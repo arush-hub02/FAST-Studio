@@ -1,0 +1,118 @@
+# =====================================================================================================================
+# FAST Studio configuration: development / demo (used when no profile is active, e.g. start.bat)
+# =====================================================================================================================
+# Spring Boot reads this file automatically. application-pilot.yaml (same folder) changes a few values for real data
+# (start.bat -Pilot, or SPRING_PROFILES_ACTIVE=pilot).
+#
+# You rarely need to edit this file. Every value written as "${NAME:default}" comes from the environment variable
+# NAME, and uses the default when NAME is not set. Put your variables in .env in the project folder (copy
+# .env.example, which documents every one); start.bat / start.sh load it. Pilot mode also loads
+# data-pilot/pilot.env (it wins). Any other key works as an environment variable too, upper-case with dots and dashes
+# as underscores (faststudio.partners.rate-limit-per-minute -> FASTSTUDIO_PARTNERS_RATE_LIMIT_PER_MINUTE), or on
+# the command line: java -jar backend.jar --server.port=9090.
+# Secrets (passwords, SMTP credentials, the media secret) belong in environment variables, never in this file.
+# =====================================================================================================================
+
+faststudio:
+  # DEMO MODE. true: fictional companies, one-click demo accounts and generated sample videos are created on the
+  # first start, and the UI shows a "demo environment" banner. Never use true with real data (the pilot profile sets false).
+  demo: true
+
+  # Where the app keeps its data: the built-in database (pg/), converted videos (media/), uploads (uploads/), the
+  # email outbox (mail-outbox/), the sign-in signing keys (keys/) and launcher logs (runtime/).
+  # Relative paths start from the backend/ folder. Env: FASTSTUDIO_DATA_DIR.
+  data-dir: "${FASTSTUDIO_DATA_DIR:../data}"
+
+  # Full path of the ffmpeg program that converts videos. Blank = find it automatically: on the PATH, or the copy
+  # npm installs in frontend/node_modules/ffmpeg-static. "disabled" switches video processing off (used by tests).
+  ffmpeg: ""
+
+  # The address people use to open FAST Studio. Links inside emails start with it, and it is the "issuer" of
+  # sign-in tokens. Set it to the real https address in a pilot. Env: FASTSTUDIO_APP_URL.
+  app-url: "${FASTSTUDIO_APP_URL:http://localhost:8080}"
+
+  db:
+    # Port of the built-in (embedded) PostgreSQL database; used only when spring.datasource.url is "embedded".
+    # 0 = any free port (tests). The pilot profile uses 54339, so demo and pilot databases never mix.
+    port: 54329
+    # The restricted database role the app works as. It has no right to bypass row-level security, so the
+    # database itself keeps companies apart (migration V2). Change only if your DBA names it differently.
+    app-role: faststudio_app
+
+  # Video pieces are served from signed, expiring addresses (/media/s/...). This is the signing key: at least
+  # 32 random characters, and stable across restarts. Blank = a new random key on every start (fine for the demo,
+  # but old links stop working after a restart). Env: FASTSTUDIO_MEDIA_SECRET (the pilot launcher generates one).
+  media-secret: "${FASTSTUDIO_MEDIA_SECRET:}"
+  # true = refuse to start without a media-secret of 32+ characters (the pilot profile sets true).
+  require-media-secret: false
+
+  admin:
+    # First platform administrator, created on start-up when none exists yet. Only used outside demo mode.
+    # The account must choose its own password at first sign-in. Env: FASTSTUDIO_ADMIN_EMAIL / FASTSTUDIO_ADMIN_PASSWORD.
+    email: "${FASTSTUDIO_ADMIN_EMAIL:}"
+    password: "${FASTSTUDIO_ADMIN_PASSWORD:}"
+
+  auth:
+    # How people stay signed in.
+    #   jwt     = signed sign-in tokens (10-minute access token + refresh token in HttpOnly cookies; scripts and
+    #             partners may send "Authorization: Bearer"). Default.
+    #   session = the previous server-side sessions, kept for one release as a fallback.
+    # Env: FASTSTUDIO_AUTH_MODE.
+    mode: "${FASTSTUDIO_AUTH_MODE:jwt}"
+    # Days after which a new token signing key is made (stored in <data-dir>/keys/). The previous key stays
+    # published at /.well-known/jwks.json so tokens it signed keep working until they expire.
+    key-rotation-days: 90
+
+  mail:
+    # Your mail server, as one URL: smtps://user:password@smtp.example.com:465 (or smtp://host:587).
+    # Blank = nothing is sent; each email is saved as an .eml file in <data-dir>/mail-outbox and listed on the
+    # Email page. Env: FASTSTUDIO_SMTP_URL.
+    smtp-url: "${FASTSTUDIO_SMTP_URL:}"
+    # Sender name and address of every email. Env: FASTSTUDIO_MAIL_FROM.
+    from: "${FASTSTUDIO_MAIL_FROM:FAST Studio <no-reply@faststudio.local>}"
+    # The Node.js program that runs mailer/send.mjs (nodemailer). "node" = found on the PATH.
+    node: node
+
+  partners:
+    # Requests per rolling minute that one partner organization (its people and API clients together) may make
+    # to the partner API (/api/partners/...). More gets "429 Too many requests". Viewers' streams are not counted.
+    rate-limit-per-minute: 120
+
+spring:
+  application:
+    name: fast-studio
+  datasource:
+    # "embedded" = the built-in PostgreSQL in <data-dir>/pg, started by the app (no installation needed).
+    # For a real/managed PostgreSQL set DB_URL (e.g. jdbc:postgresql://db.example.com:5432/faststudio),
+    # DB_USER and DB_PASSWORD. start.bat -Docker sets these for the Docker database (compose.yaml).
+    url: "${DB_URL:embedded}"
+    username: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD:postgres}"
+  servlet:
+    multipart:
+      # Largest video file that can be uploaded at once.
+      max-file-size: 2GB
+      max-request-size: 2GB
+
+server:
+  # The port the app listens on (http://localhost:8080). The launchers expect 8080.
+  port: 8080
+  error:
+    # Error answers never include program internals (stack traces).
+    include-stacktrace: never
+  servlet:
+    session:
+      # Only used in auth.mode=session: how long an idle server session lasts.
+      timeout: 8h
+      cookie:
+        # Set true when people reach the app over HTTPS (behind a reverse proxy or load balancer): sign-in cookies
+        # are then only sent over encrypted connections. Applies to the token cookies too. Env: FASTSTUDIO_SECURE_COOKIES.
+        secure: "${FASTSTUDIO_SECURE_COOKIES:false}"
+        http-only: true
+        same-site: lax
+
+logging:
+  pattern:
+    # Every log line of a request starts with the organization it was for, e.g. [org=2a7f…], so one company's
+    # activity can be found in the logs.
+    correlation: "[org=%X{orgId:-}] "

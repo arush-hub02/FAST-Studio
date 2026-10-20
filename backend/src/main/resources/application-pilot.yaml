@@ -1,0 +1,22 @@
+# =====================================================================================================================
+# FAST Studio configuration: REAL-DATA PILOT (start.bat -Pilot, ./start.sh --pilot, or SPRING_PROFILES_ACTIVE=pilot)
+# =====================================================================================================================
+# Only the values that differ from application.yaml are here; everything else comes from application.yaml.
+# The launcher first loads your .env (project folder; see .env.example for every setting: email, address, HTTPS,
+# database), then data-pilot/pilot.env, which it generates on the first pilot start and which wins:
+#   FASTSTUDIO_MEDIA_SECRET    signing key for video links (generated once)
+#   FASTSTUDIO_ADMIN_EMAIL     first platform administrator (from .env if you set it there, else admin@pilot.local)
+#   FASTSTUDIO_ADMIN_PASSWORD  its temporary password (must be changed at first sign-in)
+# Keep both files private: they contain secrets.
+# =====================================================================================================================
+
+faststudio:
+  # No fictional companies, no demo accounts, no generated videos.
+  demo: false
+  # Real data lives apart from the demo, in data-pilot/ (the launcher passes its full path).
+  data-dir: "${FASTSTUDIO_DATA_DIR:../data-pilot}"
+  db:
+    # The built-in database runs on its own port, so it never touches the demo database.
+    port: 54339
+  # Refuse to start without a stable media secret (32+ characters), so video links survive restarts.
+  require-media-secret: true

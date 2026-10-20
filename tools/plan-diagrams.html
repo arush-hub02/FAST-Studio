@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Plan diagrams</title>
+<style>
+  :root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --brand:#4f46e5; --brand-soft:#eef2ff; --ok:#047857; --ok-soft:#ecfdf5; --bad:#b91c1c; --bad-soft:#fef2f2; --plat:#0f172a; --partner:#9333ea; --partner-soft:#faf5ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f4f6fb; font: 15px/1.45 'Segoe UI', Inter, system-ui, sans-serif; color: var(--ink); }
+  .panel { width: 1400px; padding: 36px 40px; background: #f4f6fb; }
+  h1 { font-size: 26px; margin: 0 0 4px; } .sub { color: var(--muted); margin: 0 0 26px; font-size: 16px; }
+  .row { display: flex; gap: 22px; align-items: stretch; }
+  .box { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(15,23,42,.05); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; }
+  .t-plat { background: #e2e8f0; color: var(--plat); } .t-cust { background: var(--brand-soft); color: var(--brand); } .t-part { background: var(--partner-soft); color: var(--partner); }
+  h2 { font-size: 19px; margin: 0 0 6px; } h3 { font-size: 15px; margin: 12px 0 6px; }
+  ul { margin: 0; padding-left: 18px; } li { margin: 3px 0; }
+  .yes li::marker { content: '✓  '; color: var(--ok); font-weight: 700; } .no li::marker { content: '✕  '; color: var(--bad); font-weight: 700; }
+  .no { color: #7f1d1d; }
+  .arrow { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 210px; text-align: center; color: var(--partner); font-weight: 600; }
+  .arrow .line { width: 100%; height: 4px; background: var(--partner); position: relative; margin: 10px 0; border-radius: 2px; }
+  .arrow .line::after { content: ''; position: absolute; right: -4px; top: -8px; border: 10px solid transparent; border-left: 14px solid var(--partner); }
+  .note { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .cust { flex: 1.25; } .part { flex: 1.1; border-color: #e9d5ff; } .plat { flex: .9; background: #0f172a; color: #e2e8f0; border-color: #0f172a; } .plat .note { color: #94a3b8; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { font-size: 13px; padding: 3px 9px; border-radius: 8px; background: #f1f5f9; border: 1px solid var(--line); }
+  .foot { margin-top: 22px; display: flex; gap: 22px; } .foot .box { flex: 1; font-size: 14px; }
+  /* token panel */
+  .claims { flex: 1.15; font-family: Consolas, 'Cascadia Mono', monospace; font-size: 14px; }
+  .grp { border-left: 4px solid var(--brand); padding: 8px 12px; margin: 10px 0; background: #fafbff; border-radius: 0 10px 10px 0; }
+  .grp b.h { font-family: 'Segoe UI', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); display: block; margin-bottom: 4px; }
+  .grp.where { border-color: #0891b2; } .grp.where b.h { color: #0891b2; }
+  .grp.what { border-color: var(--ok); } .grp.what b.h { color: var(--ok); }
+  .grp.safe { border-color: #d97706; } .grp.safe b.h { color: #d97706; }
+  .k { color: #9333ea; } .c { color: #64748b; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
+  .steps { flex: 1; } .step { display: flex; gap: 12px; align-items: flex-start; margin: 10px 0; }
+  .num { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .req { font-family: Consolas, monospace; background: #0f172a; color: #e2e8f0; padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 8px; }
+</style></head>
+<body>
+<section class="panel" id="orgs">
+  <h1>Who sees what — platform, customer and partner organizations</h1>
+  <p class="sub">Built. Every request carries an organization ID. Partners see only what a customer chooses to share, read-only.</p>
+  <div class="row">
+    <div class="box plat"><span class="tag t-plat" style="background:#334155;color:#e2e8f0">Platform org · us</span>
+      <h2>FAST Studio operations</h2>
+      <ul><li>Create &amp; suspend customer organizations</li><li>Email templates &amp; sent-email log</li><li>Password resets for locked-out people</li></ul>
+      <p class="note" style="margin-top:12px">Sees usage counts only — never customer videos, schedules or money.</p></div>
+    <div class="box cust"><span class="tag t-cust">Customer org · tenant</span>
+      <h2>Aurora Media Network</h2>
+      <div class="chips"><span class="chip">Library</span><span class="chip">Rights</span><span class="chip">Channels</span><span class="chip">Schedule</span><span class="chip">Ads &amp; money</span><span class="chip">Distribution</span><span class="chip">Team</span><span class="chip">Audit log</span></div>
+      <p class="note" style="margin-top:12px">Owner, Admin, Content manager, Channel operator, Ad ops, Analyst — each limited by role. Other customers (e.g. Northwind) are invisible.</p>
+      <h3>Partners page</h3><p class="note" style="margin:0">Choose a partner, the channels and what to share. Stop sharing with one click.</p></div>
+    <div class="arrow">shares, read-only<div class="line"></div><span class="note">only chosen channels<br>and scopes</span></div>
+    <div class="box part"><span class="tag t-part">Partner org · minimal access</span>
+      <h2>A TV platform or app</h2>
+      <h3>Gets</h3><ul class="yes"><li>Channel name, logo, territories</li><li>Programme guide (EPG / XMLTV)</li><li>Its own stream address</li><li>Ad-break times (SCTE-35)</li><li>Delivery numbers for its viewers</li></ul>
+      <h3>Never gets</h3><ul class="no"><li>Videos library &amp; uploads</li><li>Rights contracts</li><li>Campaigns, prices, revenue</li><li>Team members, audit log</li><li>Any way to change anything</li></ul></div>
+  </div>
+  <div class="foot">
+    <div class="box"><b>Partner people</b> get partner roles only (Partner admin, Partner viewer) — never a role inside the customer.</div>
+    <div class="box"><b>Partner machines</b> use an API client (secret shown once, stored hashed) and receive a short-lived token with only the shared scopes.</div>
+    <div class="box"><b>Every partner read</b> is logged with both organization IDs and appears in the customer's Activity log.</div>
+  </div>
+</section>
+
+<section class="panel" id="token">
+  <h1>The sign-in token (JWT) — what it carries and how each request is checked</h1>
+  <p class="sub">Built. A signed token describes the person, their tenant, organizations, role and permissions. It lasts 10 minutes and is renewed automatically.</p>
+  <div class="row">
+    <div class="box claims">
+      <div class="grp"><b class="h">Who</b><span class="k">sub</span> person ID · <span class="k">typ</span> user | service · <span class="k">name</span>, <span class="k">email</span> · <span class="k">amr</span> how they signed in</div>
+      <div class="grp where"><b class="h">Where</b><span class="k">tid</span> tenant (contract) · <span class="k">org</span> { id, slug, kind: CUSTOMER | PARTNER | PLATFORM, role }<br><span class="k">orgs</span> [ every organization + role ] · <span class="k">projects</span> [ ] (groups of channels, later)</div>
+      <div class="grp what"><b class="h">What they may do</b><span class="k">perms</span> [ VIEW, CHANNELS_EDIT, SCHEDULE_PUBLISH … ] · <span class="k">platform_roles</span> · <span class="k">scope</span> for partner machines<br><span class="k">pwd_change_required</span> true → only password screens work</div>
+      <div class="grp safe"><b class="h">Safety</b><span class="k">exp</span> 10 minutes · <span class="k">ver</span> token version (instant revoke) · <span class="k">sid</span>, <span class="k">jti</span> · <span class="k">iss</span>, <span class="k">aud</span> · signed with rotating keys</div>
+      <p class="c">Kept in a secure cookie for browsers (scripts can't read it), or sent as "Authorization: Bearer" by partner systems.</p>
+    </div>
+    <div class="box steps">
+      <div class="req">GET /api/orgs/<b style="color:#a5b4fc">2a7f…</b>/channels &nbsp;→ X-Org-Id: 2a7f…</div>
+      <div class="step"><span class="num">1</span><div><b>Signature &amp; expiry</b><div class="c">Forged or expired tokens are refused.</div></div></div>
+      <div class="step"><span class="num">2</span><div><b>Still valid?</b><div class="c"><span class="k">ver</span> matches — so a password change, removal or suspension takes effect immediately.</div></div></div>
+      <div class="step"><span class="num">3</span><div><b>Organization in the path is one of theirs</b><div class="c">The org ID in the address must be in <span class="k">orgs</span>; otherwise 404 (the org stays hidden).</div></div></div>
+      <div class="step"><span class="num">4</span><div><b>Role allows the action</b><div class="c">Checked against <span class="k">perms</span> for that organization.</div></div></div>
+      <div class="step"><span class="num">5</span><div><b>Database guard</b><div class="c">Row-level security only shows rows of that organization — the last line of defence, unchanged.</div></div></div>
+    </div>
+  </div>
+</section>
+<section class="panel" id="usecase">
+  <h1>Example: Aurora Media puts two channels on the Partner TV app</h1>
+  <p class="sub">Partner TV is a smart-TV channel app (fictional). Aurora shares, Partner TV's systems read, viewers watch — and Aurora keeps control.</p>
+  <div class="row">
+    <div class="box cust" style="flex:.9"><span class="tag t-cust">Content owner</span>
+      <h2>Aurora Media Network</h2>
+      <ol style="margin:0;padding-left:20px">
+        <li>Signs a 3-month pilot with Partner TV</li>
+        <li>On <b>Partners</b>: shares <b>Aurora Action</b> and <b>Classic Cinema</b> — guide, stream set-up, ad-break times</li>
+        <li>Picks its destination "Partner TV": markers only, Partner TV sells the ads</li>
+        <li>Watches every read in its Activity log</li>
+      </ol>
+      <h3 style="color:var(--bad)">Pilot ends</h3><p class="note" style="margin:0">One click on <b>Stop sharing</b>: Partner TV's next request is refused.</p></div>
+    <div class="arrow" style="min-width:150px">shares, read-only<div class="line"></div><span class="note">accepts by<br>Partner TV admin</span></div>
+    <div class="box part" style="flex:1.6"><span class="tag t-part">Partner</span>
+      <h2>Partner TV — its systems use an API client</h2>
+      <div class="grid4">
+        <div class="mini"><b>📺 TV-guide importer</b><span>Every hour: <code>…/epg.xml</code></span><span class="note">Aurora's shows appear in the app's guide</span><em>epg:read</em></div>
+        <div class="mini"><b>▶️ Player app</b><span>Per viewer: <code>POST /play/sessions</code></span><span class="note">Stream with CUE-OUT/CUE-IN markers</span><em>stream:read</em></div>
+        <div class="mini"><b>💰 Ad server</b><span>Every few minutes: <code>…/breaks</code></span><span class="note">Prepares its own ads for each SCTE-35 break</span><em>markers:read</em></div>
+        <div class="mini off"><b>📊 Finance</b><span>Monthly: <code>…/delivery</code></span><span class="note">Viewer numbers for revenue share — not shared in this pilot</span><em>delivery:read ✕</em></div>
+      </div>
+      <p class="note" style="margin:10px 0 0">Partner TV never sees Aurora's videos, licences, campaigns, money or team — and nothing from other channels or other companies.</p></div>
+  </div>
+</section>
+<style>
+  .grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mini { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; background: #fcfaff; }
+  .mini code { font-family: Consolas, monospace; font-size: 12.5px; background: #f1f5f9; padding: 1px 5px; border-radius: 5px; }
+  .mini em { font-style: normal; font-family: Consolas, monospace; font-size: 12px; color: var(--partner); }
+  .mini.off { opacity: .55; }
+  ol li { margin: 4px 0; }
+</style>
+</body></html>

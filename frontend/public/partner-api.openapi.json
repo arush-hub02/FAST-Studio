@@ -1,0 +1,190 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FAST Studio partner API",
+    "version": "1.0.0",
+    "description": "Read-only access for partner organizations (TV platforms, apps, ad partners) to what content owners share with them. People use the FAST Studio web app; partner systems use an API client: exchange its ID and secret for a 10-minute Bearer token at POST /oauth/token (OAuth 2.0 client credentials), then call these endpoints. A request only succeeds when an ACTIVE sharing from that owner includes the endpoint's scope and the channel, and the API client has the scope; everything else answers 404, so nothing unshared can be discovered. Each partner organization is rate limited (HTTP 429). Every read appears in the owner's activity log. {partner} and {owner} accept an organization ID (UUID) or its short name."
+  },
+  "servers": [{ "url": "/" }],
+  "security": [{ "clientCredentials": [] }],
+  "components": {
+    "securitySchemes": {
+      "clientCredentials": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "/oauth/token",
+            "scopes": {
+              "channels:read": "Channel details of shared channels",
+              "epg:read": "Programme guide (JSON and XMLTV)",
+              "stream:read": "How to start a viewer's stream with the partner's delivery settings",
+              "markers:read": "Upcoming ad breaks with SCTE-35 markers",
+              "delivery:read": "Viewing and ad-delivery numbers for the partner's destination only"
+            }
+          }
+        }
+      },
+      "bearer": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "parameters": {
+      "partner": { "name": "partner", "in": "path", "required": true, "description": "Your partner organization: ID or short name", "schema": { "type": "string" } },
+      "owner": { "name": "owner", "in": "path", "required": true, "description": "The content owner that shares with you: ID or short name", "schema": { "type": "string" } },
+      "channelId": { "name": "channelId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+    },
+    "responses": {
+      "NotShared": { "description": "Not shared with you (or the sharing was stopped, or your client lacks the scope)" },
+      "RateLimited": { "description": "Too many requests from your organization; slow down" }
+    },
+    "schemas": {
+      "Token": {
+        "type": "object",
+        "properties": {
+          "access_token": { "type": "string" },
+          "token_type": { "type": "string", "const": "Bearer" },
+          "expires_in": { "type": "integer", "example": 600 },
+          "scope": { "type": "string", "example": "channels:read epg:read" }
+        }
+      },
+      "Sharing": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "ownerId": { "type": "string", "format": "uuid" },
+          "ownerSlug": { "type": "string" },
+          "ownerName": { "type": "string" },
+          "status": { "type": "string", "enum": ["INVITED", "ACTIVE"] },
+          "scopes": { "type": "array", "items": { "type": "string" } },
+          "allChannels": { "type": "boolean" },
+          "channels": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" }, "name": { "type": "string" } } } },
+          "destination": { "type": ["object", "null"], "properties": { "name": { "type": "string" }, "adMode": { "type": "string", "enum": ["SSAI", "SGAI", "PASSTHROUGH"] }, "markerFormat": { "type": "string", "enum": ["DATERANGE", "CUE_OUT"] }, "maxAdSecondsPerHour": { "type": "integer" } } },
+          "note": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "acceptedAt": { "type": ["string", "null"], "format": "date-time" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" }, "slug": { "type": "string" }, "name": { "type": "string" }, "description": { "type": "string" },
+          "genre": { "type": "string" }, "language": { "type": "string" }, "timezone": { "type": "string" }, "color": { "type": "string" },
+          "countries": { "type": "array", "items": { "type": "string" } }, "live": { "type": "boolean" }
+        }
+      },
+      "Programme": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" }, "description": { "type": "string" }, "genre": { "type": "string" },
+          "start": { "type": "string", "format": "date-time" }, "end": { "type": "string", "format": "date-time" },
+          "onNow": { "type": "boolean" }, "adBreaks": { "type": "integer" }, "image": { "type": ["string", "null"], "description": "Signed, expiring thumbnail URL" }
+        }
+      },
+      "Stream": {
+        "type": "object",
+        "properties": {
+          "howTo": { "type": "string" }, "method": { "type": "string", "const": "POST" }, "url": { "type": "string" },
+          "body": { "type": "object", "description": "Send this to url per viewer, with the viewer's country; the answer's playlistUrl is the HLS stream" },
+          "destination": { "type": "object" }
+        }
+      },
+      "AdBreak": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" }, "start": { "type": "string", "format": "date-time" }, "end": { "type": "string", "format": "date-time" },
+          "durationMs": { "type": "integer" }, "ownership": { "type": "string", "enum": ["PROVIDER", "DISTRIBUTOR"] },
+          "scte35Out": { "type": "string", "description": "SCTE-35 time_signal, hex (0xFC…)" }, "scte35In": { "type": "string" }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "destination": { "type": ["string", "null"] }, "days": { "type": "integer" }, "viewerSessions": { "type": "integer" },
+          "adImpressions": { "type": "integer" }, "adCompletes": { "type": "integer" },
+          "byDay": { "type": "array", "items": { "type": "object", "properties": { "day": { "type": "string", "format": "date" }, "viewerSessions": { "type": "integer" }, "adImpressions": { "type": "integer" } } } },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/oauth/token": {
+      "post": {
+        "summary": "Get a 10-minute token for an API client (OAuth 2.0 client credentials)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": { "application/x-www-form-urlencoded": { "schema": { "type": "object", "required": ["grant_type"], "properties": {
+            "grant_type": { "type": "string", "const": "client_credentials" },
+            "client_id": { "type": "string", "format": "uuid", "description": "Or use HTTP Basic authentication" },
+            "client_secret": { "type": "string" },
+            "scope": { "type": "string", "description": "Optional, space-separated; at most the client's own scopes" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Token" } } } },
+          "400": { "description": "unsupported_grant_type or invalid_scope" },
+          "401": { "description": "invalid_client: unknown, wrong secret or revoked" }
+        }
+      }
+    },
+    "/api/partners/{partner}/links": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }],
+      "get": {
+        "summary": "What content owners share with you (waiting or active)",
+        "responses": { "200": { "description": "Sharings", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Sharing" } } } } }, "429": { "$ref": "#/components/responses/RateLimited" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }],
+      "get": {
+        "summary": "Shared channels", "security": [{ "clientCredentials": ["channels:read"] }],
+        "responses": { "200": { "description": "Channels", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Channel" } } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" }],
+      "get": {
+        "summary": "One shared channel", "security": [{ "clientCredentials": ["channels:read"] }],
+        "responses": { "200": { "description": "Channel", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Channel" } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}/epg": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" },
+        { "name": "hours", "in": "query", "schema": { "type": "integer", "default": 24, "maximum": 168 } }],
+      "get": {
+        "summary": "Programme guide (from the published schedule)", "security": [{ "clientCredentials": ["epg:read"] }],
+        "responses": { "200": { "description": "Programmes", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Programme" } } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" }],
+      "get": {
+        "summary": "Programme guide as XMLTV (next 48 hours)", "security": [{ "clientCredentials": ["epg:read"] }],
+        "responses": { "200": { "description": "XMLTV", "content": { "application/xml": { "schema": { "type": "string" } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}/stream": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" }],
+      "get": {
+        "summary": "How to start a viewer's stream with your delivery settings", "security": [{ "clientCredentials": ["stream:read"] }],
+        "responses": { "200": { "description": "Instructions", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stream" } } } },
+          "404": { "$ref": "#/components/responses/NotShared" }, "409": { "description": "NO_DESTINATION: the owner hasn't set up delivery for your platform yet" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}/breaks": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" },
+        { "name": "hours", "in": "query", "schema": { "type": "integer", "default": 6, "maximum": 48 } }],
+      "get": {
+        "summary": "Upcoming ad breaks with SCTE-35 markers", "security": [{ "clientCredentials": ["markers:read"] }],
+        "responses": { "200": { "description": "Ad breaks", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdBreak" } } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    },
+    "/api/partners/{partner}/sources/{owner}/channels/{channelId}/delivery": {
+      "parameters": [{ "$ref": "#/components/parameters/partner" }, { "$ref": "#/components/parameters/owner" }, { "$ref": "#/components/parameters/channelId" },
+        { "name": "days", "in": "query", "schema": { "type": "integer", "default": 7, "maximum": 90 } }],
+      "get": {
+        "summary": "Viewing and ad numbers for your destination only", "security": [{ "clientCredentials": ["delivery:read"] }],
+        "responses": { "200": { "description": "Numbers", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Delivery" } } } }, "404": { "$ref": "#/components/responses/NotShared" } }
+      }
+    }
+  }
+}

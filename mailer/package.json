@@ -1,0 +1,10 @@
+{
+  "name": "fast-studio-mailer",
+  "private": true,
+  "description": "Sends one email with nodemailer. Called by the Java server for every queued email.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "nodemailer": "10.0.14"
+  }
+}

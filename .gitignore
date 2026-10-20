@@ -1,0 +1,40 @@
+# Data & Runtime
+data/
+data-pilot/
+backups/
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+mailer/node_modules/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+frontend/tsconfig.tsbuildinfo
+backend/target/
+backend/src/main/resources/static/
+
+# Secrets and environment configs
+.env
+*.env
+!.env.example
+
+# IDE & Tooling
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.claude/
+.settings/
+.project
+.classpath
+
+# Logs
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,2716 @@
+FAST Studio
+
+Complete Product Requirements, Technical Specification & Codex Implementation Brief
+
+Document type: Product Requirements Document (PRD), Functional Specification, Technical Architecture and Prototype Implementation Plan
+Working product name: FAST Studio
+Product category: Cloud-based FAST channel creation, management, scheduling, playout simulation and operations platform
+Primary reference products: SoFast (sofast.tv) and Evrideo (evrideo.com)
+Frontend: React or Angular with TypeScript (Angular provisional; select one at kickoff)
+Backend: Java with Spring Boot; PostgreSQL and object storage
+Planning revision: 2 - enriched roadmap and monetization, 19 October 2026
+Planning index: docs/README.md
+Target: An interactive, polished, end-to-end product prototype that can be demonstrated to company leadership and progressively evolved toward a production platform.
+
+Document status: Enriched planning specification. Expanded roadmap, monetization strategy and supporting contracts are in docs/. All features are proposed and unimplemented. This update covers planning only; application development is a separate task.
+
+───
+
+1. Instructions to Codex
+
+You are acting as a senior product manager, solution architect, UI/UX designer, full-stack engineer and technical researcher.
+
+Your task is to help plan and build a complete, interactive prototype of a cloud-based FAST (Free Ad-Supported Streaming Television) channel management platform.
+
+Do not treat this as a simple dashboard design task. The product should demonstrate how a media organization can manage content, create linear television channels, schedule programming, configure distribution rights, simulate advertising, preview playback and monitor operations.
+
+Use the requirements in this document as the starting point, not as an unquestionable final design.
+
+Your responsibilities
+
+1. Enrich this specification by identifying missing product requirements, edge cases, dependencies and technical risks.
+2. Research the public product capabilities of SoFast and Evrideo to understand the category and common workflows.
+3. Distinguish verified competitor capabilities from proposed features and assumptions.
+4. Review the existing repository before choosing or changing the architecture.
+5. Produce a complete implementation plan before making large code changes.
+6. Design a consistent, professional UI suitable for demonstrating to a director or enterprise customer.
+7. Implement functional interactions rather than decorative, non-working controls.
+8. Use realistic seed data and preserve data across page refreshes.
+9. Simulate unavailable integrations honestly and isolate them behind interfaces so they can be replaced later.
+10. Keep authentication, authorization, tenant isolation, rights enforcement and production security concerns visible in the architecture.
+11. Implement and test the product incrementally.
+12. Document how to run, test, demonstrate and extend the prototype.
+
+Non-negotiable rules
+
+• Do not claim a real broadcast is running when only a simulated status exists.
+• Do not represent simulated audience metrics or revenue as real data.
+• Do not implement geo-blocking solely as a frontend country selector; include a backend authorization design or explicitly mark it as a prototype simulation.
+• Do not expose credentials, signing keys or secrets in frontend code.
+• Do not build a fake login that accepts any password without clearly marking it as a development-only mock.
+• Do not make all buttons navigate to the same page or show meaningless alerts.
+• Do not generate every screen before establishing the domain model and navigation.
+• Do not rewrite the existing project or replace its established stack without first explaining why.
+• Do not add a large number of dependencies without a clear reason.
+• Do not use copyrighted competitor branding, proprietary assets or copied page layouts. Develop an original product identity.
+• Do not start with production-scale infrastructure when a smaller, coherent prototype can demonstrate the same workflow.
+
+Expected initial output
+
+Before implementing, create the following planning artifacts:
+
+1. "docs/PRODUCT_REQUIREMENTS.md"
+2. "docs/FUNCTIONAL_SPECIFICATION.md"
+3. "docs/TECHNICAL_ARCHITECTURE.md"
+4. "docs/DATA_MODEL.md"
+5. "docs/API_SPECIFICATION.md"
+6. "docs/UX_AND_NAVIGATION.md"
+7. "docs/INTEGRATION_STRATEGY.md"
+8. "docs/SECURITY_AND_RIGHTS.md"
+9. "docs/TEST_PLAN.md"
+10. "docs/IMPLEMENTATION_ROADMAP.md"
+11. "docs/ASSUMPTIONS_AND_OPEN_QUESTIONS.md"
+
+If a repository already exists, inspect it first and adapt the documents to its actual state. Do not overwrite existing work without understanding it.
+
+───
+
+2. Product vision
+
+2.1 What is FAST?
+
+FAST stands for Free Ad-Supported Streaming Television.
+
+A FAST channel behaves like a traditional television channel delivered over the internet. Programming follows a continuous schedule, and viewers can tune in at any time without selecting every individual movie or episode.
+
+The channel operator typically earns revenue through advertising, distribution agreements or other commercial arrangements.
+
+A FAST platform provides the operational tools needed to create, manage, schedule, distribute and monitor these channels.
+
+2.2 Product vision
+
+FAST Studio is a proposed cloud-based platform that allows media companies to transform existing video libraries into scheduled, continuously playing television channels.
+
+The platform should make the process understandable and manageable through a unified administrative interface.
+
+A user should be able to:
+
+1. Sign in securely.
+2. Create or access an organization.
+3. Import and manage video content.
+4. Define content metadata and licensing rights.
+5. Create a television channel.
+6. Schedule content into a continuous programme lineup.
+7. Configure advertising opportunities.
+8. Preview the channel and programme guide.
+9. Simulate publishing and distribution.
+10. Monitor channel health and view operational analytics.
+
+The prototype should demonstrate this complete workflow with a consistent domain model and persistent data.
+
+2.3 Product positioning
+
+FAST Studio is a working concept for a platform in the same general category as SoFast and Evrideo.
+
+It is not intended to be an exact copy of either product.
+
+The prototype should explore a combination of:
+
+• Media asset management.
+• FAST channel creation.
+• Programme scheduling.
+• Electronic Programme Guide (EPG) generation.
+• Content-rights management.
+• Geographic restrictions.
+• Advertising configuration.
+• Channel preview and playout simulation.
+• Distribution management.
+• Operational monitoring.
+• Analytics and reporting.
+• Organization and user administration.
+
+2.4 Primary objectives
+
+Business objectives
+
+• Demonstrate a credible FAST product concept to company leadership.
+• Establish a shared understanding of the product's scope.
+• Identify a commercially useful MVP.
+• Show how content owners and channel operators could use the platform.
+• Identify capabilities that can be built internally versus integrated with third-party services.
+
+Technical objectives
+
+• Establish one coherent React or Angular frontend and a Java/Spring Boot backend architecture.
+• Define the core domain model and API boundaries.
+• Demonstrate end-to-end workflows using realistic data.
+• Create interfaces for future media-processing, playout, ad and distribution integrations.
+• Make it possible to replace mock services incrementally without redesigning the entire UI.
+
+2.5 Out of scope for the initial prototype
+
+Unless explicitly approved, the initial prototype will not claim to provide:
+
+• Production-grade 24/7 broadcast reliability.
+• Commercial-scale video transcoding.
+• Guaranteed global CDN delivery.
+• Real advertising revenue.
+• Actual third-party platform distribution.
+• Production DRM or entitlement security.
+• Real audience measurement without a genuine data source.
+• Guaranteed legal compliance across every country.
+• A fully automated broadcast control room.
+
+These may become later engineering projects.
+
+───
+
+3. Users, personas and access control
+
+The product must distinguish the person operating the platform from the people managing channels and content.
+
+3.1 Platform Super Administrator
+
+This role manages the platform itself.
+
+Responsibilities:
+
+• Create, suspend and manage customer organizations.
+• Manage platform-level configuration.
+• Inspect system-wide health.
+• View integration status.
+• Manage platform-level feature availability.
+• Review security and audit events.
+• Manage system-wide settings.
+
+This role should not automatically be available to ordinary organization administrators.
+
+3.2 Organization Owner
+
+The customer organization owner manages its own account and operations.
+
+Responsibilities:
+
+• Configure organization details.
+• Invite users.
+• Assign organization roles.
+• Manage channels and content.
+• Configure rights and distribution settings.
+• Review analytics and operational status.
+• Configure organization-specific integrations.
+
+3.3 Organization Administrator
+
+Responsibilities:
+
+• Manage content, channels and schedules.
+• Configure applicable rights.
+• Manage users within permitted limits.
+• Review operations and reports.
+• Manage organization settings when authorized.
+
+The Organization Owner retains ownership-level permissions.
+
+3.4 Content Manager
+
+Responsibilities:
+
+• Import assets.
+• Edit metadata.
+• Manage artwork, subtitles and language information.
+• Review media processing status.
+• Manage content availability.
+• View asset licensing information.
+• Flag content requiring rights or quality review.
+
+3.5 Channel Operator
+
+Responsibilities:
+
+• Create or edit channels, subject to permissions.
+• Build playlists.
+• Manage schedules.
+• Preview programmes.
+• Review playout status.
+• Resolve operational issues.
+• Publish or activate channels if permitted.
+
+3.6 Ad Operations Manager
+
+Responsibilities:
+
+• Configure ad campaigns.
+• Create ad-break definitions.
+• Manage campaign eligibility.
+• View simulated or actual ad-delivery reports.
+• Review advertising configuration.
+
+3.7 Analyst / Read-only User
+
+Responsibilities:
+
+• View dashboards and reports.
+• Inspect channels, schedules and performance.
+• Export permitted reports.
+• Avoid making operational changes.
+
+3.8 Role-based access control
+
+Implement role-based access control (RBAC) with permissions enforced by the backend in any API-backed implementation.
+
+Suggested permission names:
+
+• "organizations.read"
+• "organizations.manage"
+• "users.read"
+• "users.invite"
+• "users.manage"
+• "assets.read"
+• "assets.create"
+• "assets.update"
+• "assets.delete"
+• "rights.read"
+• "rights.manage"
+• "channels.read"
+• "channels.create"
+• "channels.update"
+• "channels.publish"
+• "schedules.read"
+• "schedules.manage"
+• "ads.read"
+• "ads.manage"
+• "analytics.read"
+• "integrations.manage"
+• "audit.read"
+• "platform.manage"
+
+Use least-privilege access. Do not rely on hiding navigation links as a security control.
+
+For the prototype, demonstrate at least Super Administrator, Organization Administrator, Content Manager, Channel Operator and Analyst views.
+
+───
+
+4. Application structure and navigation
+
+The interface should feel like a professional enterprise SaaS product.
+
+4.1 Global layout
+
+Use a consistent application shell.
+
+Left navigation sidebar
+
+• Overview
+• Media Library
+• Channels
+• Scheduler
+• Programme Guide
+• Advertising
+• Rights Management
+• Distribution
+• Monitoring
+• Analytics
+• Integrations
+• User Management
+• Settings
+
+Platform administrators may see additional organization-management and platform-operations sections.
+
+Top navigation
+
+• Organization selector, if multi-tenant.
+• Global search.
+• Notifications.
+• Help or documentation.
+• Current user profile.
+• Sign out.
+
+Main workspace
+
+• Page title and contextual description.
+• Breadcrumbs.
+• Primary actions.
+• Search, filtering and sorting where appropriate.
+• Responsive content tables, grids or editors.
+• Empty, loading, success and error states.
+
+4.2 Navigation requirements
+
+• Navigation must work.
+• Active sections must be visually distinguishable.
+• Users must not see modules they cannot access.
+• Deep links must resolve correctly.
+• Protected routes must require authentication.
+• Invalid or unauthorized routes must show suitable states.
+• Destructive actions must require confirmation.
+• Form state and unsaved changes must be handled deliberately.
+• The interface should remain usable on laptop and tablet screen sizes.
+
+───
+
+5. Authentication and onboarding
+
+Authentication is the first functional module.
+
+5.1 Required screens
+
+A. Sign-in page
+
+Fields:
+
+• Email address.
+• Password.
+• Show/hide password.
+• Remember me, if supported by the chosen authentication mechanism.
+• Sign-in button.
+• Forgot password link.
+• Link to sign-up, if self-registration is enabled.
+
+Requirements:
+
+• Validate required fields.
+• Validate email format.
+• Show loading state while submitting.
+• Display safe, useful error messages.
+• Prevent repeated submissions while a request is in progress.
+• Redirect authenticated users to the correct landing page.
+• Avoid revealing whether an account exists in a password-related error message.
+
+B. Registration / organization creation
+
+For the prototype, support a configurable onboarding workflow.
+
+Possible fields:
+
+• Full name.
+• Work email.
+• Password.
+• Organization name.
+• Organization type.
+• Country.
+• Preferred time zone.
+• Acceptance of terms, if required by the demonstration flow.
+
+Successful registration should create or associate the user with an organization and assign the appropriate initial role.
+
+For production, account verification and invitation policies must be defined before launch.
+
+C. Forgot password
+
+• Accept an email address.
+• Display a generic confirmation.
+• Integrate with a real email service only when configured.
+• Use a development-only simulated reset flow if no email provider is available.
+• Never expose password-reset tokens in ordinary production logs.
+
+D. Reset password
+
+• Validate the reset token.
+• Validate password requirements.
+• Confirm password changes.
+• Invalidate the token after use.
+• Display expired or invalid token states.
+
+E. Email verification
+
+Optional for the initial demonstration, but include the workflow in the architecture.
+
+F. Invitation acceptance
+
+• Validate the invitation.
+• Associate the user with the correct organization.
+• Assign the role specified by the authorized inviter.
+• Require the user to establish credentials or authenticate.
+• Handle expired and revoked invitations.
+
+G. Access denied and session expiry
+
+• Provide a clear access-denied page.
+• Handle expired sessions.
+• Redirect to sign-in when necessary.
+• Preserve the intended destination when safe to do so.
+
+5.2 Authentication architecture
+
+If a backend is included, evaluate a mature identity provider or a well-maintained authentication library before implementing authentication from scratch.
+
+The architecture must support:
+
+• Secure password handling if passwords are managed locally.
+• Session or token lifecycle management.
+• Logout and session invalidation.
+• Backend authentication middleware.
+• Role and permission checks.
+• Rate limiting on sensitive endpoints.
+• Secure password reset.
+• CSRF protection where applicable.
+• Appropriate CORS configuration.
+• Secure cookie handling when cookie-based sessions are used.
+
+Do not store sensitive authentication tokens in browser local storage by default. Choose and document an appropriate session model.
+
+5.3 Demo authentication
+
+Provide a clearly labelled development/demo authentication mode when necessary.
+
+Requirements:
+
+• Seed documented demo accounts for different roles.
+• Make it possible to switch between roles during a demonstration.
+• Do not present demo credentials as production credentials.
+• Prevent demo-mode shortcuts from being enabled silently in production builds.
+• Ensure all demo users and their data are fictional.
+
+───
+
+6. Organization and tenant management
+
+A multi-tenant model should be considered from the beginning, even if the initial demonstration uses one main organization.
+
+6.1 Organization overview
+
+Fields:
+
+• Organization name.
+• Logo.
+• Organization identifier.
+• Country.
+• Default language.
+• Time zone.
+• Contact information.
+• Subscription or plan label, if needed for the prototype.
+• Organization status.
+
+6.2 Organization management
+
+Platform administrators should be able to:
+
+• Create an organization.
+• View organization details.
+• Activate or suspend an organization.
+• Review usage summaries.
+• View organization members.
+• View channel and asset counts.
+• Inspect organization-level operational status.
+
+Suspending an organization should prevent access according to a clearly defined policy without accidentally deleting its data.
+
+6.3 Tenant isolation
+
+Every tenant-owned resource must be associated with an organization.
+
+Examples:
+
+• Assets.
+• Channels.
+• Schedules.
+• Rights policies.
+• Advertising campaigns.
+• Distribution destinations.
+• Reports.
+• Invitations.
+
+The backend must derive or validate organization access from the authenticated identity. It must not trust an arbitrary organization identifier sent by the client.
+
+Cross-tenant access must be explicitly tested.
+
+───
+
+7. Dashboard and overview
+
+The dashboard is the main operational landing page.
+
+7.1 Summary cards
+
+Display:
+
+• Total channels.
+• Active channels.
+• Draft channels.
+• Assets in the library.
+• Assets awaiting processing.
+• Scheduled programmes.
+• Active or scheduled campaigns.
+• Open operational alerts.
+
+All values should come from the same underlying data used by other modules.
+
+7.2 Channel overview
+
+Display a list or grid of channels with:
+
+• Logo.
+• Name.
+• Genre.
+• Language.
+• Status.
+• Current programme.
+• Next programme.
+• Last updated time.
+• Operational status.
+• Actions based on permissions.
+
+7.3 Recent activity
+
+Examples:
+
+• New asset uploaded.
+• Channel created.
+• Schedule updated.
+• Rights policy changed.
+• Channel activated.
+• Distribution simulation failed.
+
+Activity records should be generated by real prototype actions, not hardcoded as if new events were occurring.
+
+7.4 Monitoring summary
+
+Show:
+
+• Simulated stream status.
+• Recent failures.
+• Asset processing failures.
+• Schedule validation warnings.
+• Upcoming rights expirations.
+
+Clearly label synthetic monitoring data.
+
+7.5 Dashboard filters
+
+Allow filtering by:
+
+• Organization, where permitted.
+• Channel.
+• Status.
+• Date range.
+
+───
+
+8. Media asset management
+
+The media library is a core module.
+
+8.1 Asset types
+
+The prototype should support these logical media types:
+
+• Movie.
+• TV episode.
+• Series.
+• Trailer.
+• Short-form video.
+• Advertisement.
+• Other media.
+
+A series may contain seasons and episodes. A movie or episode may be assigned to multiple playlists or channels where permitted.
+
+8.2 Asset list
+
+Display:
+
+• Thumbnail.
+• Title.
+• Asset type.
+• Genre.
+• Duration.
+• Language.
+• Resolution, when known.
+• Processing status.
+• Rights status.
+• Last updated time.
+• Available actions.
+
+Support search, filtering, sorting, pagination or virtualized lists as appropriate.
+
+8.3 Asset creation and editing
+
+Fields may include:
+
+• Title.
+• Internal asset identifier.
+• Description.
+• Asset type.
+• Genre.
+• Language.
+• Duration.
+• Release year.
+• Age rating.
+• Artwork.
+• Video file or demo media reference.
+• Audio tracks.
+• Subtitle tracks.
+• Tags.
+• Series and episode metadata.
+• Default availability.
+• Rights references.
+
+Validate required fields and prevent invalid duration or metadata values.
+
+8.4 Upload workflow
+
+For a real backend-backed prototype:
+
+1. User selects a file.
+2. Frontend validates supported file types and size limits.
+3. Backend authorizes the upload.
+4. File is stored using an appropriate storage mechanism.
+5. Asset metadata is saved.
+6. A processing job is created when applicable.
+7. The asset status progresses through its defined lifecycle.
+8. The UI reflects progress, success or failure.
+
+For a frontend-only demonstration, simulate this workflow and label it accordingly.
+
+Never pretend a file was transcoded when no transcoding operation occurred.
+
+8.5 Asset processing states
+
+Suggested states:
+
+• Draft.
+• Uploading.
+• Uploaded.
+• Processing.
+• Ready.
+• Failed.
+• Archived.
+
+Transitions should be explicit and validated.
+
+For example, a channel scheduler should not accept a media asset that has not reached an eligible state.
+
+8.6 Asset detail page
+
+Include:
+
+• Metadata.
+• Preview player, when a playable source exists.
+• Processing history.
+• Rights summary.
+• Associated channels.
+• Associated schedules.
+• Associated series or episodes.
+• Audit history, where permitted.
+
+8.7 Content deletion
+
+Deleting an asset must not silently break active schedules.
+
+Options to evaluate:
+
+• Block deletion while the asset is scheduled.
+• Require the operator to remove or replace schedule references.
+• Support archival rather than permanent deletion.
+
+The chosen rule must be consistent across the UI and backend.
+
+───
+
+9. Channel management
+
+A channel is a logical linear television service.
+
+It is not merely a playlist. It has identity, scheduling rules, availability, distribution configuration and an operational lifecycle.
+
+9.1 Channel list
+
+Display:
+
+• Logo.
+• Channel name.
+• Channel identifier.
+• Description.
+• Genre.
+• Primary language.
+• Status.
+• Current programme.
+• Next programme.
+• Rights summary.
+• Distribution status.
+• Last modified time.
+
+Actions:
+
+• Create.
+• Edit.
+• Duplicate.
+• Preview.
+• Open schedule.
+• Activate or deactivate.
+• Archive, subject to validation.
+
+9.2 Create channel wizard
+
+Suggested steps:
+
+Step 1: Basic information
+
+• Name.
+• Unique channel identifier.
+• Description.
+• Logo.
+• Genre.
+• Primary language.
+• Time zone.
+
+Step 2: Content and programming
+
+• Select eligible assets.
+• Create a playlist.
+• Configure programme rotation.
+• Select the schedule strategy.
+
+Step 3: Rights and availability
+
+• Associate relevant rights policies.
+• Define permitted distribution territories.
+• Validate that planned content is eligible for the selected channels and time windows.
+
+Step 4: Distribution configuration
+
+• Choose a demo destination or configured integration.
+• Select supported output configuration.
+• Define publication metadata.
+
+Step 5: Review
+
+• Validate required information.
+• Show missing assets, schedule gaps and rights warnings.
+• Allow the user to save a draft or proceed to activation.
+
+9.3 Channel lifecycle
+
+Suggested states:
+
+• Draft.
+• Configuring.
+• Ready for activation.
+• Active.
+• Degraded.
+• Stopped.
+• Archived.
+
+Not all state transitions should be permitted.
+
+For example:
+
+• A draft cannot become active without required configuration.
+• An active channel should not be archived without an explicit stop/archive workflow.
+• A simulated active channel must be distinguishable from a real published channel.
+
+9.4 Channel detail page
+
+Tabs:
+
+• Overview.
+• Schedule.
+• Content.
+• Rights.
+• Advertising.
+• Distribution.
+• Monitoring.
+• Activity.
+
+Each tab must use the same channel identifier and reflect actual prototype state.
+
+9.5 Channel configuration
+
+Support:
+
+• Logo and metadata.
+• Language and genre.
+• Time zone.
+• Schedule strategy.
+• Default playlist or fallback asset.
+• Permitted territories.
+• Associated ad policy.
+• Distribution configuration.
+• Channel status.
+
+Validate channel identifiers for uniqueness within the chosen scope.
+
+───
+
+10. Playlist and scheduling engine
+
+Scheduling is one of the most important modules.
+
+The prototype must demonstrate a meaningful programme scheduling workflow rather than a simple list of video titles.
+
+10.1 Schedule concepts
+
+A schedule defines which programme should play during a particular time interval.
+
+Each scheduled item should reference:
+
+• Channel.
+• Media asset.
+• Start time.
+• End time.
+• Duration.
+• Schedule status.
+• Optional advertising breaks.
+• Optional recurrence configuration.
+
+Store timestamps in a consistent format, preferably UTC, and present them in the appropriate display time zone.
+
+10.2 Scheduler views
+
+Provide:
+
+• Day view.
+• Timeline or grid view.
+• List view.
+• Current and upcoming programmes.
+• Date navigation.
+• Channel filter.
+• Schedule warnings.
+• Programme detail panel.
+
+For a multi-channel view, each channel may occupy a separate horizontal lane.
+
+10.3 Add programme
+
+The operator should be able to:
+
+1. Select a channel.
+2. Select an eligible asset.
+3. Choose a start time.
+4. Set a duration or end time.
+5. Review rights and asset readiness.
+6. Save the programme.
+7. See the updated timeline.
+
+Drag-and-drop scheduling may be implemented if it improves usability, but must not compromise basic accessibility or reliable editing.
+
+10.4 Schedule validation
+
+The system should detect:
+
+• Overlapping programmes.
+• Missing or unavailable assets.
+• Negative or zero durations.
+• Invalid start/end times.
+• Content rights that expire before playback completes.
+• Geographic restrictions that conflict with channel availability.
+• Gaps in the schedule.
+• Duplicate or conflicting schedule entries.
+• Invalid recurring schedules.
+• Daylight-saving-time ambiguities where applicable.
+
+Validation should distinguish between:
+
+• Blocking errors.
+• Warnings.
+• Informational notices.
+
+10.5 Continuous channel behavior
+
+A FAST channel generally needs continuous programming.
+
+Support at least one scheduling strategy in the prototype:
+
+• Fixed schedule.
+• Playlist loop.
+• Repeat until the next scheduled item.
+• Fallback content when an eligible item is missing.
+
+Document the selected strategy.
+
+Do not automatically fill every gap without showing the operator how and why the gap was handled.
+
+10.6 Schedule publishing
+
+Support a draft/published distinction.
+
+Suggested workflow:
+
+1. Edit the draft schedule.
+2. Validate it.
+3. Review warnings.
+4. Publish the schedule version.
+5. Display the published version and effective time.
+6. Keep the previous version or an audit record for rollback.
+
+The prototype may simulate publishing, but it must retain meaningful version history.
+
+10.7 Schedule versioning
+
+Record:
+
+• Version identifier.
+• Channel identifier.
+• Created by.
+• Creation time.
+• Publication time.
+• Validation result.
+• Changes from the previous version.
+
+This helps demonstrate how a broadcast operation can be audited.
+
+───
+
+11. Electronic Programme Guide (EPG)
+
+The EPG exposes programme information to the viewer and distribution partners.
+
+11.1 EPG interface
+
+For each channel and selected date, display:
+
+• Programme title.
+• Start time.
+• End time.
+• Artwork.
+• Description.
+• Current programme indicator.
+• Upcoming programmes.
+
+Provide a timeline or grid view where practical.
+
+11.2 EPG generation
+
+Generate EPG records from the published schedule.
+
+Avoid maintaining a separate, manually edited programme timeline that can drift out of sync with the actual schedule.
+
+11.3 Export
+
+The prototype may support JSON export and optionally XMLTV-compatible output.
+
+If XMLTV is implemented:
+
+• Use the appropriate programme and channel structures.
+• Format dates and time zones correctly.
+• Validate the exported document.
+• Include only the relevant published schedule and metadata.
+
+Do not claim that an external platform accepts the feed until the corresponding integration has been tested.
+
+11.4 Synchronization
+
+The EPG must update when a schedule version is published.
+
+Display the latest generated time and any generation errors.
+
+───
+
+12. Rights management and geo-blocking
+
+Rights management should be a first-class product module rather than an optional setting buried inside a channel form.
+
+12.1 Rights concepts
+
+Distinguish between:
+
+• Asset rights.
+• Channel rights.
+• Distribution rights.
+• Platform-specific restrictions.
+• Advertising eligibility, where applicable.
+
+A rights policy may include:
+
+• Policy name.
+• Organization.
+• Associated assets or channels.
+• Allowed countries.
+• Blocked countries.
+• Rights start date.
+• Rights end date.
+• Permitted distribution platforms.
+• Available languages or versions.
+• Optional DRM requirement.
+• Policy status.
+• Audit history.
+
+12.2 Geographic rules
+
+For the prototype, implement a clearly labelled playback-access simulator.
+
+Example:
+
+• A movie is licensed for India and the United Kingdom.
+• The movie is unavailable in the United States and Canada.
+• The operator requests a playback decision for each country.
+• The UI displays the decision, the reason and the applicable policy.
+
+The test must evaluate the effective rules, not just the channel-level allowlist.
+
+12.3 Effective rights policy
+
+Define a documented precedence model.
+
+Recommended starting principle:
+
+• Explicit prohibitions cannot be overridden by a more permissive rule at another level.
+• The content must be eligible for the requested territory, time window, platform and distribution context.
+• Missing or contradictory rights information should produce a visible validation issue.
+• The platform must not silently infer permission from the absence of a restriction.
+
+Codex should propose the exact precedence algorithm and test it before implementation.
+
+12.4 Rights windows
+
+Support:
+
+• Scheduled activation.
+• Expiry.
+• Time-zone-safe display.
+• Warnings for upcoming expiry.
+• Blocking playback when rights are not currently valid.
+• Schedule validation for programmes that extend beyond the permitted rights window.
+
+Define boundary behavior explicitly: for example, whether a programme may begin before expiry and finish after expiry. The default should be to reject a schedule that violates the configured rights policy unless an authorized exception is explicitly supported.
+
+12.5 Production geo-blocking
+
+A production implementation requires server-side enforcement.
+
+Potential components:
+
+• Trusted IP-geolocation service.
+• Backend rights evaluator.
+• Playback authorization endpoint.
+• Short-lived playback token or signed URL.
+• Stream or CDN authorization rules.
+• Cache behavior that respects access policies.
+• Logging of relevant authorization decisions.
+
+Do not treat a user-selected country, browser locale or frontend dropdown as trustworthy evidence of location.
+
+VPNs and geolocation errors must be considered.
+
+12.6 DRM
+
+DRM is distinct from geo-blocking.
+
+Geo-blocking restricts access by location. DRM protects encrypted media and controls access through supported playback licences.
+
+Include DRM configuration as an architectural placeholder unless a real DRM provider is selected and configured.
+
+───
+
+13. Advertising and monetization
+
+Advertising is a major commercial component of FAST.
+
+The initial prototype should demonstrate the workflows while making clear which data is simulated.
+
+13.1 Advertising dashboard
+
+Display:
+
+• Campaign count.
+• Active campaigns.
+• Scheduled campaigns.
+• Configured ad breaks.
+• Simulated impressions.
+• Simulated fill rate.
+• Estimated revenue, clearly marked as illustrative.
+
+13.2 Campaign management
+
+Fields:
+
+• Campaign name.
+• Campaign identifier.
+• Advertiser.
+• Start and end dates.
+• Campaign status.
+• Associated channels.
+• Target territories.
+• Target audience rules, if included.
+• Budget or impression target, if required.
+• Priority.
+• External ad-provider reference, if configured.
+
+Support create, edit, pause and archive operations according to permissions.
+
+13.3 Ad-break management
+
+Allow the operator to configure advertising opportunities within the channel schedule.
+
+Fields:
+
+• Channel.
+• Associated programme or schedule entry.
+• Break position.
+• Planned duration.
+• Eligible campaign.
+• Break status.
+
+Ad breaks may be pre-roll, mid-roll or post-roll where appropriate.
+
+13.4 Advertising terminology
+
+The documentation and UI should distinguish:
+
+• Ad break: the planned opportunity to show advertisements.
+• Ad decision: selection of eligible advertisements.
+• Ad insertion: placing ads into the playback experience.
+• Impression: an event defined by the applicable measurement standard or provider.
+• Fill rate: the proportion of eligible ad opportunities filled under a defined calculation.
+• Revenue: actual or estimated commercial value based on a specified data source.
+
+13.5 Ad insertion architecture
+
+The system should be designed to support a future ad decisioning or SSAI provider.
+
+SCTE-35 signals may be relevant to supported streaming workflows.
+
+The prototype can represent ad markers on a timeline and simulate ad selection.
+
+It must not claim to perform real server-side ad insertion without a working media integration.
+
+13.6 Revenue calculations
+
+If simulated revenue is displayed, document the formula and assumptions.
+
+For example, an illustrative revenue estimate may be calculated from simulated impressions and an assumed CPM.
+
+Never mix simulated and real data without clear labels and a known data source.
+
+13.7 Platform subscriptions and billable usage
+
+FAST Studio earns B2B platform revenue separately from publisher advertising. Start with a base subscription, channel allowance and disclosed usage for storage, processing, delivery or SSAI only where contracted. Add optional setup, managed operations, localization and integration services. Version prices/entitlements and enforce them in Java.
+
+Include trial conversion, hosted checkout or invoicing, authoritative payment confirmation, allowances/overage alerts, credits, cancellation, renewal changes and payment-failure grace. Persist source-backed usage events and deduplicate retries. Do not stop existing channels automatically because of a delayed billing callback.
+
+13.8 Advertising sales and settlement
+
+Add advertisers, insertion orders, line items, approved creatives, inventory ownership/reservations, pacing, pod limits and direct-sales delivery obligations. Integrate one ad server/SSAI provider and one demand path before adding yield optimization. Support sponsorships and approved QR deliverables only when the media path and contract allow them.
+
+Import authoritative measured reports, identify discrepancies/invalid-traffic adjustments and apply effective-dated revenue contracts. Keep inventory splits (opportunities) separate from revenue splits (money). Finance approves statements and adjustments independently; preserve source and contract version evidence. Automated publisher payouts are deferred beyond statement/export and payment reconciliation.
+
+13.9 Revenue quality and channel economics
+
+Clearly distinguish simulated, observed, estimated and reconciled metrics; cash receipt is a separate state. Ad decisions are not billable impressions. Show reporting lag, currency, source, metric denominator and coverage. Never sum simulated and real data. Show N/A or incomplete when audience/cost inputs are missing.
+
+Track net ad revenue per watch hour, publisher contribution, platform MRR/churn, attributable costs and unpaid receivables. Channel profitability includes rights, delivery, operations and platform charges without double-counting provider costs. Use exact decimal calculations and deterministic rounding in Java.
+
+See docs/MONETIZATION_STRATEGY.md for packaging, meter definitions, contract/settlement workflow and an internally consistent illustrative revenue and break-even calculation. Its example rates are assumptions, not market prices or promised returns.
+
+
+───
+
+14. Channel preview and playout
+
+The preview module connects the administrative experience to the viewer experience.
+
+14.1 Channel preview page
+
+Include:
+
+• Video player.
+• Channel logo and name.
+• Current programme.
+• Next programme.
+• Programme start and end times.
+• Playback status.
+• Schedule timeline.
+• Ad-break markers.
+• Territory-access simulation.
+• Channel status and relevant warnings.
+
+14.2 Video playback
+
+Use a known, legally usable demo media source or an asset uploaded for the demonstration.
+
+Where supported, implement HLS playback through an appropriate player integration.
+
+Provide:
+
+• Loading state.
+• Playback error state.
+• Retry behavior.
+• Unsupported-format messaging.
+• Current programme metadata.
+
+Do not hardcode an external demo stream as a guaranteed production dependency. Document the source and provide a local or alternative fallback when practical.
+
+14.3 Playout simulation
+
+Implement a playout abstraction.
+
+Suggested interface:
+
+• Start channel.
+• Stop channel.
+• Get channel status.
+• Get current programme.
+• Get next programme.
+• Get playback timeline.
+• Report an operational event.
+
+A simulated adapter may derive the current and next programme from the published schedule and current time.
+
+The simulated adapter should not claim that a real continuous stream is being generated.
+
+14.4 Future real playout integration
+
+Potential responsibilities include:
+
+• Schedule ingestion.
+• Asset resolution.
+• Playlist execution.
+• Programme transitions.
+• Fallback content.
+• Ad-break signals.
+• HLS or DASH packaging.
+• Output monitoring.
+• Failure recovery.
+• Stream publication.
+
+These capabilities should be integrated through a replaceable service adapter.
+
+───
+
+15. Distribution management
+
+A channel may be distributed to an owned OTT application, partner platform, aggregator or other supported destination.
+
+15.1 Distribution destinations
+
+Fields:
+
+• Destination name.
+• Destination type.
+• Environment.
+• Configuration status.
+• Supported output formats.
+• Associated channels.
+• Last publication attempt.
+• Last successful publication.
+• Current status.
+
+15.2 Prototype workflow
+
+1. Create a destination.
+2. Configure non-sensitive demonstration settings.
+3. Associate a channel.
+4. Validate the configuration.
+5. Initiate a simulated publication.
+6. Show a realistic success or failure result.
+7. Record the event.
+8. Display the latest status.
+
+15.3 Real integrations
+
+Actual integrations may require:
+
+• Credentials.
+• Provider-specific APIs.
+• Stream URLs.
+• EPG feeds.
+• Channel metadata.
+• Rights and territorial restrictions.
+• Certification or partner approval.
+
+Store secrets only in an appropriate backend secret-management mechanism. Do not store private credentials in browser storage or commit them to the repository.
+
+───
+
+16. Monitoring and operational control
+
+The monitoring module provides a centralized view of channel and service health.
+
+16.1 Channel health
+
+Display:
+
+• Channel status.
+• Last status update.
+• Current programme.
+• Schedule validity.
+• Playback or stream health, when available.
+• Recent errors.
+• Distribution status.
+• Rights warnings.
+
+16.2 Operational alerts
+
+Examples:
+
+• Channel stopped.
+• Schedule has a gap.
+• Asset processing failed.
+• Rights window is expiring.
+• Distribution publication failed.
+• Playback source is unavailable.
+• An integration is disconnected.
+
+Each alert should include:
+
+• Severity.
+• Time.
+• Related resource.
+• Description.
+• Suggested action.
+• Current status.
+
+16.3 Alert lifecycle
+
+Suggested states:
+
+• Open.
+• Acknowledged.
+• Resolved.
+
+Acknowledging an alert should not automatically mark the underlying problem as fixed.
+
+16.4 Event history
+
+Record meaningful operational events.
+
+The prototype may simulate monitoring inputs, but must distinguish simulated events from real observations.
+
+───
+
+17. Analytics and reporting
+
+Analytics should demonstrate commercial and operational value.
+
+17.1 Dashboard metrics
+
+Potential metrics:
+
+• Channel uptime, when actual monitoring exists.
+• Active channels.
+• Programme hours scheduled.
+• Content utilization.
+• Viewer count.
+• Watch time.
+• Playback failures.
+• Ad impressions.
+• Fill rate.
+• Estimated or actual advertising revenue.
+
+Only show metrics that have a defined data source.
+
+17.2 Prototype analytics
+
+Use seeded fictional events and derive dashboard metrics from them.
+
+The UI should display a clear demo-data indicator.
+
+17.3 Reports
+
+Provide filtering by:
+
+• Date range.
+• Channel.
+• Asset.
+• Campaign.
+• Distribution destination.
+
+Support CSV export for the prototype where useful.
+
+Exported reports should include clear column names, correct date handling and appropriate tenant scoping.
+
+───
+
+18. User management and organization settings
+
+18.1 User management
+
+Organization administrators should be able to:
+
+• View organization members.
+• Invite users.
+• Assign permitted roles.
+• Resend invitations.
+• Revoke pending invitations.
+• Suspend or reactivate accounts where authorized.
+• Review last activity, if available.
+
+The system must prevent unauthorized users from granting roles above their own authority.
+
+18.2 Profile settings
+
+Include:
+
+• Display name.
+• Profile image, if supported.
+• Preferred time zone.
+• Preferred language.
+• Notification preferences.
+• Password or account security settings, as appropriate.
+
+18.3 Organization settings
+
+Include:
+
+• Organization name and logo.
+• Default time zone.
+• Default language.
+• Allowed territories.
+• Notification preferences.
+• Retention or operational settings where applicable.
+• Integration settings.
+
+18.4 Audit log
+
+Record significant events, such as:
+
+• Authentication and security events where appropriate.
+• User invitations and role changes.
+• Asset creation and deletion.
+• Channel activation and deactivation.
+• Schedule publication.
+• Rights changes.
+• Campaign changes.
+• Distribution publication.
+• Organization settings changes.
+
+Audit records should identify the actor, action, target resource, timestamp and relevant outcome.
+
+Sensitive secrets must never be recorded in the audit log.
+
+───
+
+19. Notifications
+
+The notification system should provide useful operational feedback.
+
+19.1 In-app notifications
+
+Examples:
+
+• Asset ready.
+• Asset processing failed.
+• Schedule validation failed.
+• Channel activation succeeded.
+• Rights expiry approaching.
+• Distribution failed.
+• Invitation accepted.
+
+19.2 Notification behavior
+
+• Notifications should have a read/unread state.
+• Clicking a notification should navigate to the relevant resource.
+• Users should only see notifications they are authorized to access.
+• The UI should distinguish informational messages from operational alerts.
+• Email notifications should remain an optional integration unless a provider is configured.
+
+───
+
+20. Search and filtering
+
+Implement consistent search patterns throughout the product.
+
+Potential searchable resources:
+
+• Assets.
+• Channels.
+• Schedules.
+• Campaigns.
+• Organizations, for platform administrators.
+• Users, where permitted.
+• Alerts.
+
+Support useful filters and sorting on each module.
+
+Global search should only return resources that the current user is authorized to discover.
+
+───
+
+21. Data model
+
+Codex must refine this model based on the chosen architecture.
+
+Use stable identifiers and explicit relationships. Avoid storing multiple conflicting representations of the same information.
+
+21.1 Organization
+
+Fields:
+
+• "id"
+• "name"
+• "slug"
+• "status"
+• "country"
+• "defaultLanguage"
+• "defaultTimezone"
+• "createdAt"
+• "updatedAt"
+
+21.2 User
+
+Fields:
+
+• "id"
+• "name"
+• "email"
+• "status"
+• "createdAt"
+• "updatedAt"
+
+Authentication credentials and session data should be handled separately and securely.
+
+21.3 OrganizationMembership
+
+Fields:
+
+• "id"
+• "organizationId"
+• "userId"
+• "roleId"
+• "status"
+• "createdAt"
+
+Use an explicit membership model to support users who belong to more than one organization.
+
+21.4 Role and Permission
+
+Role fields:
+
+• "id"
+• "name"
+• "scope"
+
+Permission fields:
+
+• "id"
+• "name"
+• "description"
+
+Role-permission assignments should be explicit.
+
+21.5 MediaAsset
+
+Fields:
+
+• "id"
+• "organizationId"
+• "title"
+• "description"
+• "assetType"
+• "durationSeconds"
+• "language"
+• "genre"
+• "releaseYear"
+• "ageRating"
+• "thumbnailReference"
+• "mediaReference"
+• "processingStatus"
+• "availabilityStatus"
+• "createdBy"
+• "createdAt"
+• "updatedAt"
+
+Avoid storing large video files directly in an ordinary relational database.
+
+21.6 Series and Episode
+
+Series fields:
+
+• "id"
+• "organizationId"
+• "title"
+• "description"
+
+Episode fields:
+
+• "id"
+• "seriesId"
+• "assetId"
+• "seasonNumber"
+• "episodeNumber"
+
+Define deletion and referential-integrity behavior.
+
+21.7 Channel
+
+Fields:
+
+• "id"
+• "organizationId"
+• "name"
+• "slug"
+• "description"
+• "logoReference"
+• "genre"
+• "language"
+• "timezone"
+• "status"
+• "scheduleStrategy"
+• "defaultFallbackAssetId"
+• "createdAt"
+• "updatedAt"
+
+21.8 ScheduleVersion
+
+Fields:
+
+• "id"
+• "channelId"
+• "versionNumber"
+• "status"
+• "createdBy"
+• "createdAt"
+• "publishedAt"
+• "validationSummary"
+
+21.9 ScheduleEntry
+
+Fields:
+
+• "id"
+• "scheduleVersionId"
+• "assetId"
+• "startTime"
+• "endTime"
+• "entryType"
+• "status"
+• "metadata"
+
+Use explicit schedule-entry types if advertising breaks or non-programme events share the timeline.
+
+21.10 RightsPolicy
+
+Fields:
+
+• "id"
+• "organizationId"
+• "name"
+• "status"
+• "validFrom"
+• "validUntil"
+• "allowedCountries"
+• "blockedCountries"
+• "allowedPlatforms"
+• "requiresDrm"
+• "createdAt"
+• "updatedAt"
+
+Consider normalized territory and rights-assignment tables if required by the backend design.
+
+Do not assume a single policy field on a channel can express every asset, platform and territory restriction.
+
+21.11 RightsAssignment
+
+Fields:
+
+• "id"
+• "rightsPolicyId"
+• "resourceType"
+• "resourceId"
+
+Ensure assignments cannot cross organization boundaries.
+
+21.12 AdvertisingCampaign
+
+Fields:
+
+• "id"
+• "organizationId"
+• "name"
+• "advertiser"
+• "status"
+• "startTime"
+• "endTime"
+• "priority"
+• "targetCountries"
+• "externalProviderReference"
+
+21.13 AdBreak
+
+Fields:
+
+• "id"
+• "channelId"
+• "scheduleEntryId"
+• "position"
+• "plannedDurationSeconds"
+• "status"
+
+Keep ad-break configuration separate from actual delivered ad events.
+
+21.14 DistributionDestination
+
+Fields:
+
+• "id"
+• "organizationId"
+• "name"
+• "destinationType"
+• "status"
+• "configurationReference"
+• "createdAt"
+• "updatedAt"
+
+Secret values must not be embedded in ordinary configuration responses.
+
+21.15 DistributionPublication
+
+Fields:
+
+• "id"
+• "channelId"
+• "destinationId"
+• "status"
+• "attemptedAt"
+• "completedAt"
+• "errorCode"
+• "errorSummary"
+
+21.16 OperationalEvent
+
+Fields:
+
+• "id"
+• "organizationId"
+• "resourceType"
+• "resourceId"
+• "severity"
+• "eventType"
+• "message"
+• "sourceType"
+• "occurredAt"
+
+"sourceType" should distinguish real events from simulated events.
+
+21.17 AuditEvent
+
+Fields:
+
+• "id"
+• "organizationId"
+• "actorUserId"
+• "action"
+• "resourceType"
+• "resourceId"
+• "outcome"
+• "createdAt"
+• "metadata"
+
+Do not store passwords, authentication tokens or secret credentials in metadata.
+
+───
+
+22. Technical architecture
+
+The architecture must be refined after inspecting the repository and confirming the team's backend capabilities.
+
+22.1 Frontend
+
+Use React or Angular with TypeScript, paired with a Java/Spring Boot backend. Angular is the provisional default because it matches the original intended developer. Select one frontend based on actual team capability; do not build two parallel administration applications.
+
+Suggested areas:
+
+• Core application shell.
+• Authentication and session management.
+• Shared UI components.
+• Organization management.
+• Media library.
+• Channel management.
+• Scheduling.
+• EPG.
+• Rights management.
+• Advertising.
+• Distribution.
+• Monitoring.
+• Analytics.
+• Settings.
+
+Use feature-based organization rather than putting all components, API calls and business rules into one module.
+
+Preserve established React/Angular conventions when code is present. No frontend or backend code exists in the inspected workspace; select and pin supported versions during kickoff.
+
+22.2 Frontend principles
+
+• Strict typing.
+• Reusable components.
+• Reactive forms or the project's established form approach.
+• Route guards for navigation.
+• HTTP interceptors or equivalent centralized request handling.
+• Centralized error handling.
+• Accessible controls.
+• Loading, empty, success and error states.
+• Clear separation of API models and presentation models.
+• No hardcoded business rules scattered across components.
+• Avoid oversized components that mix unrelated responsibilities.
+
+Use supported patterns for the selected framework: typed reactive forms in Angular, or typed forms and the selected routing/server-state conventions in React. Keep authoritative scheduling, rights, quota and financial rules in Java.
+
+22.3 Backend
+
+The backend requirement is Java. Use a Spring Boot modular monolith with Spring MVC, Spring Security, Bean Validation, PostgreSQL, Spring Data JPA and Flyway migrations. Object storage holds media; durable jobs/outbox processing handle provider operations and report imports.
+
+Java 21 is a provisional baseline; evaluate Java 25 and the supported Spring Boot line against existing services and SDKs before pinning. Reuse existing Enveu Java services where their actual capabilities fit. Node.js/NestJS/Express are not the backend proposal for this revision.
+
+Use secure OIDC sessions, server-enforced tenant permissions, optimistic concurrency for schedules, exact decimal financial calculations and idempotent usage/payment/report ingestion. Media streaming, transcoding and SSAI run through provider adapters rather than through the Java request path.
+
+Detailed decisions, consistency rules, performance envelopes and recovery targets are in docs/TECHNICAL_ARCHITECTURE.md. They are proposed engineering requirements, not verified production capabilities.
+
+22.4 Suggested backend domains
+
+• Identity and authorization.
+• Organizations and memberships.
+• Media assets.
+• Channel configuration.
+• Scheduling.
+• Rights management.
+• Advertising.
+• Distribution.
+• Monitoring and alerts.
+• Analytics.
+• Audit and notifications.
+
+Start with a modular monolith unless there is a concrete reason for separate deployable services.
+
+Do not introduce microservices, Kubernetes, Kafka or other infrastructure solely to make the prototype appear sophisticated.
+
+22.5 Media infrastructure
+
+Potential production components:
+
+• Object storage.
+• Media validation and transcoding.
+• HLS/DASH packaging.
+• Cloud playout or channel assembly.
+• CDN.
+• EPG generation and export.
+• Advertising integration.
+• Playback authorization.
+• DRM provider, where required.
+
+Codex must identify which capabilities can be represented by a mock adapter and which require a real service for a valid technical proof of concept.
+
+22.6 Architecture diagram
+
+Produce a diagram covering the following logical flow:
+
+React or Angular Admin UI
+|
+v
+Backend API
+|
++---- Identity and Authorization
+|
++---- Organizations and Memberships
+|
++---- Media Asset Service
+| |
+| +---- Object Storage
+| +---- Processing Adapter
+|
++---- Channel and Scheduling Service
+| |
+| +---- Schedule Validation
+| +---- EPG Generation
+|
++---- Rights and Playback Authorization
+|
++---- Advertising Service
+|
++---- Distribution Service
+|
++---- Monitoring and Analytics
+|
++---- Operational Events
+
+Scheduling / Media / Distribution
+|
+v
+Playout and Streaming Provider
+|
+v
+CDN / Streaming Output
+|
+v
+Viewer Player or External Platform
+
+This represents logical responsibilities, not a requirement that each box become a separate microservice.
+
+───
+
+23. API specification
+
+Use a consistent REST API unless the existing backend establishes another convention.
+
+Document request and response schemas, authentication requirements, permission requirements, pagination and errors.
+
+Use versioning appropriate to the project's existing API conventions.
+
+Suggested API families follow.
+
+23.1 Authentication
+
+• "POST /api/v1/auth/login"
+• "POST /api/v1/auth/logout"
+• "GET /api/v1/auth/me"
+• "POST /api/v1/auth/forgot-password"
+• "POST /api/v1/auth/reset-password"
+• "POST /api/v1/auth/refresh", if the chosen session model requires it.
+
+23.2 Organizations
+
+• "GET /api/v1/organizations"
+• "POST /api/v1/organizations"
+• "GET /api/v1/organizations/:id"
+• "PATCH /api/v1/organizations/:id"
+• "GET /api/v1/organizations/:id/members"
+• "POST /api/v1/organizations/:id/invitations"
+
+23.3 Assets
+
+• "GET /api/v1/assets"
+• "POST /api/v1/assets"
+• "GET /api/v1/assets/:id"
+• "PATCH /api/v1/assets/:id"
+• "DELETE /api/v1/assets/:id"
+• "POST /api/v1/assets/:id/upload-session"
+• "GET /api/v1/assets/:id/processing-status"
+
+Choose an appropriate upload mechanism for the selected storage system.
+
+23.4 Channels
+
+• "GET /api/v1/channels"
+• "POST /api/v1/channels"
+• "GET /api/v1/channels/:id"
+• "PATCH /api/v1/channels/:id"
+• "POST /api/v1/channels/:id/activate"
+• "POST /api/v1/channels/:id/deactivate"
+• "GET /api/v1/channels/:id/status"
+
+23.5 Scheduling
+
+• "GET /api/v1/channels/:id/schedules"
+• "POST /api/v1/channels/:id/schedules"
+• "GET /api/v1/schedules/:id"
+• "PATCH /api/v1/schedules/:id"
+• "POST /api/v1/schedules/:id/validate"
+• "POST /api/v1/schedules/:id/publish"
+• "GET /api/v1/schedules/:id/versions"
+
+23.6 EPG
+
+• "GET /api/v1/channels/:id/epg"
+• "POST /api/v1/channels/:id/epg/generate"
+• "GET /api/v1/channels/:id/epg/export"
+
+23.7 Rights
+
+• "GET /api/v1/rights-policies"
+• "POST /api/v1/rights-policies"
+• "GET /api/v1/rights-policies/:id"
+• "PATCH /api/v1/rights-policies/:id"
+• "POST /api/v1/rights/evaluate"
+
+The rights-evaluation endpoint must use authenticated context and validate resource access. Do not let the caller use it to discover restricted cross-tenant data.
+
+23.8 Advertising
+
+• "GET /api/v1/campaigns"
+• "POST /api/v1/campaigns"
+• "PATCH /api/v1/campaigns/:id"
+• "GET /api/v1/channels/:id/ad-breaks"
+• "POST /api/v1/channels/:id/ad-breaks"
+
+23.9 Distribution
+
+• "GET /api/v1/destinations"
+• "POST /api/v1/destinations"
+• "GET /api/v1/channels/:id/publications"
+• "POST /api/v1/channels/:id/publications"
+
+23.10 Monitoring and analytics
+
+• "GET /api/v1/alerts"
+• "POST /api/v1/alerts/:id/acknowledge"
+• "POST /api/v1/alerts/:id/resolve"
+• "GET /api/v1/analytics/overview"
+• "GET /api/v1/analytics/channels"
+• "GET /api/v1/analytics/advertising"
+• "GET /api/v1/audit-events"
+
+These endpoints are proposed contracts. Codex should refine names and semantics before implementation.
+
+23.11 Error conventions
+
+Use consistent error responses.
+
+Expected cases include:
+
+• Validation failure.
+• Authentication failure.
+• Permission denied.
+• Resource not found.
+• Resource conflict.
+• Invalid state transition.
+• Rights restriction.
+• External provider failure.
+• Rate limiting.
+• Unexpected server failure.
+
+Never return internal stack traces or sensitive implementation details to the client.
+
+───
+
+24. UI/UX and design system
+
+The prototype must look credible enough for a leadership demonstration.
+
+24.1 Design direction
+
+Create an original enterprise media-operations interface.
+
+Preferred characteristics:
+
+• Professional and modern.
+• Clear information hierarchy.
+• Consistent typography.
+• Well-designed tables and filters.
+• Thoughtful use of cards and data visualization.
+• Strong channel and programme timeline visualizations.
+• Subtle status colors.
+• Consistent spacing.
+• Responsive layout.
+• Accessible contrast and focus indicators.
+
+Avoid a generic landing page followed by a collection of disconnected dashboard mockups.
+
+24.2 Design system
+
+Define reusable tokens for:
+
+• Color.
+• Typography.
+• Spacing.
+• Border radius.
+• Elevation.
+• Status colors.
+• Breakpoints.
+• Form controls.
+• Tables.
+• Modals.
+• Toasts.
+• Empty states.
+• Loading indicators.
+
+Choose a restrained palette suitable for a professional media SaaS product.
+
+A dark theme may be appropriate for the operations workspace, but should be a deliberate product decision rather than an excuse to use excessive gradients or glowing cards.
+
+24.3 Shared components
+
+Build reusable components for:
+
+• Application shell.
+• Sidebar and top navigation.
+• Page headers.
+• Breadcrumbs.
+• Data tables.
+• Search and filter controls.
+• Status indicators.
+• Confirmation dialogs.
+• Form fields.
+• Toast notifications.
+• Loading states.
+• Empty states.
+• Error states.
+• Video preview.
+• Programme timeline.
+• Channel status card.
+• Metric card.
+• Audit timeline.
+
+24.4 Interaction standards
+
+Every interactive control must have a defined outcome.
+
+Examples:
+
+• Create opens a functional creation flow.
+• Edit loads existing values.
+• Save persists changes.
+• Cancel discards or confirms unsaved changes.
+• Delete asks for confirmation and respects resource dependencies.
+• Filters actually filter data.
+• Search actually searches data.
+• Export creates a valid file.
+• Publish validates and records the publication action.
+• Status changes update the corresponding resource and audit history.
+
+Do not leave dead controls in the demonstration.
+
+───
+
+25. Seed data and demonstration scenario
+
+The product should work immediately after setup with a coherent fictional media organization.
+
+25.1 Demo organization
+
+Organization: "Aurora Media Network"
+
+Description: A fictional media company operating thematic streaming television channels.
+
+25.2 Demo channels
+
+Create at least four fictional channels:
+
+1. Aurora Action.
+2. Classic Cinema.
+3. Travel & Discovery.
+4. Family Entertainment.
+
+Each channel should have:
+
+• Unique metadata.
+• A logo or original placeholder artwork.
+• A genre and language.
+• A schedule.
+• A rights configuration.
+• A channel status.
+• A preview experience.
+
+25.3 Demo content library
+
+Seed enough assets to make the scheduler and channel lists feel realistic.
+
+Use fictional titles or appropriately licensed demo media.
+
+Include a mixture of:
+
+• Movies.
+• Episodes.
+• Trailers.
+• Advertisements.
+
+Include different durations, genres, languages and processing states.
+
+25.4 Demo rights scenarios
+
+Include at least:
+
+• A title available in India and the UK.
+• A title restricted to India.
+• A title with an upcoming rights expiry.
+• A title with expired rights.
+• A title whose policy is incomplete.
+
+These should exercise real validation and simulated authorization decisions.
+
+25.5 Demo advertising
+
+Create fictional campaigns with different states and territories.
+
+Include ad breaks in at least one schedule.
+
+Label simulated impressions and revenue clearly.
+
+25.6 Demo users
+
+Provide documented development accounts for different roles.
+
+Use fictional identities and development-only credentials. Never reuse company credentials.
+
+25.7 Primary demonstration workflow
+
+The entire application should support the following walkthrough:
+
+1. Sign in as an organization administrator.
+2. Open the dashboard.
+3. Browse the media library.
+4. Open an asset and inspect its metadata and rights.
+5. Create a new channel.
+6. Add eligible content to the channel.
+7. Build a programme schedule.
+8. Resolve a scheduling or rights warning.
+9. Publish a schedule version.
+10. Open the EPG.
+11. Preview the channel and current programme.
+12. Simulate a playback request from an allowed country.
+13. Simulate a playback request from a restricted country.
+14. Configure an ad break.
+15. Review the distribution simulation.
+16. Inspect monitoring and analytics.
+17. Open the audit history.
+18. Sign in with a read-only role and verify restricted actions are unavailable.
+
+This scenario should be documented as a repeatable demonstration script.
+
+───
+
+26. Persistence and integration strategy
+
+26.1 Prototype persistence
+
+The prototype should preserve meaningful changes after refresh.
+
+Preferred options:
+
+Option A (recommended): React or Angular frontend with Java/Spring Boot and PostgreSQL
+
+Recommended when the prototype needs to demonstrate authentication, data relationships, API contracts and server-side authorization.
+
+Option B (demo-only alternative): React or Angular frontend with a local mock API
+
+Suitable for a fast UI demonstration, provided that the data model and service boundaries are designed for eventual backend replacement.
+
+Option C: Browser storage
+
+Acceptable for a short-lived, frontend-only prototype when its limitations are explicit.
+
+Browser storage must not be treated as secure authentication, production authorization or a multi-user database.
+
+Codex should recommend an approach based on the repository, timeline and demonstration needs.
+
+26.2 Integration adapters
+
+Define interfaces for external systems rather than coupling the UI directly to a specific provider.
+
+Potential adapters:
+
+• "MediaProcessingProvider"
+• "StorageProvider"
+• "PlayoutProvider"
+• "AdDecisionProvider"
+• "DistributionProvider"
+• "GeolocationProvider"
+• "DrmProvider"
+• "NotificationProvider"
+• "AnalyticsProvider"
+
+Implement mock adapters where real providers are not configured.
+
+The UI should display whether each adapter is simulated, connected, degraded or unavailable.
+
+26.3 Configuration
+
+Use environment-specific configuration for:
+
+• API base URL.
+• Feature flags.
+• Demo-mode availability.
+• Provider endpoints.
+• Public integration identifiers.
+
+Keep secrets in backend environment configuration or an appropriate secret manager.
+
+Do not put private API keys in React/Angular environment files or bundle them into the browser.
+
+───
+
+27. Testing strategy
+
+Testing must cover the business logic as well as the visual interface.
+
+27.1 Unit tests
+
+Test:
+
+• Form validation.
+• Role and permission rules.
+• Channel state transitions.
+• Schedule overlap detection.
+• Schedule duration calculations.
+• Time-zone handling.
+• Rights evaluation.
+• Rights-window expiry.
+• Country restrictions.
+• Ad-break validation.
+• EPG generation.
+• Revenue calculation assumptions.
+• Export generation.
+
+27.2 Integration tests
+
+Test:
+
+• Authentication.
+• Organization isolation.
+• Asset creation and editing.
+• Channel creation.
+• Schedule publication.
+• Rights evaluation.
+• Audit event generation.
+• Distribution simulation.
+• API error handling.
+
+27.3 End-to-end tests
+
+Automate the primary demonstration workflow where practical.
+
+At minimum, verify:
+
+• Login and logout.
+• Role-specific navigation.
+• Asset creation.
+• Channel creation.
+• Scheduling and validation.
+• Rights restriction simulation.
+• EPG display.
+• Publication workflow.
+• Data persistence after refresh.
+
+27.4 Security tests
+
+Verify:
+
+• Unauthorized routes are protected.
+• Backend permissions cannot be bypassed by calling APIs directly.
+• Tenant A cannot access Tenant B's resources.
+• Secrets are not exposed in API responses.
+• Invalid session and reset tokens are rejected.
+• Destructive actions enforce permissions.
+• Rights evaluation rejects unauthorized requests.
+
+27.5 UX tests
+
+Check:
+
+• Loading states.
+• Empty states.
+• Error states.
+• Responsive layout.
+• Keyboard navigation.
+• Focus indicators.
+• Form validation.
+• Modal behavior.
+• Accessible labels.
+• Clear messaging for simulated features.
+
+───
+
+28. Non-functional requirements
+
+Performance
+
+• Avoid unnecessary full-page reloads.
+• Use pagination or appropriate virtualization for large lists.
+• Avoid loading all media metadata when a smaller page is sufficient.
+• Keep expensive processing outside synchronous request handlers.
+• Profile the actual implementation rather than making unsupported performance claims.
+
+Reliability
+
+• Display explicit errors when operations fail.
+• Avoid silently losing form changes.
+• Preserve published schedule history.
+• Handle missing media and unavailable integrations.
+• Make retries safe where applicable.
+
+Security
+
+• Use least-privilege authorization.
+• Enforce tenant boundaries.
+• Validate all API input.
+• Protect authentication flows.
+• Avoid exposing secrets.
+• Record significant administrative actions.
+• Apply secure file-upload validation.
+• Define appropriate retention and deletion behavior.
+
+Accessibility
+
+• Use semantic controls.
+• Support keyboard navigation.
+• Provide labels and error descriptions.
+• Maintain sufficient contrast.
+• Do not communicate status using color alone.
+• Ensure the scheduler has a usable non-drag-and-drop interaction.
+
+Maintainability
+
+• Separate business logic from UI components.
+• Use typed domain models.
+• Keep external integrations behind adapters.
+• Provide migrations and reproducible seed data when a backend is used.
+• Document environment setup.
+• Keep test and lint commands working.
+
+───
+
+29. Implementation roadmap
+
+Planning baseline: 19 October 2026. Status: all releases unstarted; discovery inspection and this plan are complete, but R0 customer/provider validation remains open.
+
+## Delivery assumptions
+
+Use one React or Angular TypeScript application and a Java/Spring Boot modular monolith. Angular is the reversible default from the original brief; the plan supports React with the same API and domain rules. Start with PostgreSQL, object storage and durable background jobs. Integrate media delivery and ad insertion through providers.
+
+Indicative elapsed ranges assume two frontend engineers, two Java engineers, one QA engineer, a shared product/UX lead, and a media/ad-tech specialist available during R2–R3. Work can overlap within a release. Ranges include integration and hardening work, but exclude unpredictable partner procurement/certification delays. A smaller team must re-estimate. These are planning estimates, not delivery commitments.
+
+| Release | Indicative duration / cumulative time | Main outcome | Feature scope | Accountable lead |
+| --- | --- | --- | --- | --- |
+| R0: validate and design | 1–2 weeks / 1–2 | Confirm pilot buyer, framework, provider path and commercial hypothesis | Discovery for F01–F25 | Product lead + technical lead |
+| R1: leadership prototype | 6–8 weeks / 7–10 | Demonstrate content → rights → schedule → EPG → preview → ad/distribution simulation | F01–F10 | Engineering lead |
+| R2: paid SaaS pilot | 6–8 weeks / 13–18 | Onboard real catalog and collect/reconcile first platform subscription | F11–F16; harden F01–F10 | Engineering + billing lead |
+| R3: monetized channel pilot | 8–12 weeks / 21–30 | One working channel/provider/destination/ad path with financial evidence | F17–F25; F26 only if contracted | Media lead + ad-ops + finance |
+| R4: expansion tranche | 8–12 weeks per selected tranche | Expand proven revenue paths and customer segments | Select F27–F38 by demand; not all in one tranche | Product + commercial lead |
+
+## R0 — confirm the smallest sellable outcome
+
+1. Interview five content owners/operators and identify two prospective pilot customers. Record catalog size, territories, operating effort, current costs, ad inventory ownership and purchase authority.
+2. Choose React or Angular from actual team capability; use Angular provisionally. Confirm Java LTS/runtime, Spring Boot support and provider SDK compatibility before pinning versions.
+3. Inventory reusable Enveu identity, storage, media processing, player, analytics and billing services. No such code is present in this workspace.
+4. Obtain technical access and commercial requirements for one playout/SSAI path and one destination. Prepare a configurable simulator if access is delayed.
+5. Define pilot coverage, broadcaster responsibilities, billing currency, billable meters, inventory split, measurement authority and settlement ownership.
+6. Produce the API contract, rights rules, seed scenarios and first-slice acceptance cases from this document pack.
+
+**Exit evidence:** named pilot owners, selected frontend, approved Java approach, provider feasibility checklist, agreed pilot scope and a reviewed backlog. Customer/provider access is a gate to paid rollout, not a reason to stop local prototype work.
+
+## R1 — working product narrative
+
+| Slice | Work and dependencies | Demonstrable exit |
+| --- | --- | --- |
+| R1.1 foundation | F01; schema migrations, sessions, memberships, roles, app shell, tenant-aware repositories, audit and seed data | Two tenants; cross-tenant reads/writes fail; restart preserves state |
+| R1.2 content and rights | F02–F04; asset metadata/upload, rights evaluator, channel wizard, eligible fallback | Asset can be prepared and assigned; unavailable rights block use with reasons |
+| R1.3 schedule and guide | F05–F07; draft editing, templates, conflict checks, publication, EPG, preview | Publish a valid 24-hour lineup; reject overlap/expiry; EPG matches version; stale edits fail |
+| R1.4 commercial demo | F08–F10; approved creatives, ad pods, campaign eligibility, destination simulator, alerts, report provenance | Show a filled pod, unfilled fallback, failed publication, resolution and labeled simulated revenue |
+
+Rights validation belongs before schedule publication. A prototype must never publish an invalid schedule first and postpone rights checking to a later milestone. Derive simulated metrics from deterministic fixtures/events rather than random dashboard numbers.
+
+**Exit evidence:** repeatable clean-start demo, persistent data, complete keyboard workflow, permission checks, critical business tests, setup instructions and implemented/simulated/unavailable feature matrix. No claims of a live continuous broadcast or collected ad revenue.
+
+## R2 — first paying platform customer
+
+- F11: versioned plans and contracts, trial/active/past-due/canceled subscriptions, backend feature and quota enforcement.
+- F12: authoritative tenant usage events, replay-safe aggregation, allowances and overage estimates. Alert before limits; prevent new paid resources without unexpectedly stopping existing broadcasts.
+- F13: one hosted billing provider or invoice adapter, real settlement confirmation, signed webhook deduplication, credits, cancellations and payment-failure recovery. Test mode and live mode remain separate.
+- F14–F15: resumable upload, bulk import preview, media QC evidence and real processing results for pilot assets.
+- F16: approval separation, optimistic concurrency, activity history and production-safe identities/secrets.
+- Operational baseline: deployment rollback, restore test, monitoring, support owner, tenant exports and documented retention policy.
+
+**Dependencies:** billing-provider availability, legal entity/currency choices, commercial agreement, real media processing access and R1 workflow correctness.
+
+**Exit evidence:** pilot user loads a catalog; signed-in billing owner sees the same usage as the invoice; payment/invoice settlement is reconciled; replay does not double-bill; downgrade and delinquency policies pass; no cross-tenant access. A sandbox checkout alone does not satisfy the commercial gate. If payment rails are unavailable, use an agreed invoice workflow with independently verified payment and clearly record the adapter limitation.
+
+## R3 — earn and explain actual advertising revenue
+
+| Workstream | Requirements | Launch gate |
+| --- | --- | --- |
+| Stream and partner delivery | F17; playout adapter, eligible rendition, published EPG, signed authorization, one destination | Agreed 72-hour initial soak, stream continuity checks, rollback and rights revocation drill; partner approval recorded |
+| Ads and direct sales | F18–F20; orders/line items, duration reservations, inventory ownership, pacing, pods, creative approval, frequency limits | Provider test matrix passes including malformed tags, timeout, missing markers, underfill and slate; actual approved test insertion |
+| Measurement and privacy | F21/F24; authoritative report ingestion, provenance, consent restrictions, invalid-traffic adjustments, authorized sellers | No billing from ad decisions; no duplicate accepted impressions; restricted context produces permitted fallback |
+| Finance and margin | F22–F23; contract versions, adjustments, statements, channel costs and approvals | One report period reconciled to partner statement; disputed deltas visible; shares balance; finance approves export |
+| Operations | F25; stream probes, provider lag, ad errors, incident response, restore and fallback drills | Runbooks exercised, on-call owner assigned, initial service objectives measured |
+
+Start the 72-hour soak only after representative programme transitions and ad breaks are configured. Extend it when defects or insufficient coverage invalidate the evidence. This soak is an initial pilot gate, not proof of an annual availability SLA.
+
+**Commercial gate:** two pilots review actual subscription and channel economics and renew or commit to continue. Prove demand and manageable operating cost before broad destination or ad-provider expansion. Real ad cash settlement may lag the technical pilot by the partner's payment cycle; record outstanding receivables rather than calling them cash received.
+
+## R4 — select expansion by evidence
+
+1. **Yield and regional growth:** F27–F28 after sufficient comparable impressions, a second demand contract or a signed new-territory customer. Compare net revenue per watch hour alongside retention and errors.
+2. **Enterprise and partner sales:** F29–F32 when a qualified contract requires SSO/SCIM, APIs, reseller access or managed services. Price incremental support and infrastructure.
+3. **Format expansion:** F33–F34 after live/catch-up rights, media capability and a paying use case are verified.
+4. **AI and commerce experiments:** F35–F37 after approved source content/catalog, human review, cost limits and a measured experiment goal. Build manual sponsorships before automated product detection.
+5. **Premium resilience:** F38 after measured failover/restore behavior and a costed service commitment.
+
+Each selected tranche gets its own capacity estimate, acceptance criteria and commercial success test. Do not bundle all expansion ideas into a promised release.
+
+## Dependency order and critical path
+
+Identity/tenant boundaries → ready media + rights → schedule validation → immutable publication/EPG → playout/destination approval → ad insertion + inventory rights → measured impressions → reconciliation → statements → paid settlement.
+
+Billing plans → durable usage → versioned price calculation → invoice/payment reconciliation is a parallel SaaS revenue path from R2. Finance and ad reporting share references and audit conventions, but keep their ledgers and obligations separate.
+
+Critical external risks: media/SSAI access, destination acceptance, demand agreements, rights clearance and payment availability. Product must show provider readiness and blocked dependencies explicitly. Prototype simulators keep discovery moving; they cannot satisfy production gates.
+
+## First engineering sprint after planning
+
+Create a single frontend and Java service; add PostgreSQL migrations, two fictional organizations, OIDC development integration and server-enforced memberships. Deliver asset metadata + rights + channel draft persisted through the API. Cover cross-tenant rejection and rights expiry with integration tests. Publish setup instructions and capture a working demo. Do not begin all modules or add media-scale infrastructure in the first sprint.
+
+## Explicit deferrals
+
+Defer a proprietary SSAI engine, RTB exchange, TV/mobile app suite, recommendation engine, microservices, Kafka, Kubernetes, marketplace payouts and autonomous AI publishing. Revisit each only when a paying requirement or measured scaling constraint justifies it.
+
+───
+
+30. Acceptance criteria for the complete prototype
+
+The prototype is considered ready for a leadership demonstration when the following conditions are met.
+
+Authentication
+
+• Sign-in and sign-out work.
+• Invalid credentials produce a useful error.
+• Demo roles can be selected through a documented development workflow.
+• Protected routes are handled correctly.
+
+Content management
+
+• Assets can be created and edited.
+• Search and filters work.
+• Asset states are visible.
+• Asset references remain consistent across the application.
+• Destructive operations respect dependencies.
+
+Channel management
+
+• Channels can be created and edited.
+• Status transitions are validated.
+• Channel details link to the corresponding schedules and rights.
+• Channel previews display relevant metadata.
+
+Scheduling
+
+• Schedule entries can be created and edited.
+• Invalid overlaps and durations are detected.
+• Rights conflicts produce understandable warnings or errors.
+• Schedule publication creates a version.
+• EPG data corresponds to the published schedule.
+
+Geo-blocking
+
+• Allowed and blocked territories are configurable.
+• Rights windows are respected.
+• The effective policy is explained in the result.
+• The prototype clearly labels its location checks as simulated.
+• Production enforcement requirements are documented.
+
+Advertising
+
+• Campaigns and ad breaks can be configured.
+• Simulated events are clearly labelled.
+• Analytics use defined formulas and data sources.
+
+Distribution and monitoring
+
+• Destinations can be configured.
+• Publication simulations create records.
+• Alerts can be acknowledged and resolved.
+• Simulated and real events are distinguishable.
+
+Quality
+
+• Changes persist according to the selected storage strategy.
+• Navigation works.
+• No major control is inert.
+• Empty, loading and error states are handled.
+• The application has a consistent design system.
+• Automated tests cover the critical business logic.
+• Setup and demonstration instructions are complete.
+
+───
+
+31. Risks and decisions to resolve
+
+Codex must maintain an explicit assumptions register.
+
+Product risks
+
+• The target customer is not yet confirmed.
+• The expected commercial model is not yet confirmed.
+• The actual scope of the director's request may be larger or smaller than this proposal.
+• Some features may be unnecessary for the first release.
+
+Technical risks
+
+• Building a real playout engine is significantly more complex than building the dashboard.
+• Media transcoding, packaging and delivery may require third-party services.
+• Scheduling and rights evaluation contain time-zone and policy edge cases.
+• Real advertising integration depends on the selected provider and delivery model.
+• Distribution integrations may require commercial access or partner approval.
+• Browser-only storage cannot provide production-grade multi-user security.
+
+Decisions required
+
+1. Is the intended deliverable a UI prototype, a backend-backed proof of concept, or a production product?
+2. Which Java backend services and infrastructure already exist at Enveu and can be reused?
+3. Does the company want to build playout internally or integrate a provider?
+4. Who is the primary customer?
+5. Which distribution destinations are essential?
+6. What is the expected MVP timeline?
+7. Is real video playback required in the first demonstration?
+8. Is real geo-enforcement required or is an explicitly labelled simulation acceptable?
+9. Which ad insertion model and providers are being considered?
+10. Which features are commercially mandatory for the first release?
+
+Do not block all progress while waiting for every answer. Make reversible assumptions, document them and prioritize the decisions that materially affect architecture.
+
+───
+
+32. Required final handover
+
+When the planned prototype is complete, provide:
+
+1. A working application that can be started locally.
+2. Complete source code.
+3. Setup and environment instructions.
+4. Database migrations and seed data if a database is used.
+5. Documented demo accounts and roles.
+6. Product and architecture documentation.
+7. API specification.
+8. Automated tests and instructions for running them.
+9. A feature matrix distinguishing implemented, simulated and unimplemented capabilities.
+10. A list of known limitations and unresolved decisions.
+11. A demonstration script suitable for company leadership.
+12. A prioritized plan for moving from prototype to production.
+
+The final handover must clearly identify any features that remain incomplete. Do not mark a milestone complete merely because the corresponding screen exists.
+
+───
+
+33. Immediate next action for Codex
+
+Do not begin by generating the entire application in one large code change.
+
+Start with this sequence:
+
+1. Inspect the repository and summarize its current state.
+2. Research and compare the public capabilities of SoFast and Evrideo.
+3. Identify what the proposed FAST Studio product should include beyond the visible competitor features.
+4. Refine this PRD and list the unresolved decisions.
+5. Propose the architecture, domain model, API contracts and implementation milestones.
+6. Identify which features can be fully implemented locally and which require external services.
+7. Present the plan and its major trade-offs.
+8. Once the plan is sufficiently clear, implement the foundation and the first end-to-end workflow.
+9. Test each milestone before proceeding to the next.
+
+The first end-to-end workflow to prove should be:
+
+Sign in → create an asset → create a channel → schedule the asset → validate rights → publish the schedule → generate the EPG → preview the channel → inspect the resulting operational events.
+
+This single workflow should drive the initial architecture, domain model and UI decisions.
+
+The ultimate objective is not merely to create a convincing dashboard. It is to create a coherent, interactive prototype that demonstrates an understanding of how a FAST channel product works, what customers need, how the business could operate, and what engineering would be required to make it production-ready.
+
+---
+
+34. Enriched feature and planning index
+
+The prioritized feature backlog is in docs/PRODUCT_REQUIREMENTS.md (F01-F38), with release traceability, commercial value and measurable targets. Important additions beyond the initial prototype include:
+
+- SaaS plans, entitlements, durable usage metering, billing and payment reconciliation.
+- Resumable/bulk catalog onboarding, real media QC, captions and approval workflows.
+- Direct ad orders, creative approval, owned inventory reservations, pacing and ad-experience rules.
+- Real SSAI/ad-server integration, consent/advertising restrictions and authorized-seller readiness.
+- Source-backed ad reports, discrepancy resolution, revenue contracts, royalties and settlement statements.
+- Per-channel contribution margin, cost allocation and revenue-per-watch-hour reporting.
+- Measured stream operations, fallback/restore drills and incident ownership.
+- Phase-gated localization/regional variants, enterprise SSO/SCIM, APIs/webhooks, reseller/white-label and managed services.
+- Later validated live/catch-up, AI assistance, licensing marketplace and commerce opportunities.
+
+Supporting planning documents:
+
+docs/README.md
+docs/PRODUCT_REQUIREMENTS.md
+docs/FUNCTIONAL_SPECIFICATION.md
+docs/TECHNICAL_ARCHITECTURE.md
+docs/DATA_MODEL.md
+docs/API_SPECIFICATION.md
+docs/UX_AND_NAVIGATION.md
+docs/INTEGRATION_STRATEGY.md
+docs/SECURITY_AND_RIGHTS.md
+docs/TEST_PLAN.md
+docs/IMPLEMENTATION_ROADMAP.md
+docs/ASSUMPTIONS_AND_OPEN_QUESTIONS.md
+docs/MONETIZATION_STRATEGY.md
+docs/RESEARCH_AND_SOURCES.md
+
+35. Commercial and production acceptance additions
+
+The original section 30 remains the prototype gate. It is insufficient by itself for a paid or live service.
+
+R2 additionally requires a verified platform payment/settled invoice, reconciled usage, tested webhook replay/out-of-order handling, backend entitlements, actual pilot media QC, restore evidence and a support owner.
+
+R3 additionally requires a working authorized stream, one accepted destination/provider path, actual approved ad insertion, authoritative measurement, restricted-context fallback, source-backed settlement, independent finance approval and operational drills. Reconciled revenue and received cash remain distinct.
+
+No app, external integration, payment flow or production security control has been implemented or verified by this planning update. All release work remains unstarted. Application development, production deployment, vendor purchases and customer commitments are separate execution steps.
