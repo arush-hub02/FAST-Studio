@@ -1,6 +1,6 @@
 # FAST Studio product requirements
 
-Revision 2 — 19 October 2026. All listed capabilities are proposed; implementation status: unstarted.
+Revision 3 — 20 October 2026: F45–F54 and feature extensions added after the [SoFast review](#competitive-review-sofast). What is built is listed under "Prototype status" below.
 
 ## Product and customer
 
@@ -67,19 +67,52 @@ P0 is relative to the assigned release. R3 monetization requirements do not all 
 | F42 | P0 / R1 ✅ | Destination profiles: ad mode (SSAI / SGAI / pass-through), marker format, ad-load limit; conformance check on publish | Prevent partner rejections before they happen |
 | F43 | P0 / R1 ✅ | Prototype SSAI stitcher (server beacons) and SGAI via HLS Interstitials (client beacons); explainable ad decisions | Demonstrable monetisation path; evidence-based analytics |
 | F44 | P1 / R1 ✅ | Guided first-channel checklist, plain-language validation messages, in-app "How FAST works" primer | Non-specialist operators succeed without training |
+| F45 | P0 / R3 | Platform delivery packs: per-destination export of the HLS stream, XMLTV and JSON guide, and an MRSS feed (titles, artwork, ratings, durations, ad-break times); submission checklist and status per platform (e.g. Samsung TV Plus, LG Channels, Roku, Pluto TV, Tubi, Plex, VIDAA) | Channels accepted by real platforms; replaces the simulated hand-off |
+| F46 | P0 / R2 | Platform-readiness check: compare a channel with each target platform's specification (codecs, bitrate ladder, segment length, loudness, captions, ad-break spacing and length, guide fields, artwork sizes) and show a pass/fail report before submission | Fewer rejected submissions; automates checks that managed-service competitors do by hand |
+| F47 | P0 / R2 | Loudness measurement and normalization at upload (EBU R128 / ATSC A/85 target per destination, e.g. ffmpeg `loudnorm`), shown in media QC | Platforms reject channels with uneven volume |
+| F48 | P1 / R3 | On-screen graphics: channel logo bug (burned in at conversion), "Up next" / "Coming up" cards and promos as generated bumper clips placed by the scheduler, per-channel templates with a safe-area check | Branded channel look that platforms and viewers expect |
+| F49 | P1 / R2 | Guide enrichment: match titles against a metadata source (e.g. TMDB, or licensed Gracenote; check commercial-use terms) for synopsis, cast, genres, season/episode, artwork and canonical IDs; uncertain matches need human confirmation; daily guide-quality report (missing synopsis or artwork, unidentified titles, gaps) | Richer guide = better placement and discovery on platforms |
+| F50 | P1 / R2 | Library readiness report: hours by genre, rating and territory with valid rights; how many 24/7 channels the library can fill within repeat limits; missing metadata, rights, captions and artwork | Self-service catalog evaluation; sales tool |
+| F51 | P1 / R4 | Restream: ingest an existing linear feed (SRT or HLS), add or condition SCTE-35 markers and deliver it as a FAST channel without changing the original broadcast | Broadcasters with existing channels |
+| F52 | P2 / R4 | Extra output formats per destination: DASH, SRT, HEVC renditions | Destinations that do not accept HLS/H.264 |
+| F53 | P2 / R4 | Interface and emails in several languages (start with Spanish, Portuguese, French) | Customers outside English-speaking markets |
+| F54 | P1 / R3 | CDN delivery with token authentication, and DRM where a destination requires it | Scale and content protection |
 
 **Prototype status (20 Oct 2026):** F39–F44 are built at prototype grade, as are the core flows of F01 and F03–F07 (see the root README's real/simulated matrix). Partial items:
 
 | Feature | Built | Not built |
 | --- | --- | --- |
-| F01 | Local accounts | OIDC; invitations show a one-time password instead of email |
+| F01 | Local accounts, JWT sign-in, emailed invitations, forgot-password | OIDC / company single sign-on |
 | F02 | Upload, processing, metadata, series fields | Captions; resumable upload |
 | F05 | Auto-fill, manual add, gap close | Recurring templates |
 | F08 | Campaigns, ad decisions | Creative approval workflow; insertion orders |
 | F09 | Destination checks; partner hand-off is simulated | — |
 | F10 | Alerts, acknowledge/resolve, provenance labels | CSV export |
 
-Everything from F11 onward is unstarted.
+Everything else from F11 onward is unstarted, apart from the partner API (part of F30) and partner organizations (part of F31). F45–F54 are unstarted.
+
+## Competitive review: SoFast
+
+Reviewed 20 October 2026 from SoFast's public website only (no demo, no pricing; see also [Research](RESEARCH_AND_SOURCES.md)). SoFast is a managed service and distribution network. It audits a catalog, programs, brands and plays out the channel, places it on 360+ platforms and operators, and sells the ads: its own SSAI and ad server, programmatic plus direct sales, and revenue-share, inventory-split or hybrid deals. Customers get dashboards and a contact form, not a self-service tool. FAST Studio is self-service software, so SoFast is as much a possible customer or partner as a competitor.
+
+**Differentiators to keep** (not mentioned on SoFast's public site, which does not prove they lack them): self-service operation; SGAI; rights enforced in the schedule, stream and ads; the partner portal and partner API; isolated multi-company operation with audit history; transparency (SCTE-35 inspector, built-in course, real-vs-simulated labels); running on the customer's own infrastructure.
+
+**Added to the backlog:** F45–F54 in the table above, plus these extensions to existing features:
+
+| Feature | Extension | Why |
+| --- | --- | --- |
+| F02 / F15 | Captions moved up to R2: upload SRT/WebVTT per asset and language, deliver them as HLS subtitle renditions, caption coverage in the F46 report | US platforms expect captions; accessibility |
+| F05 | Programming blocks in auto-fill: marathons, premieres, themed dayparts, repeat rules (minimum gap before a title airs again) | SoFast advertises AI-assisted blocks; operators want them without AI too |
+| F11 | Published prices and a self-serve free trial | SoFast and most managed services quote on request only |
+| F18 / F21 | Reports by channel, platform and country: impressions, fill rate, CPM, revenue, matched to payment statements | Category expectation for monetization |
+| F22 | Revenue per title and per rights holder in statements | Rights holders are paid per title; SoFast reports by channel, platform and country |
+| F28 | Dubbing and subtitle provider integration (e.g. Deepdub, which SoFast uses, or ElevenLabs) with human QC; extra audio tracks in HLS; a guide per country | New territories |
+| F33 | Live SRT input switch (to live and back to the schedule, ad markers kept consistent) can move to R3 if a pilot needs live | Live events and news |
+| F35 | AI suggestions for programming blocks and ad-break points, always with human approval | Operator productivity |
+
+**Not adopted** (SoFast business lines that are not part of a channel-operations product): TV launcher (WAYO TV), cloud gaming, hotel TV, set-top box / OEM platforms, satellite distribution, a licensed content catalog (F36 covers a marketplace if demand appears), an in-house ad-sales team and 24/7 human master control (only as F32 managed services if a customer pays for them).
+
+Sources: [SoFast](https://sofast.tv/), [FAST On The Fly](https://sofast.tv/fast-on-the-fly/index.html), [Monetization](https://sofast.tv/monetization/index.html), [Cloud playout](https://sofast.tv/playout/index.html), [Technology](https://sofast.tv/technology/index.html), [Why SoFast](https://sofast.tv/why-sofast/index.html), [AI dubbing](https://sofast.tv/ai-localization/index.html), [EPG Enricher demo](https://epg-enricher.pages.dev/).
 
 ## Personas and new permissions
 

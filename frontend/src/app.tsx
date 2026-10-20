@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, ensureCsrf, type Me, type Membership } from './api'
-import { Icon, initials, useApi } from './ui'
+import { Dropdown, Icon, initials, useApi } from './ui'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Library from './pages/Library'
@@ -21,7 +21,9 @@ import Email from './pages/Email'
 import Partners from './pages/Partners'
 import PartnerHome from './pages/PartnerHome'
 import PartnerApi from './pages/PartnerApi'
-import { ChangePasswordModal, ForcedPasswordChange, ResetPassword } from './pages/Password'
+import { ForcedPasswordChange, ResetPassword } from './pages/Password'
+import { ThemeProvider, useTheme } from './theme'
+import { ProfileSettingsModal } from './components/ProfileSettingsModal'
 
 // ---------------------------------------------------------------- session
 
@@ -55,8 +57,9 @@ export default function App() {
   }, [])
   if (me === undefined) return <div className="empty" style={{ height: '100%', justifyContent: 'center' }}><span className="spinner" /></div>
   return (
-    <SessionCtx.Provider value={{ me, refresh, logout }}>
-      <Routes>
+    <ThemeProvider>
+      <SessionCtx.Provider value={{ me, refresh, logout }}>
+        <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* a temporary password must be replaced before anything else (the API enforces this too) */}
         {me?.mustChangePassword ? <Route path="*" element={<ForcedPasswordChange />} /> : <>
@@ -88,6 +91,7 @@ export default function App() {
         </>}
       </Routes>
     </SessionCtx.Provider>
+  </ThemeProvider>
   )
 }
 
@@ -185,8 +189,9 @@ const PARTNER_NAV: NavGroup[] = [
 ]
 
 function Shell() {
-  const [changingPassword, setChangingPassword] = useState(false)
-  const { me, logout } = useSession()
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
+  const { me } = useSession()
+  const { mode, toggleDarkLight } = useTheme()
   const nav = useNavigate()
   const { pathname } = useLocation()
   const slug = pathname.split('/')[1]
@@ -380,14 +385,14 @@ function Shell() {
             type="button"
             className="nav-toggle-btn"
             onClick={toggleCollapse}
-            title="Collapse sidebar (Ctrl+B)"
-            aria-label="Collapse sidebar"
+            title={collapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <Icon name="chevronLeft" size={16} />
+            <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={16} />
           </button>
         </div>
 
-        {/* Dedicated expand button in collapsed mode */}
+        {/* Dedicated expand arrow button in collapsed mode */}
         {collapsed && (
           <button
             type="button"
@@ -508,25 +513,22 @@ function Shell() {
       <div className="main">
         {me.demoMode && <div className="demo-ribbon"><Icon name="sparkle" size={14} /> Demo environment — fictional companies and development-only accounts. Ad money shown is an estimate from demo playback, never real revenue.</div>}
         <header className="topbar">
-          <button
-            type="button"
-            className="btn ghost icon-btn"
-            onClick={toggleCollapse}
-            title={collapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            style={{ marginRight: 6, flexShrink: 0 }}
-          >
-            <Icon name="panelLeft" size={19} />
-          </button>
           {me.memberships.length > 0 && (
-            <label className="row" style={{ gap: 8 }}>
-              <Icon name="building" />
-              <select aria-label="Organization" value={current?.slug ?? ''} style={{ width: 240, fontWeight: 600 }}
-                onChange={e => nav('/' + e.target.value)}>
-                {!current && <option value="">Choose organization…</option>}
-                {me.memberships.map(m => <option key={m.slug} value={m.slug}>{m.name}</option>)}
-              </select>
-            </label>
+            <Dropdown
+              options={me.memberships.map(m => ({
+                value: m.slug,
+                label: m.name,
+                description: `${m.kind === 'PARTNER' ? 'Partner portal' : 'Content owner'} · ${m.role.replace('_', ' ').toLowerCase()}`,
+                icon: 'building',
+                badge: m.kind === 'PARTNER' ? 'Partner' : undefined,
+                badgeType: 'sim',
+              }))}
+              value={current?.slug}
+              onChange={val => nav('/' + val)}
+              placeholder="Choose organization…"
+              searchable={me.memberships.length > 2}
+              style={{ minWidth: 240 }}
+            />
           )}
           {current && <span className="badge info" title="Your role in this organization">{current.role.replace('_', ' ').toLowerCase()}</span>}
           {current?.kind === 'PARTNER' && <span className="badge sim" title="A partner organization reads what content owners share with it">partner</span>}
@@ -534,13 +536,41 @@ function Shell() {
           {current && current.kind !== 'PARTNER' && <NavLink to={`/${current.slug}/monitoring`} className="btn ghost" aria-label="Alerts">
             <Icon name="alert" />{alerts.data && alerts.data.length > 0 && <span className="badge bad">{alerts.data.length}</span>}
           </NavLink>}
-          {current && <NavLink to={`/${current.slug}/learn`} className="btn ghost"><Icon name="book" />Help</NavLink>}
-          <div className="row">
-            <button className="avatar" style={{ background: '#6366f1', border: 0, cursor: 'pointer' }} onClick={() => setChangingPassword(true)} title="Change password" aria-label="Change password">{initials(me.name)}</button>
-            <div className="small" style={{ lineHeight: 1.2 }}><b>{me.name}</b><div className="faint">{me.email}</div></div>
-          </div>
-          <button className="btn ghost icon-btn" onClick={logout} aria-label="Sign out" title="Sign out"><Icon name="logout" /></button>
-          {changingPassword && <ChangePasswordModal onClose={() => setChangingPassword(false)} />}
+          {/* Quick theme mode toggle */}
+          <button
+            type="button"
+            className="btn ghost icon-btn topbar-theme-btn"
+            onClick={toggleDarkLight}
+            title={mode === 'light' ? 'Switch to Eye-soothing Dark theme' : 'Switch to Daylight theme'}
+            aria-label="Toggle theme mode"
+          >
+            <Icon name={mode === 'light' ? 'moon' : 'sun'} size={17} />
+          </button>
+
+          {/* Improved Profile & Studio Settings Trigger */}
+          <button
+            type="button"
+            className="topbar-profile-btn"
+            onClick={() => setProfileSettingsOpen(true)}
+            title="Profile & Studio Settings"
+            aria-label="Profile and Settings"
+          >
+            <div className="topbar-avatar">
+              {initials(me.name)}
+            </div>
+            <div className="topbar-profile-text">
+              <span className="topbar-profile-name">{me.name}</span>
+              <span className="topbar-profile-role">{current ? current.role.replace('_', ' ').toLowerCase() : 'Studio Member'}</span>
+            </div>
+            <Icon name="chevronDown" size={13} />
+          </button>
+
+          {profileSettingsOpen && (
+            <ProfileSettingsModal
+              currentOrgName={current?.name}
+              onClose={() => setProfileSettingsOpen(false)}
+            />
+          )}
         </header>
         <main className="content" id="main"><Outlet /></main>
       </div>

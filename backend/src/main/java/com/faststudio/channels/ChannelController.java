@@ -43,6 +43,15 @@ public class ChannelController {
         var guide = ScheduleController.guide(data, t.orgId(), c, now.minusSeconds(60), now.plusSeconds(12 * 3600));
         var cur = guide.stream().filter(ScheduleController.Programme::now).findFirst().orElse(null);
         var next = guide.stream().filter(p -> p.start().isAfter(now)).findFirst().orElse(null);
+        if (cur == null && c.publishedVersionId() != null) {
+            var activeBreak = data.entries(t.orgId(), c.publishedVersionId(), now.minusSeconds(600), now.plusSeconds(600)).stream()
+                    .filter(e -> e.isBreak() && !e.start().isAfter(now) && e.end().isAfter(now))
+                    .findFirst().orElse(null);
+            if (activeBreak != null) {
+                cur = new ScheduleController.Programme(activeBreak.id(), "Commercial Ad Break", "Programmatic SSAI commercial break",
+                        "Commercial", "AD", "#f59e0b", null, activeBreak.start(), activeBreak.end(), 1, true, null);
+            }
+        }
         Integer version = c.publishedVersionId() == null ? null : data.db.sql("select number from schedule_version where id = :v")
                 .param("v", c.publishedVersionId()).query(Integer.class).single();
         String fb = c.fallbackAssetId() == null ? null : data.asset(t.orgId(), c.fallbackAssetId()).title();

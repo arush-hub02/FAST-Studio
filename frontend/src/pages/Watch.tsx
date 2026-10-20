@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, type ChannelView, type Decision, type Programme, type RightsDecision } from '../api'
 import { useOrg } from '../app'
-import { ChannelLogo, COUNTRIES, Empty, flag, fmtDur, fmtTime, Icon, InfoTip, Loading, PageHead, Sim, useApi, useToast, VideoPlayer, type PlayerEvent } from '../ui'
+import { ChannelLogo, COUNTRIES, Dropdown, Empty, flag, fmtDur, fmtTime, Icon, InfoTip, Loading, PageHead, Sim, useApi, useToast, VideoPlayer, type PlayerEvent } from '../ui'
 
 type Destination = { id: string; name: string; kind: string; adMode: string; markerFormat: string; maxAdSecondsPerHour: number; notes: string }
 type Started = { sessionId: string; playlistUrl: string; adMode: string; markerFormat: string; destination: string; country: string; rightsNow?: RightsDecision }
@@ -34,6 +34,27 @@ export default function Watch() {
   const [adNow, setAdNow] = useState<string | null>(null)
   const [tab, setTab] = useState<'what' | 'playlist'>('what')
   const sgaiDecisions = useRef<Map<string, { breakId: string; campaignId: string; campaign: string }>>(new Map())
+
+  const channelOptions = useMemo(() => live.map(c => ({
+    value: c.channel.slug,
+    label: c.channel.name,
+    icon: 'tv',
+    badge: 'LIVE',
+    badgeType: 'live' as const,
+    description: `${c.channel.timezone} · v${c.publishedVersion ?? 1}`,
+  })), [live])
+
+  const countryOptions = useMemo(() => Object.keys(COUNTRIES).filter(c => c !== 'WW').map(c => ({
+    value: c,
+    label: `${flag(c)} ${COUNTRIES[c]}`,
+  })), [])
+
+  const destOptions = useMemo(() => (dests.data?.destinations ?? []).map(d => ({
+    value: d.id,
+    label: d.name,
+    icon: 'cast',
+    description: `${d.kind} · ${d.adMode}`,
+  })), [dests.data])
 
   useEffect(() => {
     if (!destId && dests.data?.destinations.length) setDestId(dests.data.destinations.find(d => d.kind === 'OWNED_WEB' && d.adMode === 'SSAI')?.id ?? dests.data.destinations[0].id)
@@ -98,11 +119,38 @@ export default function Watch() {
         <div className="split">
           <div className="stack" style={{ gap: 16 }}>
             <div className="card card-pad grid g3">
-              <label className="field">Channel<select value={slug} onChange={e => setParams({ channel: e.target.value })}>{live.map(c => <option key={c.channel.slug} value={c.channel.slug}>{c.channel.name}</option>)}</select></label>
-              <label className="field"><span className="row">Viewer is in <Sim text="Simulated" tip="A real service detects the viewer's country from their network address at the edge. Here you choose it to see geo-blocking work." /></span>
-                <select value={country} onChange={e => setCountry(e.target.value)}>{Object.keys(COUNTRIES).filter(c => c !== 'WW').map(c => <option key={c} value={c}>{flag(c)} {COUNTRIES[c]}</option>)}</select></label>
-              <label className="field"><span className="row">Watching on <InfoTip text="Each destination has its own way of handling ads: SSAI, SGAI, or passing markers to a partner platform." /></span>
-                <select value={destId} onChange={e => setDestId(e.target.value)}>{dests.data.destinations.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label>
+              <div className="field">
+                <span>Channel</span>
+                <Dropdown
+                  options={channelOptions}
+                  value={slug}
+                  onChange={s => setParams({ channel: s })}
+                  align="full"
+                  searchable
+                  placeholder="Select live channel..."
+                />
+              </div>
+              <div className="field">
+                <span className="row">Viewer Location <Sim text="Simulated" tip="A real service detects the viewer's country from their network address at the edge. Here you choose it to see geo-blocking work." /></span>
+                <Dropdown
+                  options={countryOptions}
+                  value={country}
+                  onChange={setCountry}
+                  align="full"
+                  searchable
+                  placeholder="Select country..."
+                />
+              </div>
+              <div className="field">
+                <span className="row">Ad Destination <InfoTip text="Each destination has its own way of handling ads: SSAI, SGAI, or passing markers to a partner platform." /></span>
+                <Dropdown
+                  options={destOptions}
+                  value={destId}
+                  onChange={setDestId}
+                  align="full"
+                  placeholder="Select destination..."
+                />
+              </div>
             </div>
 
             <div style={{ position: 'relative' }}>

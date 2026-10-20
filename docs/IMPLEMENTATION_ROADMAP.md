@@ -26,6 +26,13 @@ Deviations from the plan below, with reasons:
 
 **Planned next:** projects and company single sign-on (P5), per-company email wording. See [PARTNER_ACCESS_AND_TOKENS.md](PARTNER_ACCESS_AND_TOKENS.md).
 
+**Added after the SoFast review (20 Oct 2026):** F45–F54 and extensions to F02/F15, F05, F11, F18/F21, F22, F28, F33 and F35. Details and sources are in [Product requirements](PRODUCT_REQUIREMENTS.md#competitive-review-sofast). They are placed in R2–R4 below. Recommended order, because these decide whether a real platform accepts a channel:
+1. Platform-readiness check (F46), loudness (F47) and captions (F02/F15)
+2. Library readiness report (F50) and guide enrichment (F49)
+3. Platform delivery packs (F45) for the first real destination
+4. On-screen graphics (F48)
+5. Live input (F33), then restream (F51)
+
 **Still needed for a pilot:** OIDC sign-in; CDN token auth; the creative-approval workflow (F08 remainder); bulk import (F14); a durable job queue; structured logs/metrics tagged with org; an accessibility audit (WCAG 2.2 AA) of the timeline and player.
 
 Planning baseline: 19 October 2026. Status: all releases unstarted; discovery inspection and this plan are complete, but R0 customer/provider validation remains open.
@@ -40,9 +47,9 @@ Indicative elapsed ranges assume two frontend engineers, two Java engineers, one
 | --- | --- | --- | --- | --- |
 | R0: validate and design | 1–2 weeks / 1–2 | Confirm pilot buyer, framework, provider path and commercial hypothesis | Discovery for F01–F25 | Product lead + technical lead |
 | R1: leadership prototype | 6–8 weeks / 7–10 | Demonstrate content → rights → schedule → EPG → preview → ad/distribution simulation | F01–F10 | Engineering lead |
-| R2: paid SaaS pilot | 6–8 weeks / 13–18 | Onboard real catalog and collect/reconcile first platform subscription | F11–F16; harden F01–F10 | Engineering + billing lead |
-| R3: monetized channel pilot | 8–12 weeks / 21–30 | One working channel/provider/destination/ad path with financial evidence | F17–F25; F26 only if contracted | Media lead + ad-ops + finance |
-| R4: expansion tranche | 8–12 weeks per selected tranche | Expand proven revenue paths and customer segments | Select F27–F38 by demand; not all in one tranche | Product + commercial lead |
+| R2: paid SaaS pilot | 6–8 weeks / 13–18 | Onboard real catalog and collect/reconcile first platform subscription | F11–F16; F46, F47, F49, F50, captions (F02/F15); harden F01–F10 | Engineering + billing lead |
+| R3: monetized channel pilot | 8–12 weeks / 21–30 | One working channel/provider/destination/ad path with financial evidence | F17–F25; F45, F48, F54; F26 only if contracted | Media lead + ad-ops + finance |
+| R4: expansion tranche | 8–12 weeks per selected tranche | Expand proven revenue paths and customer segments | Select F27–F38 and F51–F53 by demand; not all in one tranche | Product + commercial lead |
 
 ## R0 — confirm the smallest sellable outcome
 
@@ -75,6 +82,8 @@ Rights validation belongs before schedule publication. A prototype must never pu
 - F13: one hosted billing provider or invoice adapter, real settlement confirmation, signed webhook deduplication, credits, cancellations and payment-failure recovery. Test mode and live mode remain separate.
 - F14–F15: resumable upload, bulk import preview, media QC evidence and real processing results for pilot assets.
 - F16: approval separation, optimistic concurrency, activity history and production-safe identities/secrets.
+- F46–F47 and captions (F02/F15): platform-readiness report per target platform, loudness normalization at upload, caption upload with HLS subtitle renditions. Gate: a pilot channel passes the report for its chosen platform.
+- F49–F50: guide enrichment with a human confirmation step for uncertain matches, and the library readiness report. Gate: a pilot catalog shows how many channels it can fill and what is missing.
 - Operational baseline: deployment rollback, restore test, monitoring, support owner, tenant exports and documented retention policy.
 
 **Dependencies:** billing-provider availability, legal entity/currency choices, commercial agreement, real media processing access and R1 workflow correctness.
@@ -86,6 +95,7 @@ Rights validation belongs before schedule publication. A prototype must never pu
 | Workstream | Requirements | Launch gate |
 | --- | --- | --- |
 | Stream and partner delivery | F17; playout adapter, eligible rendition, published EPG, signed authorization, one destination | Agreed 72-hour initial soak, stream continuity checks, rollback and rights revocation drill; partner approval recorded |
+| Platform delivery and look | F45, F48, F54; delivery pack (stream, XMLTV/JSON guide, MRSS) for the chosen destination, logo and "Up next" graphics, CDN with token auth, DRM if the destination requires it | Destination accepts the pack in its test or certification; graphics pass its safe-area rules |
 | Ads and direct sales | F18–F20; orders/line items, duration reservations, inventory ownership, pacing, pods, creative approval, frequency limits | Provider test matrix passes including malformed tags, timeout, missing markers, underfill and slate; actual approved test insertion |
 | Measurement and privacy | F21/F24; authoritative report ingestion, provenance, consent restrictions, invalid-traffic adjustments, authorized sellers | No billing from ad decisions; no duplicate accepted impressions; restricted context produces permitted fallback |
 | Finance and margin | F22–F23; contract versions, adjustments, statements, channel costs and approvals | One report period reconciled to partner statement; disputed deltas visible; shares balance; finance approves export |
@@ -102,6 +112,7 @@ Start the 72-hour soak only after representative programme transitions and ad br
 3. **Format expansion:** F33–F34 after live/catch-up rights, media capability and a paying use case are verified.
 4. **AI and commerce experiments:** F35–F37 after approved source content/catalog, human review, cost limits and a measured experiment goal. Build manual sponsorships before automated product detection.
 5. **Premium resilience:** F38 after measured failover/restore behavior and a costed service commitment.
+6. **Live, formats and languages:** F51 (restream) after a paying broadcaster with an existing linear channel; F52 when a destination refuses HLS/H.264; F53 when a customer needs the interface in their language.
 
 Each selected tranche gets its own capacity estimate, acceptance criteria and commercial success test. Do not bundle all expansion ideas into a promised release.
 
@@ -120,3 +131,5 @@ Create a single frontend and Java service; add PostgreSQL migrations, two fictio
 ## Explicit deferrals
 
 Defer a proprietary SSAI engine, RTB exchange, TV/mobile app suite, recommendation engine, microservices, Kafka, Kubernetes, marketplace payouts and autonomous AI publishing. Revisit each only when a paying requirement or measured scaling constraint justifies it.
+
+Not adopted from the SoFast review: a TV launcher, cloud gaming, hotel TV, set-top box platforms, satellite distribution, a licensed content catalog, an in-house ad-sales team and 24/7 human master control. These are separate businesses, not channel-operations software; ad sales and master control return only as F32 managed services if a customer pays for them.

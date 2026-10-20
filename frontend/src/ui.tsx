@@ -46,6 +46,16 @@ const P: Record<string, ReactNode> = {
   chevronRight: <path d="m9 18 6-6-6-6" />,
   panelLeft: <><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /></>,
   gripVertical: <><circle cx="9" cy="12" r="1.5" /><circle cx="9" cy="6" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="15" cy="18" r="1.5" /></>,
+  moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></>,
+  palette: <path d="M13.5 2H12C6.5 2 2 6.5 2 12s4.5 10 10 10c.8 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-3.8-9-8.5-9z" />,
+  settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></>,
+  sliders: <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />,
+  checkCircle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" /></>,
+  bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  shieldCheck: <><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z" /><path d="m9 12 2 2 4-4" /></>,
+  list: <><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></>,
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof P | string; size?: number }) {
@@ -61,6 +71,10 @@ export function Icon({ name, size = 18 }: { name: keyof typeof P | string; size?
 export function fmtTime(iso?: string | null, tz?: string) {
   if (!iso) return '—'
   return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(new Date(iso))
+}
+export function fmtTimeSec(iso?: string | null, tz?: string) {
+  if (!iso) return '—'
+  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: tz }).format(new Date(iso))
 }
 export function fmtDayTime(iso?: string | null, tz?: string) {
   if (!iso) return '—'
@@ -194,17 +208,34 @@ export function InfoTip({ text }: { text: ReactNode }) {
   )
 }
 
-export function Modal({ title, subtitle, onClose, children, footer, wide }: {
-  title: string; subtitle?: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; wide?: boolean
+export function Modal({
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  wide,
+  size,
+  className = '',
+}: {
+  title: string
+  subtitle?: ReactNode
+  onClose: () => void
+  children: ReactNode
+  footer?: ReactNode
+  wide?: boolean
+  size?: 'sm' | 'md' | 'lg' | 'wide'
+  className?: string
 }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', k)
     return () => window.removeEventListener('keydown', k)
   }, [onClose])
+  const resolvedSizeClass = size ? ` modal-${size}` : (wide ? ' wide' : '')
   return (
     <div className="overlay" onMouseDown={e => e.target === e.currentTarget && onClose()}>
-      <div className={'modal' + (wide ? ' wide' : '')} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal${resolvedSizeClass}${className ? ' ' + className : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>
           <button className="btn ghost icon-btn" onClick={onClose} aria-label="Close"><Icon name="x" /></button>
@@ -234,7 +265,7 @@ export function Confirm({ title, text, confirmLabel = 'Confirm', danger, onConfi
   title: string; text: ReactNode; confirmLabel?: string; danger?: boolean; onConfirm: () => void; onClose: () => void
 }) {
   return (
-    <Modal title={title} onClose={onClose} footer={<>
+    <Modal title={title} onClose={onClose} size="sm" footer={<>
       <button className="btn" onClick={onClose}>Cancel</button>
       <button className={'btn ' + (danger ? 'danger solid' : 'primary')} onClick={() => { onConfirm(); onClose() }}>{confirmLabel}</button>
     </>}>
@@ -358,14 +389,413 @@ export function VideoPlayer({ src, live, onEvent, poster }: { src: string | null
   )
 }
 
-export function ProgressRing({ value, size = 64 }: { value: number; size?: number }) {
-  const r = size / 2 - 6, c = 2 * Math.PI * r
+export function ProgressRing({
+  value,
+  size = 52,
+  strokeWidth = 4,
+  color,
+}: {
+  value: number
+  size?: number
+  strokeWidth?: number
+  color?: string
+}) {
+  const clamped = Math.min(Math.max(value, 0), 1)
+  const percent = Math.round(clamped * 100)
+  const r = (size - strokeWidth) / 2
+  const c = 2 * Math.PI * r
+  const strokeColor = color ?? (percent === 100 ? 'var(--ok)' : 'var(--primary)')
+  const fontSize = Math.round(size * 0.23)
+
   return (
-    <svg width={size} height={size} role="img" aria-label={`${Math.round(value * 100)}% complete`}>
-      <circle cx={size / 2} cy={size / 2} r={r} stroke="#e5e8ef" strokeWidth={6} fill="none" />
-      <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--primary)" strokeWidth={6} fill="none" strokeLinecap="round"
-        strokeDasharray={c} strokeDashoffset={c * (1 - value)} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-      <text x="50%" y="54%" textAnchor="middle" fontSize={14} fontWeight={700} fill="var(--text)">{Math.round(value * 100)}%</text>
-    </svg>
+    <div className="progress-ring-wrap" style={{ width: size, height: size, position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`${percent}% complete`}
+        style={{ overflow: 'visible', display: 'block' }}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="var(--surface-3)"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - clamped)}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          style={{ transition: 'stroke-dashoffset 0.4s ease' }}
+        />
+        <text
+          x={size / 2}
+          y={size / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={fontSize}
+          fontWeight={700}
+          fill="var(--text)"
+          fontFamily="var(--font)"
+          style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}
+        >
+          {percent}%
+        </text>
+      </svg>
+    </div>
   )
 }
+
+// ---------------------------------------------------------------- dropdown component
+
+export type DropdownOption = {
+  value: string
+  label: string
+  description?: string
+  icon?: string | ReactNode
+  badge?: string
+  badgeType?: 'live' | 'ok' | 'warn' | 'accent' | 'info' | 'default' | 'sim'
+  disabled?: boolean
+}
+
+export function Dropdown({
+  options,
+  value,
+  onChange,
+  placeholder = 'Select option…',
+  searchable = false,
+  multiple = false,
+  disabled = false,
+  clearable = false,
+  className = '',
+  style,
+  triggerPrefix,
+  align = 'left',
+  emptyText = 'No options found',
+}: {
+  options: DropdownOption[]
+  value?: string | string[]
+  onChange: (val: any) => void
+  placeholder?: string
+  searchable?: boolean
+  multiple?: boolean
+  disabled?: boolean
+  clearable?: boolean
+  className?: string
+  style?: React.CSSProperties
+  triggerPrefix?: ReactNode
+  align?: 'left' | 'right' | 'full'
+  emptyText?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Close on outside click and Escape
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  // Focus search when opened
+  useEffect(() => {
+    if (open && searchable) {
+      setTimeout(() => searchInputRef.current?.focus(), 40)
+    } else {
+      setQuery('')
+    }
+  }, [open, searchable])
+
+  // Filtered options
+  const filtered = query.trim()
+    ? options.filter(
+        o =>
+          o.label.toLowerCase().includes(query.toLowerCase()) ||
+          (o.description && o.description.toLowerCase().includes(query.toLowerCase()))
+      )
+    : options
+
+  // Value helpers
+  const selectedValues: string[] = Array.isArray(value) ? value : value ? [value] : []
+  const selectedOptions = options.filter(o => selectedValues.includes(o.value))
+  const hasAnyIcon = options.some(o => !!o.icon)
+
+  const handleSelect = (opt: DropdownOption) => {
+    if (opt.disabled) return
+    if (multiple) {
+      const next = selectedValues.includes(opt.value)
+        ? selectedValues.filter(v => v !== opt.value)
+        : [...selectedValues, opt.value]
+      onChange(next)
+    } else {
+      onChange(opt.value)
+      setOpen(false)
+    }
+  }
+
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const allFilteredValues = filtered.filter(o => !o.disabled).map(o => o.value)
+    const combined = Array.from(new Set([...selectedValues, ...allFilteredValues]))
+    onChange(combined)
+  }
+
+  const handleClearAll = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onChange([])
+  }
+
+  const [dropUp, setDropUp] = useState(false)
+
+  const handleToggle = () => {
+    if (disabled) return
+    if (!open && rootRef.current) {
+      const rect = rootRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const spaceAbove = rect.top
+      setDropUp(spaceBelow < 250 && spaceAbove > spaceBelow)
+    }
+    setOpen(o => !o)
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={`custom-dropdown align-${align} ${dropUp ? 'drop-up' : ''} ${open ? 'is-open' : ''} ${disabled ? 'is-disabled' : ''} ${className}`}
+      style={style}
+    >
+      {/* Trigger Button */}
+      <button
+        type="button"
+        className="dropdown-trigger"
+        onClick={handleToggle}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="dropdown-trigger-content">
+          {triggerPrefix && (selectedOptions.length === 0 || multiple || !selectedOptions[0]?.icon) && (
+            <span className="dropdown-trigger-prefix">{triggerPrefix}</span>
+          )}
+          {selectedOptions.length === 0 ? (
+            <span className="dropdown-placeholder">{placeholder}</span>
+          ) : multiple ? (
+            <span className="dropdown-summary">
+              {selectedOptions.length === 1 ? (
+                <span className="dropdown-selected-label">
+                  {selectedOptions[0].icon && (
+                    <span className="dropdown-trigger-icon">
+                      {typeof selectedOptions[0].icon === 'string' ? (
+                        <Icon name={selectedOptions[0].icon} size={14} />
+                      ) : (
+                        selectedOptions[0].icon
+                      )}
+                    </span>
+                  )}
+                  <span>{selectedOptions[0].label}</span>
+                </span>
+              ) : (
+                <span className="dropdown-summary-badge">
+                  {selectedOptions.length} selected
+                </span>
+              )}
+            </span>
+          ) : (
+            <span className="dropdown-selected-label">
+              {selectedOptions[0].icon && (
+                <span className="dropdown-trigger-icon">
+                  {typeof selectedOptions[0].icon === 'string' ? (
+                    <Icon name={selectedOptions[0].icon} size={14} />
+                  ) : (
+                    selectedOptions[0].icon
+                  )}
+                </span>
+              )}
+              <span>{selectedOptions[0].label}</span>
+            </span>
+          )}
+        </span>
+
+        <span className="dropdown-trigger-actions">
+          {clearable && selectedValues.length > 0 && !disabled && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="dropdown-trigger-clear"
+              onClick={e => {
+                e.stopPropagation()
+                onChange(multiple ? [] : '')
+              }}
+              aria-label="Clear selection"
+            >
+              <Icon name="x" size={12} />
+            </span>
+          )}
+          <span className={`dropdown-chevron ${open ? 'is-open' : ''}`}>
+            <Icon name="chevronDown" size={13} />
+          </span>
+        </span>
+      </button>
+
+      {/* Popover Menu */}
+      {open && (
+        <div className={`dropdown-menu align-${align}`} role="listbox">
+          {searchable && (
+            <div className="dropdown-search-wrap">
+              <Icon name="search" size={14} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="dropdown-search-input"
+                placeholder="Search…"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.stopPropagation()}
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="dropdown-search-clear"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                >
+                  <Icon name="x" size={12} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {multiple && (
+            <div className="dropdown-multi-toolbar">
+              <span className="dropdown-multi-count">
+                {selectedValues.length} of {options.length} selected
+              </span>
+              <div className="dropdown-multi-actions">
+                <button
+                  type="button"
+                  className="dropdown-toolbar-btn"
+                  onClick={handleSelectAll}
+                >
+                  Select all
+                </button>
+                {selectedValues.length > 0 && (
+                  <button
+                    type="button"
+                    className="dropdown-toolbar-btn"
+                    onClick={handleClearAll}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="dropdown-options-list">
+            {filtered.length === 0 ? (
+              <div className="dropdown-empty">{emptyText}</div>
+            ) : (
+              filtered.map(opt => {
+                const isSelected = selectedValues.includes(opt.value)
+                const hasDesc = !!opt.description
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={opt.disabled}
+                    className={`dropdown-item ${isSelected ? 'is-selected' : ''} ${
+                      opt.disabled ? 'is-disabled' : ''
+                    } ${hasDesc ? 'has-desc' : ''}`}
+                    onClick={() => handleSelect(opt)}
+                  >
+                    {/* Checkbox for multiple selection */}
+                    {multiple && (
+                      <span className={`dropdown-checkbox ${isSelected ? 'checked' : ''}`}>
+                        {isSelected && <Icon name="check" size={11} />}
+                      </span>
+                    )}
+
+                    {/* Left Icon with alignment spacer */}
+                    {hasAnyIcon && (
+                      <span className="dropdown-item-icon">
+                        {opt.icon ? (
+                          typeof opt.icon === 'string' ? (
+                            <Icon name={opt.icon} size={15} />
+                          ) : (
+                            opt.icon
+                          )
+                        ) : (
+                          <span className="dropdown-icon-spacer" />
+                        )}
+                      </span>
+                    )}
+
+                    {/* Label & Description Column */}
+                    <div className="dropdown-item-text">
+                      <span className="dropdown-item-label">{opt.label}</span>
+                      {opt.description && (
+                        <span className="dropdown-item-desc">{opt.description}</span>
+                      )}
+                    </div>
+
+                    {/* Right Badge or Single Checkmark */}
+                    <div className="dropdown-item-aside">
+                      {opt.badge && (
+                        <span className={`badge ${opt.badgeType ?? 'info'} sm`}>
+                          {opt.badge}
+                        </span>
+                      )}
+                      {!multiple && isSelected && (
+                        <span className="dropdown-item-check">
+                          <Icon name="check" size={14} />
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Re-export DateTimePicker & Timezone utilities for universal usage across the project
+export {
+  DateTimePicker,
+  formatDateTimeTz,
+  getTimezoneBadge,
+  COMMON_TIMEZONES,
+  type DateTimePickerProps,
+  type TimezoneOption,
+} from './components/DateTimePicker'
