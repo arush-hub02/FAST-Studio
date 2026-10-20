@@ -40,6 +40,12 @@ const P: Record<string, ReactNode> = {
   arrowRight: <path d="M5 12h14M13 5l7 7-7 7" />,
   stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
   rocket: <path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M14 6a8 8 0 0 1 5-3s0 3-3 5l-6 6-2-2zM9 11 6 10l-3 3 4 1M13 15l1 3-3 3-1-4" />,
+  chevronsLeft: <path d="m11 17-5-5 5-5M18 17l-5-5 5-5" />,
+  chevronsRight: <path d="m6 17 5-5-5-5M13 17l5-5-5-5" />,
+  chevronLeft: <path d="m15 18-6-6 6-6" />,
+  chevronRight: <path d="m9 18 6-6-6-6" />,
+  panelLeft: <><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /></>,
+  gripVertical: <><circle cx="9" cy="12" r="1.5" /><circle cx="9" cy="6" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="15" cy="18" r="1.5" /></>,
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof P | string; size?: number }) {

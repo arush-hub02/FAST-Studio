@@ -137,7 +137,21 @@ function NotFound() {
 
 // ---------------------------------------------------------------- shell
 
-const NAV: { group: string; items: { to: string; icon: string; label: string; hint: string }[] }[] = [
+type NavItem = {
+  to: string
+  icon: string
+  label: string
+  hint: string
+  tag?: string
+  tagType?: 'live' | 'accent' | 'alert' | 'sim'
+}
+
+type NavGroup = {
+  group: string
+  items: NavItem[]
+}
+
+const NAV: NavGroup[] = [
   { group: '', items: [{ to: '', icon: 'home', label: 'Home', hint: 'Launch checklist & status' }] },
   { group: 'Create', items: [
     { to: 'library', icon: 'film', label: 'Library', hint: 'Videos & ad creatives' },
@@ -145,11 +159,11 @@ const NAV: { group: string; items: { to: string; icon: string; label: string; hi
     { to: 'schedule', icon: 'calendar', label: 'Schedule', hint: 'What plays when' },
   ] },
   { group: 'Watch', items: [
-    { to: 'watch', icon: 'play', label: 'Watch live', hint: 'Player with real ad breaks' },
+    { to: 'watch', icon: 'play', label: 'Watch live', hint: 'Player with real ad breaks', tag: 'Live', tagType: 'live' },
     { to: 'guide', icon: 'grid', label: 'TV guide', hint: 'Programme guide (EPG)' },
   ] },
   { group: 'Earn & deliver', items: [
-    { to: 'ads', icon: 'megaphone', label: 'Ads', hint: 'Campaigns & ad decisions' },
+    { to: 'ads', icon: 'megaphone', label: 'Ads', hint: 'Campaigns & ad decisions', tag: 'SSAI', tagType: 'accent' },
     { to: 'rights', icon: 'shield', label: 'Rights', hint: 'Where content may play' },
     { to: 'distribution', icon: 'send', label: 'Distribution', hint: 'Send to platforms' },
     { to: 'partners', icon: 'link', label: 'Partners', hint: 'Share channels with platforms' },
@@ -163,9 +177,9 @@ const NAV: { group: string; items: { to: string; icon: string; label: string; hi
 ]
 
 // partner organizations: they only read what customers share with them
-const PARTNER_NAV: typeof NAV = [
+const PARTNER_NAV: NavGroup[] = [
   { group: '', items: [{ to: '', icon: 'link', label: 'Shared with us', hint: 'Channels customers share' }] },
-  { group: 'Connect', items: [{ to: 'api', icon: 'key', label: 'API access', hint: 'Let your systems read' }] },
+  { group: 'Connect', items: [{ to: 'api', icon: 'key', label: 'API access', hint: 'Let your systems read', tag: 'REST', tagType: 'accent' }] },
   { group: 'Operate', items: [{ to: 'team', icon: 'users', label: 'Team', hint: 'People & permissions' }] },
   { group: 'Help', items: [{ to: 'learn', icon: 'book', label: 'How FAST works', hint: 'SSAI, SGAI, SCTE-35 explained' }] },
 ]
@@ -177,33 +191,333 @@ function Shell() {
   const { pathname } = useLocation()
   const slug = pathname.split('/')[1]
   const current = me?.memberships.find(m => m.slug === slug)
-  const alerts = useApi<{ id: string }[]>(current && current.status === 'ACTIVE' && current.kind !== 'PARTNER' ? `/api/orgs/${current.slug}/alerts` : null, [current?.slug], 30000)
+  const alerts = useApi<{ id: string }[]>(
+    current && current.status === 'ACTIVE' && current.kind !== 'PARTNER' ? `/api/orgs/${current.slug}/alerts` : null,
+    [current?.slug],
+    30000
+  )
   const menu = current?.kind === 'PARTNER' ? PARTNER_NAV : NAV
+
+  // Sidenav collapsible & manual resize state
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('fs.nav.collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [navWidth, setNavWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('fs.nav.width')
+      if (saved) {
+        const parsed = parseInt(saved, 10)
+        if (parsed >= 230 && parsed <= 420) return parsed
+      }
+    } catch {}
+    return 260
+  })
+  const [isResizing, setIsResizing] = useState(false)
+  const [popover, setPopover] = useState<{
+    label: string
+    hint?: string
+    tag?: string
+    tagType?: string
+    top: number
+  } | null>(null)
+
+  const toggleCollapse = useCallback(() => {
+    setPopover(null)
+    setCollapsed(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem('fs.nav.collapsed', String(next))
+      } catch {}
+      return next
+    })
+  }, [])
+
+  const showItemPopover = useCallback((
+    e: React.MouseEvent,
+    item: { label: string; hint?: string; tag?: string; tagType?: string }
+  ) => {
+    if (!collapsed) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    setPopover({
+      label: item.label,
+      hint: item.hint,
+      tag: item.tag,
+      tagType: item.tagType,
+      top: rect.top + rect.height / 2
+    })
+  }, [collapsed])
+
+  const hidePopover = useCallback(() => setPopover(null), [])
+
+  // Drag expansion / resizing
+  const startResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setPopover(null)
+    setIsResizing(true)
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const newWidth = Math.max(220, Math.min(420, moveEvent.clientX))
+      setNavWidth(newWidth)
+      setCollapsed(false)
+    }
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+      setIsResizing(false)
+      const finalWidth = Math.max(220, Math.min(420, upEvent.clientX))
+      try {
+        localStorage.setItem('fs.nav.width', String(finalWidth))
+        localStorage.setItem('fs.nav.collapsed', 'false')
+      } catch {}
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+  }, [])
+
+  // Keyboard accessibility for resizer
+  const handleResizerKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggleCollapse()
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      if (collapsed) return
+      setNavWidth(w => {
+        const next = Math.max(220, w - 20)
+        try { localStorage.setItem('fs.nav.width', String(next)) } catch {}
+        return next
+      })
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      if (collapsed) {
+        toggleCollapse()
+      } else {
+        setNavWidth(w => {
+          const next = Math.min(420, w + 20)
+          try { localStorage.setItem('fs.nav.width', String(next)) } catch {}
+          return next
+        })
+      }
+    }
+  }, [collapsed, toggleCollapse])
+
+  // Global Ctrl+B or Cmd+B shortcut
+  useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        e.preventDefault()
+        toggleCollapse()
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKey)
+    return () => window.removeEventListener('keydown', handleGlobalKey)
+  }, [toggleCollapse])
+
   if (!me) return null
+  const effectiveWidth = collapsed ? 68 : navWidth
+
   return (
-    <div className="shell">
-      <nav className="nav" aria-label="Main">
-        <div className="brand"><div className="brand-logo"><Icon name="play" size={18} /></div>FAST Studio</div>
-        {current ? menu.map(g => (
-          <div key={g.group}>
-            {g.group && <div className="nav-section">{g.group}</div>}
-            {g.items.map(i => (
-              <NavLink key={i.to} to={`/${current.slug}${i.to ? '/' + i.to : ''}`} end={!i.to}>
-                <Icon name={i.icon} /><span><span>{i.label}</span><small>{i.hint}</small></span>
-              </NavLink>
-            ))}
+    <div
+      className={`shell ${isResizing ? 'is-resizing' : ''}`}
+      style={{ '--nav-w': `${effectiveWidth}px` } as React.CSSProperties}
+    >
+      <nav className={`nav ${collapsed ? 'collapsed' : ''}`} aria-label="Main navigation">
+        <div className="nav-ambient" />
+
+        {/* Resizer strip with drag & double-click collapse */}
+        <div
+          className="nav-resizer"
+          role="separator"
+          tabIndex={0}
+          aria-orientation="vertical"
+          aria-label="Resize sidebar. Double-click or press Enter to collapse/expand."
+          title="Drag to resize · Double-click to collapse/expand (Ctrl+B)"
+          onMouseDown={startResize}
+          onDoubleClick={toggleCollapse}
+          onKeyDown={handleResizerKeyDown}
+        >
+          <div className="nav-resizer-pill" />
+        </div>
+
+        {/* Brand header with animated logo */}
+        <div className="brand">
+          <div
+            className="brand-link"
+            onClick={() => nav(current ? `/${current.slug}` : '/')}
+            role="button"
+            tabIndex={0}
+            title={collapsed ? "FAST Studio · Click to expand" : "FAST Studio Home"}
+            onMouseEnter={e => showItemPopover(e, { label: 'FAST Studio', hint: 'Platform Home · Click logo to expand (Ctrl+B)' })}
+            onMouseLeave={hidePopover}
+          >
+            <div
+              className="brand-logo"
+              onClick={e => {
+                if (collapsed) {
+                  e.stopPropagation()
+                  toggleCollapse()
+                }
+              }}
+            >
+              <Icon name="play" size={17} />
+            </div>
+            <div className="brand-text">
+              <div className="brand-title">
+                <span className="brand-gradient">FAST</span> Studio
+              </div>
+              <div className="brand-sub">Platform</div>
+            </div>
           </div>
-        )) : null}
-        {me.platformAdmin && <>
-          <div className="nav-section">Platform</div>
-          <NavLink to="/platform" end><Icon name="building" /><span><span>Organizations</span><small>Customer tenants</small></span></NavLink>
-          <NavLink to="/platform/email"><Icon name="mail" /><span><span>Email</span><small>Templates & sent emails</small></span></NavLink>
-        </>}
-        <div className="nav-foot">{me.demoMode ? 'Prototype build · data is fictional' : 'Pilot · your real data'}</div>
+          <button
+            type="button"
+            className="nav-toggle-btn"
+            onClick={toggleCollapse}
+            title="Collapse sidebar (Ctrl+B)"
+            aria-label="Collapse sidebar"
+          >
+            <Icon name="chevronLeft" size={16} />
+          </button>
+        </div>
+
+        {/* Dedicated expand button in collapsed mode */}
+        {collapsed && (
+          <button
+            type="button"
+            className="nav-expand-btn"
+            onClick={toggleCollapse}
+            title="Expand sidebar (Ctrl+B)"
+            aria-label="Expand sidebar"
+            onMouseEnter={e => showItemPopover(e, { label: 'Expand Sidebar', hint: 'Press Ctrl+B or click to expand' })}
+            onMouseLeave={hidePopover}
+          >
+            <Icon name="chevronRight" size={15} />
+          </button>
+        )}
+
+        {/* Scrollable Navigation Body */}
+        <div className="nav-body" onScroll={hidePopover}>
+          {current ? menu.map(g => (
+            <div key={g.group}>
+              {g.group && <div className="nav-section">{g.group}</div>}
+              {g.items.map(i => {
+                // Dynamic monitoring alerts tag
+                const isMonitoring = i.to === 'monitoring'
+                const alertCount = alerts.data && alerts.data.length > 0 ? alerts.data.length : 0
+                const itemTag = isMonitoring && alertCount > 0 ? String(alertCount) : i.tag
+                const itemTagType = isMonitoring && alertCount > 0 ? 'alert' : i.tagType
+
+                return (
+                  <NavLink
+                    key={i.to}
+                    to={`/${current.slug}${i.to ? '/' + i.to : ''}`}
+                    end={!i.to}
+                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                    title={collapsed ? `${i.label}${itemTag ? ` [${itemTag}]` : ''}${i.hint ? ` — ${i.hint}` : ''}` : undefined}
+                    onMouseEnter={e => showItemPopover(e, { label: i.label, hint: i.hint, tag: itemTag, tagType: itemTagType })}
+                    onMouseLeave={hidePopover}
+                  >
+                    <Icon name={i.icon} size={17} />
+
+                    {/* Expanded text & tags */}
+                    <div className="nav-text-col">
+                      <div className="nav-title-row">
+                        <span className="nav-label">{i.label}</span>
+                        {itemTag && (
+                          <span className={`nav-tag ${itemTagType ?? 'accent'}`}>
+                            {itemTagType === 'live' && <span className="tag-pulse-dot" />}
+                            {itemTag}
+                          </span>
+                        )}
+                      </div>
+                      <small>{i.hint}</small>
+                    </div>
+
+                    {/* Collapsed dot indicator */}
+                    {collapsed && itemTag && (
+                      <span className={`nav-collapsed-dot ${itemTagType ?? 'accent'}`} />
+                    )}
+                  </NavLink>
+                )
+              })}
+            </div>
+          )) : null}
+
+          {/* Platform Admin Links */}
+          {me.platformAdmin && (
+            <div>
+              <div className="nav-section">Platform</div>
+              <NavLink
+                to="/platform"
+                end
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                title={collapsed ? 'Organizations [Admin] — Customer tenants' : undefined}
+                onMouseEnter={e => showItemPopover(e, { label: 'Organizations', hint: 'Customer tenants', tag: 'Admin', tagType: 'accent' })}
+                onMouseLeave={hidePopover}
+              >
+                <Icon name="building" size={17} />
+                <div className="nav-text-col">
+                  <div className="nav-title-row">
+                    <span className="nav-label">Organizations</span>
+                    <span className="nav-tag accent">Admin</span>
+                  </div>
+                  <small>Customer tenants</small>
+                </div>
+                {collapsed && <span className="nav-collapsed-dot accent" />}
+              </NavLink>
+              <NavLink
+                to="/platform/email"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                title={collapsed ? 'Email — Templates & sent emails' : undefined}
+                onMouseEnter={e => showItemPopover(e, { label: 'Email', hint: 'Templates & sent emails' })}
+                onMouseLeave={hidePopover}
+              >
+                <Icon name="mail" size={17} />
+                <div className="nav-text-col">
+                  <span className="nav-label">Email</span>
+                  <small>Templates & sent emails</small>
+                </div>
+              </NavLink>
+            </div>
+          )}
+        </div>
+
+        {/* Nav Footer (Fixed at bottom) */}
+        <div
+          className="nav-foot"
+          title={me.demoMode ? 'Prototype build · fictional data' : 'Pilot · your real data'}
+          onMouseEnter={e => showItemPopover(e, { label: 'System Status', hint: me.demoMode ? 'Prototype build · fictional data' : 'Pilot · live system' })}
+          onMouseLeave={hidePopover}
+        >
+          <div
+            className={`nav-foot-dot ${me.demoMode ? 'demo' : ''}`}
+          />
+          <div className="nav-foot-label">
+            {me.demoMode ? 'Prototype · fictional data' : 'Pilot · live system'}
+          </div>
+        </div>
       </nav>
+
       <div className="main">
         {me.demoMode && <div className="demo-ribbon"><Icon name="sparkle" size={14} /> Demo environment — fictional companies and development-only accounts. Ad money shown is an estimate from demo playback, never real revenue.</div>}
         <header className="topbar">
+          <button
+            type="button"
+            className="btn ghost icon-btn"
+            onClick={toggleCollapse}
+            title={collapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            style={{ marginRight: 6, flexShrink: 0 }}
+          >
+            <Icon name="panelLeft" size={19} />
+          </button>
           {me.memberships.length > 0 && (
             <label className="row" style={{ gap: 8 }}>
               <Icon name="building" />
@@ -230,6 +544,27 @@ function Shell() {
         </header>
         <main className="content" id="main"><Outlet /></main>
       </div>
+
+      {/* Floating unclipped popover for collapsed icons */}
+      {collapsed && popover && (
+        <div
+          className="nav-floating-popover"
+          style={{ top: `${popover.top}px` }}
+          role="tooltip"
+          aria-hidden="false"
+        >
+          <div className="nav-popover-title">
+            <span>{popover.label}</span>
+            {popover.tag && (
+              <span className={`nav-tag ${popover.tagType ?? 'accent'}`}>
+                {popover.tagType === 'live' && <span className="tag-pulse-dot" />}
+                {popover.tag}
+              </span>
+            )}
+          </div>
+          {popover.hint && <div className="nav-popover-hint">{popover.hint}</div>}
+        </div>
+      )}
     </div>
   )
 }
