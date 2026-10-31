@@ -3,7 +3,7 @@ package com.faststudio.v1.services.ops;
 import com.faststudio.v1.core.common.Data.Channel;
 import com.faststudio.v1.core.common.Data.Entry;
 
-import com.faststudio.v1.controllers.viewer.PlaybackControllerV1;
+import com.faststudio.v1.services.playout.PlaybackServiceV1;
 import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
@@ -37,11 +37,11 @@ public class AvailVerifier {
 
     private final Data data;
     private final EdgeClient edge;
-    private final PlaybackControllerV1 playback;
+    private final PlaybackServiceV1 playback;
     private final Map<UUID, Map<String, Result>> results = new ConcurrentHashMap<>();
     private final Map<String, Watch> watching = new HashMap<>();   // scheduler thread only
 
-    public AvailVerifier(Data data, EdgeClient edge, PlaybackControllerV1 playback) {
+    public AvailVerifier(Data data, EdgeClient edge, PlaybackServiceV1 playback) {
         this.data = data;
         this.edge = edge;
         this.playback = playback;
