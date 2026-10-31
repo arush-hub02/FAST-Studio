@@ -1,0 +1,439 @@
+<!doctype html>
+<!--
+  TEMPLATE for docs/visualizeDB.html. Do not open this file directly: run
+    cd backend && ./mvnw test -Dtest=SchemaCatalogExportTest -Ddbdocs=true
+  which injects the real schema (catalog) and docs/db/table-usage.json (usage) and writes docs/visualizeDB.html.
+  See .claude/skills/visualize-db/SKILL.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAST Studio Database Guide</title>
+<style>
+:root {
+  --bg: #f6f7fb; --panel: #ffffff; --panel-2: #f0f2f8; --text: #172033; --muted: #5b6478; --line: #dde1ea;
+  --accent: #4f46e5; --accent-soft: #eef0ff; --ok: #0f7b4b; --ok-soft: #e6f6ee; --warn: #9a5b00; --warn-soft: #fff4e0;
+  --bad: #b42318; --bad-soft: #fdecea; --code-bg: #0f172a; --code-text: #e2e8f0; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  --f1: #4f46e5; --f2: #0e7490; --f3: #b45309; --f4: #7c3aed; --f5: #0f7b4b; --f6: #be185d; --f7: #1d4ed8; --f8: #a16207; --f9: #475569; --f10: #c2410c; --f11: #15803d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1020; --panel: #121a2e; --panel-2: #18213a; --text: #e6e9f2; --muted: #9aa4bb; --line: #26304a;
+    --accent: #8b8cf8; --accent-soft: #1f2347; --ok: #4ade80; --ok-soft: #10291c; --warn: #fbbf24; --warn-soft: #2d2410;
+    --bad: #f87171; --bad-soft: #2d1515; --code-bg: #060a16; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1020; --panel: #121a2e; --panel-2: #18213a; --text: #e6e9f2; --muted: #9aa4bb; --line: #26304a;
+  --accent: #8b8cf8; --accent-soft: #1f2347; --ok: #4ade80; --ok-soft: #10291c; --warn: #fbbf24; --warn-soft: #2d2410;
+  --bad: #f87171; --bad-soft: #2d1515; --code-bg: #060a16; --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); cursor: pointer; text-decoration: none; }
+a:hover { text-decoration: underline; }
+header { position: sticky; top: 0; z-index: 5; display: flex; gap: 12px; align-items: center; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 17px; margin: 0; white-space: nowrap; }
+header .sub { color: var(--muted); font-size: 12px; }
+#search { flex: 1; max-width: 520px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font-size: 14px; }
+button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 7px; padding: 6px 10px; }
+button:hover { border-color: var(--accent); }
+.layout { display: grid; grid-template-columns: 270px 1fr; min-height: calc(100vh - 58px); }
+nav { border-right: 1px solid var(--line); background: var(--panel); padding: 12px; overflow-y: auto; position: sticky; top: 58px; height: calc(100vh - 58px); }
+nav .views { display: grid; gap: 4px; margin-bottom: 14px; }
+nav .views a { display: block; padding: 7px 10px; border-radius: 7px; color: var(--text); }
+nav .views a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+nav .group { margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+nav .t { display: block; padding: 3px 10px; border-radius: 6px; color: var(--text); font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+nav .t.on { background: var(--accent-soft); color: var(--accent); }
+main { padding: 22px 28px 60px; min-width: 0; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.card h2 { font-size: 16px; margin: 0 0 8px; }
+.card h3 { font-size: 14px; margin: 14px 0 6px; }
+.muted { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); font-size: 12px; white-space: nowrap; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.chip.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.tcard { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 10px; padding: 10px 12px; cursor: pointer; box-shadow: var(--shadow); }
+.tcard:hover { border-color: var(--c); }
+.tcard b { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+.tcard p { margin: 4px 0 6px; color: var(--muted); font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.section-title { display: flex; align-items: center; gap: 8px; margin: 22px 0 10px; font-size: 15px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; border-bottom: 1px solid var(--line); padding: 6px 8px; }
+table.data td { border-bottom: 1px solid var(--line); padding: 6px 8px; vertical-align: top; }
+.table-wrap { overflow-x: auto; }
+.q { border: 1px solid var(--line); border-radius: 10px; margin: 10px 0; overflow: hidden; }
+.q .qh { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--panel-2); }
+.q .qh .what { font-weight: 600; }
+.q pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+.q .why { padding: 6px 12px 10px; color: var(--muted); font-size: 12.5px; background: var(--panel); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.callout { border-radius: 10px; padding: 10px 14px; margin: 10px 0; border: 1px solid var(--line); background: var(--panel-2); }
+.callout.warn { background: var(--warn-soft); border-color: transparent; }
+.callout.bad { background: var(--bad-soft); border-color: transparent; }
+svg text { fill: var(--text); font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+svg .box { fill: var(--panel); stroke: var(--line); }
+svg .box.center { stroke: var(--accent); stroke-width: 2; fill: var(--accent-soft); }
+svg .edge { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+svg .lbl { fill: var(--muted); font-size: 10.5px; }
+svg g.link { cursor: pointer; }
+svg g.link:hover .box { stroke: var(--accent); }
+.hide { display: none !important; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  main { padding: 16px; }
+  header { flex-wrap: wrap; padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>FAST Studio database guide</h1>
+    <div class="sub" id="generated"></div>
+  </div>
+  <input id="search" type="search" placeholder="Search a table, column, constraint or error text (e.g. organization_slug_key)…" autocomplete="off">
+  <button id="theme" title="Switch light/dark">◐</button>
+</header>
+<div class="layout">
+  <nav>
+    <div class="views" id="views"></div>
+    <div id="tablelist"></div>
+  </nav>
+  <main id="main"></main>
+</div>
+<script>
+const CATALOG = /*__CATALOG__*/null;
+const USAGE = /*__USAGE__*/null;
+
+// ------------------------------------------------------------------ data model built from the catalog
+const FEATURE_COLORS = ['--f1','--f2','--f3','--f4','--f5','--f6','--f7','--f8','--f9','--f10','--f11'];
+const features = Object.keys(USAGE.features);
+const featureColor = f => `var(${FEATURE_COLORS[Math.max(0, features.indexOf(f)) % FEATURE_COLORS.length]})`;
+const byTable = (rows) => rows.reduce((m, r) => ((m[r.table_name] ||= []).push(r), m), {});
+const cols = byTable(CATALOG.columns), cons = byTable(CATALOG.constraints), idx = byTable(CATALOG.indexes);
+const pols = byTable(CATALOG.policies), trigs = byTable(CATALOG.triggers);
+const tables = CATALOG.tables.map(t => ({ ...t, usage: USAGE.tables[t.name] || {} }));
+const T = Object.fromEntries(tables.map(t => [t.name, t]));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** Parses "FOREIGN KEY (a, b) REFERENCES parent(c, d)". */
+function fkParts(def) {
+  const m = /FOREIGN KEY \(([^)]+)\) REFERENCES ([\w.]+)\(([^)]+)\)/.exec(def);
+  return m ? { cols: m[1].split(',').map(s => s.trim()), parent: m[2], parentCols: m[3].split(',').map(s => s.trim()) } : null;
+}
+const keyCols = def => (/\(([^)]+)\)/.exec(def)?.[1] || '').split(',').map(s => s.trim()).filter(Boolean);
+for (const t of tables) {
+  const c = cons[t.name] || [];
+  t.pk = keyCols(c.find(x => x.kind === 'p')?.definition || '');
+  t.fks = c.filter(x => x.kind === 'f').map(x => ({ name: x.name, ...fkParts(x.definition), def: x.definition })).filter(f => f.parent);
+  t.uniques = c.filter(x => x.kind === 'u').map(x => ({ name: x.name, cols: keyCols(x.definition), def: x.definition }));
+  t.checks = c.filter(x => x.kind === 'c').map(x => ({ name: x.name, def: x.definition }));
+  t.columns = cols[t.name] || [];
+  t.hasOrg = t.columns.some(c => c.name === 'org_id');
+}
+for (const t of tables) t.children = tables.flatMap(o => o.fks.filter(f => f.parent === t.name).map(f => ({ table: o.name, fk: f })));
+const orderColumn = t => ['created_at', 'occurred_at', 'updated_at', 'started_at'].find(c => t.columns.some(x => x.name === c)) || t.pk[0] || t.columns[0]?.name;
+
+// ------------------------------------------------------------------ query builders (plain-language caption + safety)
+const PROJECT = "(select id from organization where slug = 'your-project-slug')";
+const q = (what, sql, why, safe = true) => ({ what, sql, why, safe });
+
+function lookQueries(t) {
+  const n = t.name, oc = orderColumn(t), where = t.hasOrg ? `\nwhere org_id = ${PROJECT}` : '';
+  const out = [
+    q('Latest 20 rows', `select *\nfrom ${n}${where}\norder by ${oc} desc\nlimit 20;`, t.hasOrg ? 'Replace your-project-slug with the project from the page address (/aurora → aurora).' : 'Shows the most recent rows.'),
+    q('How many rows', `select count(*) from ${n}${where};`, 'A quick size check.'),
+  ];
+  if (t.hasOrg) out.push(q('Rows per project', `select o.slug, count(*)\nfrom ${n} x join organization o on o.id = x.org_id\ngroup by o.slug order by 2 desc;`, 'Which projects have data in this table.'));
+  if (t.pk.length) out.push(q('Find one row by its key', `select *\nfrom ${n}\nwhere ${t.pk.map(c => `${c} = '…'`).join('\n  and ')};`, 'Paste the id from the page address or the API response.'));
+  for (const c of t.columns.filter(c => ['status', 'kind', 'severity', 'event', 'role'].includes(c.name)))
+    out.push(q(`Rows by ${c.name}`, `select ${c.name}, count(*)\nfrom ${n}${where}\ngroup by ${c.name} order by 2 desc;`, `Spot unexpected ${c.name} values.`));
+  return out;
+}
+
+function createStatement(t) {
+  const lines = t.columns.map(c => `  ${c.name} ${c.type}${c.not_null ? ' not null' : ''}${c.default_value ? ' default ' + c.default_value : ''}${c.identity === 'a' ? ' generated always as identity' : c.identity === 'd' ? ' generated by default as identity' : ''}`);
+  for (const c of cons[t.name] || []) lines.push(`  constraint ${c.name} ${c.definition}`);
+  let sql = `create table ${t.name} (\n${lines.join(',\n')}\n);`;
+  const conNames = new Set((cons[t.name] || []).map(c => c.name));
+  for (const i of (idx[t.name] || []).filter(i => !conNames.has(i.name))) sql += `\n${i.definition};`;
+  if (t.rls) sql += `\nalter table ${t.name} enable row level security;`;
+  for (const p of pols[t.name] || []) sql += `\ncreate policy ${p.name} on ${t.name} for ${p.command}${p.using_expr ? ` using (${p.using_expr})` : ''}${p.with_check ? ` with check (${p.with_check})` : ''};`;
+  for (const g of trigs[t.name] || []) sql += `\n${g.definition};`;
+  return sql;
+}
+
+function structureQueries(t) {
+  const n = t.name;
+  return [
+    q('How this table is built (CREATE TABLE)', createStatement(t), 'Rebuilt from the live schema: columns, keys, checks, indexes, row-level security and triggers. For reading only.'),
+    q('Columns as the database sees them', `select column_name, data_type, is_nullable, column_default\nfrom information_schema.columns\nwhere table_name = '${n}' order by ordinal_position;`, 'Use this to confirm a column exists after a deploy.'),
+    q('Add a column (template)', `-- Put this in a NEW migration file, e.g. backend/src/main/resources/db/migration/V16__describe_change.sql\nalter table ${n} add column new_column text not null default '';`, 'Never change a live database by hand: add a migration so every environment gets the same change.', false),
+    q('Add an index (template)', `-- New migration file\ncreate index ${n}_new_column_idx on ${n}(${t.hasOrg ? 'org_id, ' : ''}new_column);`, 'Speeds up searches by that column.', false),
+    q('Allow only certain values (template)', `-- New migration file\nalter table ${n} add constraint ${n}_new_column_check check (new_column in ('A', 'B'));`, 'Rejects bad values with a clear error.', false),
+    q('Rename a column (template)', `-- New migration file; update the Java code that uses the old name in the same change\nalter table ${n} rename column old_name to new_name;`, 'The code must change at the same time.', false),
+  ];
+}
+
+function idQueries(t) {
+  const out = [];
+  for (const c of t.columns) {
+    const d = c.default_value || '';
+    if (d.startsWith('nextval(')) {
+      const seq = /nextval\('([^']+)'/.exec(d)?.[1] || `${t.name}_${c.name}_seq`;
+      out.push(q(`${c.name}: automatic counter (auto-increment)`, `select pg_get_serial_sequence('${t.name}', '${c.name}');  -- the counter's name\nselect last_value from ${seq.replace(/::regclass$/, '')};`, `${c.name} is numbered automatically (1, 2, 3…). Never insert it yourself.`));
+      out.push(q(`${c.name}: fix the counter after a manual import`, `select setval(pg_get_serial_sequence('${t.name}', '${c.name}'), (select coalesce(max(${c.name}), 1) from ${t.name}));`, 'Only if inserts fail with "duplicate key … _pkey" after rows were copied in by hand. Changes data — ask a developer first.', false));
+    } else if (c.identity) {
+      out.push(q(`${c.name}: identity column (auto-increment)`, `select pg_get_serial_sequence('${t.name}', '${c.name}');`, `${c.name} is numbered automatically.`));
+    } else if (/gen_random_uuid\(\)/.test(d)) {
+      out.push(q(`${c.name}: random id created automatically`, `-- New rows get a random id like 7b2473b8-eff6-4558-87c8-16b371424fa9; you never choose it.\nselect ${c.name} from ${t.name} order by ${orderColumn(t)} desc limit 5;`, 'There is no counter to reset: every id is unique on its own.'));
+    }
+  }
+  if (!out.length) out.push(q('No automatic id', `-- ${t.name} is identified by: ${t.pk.join(', ') || '(no primary key)'}\nselect ${t.pk.join(', ') || '*'} from ${t.name} limit 5;`, 'The key comes from other tables (for example a project id plus a name), not from a counter.'));
+  return out;
+}
+
+function diagnoseQueries(t) {
+  const n = t.name, out = [];
+  for (const f of t.fks) {
+    const on = f.cols.map((c, i) => `p.${f.parentCols[i]} = x.${c}`).join(' and ');
+    out.push(q(`Rows pointing to a missing ${f.parent}`, `select x.*\nfrom ${n} x\nleft join ${f.parent} p on ${on}\nwhere p.${f.parentCols[0]} is null and x.${f.cols[f.cols.length - 1]} is not null\nlimit 20;`, `Should return nothing. Related error: "violates foreign key constraint ${f.name}".`));
+  }
+  for (const u of t.uniques.concat(t.pk.length ? [{ name: `${n}_pkey`, cols: t.pk }] : []))
+    out.push(q(`Duplicates for ${u.name}`, `select ${u.cols.join(', ')}, count(*)\nfrom ${n}\ngroup by ${u.cols.join(', ')}\nhaving count(*) > 1;`, `Related error: "duplicate key value violates unique constraint ${u.name}". Shows which value already exists.`));
+  for (const c of t.checks) {
+    const expr = c.def.replace(/^CHECK \(/, '').replace(/\)$/, '');
+    out.push(q(`Rule ${c.name}`, `-- Allowed: ${c.def}\nselect * from ${n} where not (${expr}) limit 20;`, `Related error: "violates check constraint ${c.name}". The first line shows what values are allowed.`));
+  }
+  for (const ch of t.children.slice(0, 6))
+    out.push(q(`What uses a ${n} row (in ${ch.table})`, `select count(*)\nfrom ${ch.table}\nwhere ${ch.fk.cols.map((c, i) => `${c} = '…' /* ${n}.${ch.fk.parentCols[i]} */`).join('\n  and ')};`, `Before deleting or archiving a ${n} row, see what still points to it.`));
+  if (t.rls) out.push(q('Row-level security check', `-- In the app, a project only sees its own rows. As the database owner you see ALL projects, so always filter:\nselect count(*) from ${n} where org_id = ${PROJECT};`, '"Not found" in the app but the row exists here? It probably belongs to another project (org_id).'));
+  return out;
+}
+
+// ------------------------------------------------------------------ rendering helpers
+const chip = (txt, cls = '') => `<span class="chip ${cls}">${txt}</span>`;
+let qid = 0;
+function queryBlock(x) {
+  const id = 'q' + (qid++);
+  return `<div class="q"><div class="qh"><span class="what">${esc(x.what)}</span><span class="chips">${x.safe ? chip('read-only', 'ok') : chip('changes the database', 'bad')}<button data-copy="${id}">Copy</button></span></div><pre id="${id}">${esc(x.sql)}</pre><div class="why">${esc(x.why)}</div></div>`;
+}
+function tableLink(n) { return `<a data-table="${esc(n)}" class="mono">${esc(n)}</a>`; }
+function pageChips(pages) { return (pages || []).map(p => `<a data-page="${esc(p)}">${chip(esc(USAGE.pages[p] || p) + ` <span class="muted mono">${esc(p)}</span>`)}</a>`).join(' '); }
+
+function relationsSvg(t) {
+  const parents = [...new Set(t.fks.map(f => f.parent))].filter(p => p !== t.name);
+  const children = [...new Set(t.children.map(c => c.table))].filter(c => c !== t.name);
+  const rowH = 30, h = Math.max(parents.length, children.length, 1) * rowH + 30, W = 780, bw = 190, bh = 24;
+  const cx = W / 2 - bw / 2, cy = h / 2 - bh / 2;
+  const box = (x, y, name, cls) => `<g class="link" data-table="${esc(name)}"><rect class="box ${cls}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6"/><text x="${x + 10}" y="${y + 16}">${esc(name)}</text></g>`;
+  let s = `<svg viewBox="0 0 ${W} ${h}" width="100%" style="max-width:${W}px" role="img" aria-label="Relations of ${esc(t.name)}">`;
+  parents.forEach((p, i) => { const y = 15 + i * rowH; s += `<path class="edge" d="M${20 + bw} ${y + bh / 2} C ${cx - 40} ${y + bh / 2}, ${cx - 40} ${cy + bh / 2}, ${cx} ${cy + bh / 2}"/>` + box(20, y, p, ''); });
+  children.forEach((c, i) => { const y = 15 + i * rowH, x = W - 20 - bw; s += `<path class="edge" d="M${cx + bw} ${cy + bh / 2} C ${x + 40} ${cy + bh / 2}, ${x + 40} ${y + bh / 2}, ${x} ${y + bh / 2}"/>` + box(x, y, c, ''); });
+  s += box(cx, cy, t.name, 'center');
+  s += `<text class="lbl" x="20" y="11">uses (points to) →</text><text class="lbl" x="${W - 20 - bw}" y="11">← used by (points here)</text></svg>`;
+  return parents.length || children.length ? s : '<p class="muted">No relations to other tables.</p>';
+}
+
+// ------------------------------------------------------------------ views
+const main = document.getElementById('main');
+const views = [['map', 'Map of all tables'], ['pages', 'By page'], ['features', 'By feature'], ['errors', 'Fix a 500 error'], ['howto', 'How to run a query']];
+let current = { view: 'map' };
+
+function renderNav() {
+  document.getElementById('views').innerHTML = views.map(([k, l]) => `<a data-view="${k}" class="${current.view === k ? 'on' : ''}">${l}</a>`).join('');
+  const term = document.getElementById('search').value.trim().toLowerCase();
+  document.getElementById('tablelist').innerHTML = features.map(f => {
+    const ts = tables.filter(t => t.usage.feature === f && matches(t, term));
+    return ts.length ? `<div class="group"><span class="dot" style="background:${featureColor(f)}"></span>${esc(f)}</div>` + ts.map(t => `<a class="t ${current.table === t.name ? 'on' : ''}" data-table="${t.name}">${t.name}</a>`).join('') : '';
+  }).join('');
+}
+
+/** Search across table, column, constraint and index names, purposes and error text. */
+function matches(t, term) {
+  if (!term) return true;
+  const hay = [t.name, t.usage.purpose, t.usage.feature, ...(t.usage.watch || []), ...(t.usage.apis || []), ...(t.usage.pages || []),
+    ...t.columns.map(c => c.name), ...(cons[t.name] || []).map(c => c.name + ' ' + c.definition), ...(idx[t.name] || []).map(i => i.name)].join(' ').toLowerCase();
+  return term.split(/\s+/).every(w => hay.includes(w.replace(/["'.,:]/g, '')));
+}
+
+function renderMap() {
+  const term = document.getElementById('search').value.trim().toLowerCase();
+  let html = `<div class="card"><h2>All ${tables.length} tables</h2><p class="muted">Each coloured group is a part of the product. Click a table to see what it stores, which screens use it, how it is built and ready-made queries to check it. Lines between tables are shown on each table's page.</p></div>`;
+  for (const f of features) {
+    const ts = tables.filter(t => t.usage.feature === f && matches(t, term));
+    if (!ts.length) continue;
+    html += `<div class="section-title"><span class="dot" style="background:${featureColor(f)}"></span><b>${esc(f)}</b><span class="muted">— ${esc(USAGE.features[f])}</span></div><div class="grid">`;
+    html += ts.map(t => `<div class="tcard" style="--c:${featureColor(f)}" data-table="${t.name}"><b>${t.name}</b><p>${esc(t.usage.purpose)}</p><div class="chips">${chip(t.columns.length + ' columns')}${t.fks.length ? chip('→ ' + t.fks.length) : ''}${t.children.length ? chip('← ' + t.children.length) : ''}${t.rls ? chip('per project', 'accent') : ''}</div></div>`).join('');
+    html += `</div>`;
+  }
+  main.innerHTML = html || '<div class="card">No table matches your search.</div>';
+}
+
+function renderTable(name) {
+  const t = T[name];
+  if (!t) return renderMap();
+  const u = t.usage, code = CATALOG.code[name] || [];
+  const keyBadges = c => [t.pk.includes(c.name) ? chip('key', 'accent') : '', t.fks.some(f => f.cols.includes(c.name)) ? chip('→ ' + t.fks.filter(f => f.cols.includes(c.name)).map(f => f.parent).join(', ')) : '',
+    t.uniques.some(x => x.cols.length === 1 && x.cols[0] === c.name) ? chip('unique') : ''].join(' ');
+  const tab = current.tab || 'look';
+  const groups = { look: ['Look at the data', lookQueries(t)], structure: ['Structure & changes', structureQueries(t)], ids: ['IDs / auto-increment', idQueries(t)], diagnose: ['Diagnose problems', diagnoseQueries(t)] };
+  main.innerHTML = `
+  <div class="card">
+    <div class="chips" style="margin-bottom:6px">${chip(`<span class="dot" style="background:${featureColor(u.feature)}"></span>` + esc(u.feature))}${t.rls ? chip('Row-level security: each project sees only its own rows', 'accent') : chip('Shared table (not split per project)')}</div>
+    <h2 class="mono" style="font-size:20px">${name}</h2>
+    <p>${esc(u.purpose)}</p>
+    ${u.watch?.length ? `<div class="callout warn"><b>Good to know</b><ul style="margin:6px 0 0 18px;padding:0">${u.watch.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+  </div>
+  <div class="card"><h2>Where it is used</h2>
+    <h3>Screens</h3><div class="chips">${pageChips(u.pages) || '<span class="muted">Not shown directly on a screen.</span>'}</div>
+    <h3>API calls</h3><div class="chips">${(u.apis || []).map(a => chip(`<span class="mono">${esc(a)}</span>`)).join(' ') || '<span class="muted">—</span>'}</div>
+    <h3>Code that reads or writes it</h3>${code.length ? `<div class="table-wrap"><table class="data"><tr><th>Class</th><th>Layer</th><th>Does</th><th>File</th></tr>${code.map(c => `<tr><td class="mono">${esc(c.class)}</td><td>${esc(c.layer)}</td><td>${esc(c.operations)}</td><td class="mono muted">${esc(c.file)}</td></tr>`).join('')}</table></div>` : '<p class="muted">Only used through database rules (triggers/functions) or migrations.</p>'}
+  </div>
+  <div class="card"><h2>Relations</h2>${relationsSvg(t)}</div>
+  <div class="card"><h2>Columns</h2><div class="table-wrap"><table class="data"><tr><th>Column</th><th>Type</th><th>Required</th><th>Default</th><th></th></tr>
+    ${t.columns.map(c => `<tr><td class="mono"><b>${esc(c.name)}</b></td><td class="mono">${esc(c.type)}</td><td>${c.not_null ? 'yes' : '<span class="muted">no</span>'}</td><td class="mono muted">${esc(c.default_value || (c.identity ? 'automatic number' : ''))}</td><td>${keyBadges(c)}</td></tr>`).join('')}
+  </table></div>
+  ${t.checks.length ? `<h3>Rules (allowed values)</h3>${t.checks.map(c => `<div class="mono" style="margin:4px 0"><b>${esc(c.name)}</b>: ${esc(c.def)}</div>`).join('')}` : ''}
+  ${(idx[name] || []).length ? `<h3>Indexes (speed up searches)</h3>${idx[name].map(i => `<div class="mono muted" style="margin:3px 0">${esc(i.definition)}</div>`).join('')}` : ''}
+  ${(pols[name] || []).length ? `<h3>Row-level security policies</h3>${pols[name].map(p => `<div class="mono muted" style="margin:3px 0">${esc(p.name)}: ${esc(p.command)} using ${esc(p.using_expr)}</div>`).join('')}` : ''}
+  ${(trigs[name] || []).length ? `<h3>Triggers (automatic actions)</h3>${trigs[name].map(g => `<div class="mono muted" style="margin:3px 0">${esc(g.definition)}</div>`).join('')}` : ''}
+  </div>
+  <div class="card"><h2>Queries</h2>
+    <div class="callout">Start every session with <span class="mono">begin read only;</span> and end with <span class="mono">rollback;</span> — then nothing can change by accident. Queries marked <b>changes the database</b> are for developers and belong in a migration.</div>
+    <div class="tabs">${Object.entries(groups).map(([k, [l]]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    ${groups[tab][1].map(queryBlock).join('')}
+  </div>`;
+}
+
+function renderPages() {
+  const pages = Object.keys(USAGE.pages);
+  main.innerHTML = `<div class="card"><h2>Tables by screen</h2><p class="muted">If a screen shows an error, these are the tables behind it. Click a table to check it.</p></div>` +
+    pages.map(p => {
+      const ts = tables.filter(t => (t.usage.pages || []).includes(p));
+      return `<div class="card" id="page-${esc(p)}"><h2>${esc(USAGE.pages[p])} <span class="muted mono" style="font-weight:400">${esc(p)}</span></h2><div class="chips">${ts.map(t => `<a data-table="${t.name}">${chip(`<span class="dot" style="background:${featureColor(t.usage.feature)}"></span>` + t.name)}</a>`).join(' ') || '<span class="muted">No tables recorded.</span>'}</div></div>`;
+    }).join('');
+}
+
+function renderFeatures() {
+  main.innerHTML = features.map(f => {
+    const ts = tables.filter(t => t.usage.feature === f);
+    return `<div class="card"><h2><span class="dot" style="background:${featureColor(f)}"></span> ${esc(f)}</h2><p class="muted">${esc(USAGE.features[f])}</p><div class="table-wrap"><table class="data"><tr><th>Table</th><th>What it stores</th><th>Screens</th></tr>${ts.map(t => `<tr><td>${tableLink(t.name)}</td><td>${esc(t.usage.purpose)}</td><td>${(t.usage.pages || []).map(p => esc(USAGE.pages[p] || p)).join(', ')}</td></tr>`).join('')}</table></div></div>`;
+  }).join('');
+}
+
+const ERRORS = [
+  ['duplicate key value violates unique constraint "NAME"', '23505', 'Something with the same name/key already exists.', 'Search this guide for NAME → open its table → Diagnose → "Duplicates for NAME". Usually the user should pick another name or edit the existing item.'],
+  ['violates foreign key constraint "NAME"', '23503', 'The row points to something that does not exist (or something is being deleted while still in use).', 'Search for NAME → Diagnose → "Rows pointing to a missing …" and "What uses a … row".'],
+  ['violates check constraint "NAME"', '23514', 'A value is not one of the allowed values.', 'Search for NAME → Columns → Rules shows the allowed values.'],
+  ['null value in column "COLUMN" … violates not-null constraint', '23502', 'A required field was empty.', 'Search for COLUMN → see which table requires it; the screen or API call did not send it.'],
+  ['new row violates row-level security policy for table "TABLE"', '42501', 'The code tried to write a row for a different project than the one the request belongs to.', 'A code bug, not a data problem. Open TABLE → Where it is used → note the class, and report it with the error reference.'],
+  ['relation "TABLE" does not exist / column "COLUMN" does not exist', '42P01 / 42703', 'The app is newer than the database: a migration has not run.', 'Run the "Applied migrations" query below and compare with backend/src/main/resources/db/migration.'],
+  ['invalid input syntax for type uuid', '22P02', 'An id in the address or request is not a valid id.', 'Check the link; ids look like 7b2473b8-eff6-4558-87c8-16b371424fa9.'],
+  ['Incorrect result size: expected 1, actual 0', '—', 'The code expected exactly one row but found none.', 'Open the table named in the stack trace → Look → "Find one row by its key". The row may be missing or belong to another project.'],
+  ['could not serialize access / deadlock detected', '40001 / 40P01', 'Two changes happened at the same moment.', 'Usually safe to retry. Repeated? Report it with the time.'],
+  ['Connection refused / Connection is not available', '08001', 'The database is not running or is overloaded.', 'Restart the app (stop.bat, start.bat). The local database starts with it.'],
+];
+
+function renderErrors() {
+  main.innerHTML = `
+  <div class="card"><h2>Fix a 500 error caused by the database</h2>
+    <ol style="margin:0 0 0 18px;padding:0">
+      <li>The screen or API answer shows a reference, for example <span class="mono">Something went wrong on the server (reference 5342f169)</span>.</li>
+      <li>Open the server log <span class="mono">data/runtime/app.log</span> and search for <span class="mono">ref=5342f169</span>.</li>
+      <li>Read down to the line that starts with <span class="mono">Caused by</span> or <span class="mono">ERROR:</span>. Copy the database message.</li>
+      <li>Paste a distinctive part (for example the constraint name) into the search box at the top: it shows the table involved. Use that table's <b>Diagnose</b> queries.</li>
+    </ol>
+  </div>
+  <div class="card"><h2>What common database messages mean</h2><div class="table-wrap"><table class="data"><tr><th>Message contains</th><th>Code</th><th>In plain words</th><th>What to do</th></tr>
+    ${ERRORS.map(e => `<tr><td class="mono">${esc(e[0])}</td><td class="mono">${esc(e[1])}</td><td>${esc(e[2])}</td><td>${esc(e[3])}</td></tr>`).join('')}
+  </table></div></div>
+  <div class="card"><h2>Checks for the whole database</h2>
+    ${[q('Applied migrations', 'select installed_rank, version, description, success, installed_on\nfrom flyway_schema_history order by installed_rank;', 'Every file in db/migration should be listed with success = true.'),
+       q('Find a project id from its address', "select id, slug, name, kind, status, tenant_id\nfrom organization where slug = 'your-project-slug';", 'Most tables store the project as org_id.'),
+       q('Is a project or its tenant suspended?', "select o.slug, o.status as project_status, t.name as tenant, t.status as tenant_status\nfrom organization o left join customer_tenant t on t.id = o.tenant_id\nwhere o.slug = 'your-project-slug';", 'Suspended = 403 ORG_SUSPENDED on every management screen.'),
+       q('Who can sign in to a project', "select u.email, m.role, m.custom_role_key\nfrom membership m join app_user u on u.id = m.user_id\nwhere m.org_id = (select id from organization where slug = 'your-project-slug');", 'No row for a person = they get "not found" for that project.'),
+       q('Latest changes by people', "select created_at, action, resource_type, detail\nfrom audit_event\nwhere org_id = (select id from organization where slug = 'your-project-slug')\norder by id desc limit 30;", 'What happened just before the error.'),
+       q('Long-running or stuck queries', "select pid, now() - query_start as running_for, state, left(query, 120) as query\nfrom pg_stat_activity where state <> 'idle' order by running_for desc;", 'Anything running for minutes is worth reporting.')].map(queryBlock).join('')}
+  </div>`;
+}
+
+function renderHowto() {
+  main.innerHTML = `
+  <div class="card"><h2>How to run a query safely</h2>
+    <ol style="margin:0 0 0 18px;padding:0">
+      <li>Install a database tool such as <b>DBeaver</b> or <b>pgAdmin</b> (or use <span class="mono">psql</span>).</li>
+      <li>Connect. Local demo: host <span class="mono">localhost</span>, port <span class="mono">54329</span>, database <span class="mono">postgres</span>, user <span class="mono">postgres</span> (the port is shown in <span class="mono">data/runtime/app.log</span> as "Database: jdbc:postgresql://localhost:…"). For other environments ask the administrator for a <b>read-only</b> login.</li>
+      <li>Type <span class="mono">begin read only;</span> first. Now nothing can be changed by mistake.</li>
+      <li>Copy a query from a table's page, replace the <span class="mono">…</span> or <span class="mono">your-project-slug</span> parts, and run it.</li>
+      <li>Finish with <span class="mono">rollback;</span>.</li>
+    </ol>
+  </div>
+  <div class="card"><h2>Things to know</h2>
+    <ul style="margin:0 0 0 18px;padding:0">
+      <li><b>Projects are separated by org_id.</b> In the app each project only sees its own rows (row-level security). Connected as the database owner you see every project, so always add <span class="mono">where org_id = …</span>.</li>
+      <li><b>Times are stored in UTC.</b> Screens show the channel's or browser's timezone.</li>
+      <li><b>Never change the structure by hand.</b> Structure changes go into a new migration file (<span class="mono">backend/src/main/resources/db/migration/V&lt;next&gt;__name.sql</span>) so every environment matches.</li>
+      <li><b>Secrets are encrypted.</b> Columns such as tokens, secrets and password hashes cannot be read back — that is on purpose.</li>
+      <li>This guide is generated from the real schema; regenerate it after every migration (see <span class="mono">.claude/skills/visualize-db/SKILL.md</span>).</li>
+    </ul>
+  </div>`;
+}
+
+function render() {
+  qid = 0;
+  renderNav();
+  if (current.table) renderTable(current.table);
+  else ({ map: renderMap, pages: renderPages, features: renderFeatures, errors: renderErrors, howto: renderHowto }[current.view] || renderMap)();
+  if (current.anchor) document.getElementById(current.anchor)?.scrollIntoView();
+  else main.scrollTop = 0;
+}
+
+function go(state) {
+  current = { view: 'map', ...state };
+  const hash = current.table ? '#table=' + current.table + (current.tab ? '&tab=' + current.tab : '') : '#' + current.view;
+  if (location.hash !== hash) history.pushState(null, '', hash);
+  render();
+  window.scrollTo(0, 0);
+}
+
+function fromHash() {
+  const h = location.hash.slice(1), p = new URLSearchParams(h.includes('=') ? h : '');
+  current = p.get('table') ? { view: 'map', table: p.get('table'), tab: p.get('tab') || undefined } : { view: views.some(v => v[0] === h) ? h : 'map' };
+  render();
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-table],[data-view],[data-tab],[data-copy],[data-page]');
+  if (!el) return;
+  if (el.dataset.copy) {
+    navigator.clipboard?.writeText(document.getElementById(el.dataset.copy).textContent).then(() => { el.textContent = 'Copied'; setTimeout(() => el.textContent = 'Copy', 1200); });
+  } else if (el.dataset.table) go({ table: el.dataset.table });
+  else if (el.dataset.view) go({ view: el.dataset.view });
+  else if (el.dataset.tab) go({ table: current.table, tab: el.dataset.tab });
+  else if (el.dataset.page) { go({ view: 'pages', anchor: 'page-' + el.dataset.page }); }
+});
+document.getElementById('search').addEventListener('input', () => { if (current.table || !['map'].includes(current.view)) current = { view: 'map' }; render(); });
+document.getElementById('theme').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('dbguide-theme', document.documentElement.dataset.theme); } catch (_) {}
+});
+try { const saved = localStorage.getItem('dbguide-theme'); if (saved) document.documentElement.dataset.theme = saved; } catch (_) {}
+window.addEventListener('popstate', fromHash);
+document.getElementById('generated').textContent = `${tables.length} tables · generated from ${CATALOG.generatedFrom}`;
+fromHash();
+</script>
+</body>
+</html>
