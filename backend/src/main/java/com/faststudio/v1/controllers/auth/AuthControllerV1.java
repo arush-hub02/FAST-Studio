@@ -2,6 +2,7 @@ package com.faststudio.v1.controllers.auth;
 
 import com.faststudio.v1.config.demo.DemoAccounts;
 import com.faststudio.v1.core.auth.Auth;
+import com.faststudio.v1.core.auth.Throttle;
 import com.faststudio.v1.core.auth.Tokens;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sign-in and sessions: browser sign-in (HttpOnly token cookies, or a server session in faststudio.auth.mode=session),
@@ -41,17 +41,17 @@ public class AuthControllerV1 {
     private final Tokens tokens;
     private final MailServiceV1 mail;
     private final Audit audit;
-    // ponytail: in-memory per-email throttle; move to a shared store when running >1 instance.
-    private final Map<String, Deque<Instant>> failures = new ConcurrentHashMap<>();
+    private final Throttle throttle;
 
     public AuthControllerV1(AuthenticationManager authManager, SecurityContextRepository contextRepo, AccountServiceV1 accounts,
-                            Tokens tokens, MailServiceV1 mail, Audit audit) {
+                            Tokens tokens, MailServiceV1 mail, Audit audit, Throttle throttle) {
         this.authManager = authManager;
         this.contextRepo = contextRepo;
         this.accounts = accounts;
         this.tokens = tokens;
         this.mail = mail;
         this.audit = audit;
+        this.throttle = throttle;
     }
 
     @GetMapping("/csrf")
@@ -62,7 +62,7 @@ public class AuthControllerV1 {
     /** Browser sign-in: tokens in HttpOnly cookies (or a server session in faststudio.auth.mode=session). */
     @PostMapping("/login")
     Me login(@Valid @RequestBody LoginRequest body, HttpServletRequest req, HttpServletResponse res) {
-        var auth = authenticate(body);
+        var auth = authenticate(body, req);
         var ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(auth);
         SecurityContextHolder.setContext(ctx);
@@ -77,21 +77,21 @@ public class AuthControllerV1 {
         return accounts.me(id);
     }
 
-    /** Checks email + password, with a per-email throttle and the same answer whether or not the account exists. */
-    private Authentication authenticate(LoginRequest body) {
-        String key = body.email().toLowerCase(Locale.ROOT);
-        Deque<Instant> recent = failures.computeIfAbsent(key, k -> new ArrayDeque<>());
-        synchronized (recent) {
-            recent.removeIf(t -> t.isBefore(Instant.now().minusSeconds(300)));
-            if (recent.size() >= 5) throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED",
-                    "Too many attempts. Wait a few minutes and try again.");
-        }
+    /**
+     * Checks email + password with the same answer whether or not the account exists. Limited per account and per
+     * client address (see {@link Throttle}); only failures count, and a success clears the account's count.
+     */
+    private Authentication authenticate(LoginRequest body, HttpServletRequest req) {
+        String email = Throttle.email(body.email()), ip = Throttle.ip(req);
+        throttle.check(Throttle.LOGIN_EMAIL, email);
+        throttle.check(Throttle.LOGIN_IP, ip);
         try {
             var auth = authManager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(body.email(), body.password()));
-            failures.remove(key);
+            throttle.clear(Throttle.LOGIN_EMAIL, email);
             return auth;
         } catch (AuthenticationException e) {
-            synchronized (recent) { recent.add(Instant.now()); }
+            throttle.record(Throttle.LOGIN_EMAIL, email);
+            throttle.record(Throttle.LOGIN_IP, ip);
             throw new ApiException(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", "Email or password is incorrect.");
         }
     }
@@ -114,7 +114,11 @@ public class AuthControllerV1 {
 
     /** Public: self-service reset link by email (same answer whether or not the account exists). */
     @PostMapping("/forgot")
-    Map<String, String> forgot(@Valid @RequestBody ForgotRequest body) { return accounts.forgot(body); }
+    Map<String, String> forgot(@Valid @RequestBody ForgotRequest body, HttpServletRequest req) {
+        throttle.check(Throttle.FORGOT_IP, Throttle.ip(req));
+        throttle.record(Throttle.FORGOT_IP, Throttle.ip(req));
+        return accounts.forgot(body);
+    }
 
     // ---------------------------------------------------------------- tokens (docs/PARTNER_ACCESS_AND_TOKENS.md §4.2)
 
@@ -134,9 +138,9 @@ public class AuthControllerV1 {
 
     /** For scripts and partner systems: email + password in the body, tokens in the answer (no cookies). */
     @PostMapping("/token")
-    TokenResponse token(@Valid @RequestBody LoginRequest body) {
+    TokenResponse token(@Valid @RequestBody LoginRequest body, HttpServletRequest req) {
         requireTokens();
-        UUID id = UUID.fromString(authenticate(body).getName());
+        UUID id = UUID.fromString(authenticate(body, req).getName());
         UUID sid = UUID.randomUUID();
         Tokens.Access a = tokens.mint(id, null, sid);
         Tokens.Refresh r = tokens.startFamily(id, sid, a.org() == null ? null : a.org().id());

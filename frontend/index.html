@@ -7,18 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>FAST Studio</title>
-    <script>
-      (function() {
-        try {
-          var m = localStorage.getItem('fs.theme.mode') || 'dark';
-          var a = localStorage.getItem('fs.theme.accent') || 'indigo';
-          var d = localStorage.getItem('fs.theme.density') || 'standard';
-          document.documentElement.setAttribute('data-theme', m);
-          document.documentElement.setAttribute('data-accent', a);
-          document.documentElement.setAttribute('data-density', d);
-        } catch(e) {}
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,11 +3,14 @@ package com.faststudio.v1.services.ads;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.common.PublicUrl;
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.ads.AdSourceRepository;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import com.faststudio.v1.services.ads.sources.VastSource;
 
 import jakarta.validation.constraints.*;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -55,7 +58,7 @@ public class AdSourceAdminService {
         materializeDefault(org);
         if ("DIRECT".equals(r.kind()) && repository.hasDirect(org))
             throw ApiException.conflict("DIRECT_EXISTS", "Direct-sold campaigns are already in the waterfall.");
-        UUID id = repository.insert(org, r.name().trim(), r.kind(), tag, r.timeoutMs(), r.enabled(), managedBy);
+        UUID id = repository.insert(org, r.name().trim(), r.kind(), seal(tag), r.timeoutMs(), r.enabled(), managedBy);
         audit.log(org, actor, "ad-source.create", "ad_source", id, r.name() + " (" + managedBy.toLowerCase() + ")");
         return id;
     }
@@ -63,8 +66,8 @@ public class AdSourceAdminService {
     /** Blank write-only credentials preserve the stored URL; ownership is checked before reading it. */
     public void update(UUID org, UUID actor, UUID id, AdSourceRequest r, String onlyManagedBy) {
         String tag = "VAST".equals(r.kind()) && (r.tagUrl() == null || r.tagUrl().isBlank())
-                ? repository.vastTagUrl(org, id, onlyManagedBy).orElseThrow(() -> ApiException.notFound("Ad source"))
-                : checkTag(r);
+                ? repository.vastTagUrl(org, id, onlyManagedBy).orElseThrow(() -> ApiException.notFound("Ad source"))   // already sealed
+                : seal(checkTag(r));
         if (!repository.update(org, id, r.kind(), r.name().trim(), tag, r.timeoutMs(), r.enabled(), onlyManagedBy))
             throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.update", "ad_source", id, r.name());
@@ -111,6 +114,17 @@ public class AdSourceAdminService {
         } catch (Exception e) {
             return new TagTest("[REDACTED]", (System.nanoTime() - start) / 1_000_000L, List.of(), VastSource.reason(e));
         }
+    }
+
+    private String seal(String tag) { return tag == null ? null : decisions.sealTag(tag); }
+
+    /** One-time upgrade: tags saved before encryption at rest are re-saved sealed (system task across tenants). */
+    @EventListener(ApplicationReadyEvent.class)
+    void sealPlaintextTags() {
+        TenantScope.bypass(() -> {
+            for (var t : repository.plaintextTags()) repository.setTagUrl(t.orgId(), t.id(), decisions.sealTag(t.tagUrl()));
+            return null;
+        });
     }
 
     private static String checkTag(AdSourceRequest r) {

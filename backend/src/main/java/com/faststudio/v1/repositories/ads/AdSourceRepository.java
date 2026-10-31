@@ -95,6 +95,18 @@ public class AdSourceRepository {
         db.sql("update ad_source set position = :p where org_id = :o and id = :id").param("p", position).param("o", org).param("id", id).update();
     }
 
+    /** A stored tag URL (sealed, or plaintext from before encryption) for the start-up re-encryption. */
+    public record StoredTag(UUID orgId, UUID id, String tagUrl) {}
+
+    /** Tags still stored as plaintext (they contain "://"; sealed values are Base64). Run under TenantScope.bypass. */
+    public List<StoredTag> plaintextTags() {
+        return db.sql("select org_id, id, tag_url from ad_source where tag_url like '%://%'").query(StoredTag.class).list();
+    }
+
+    public void setTagUrl(UUID org, UUID id, String tagUrl) {
+        db.sql("update ad_source set tag_url = :u where org_id = :o and id = :id").param("u", tagUrl).param("o", org).param("id", id).update();
+    }
+
     private static Map<String, Object> by(String managedBy) {
         return managedBy == null ? Map.of() : Map.of("by", managedBy);
     }

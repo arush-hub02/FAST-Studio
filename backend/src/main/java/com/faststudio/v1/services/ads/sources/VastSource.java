@@ -43,7 +43,8 @@ public class VastSource implements IAdSource {
 
     private final AdSourceRepository repository;
     private final MediaServiceV1 media;
-    private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
+    // Redirects are followed by PublicUrl.send, which checks every hop against private addresses.
+    private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(2)).build();
 
     public VastSource(AdSourceRepository repository, MediaServiceV1 media) {
@@ -114,11 +115,13 @@ public class VastSource implements IAdSource {
             throws IOException, InterruptedException {
         long ms = (deadlineNanos - System.nanoTime()) / 1_000_000L;
         if (ms <= 0) throw new IOException("timed out");
-        var b = HttpRequest.newBuilder(PublicUrl.check(url)).timeout(Duration.ofMillis(ms)).GET();
-        // server-side requests carry the viewer, as ad servers expect from a stitcher
-        if (!viewer.userAgent().isEmpty()) b.header("User-Agent", viewer.userAgent());
-        if (!viewer.ip().isEmpty()) b.header("X-Forwarded-For", viewer.ip());
-        HttpResponse<byte[]> res = http.send(b.build(), HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> res = PublicUrl.send(http, url, u -> {
+            var b = HttpRequest.newBuilder(u).timeout(Duration.ofMillis(ms)).GET();
+            // server-side requests carry the viewer, as ad servers expect from a stitcher
+            if (!viewer.userAgent().isEmpty()) b.header("User-Agent", viewer.userAgent());
+            if (!viewer.ip().isEmpty()) b.header("X-Forwarded-For", viewer.ip());
+            return b.build();
+        }, HttpResponse.BodyHandlers.ofByteArray());
         if (res.statusCode() == 204) return List.of();
         if (res.statusCode() / 100 != 2) throw new IOException("HTTP " + res.statusCode());
         List<Ad> out = new ArrayList<>();
@@ -165,7 +168,10 @@ public class VastSource implements IAdSource {
         return out;
     }
 
-    /** Calls the ad server's tracking URLs for a delivered event (fire-and-forget: a count is never worth a stall). */
+    /**
+     * Calls the ad server's tracking URLs for a delivered event (fire-and-forget: a count is never worth a stall).
+     * Only the first address is called; a redirect it answers with is not followed (it could point anywhere).
+     */
     public void track(AdDecisionServiceV1.Slot slot, String event) {
         for (String u : slot.tracking().getOrDefault(event, List.of())) {
             try {

@@ -3,6 +3,7 @@ package com.faststudio.v1.config;
 import com.faststudio.v1.core.auth.TokenKeys;
 import com.faststudio.v1.core.auth.Tokens;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
+import java.net.URI;
 import java.util.UUID;
 
 /**
@@ -38,7 +41,11 @@ import java.util.UUID;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain chain(HttpSecurity http, Tokens tokens) throws Exception {
+    SecurityFilterChain chain(HttpSecurity http, Tokens tokens, @Value("${faststudio.edge.public-url:}") String edgePublicUrl) throws Exception {
+        http.headers(h -> h
+                .contentSecurityPolicy(c -> c.policyDirectives(contentSecurityPolicy(edgePublicUrl)))
+                .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .addHeaderWriter((req, res) -> res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")));
         var unauthorized = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
         http.authorizeHttpRequests(a -> a
                         .requestMatchers(Tokens.COOKIE_FREE.toArray(String[]::new)).permitAll()
@@ -58,6 +65,23 @@ public class SecurityConfig {
         else
             http.logout(l -> l.logoutUrl("/api/auth/logout").logoutSuccessHandler((q, r, a) -> r.setStatus(204)));
         return http.build();
+    }
+
+    /**
+     * Only this app's own scripts run (no inline or third-party script), and no other site may frame it. Video comes from
+     * the delivery edge (its public address) and blob: URLs made by the player; images may come from any https host
+     * (provider thumbnails). Styles allow inline attributes because the screens use React style props.
+     */
+    static String contentSecurityPolicy(String edgePublicUrl) {
+        String edge = "";
+        try {
+            URI u = URI.create(edgePublicUrl.trim());
+            if (u.getScheme() != null && u.getHost() != null) edge = " " + u.getScheme() + "://" + u.getRawAuthority();
+        } catch (IllegalArgumentException ignored) { /* no edge configured */ }
+        return "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                + "font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:" + edge + "; "
+                + "media-src 'self' blob: https:" + edge + "; connect-src 'self' https:" + edge + "; worker-src 'self' blob:; "
+                + "frame-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'";
     }
 
     @Bean

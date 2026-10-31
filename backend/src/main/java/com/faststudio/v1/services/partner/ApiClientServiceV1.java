@@ -84,7 +84,10 @@ public class ApiClientServiceV1 {
         if (!"client_credentials".equals(grantType))
             return TokenResponse.error(HttpStatus.BAD_REQUEST, "unsupported_grant_type", "Only client_credentials is supported.");
         if (authorizationHeader != null && authorizationHeader.regionMatches(true, 0, "Basic ", 0, 6)) {
-            String[] pair = new String(Base64.getDecoder().decode(authorizationHeader.substring(6).strip()), StandardCharsets.UTF_8).split(":", 2);
+            String[] pair;
+            try {
+                pair = new String(Base64.getDecoder().decode(authorizationHeader.substring(6).strip()), StandardCharsets.UTF_8).split(":", 2);
+            } catch (IllegalArgumentException e) { return invalidClient(); }   // not Base64: a client error, not a 500
             id = pair[0];
             secret = pair.length > 1 ? pair[1] : null;
         }

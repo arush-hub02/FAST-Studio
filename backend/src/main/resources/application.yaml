@@ -119,6 +119,10 @@ spring:
 server:
   # The port the app listens on (http://localhost:8080). The launchers expect 8080.
   port: 8080
+  # Behind a reverse proxy or load balancer, take the visitor's address and https from X-Forwarded-For / -Proto.
+  # Tomcat trusts these headers only from proxies on private networks (10.x, 172.16-31.x, 192.168.x, loopback),
+  # so a visitor can't fake their address to get around sign-in limits. Env: SERVER_FORWARD_HEADERS_STRATEGY.
+  forward-headers-strategy: native
   error:
     # Error answers never include program internals (stack traces).
     include-stacktrace: never

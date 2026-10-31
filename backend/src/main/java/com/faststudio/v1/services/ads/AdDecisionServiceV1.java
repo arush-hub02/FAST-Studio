@@ -1,6 +1,7 @@
 package com.faststudio.v1.services.ads;
 
 import com.faststudio.v1.core.common.Data;
+import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.repositories.ads.AdSourceRepository;
 import com.faststudio.v1.services.ads.sources.IAdSource;
@@ -36,15 +37,17 @@ public class AdDecisionServiceV1 {
     private final JsonMapper json;
     private final EdgePublisher publisher;
     private final TenantConfigurationServiceV1 configuration;
+    private final Secrets secrets;
 
     public AdDecisionServiceV1(Data data, AdSourceRepository repository, List<IAdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher,
-                              TenantConfigurationServiceV1 configuration) {
+                              TenantConfigurationServiceV1 configuration, Secrets secrets) {
         this.data = data;
         this.repository = repository;
         this.transactions = new TransactionTemplate(manager);
         this.json = json;
         this.publisher = publisher;
         this.configuration=configuration;
+        this.secrets = secrets;
         this.sources = sources.stream().collect(Collectors.toMap(IAdSource::kind, Function.identity()));
     }
 
@@ -79,9 +82,20 @@ public class AdDecisionServiceV1 {
 
     /** The tenant's waterfall in order; without configuration, direct-sold campaigns only. */
     public List<IAdSource.Config> waterfall(UUID org) {
-        List<IAdSource.Config> rows = repository.waterfall(org);
+        List<IAdSource.Config> rows = repository.waterfall(org).stream().map(s -> s.tagUrl() == null ? s
+                : new IAdSource.Config(s.id(), s.name(), s.kind(), openTag(s.tagUrl()), s.timeoutMs(), s.position(), s.enabled(), s.managedBy())).toList();
         return rows.isEmpty() ? List.of(DEFAULT_DIRECT) : rows;
     }
+
+    /**
+     * Ad-tag URLs are stored encrypted (they carry ad-server account details). Values from before encryption are still
+     * plaintext until AdSourceAdminService re-seals them at start-up; Base64 never contains "://", so they are told apart.
+     */
+    public String openTag(String stored) {
+        return stored == null || stored.contains("://") ? stored : secrets.open(stored);
+    }
+
+    public String sealTag(String plain) { return secrets.seal(plain); }
 
     Decision compute(UUID org, UUID sessionId, UUID breakId, Instant at, long breakMs, UUID programmeAssetId, String country, IAdSource.Viewer viewer) {
         String genre = "";
