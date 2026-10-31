@@ -17,13 +17,14 @@ frontend/src/
 │   ├── components/                   #   AdSources, DateTimePicker, GenreSelector, ProfileSettingsModal, ResetLinkModal
 │   └── configuration/                #   ConfigurationEditor + types (tenant/project settings and platform admin)
 └── features/
-    ├── auth/                         # Login, Password (reset / change, ResetLinkModal)
-    ├── home/                         # Home, Guide, Learn
-    ├── library/                      # Library
+    ├── auth/                         # Login, Password (reset / change)
+    ├── home/                         # Home, Guide (+ guideAds: ad-break fill), Learn
+    ├── library/                      # Library, AssetDrawer, AddVideoModal, mediaKind
     ├── rights/                       # Rights
-    ├── channels/                     # Channels, Watch
-    ├── programming/                  # Schedule, SmartProgramming
-    ├── ads/                          # Ads
+    ├── channels/                     # Channels, ChannelWizard, ChannelSettings, channelOptions, Watch
+    ├── programming/                  # Schedule, ScheduleTimeline, PreflightPanel, ProgramModal, ReplaceModal,
+    │                                 #   ScheduleModals (auto-fill, publish), scheduleShared, SmartProgramming
+    ├── ads/                          # Ads, CampaignModal, AdSimulator, adTypes
     ├── distribution/                 # Distribution, Partners (sharing with partner organizations)
     ├── monitoring/                   # Monitoring, Analytics
     ├── team/                         # Team
@@ -45,6 +46,7 @@ frontend/src/
 
 - `app/` may import `features/` and `shared/`. `features/` import `shared/` and the session/org hooks from `app/App` (`useSession`, `useOrg`). `shared/` imports only `shared/` (and those hooks).
 - A component used by two features moves to `shared/components/`.
+- A screen file keeps the page component. Its dialogs, drawers, wizards and large panels go into sibling files in the same feature folder (`PascalCase.tsx`); types and option lists they share go into a small lowercase module (`scheduleShared.ts`, `channelOptions.ts`). Sibling files never import the screen file.
 - Verify with `npx tsc --noEmit` and `npm run build` after each change; check pages in the browser.
 
 ## Cross-feature imports

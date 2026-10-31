@@ -148,5 +148,6 @@ Tests moved next to the class they exercise (same package, for package-private a
 
 1. New code goes into the matching `controllers/<audience>/<feature>`, `services/<feature>`, `repositories/<feature>`, `dto/<feature>` or `util/<provider>` folder.
 2. Keep every public API path, response shape and permission check. Run `CrossTenantMatrixTest` and the feature's tests after each change.
-3. Controllers do not hold SQL; step 1b moves remaining SQL from controllers into repositories/services feature by feature (tracked in PROGRESS.md).
+3. Controllers and services do not hold SQL: every query lives in `repositories/<feature>` (done 2026-10-31). Only cross-cutting infrastructure in `core/` and `config/` (tokens, request interceptors, audit, demo seeding, bootstrap) talks to the database directly. Member permissions are resolved by `core/auth/Permissions` over `AccessRoleRepository`, so `core` never depends on a service.
+5. Verify backend changes with `./mvnw clean test`. An IDE build can leave stale classes in `target/` that hide compile errors from an incremental build.
 4. Do not move files another agent has claimed in PROGRESS.md; coordinate first.
