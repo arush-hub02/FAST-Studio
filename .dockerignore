@@ -1,0 +1,17 @@
+# Only source goes into the build context: no local data, secrets, dependencies or build output.
+**/node_modules
+**/target
+backend/src/main/resources/static
+data
+data-*
+backups
+.env
+.env.*
+!.env.example
+**/.dev.vars
+.git
+.github
+.claude
+docs
+worker
+*.log
