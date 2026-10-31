@@ -46,6 +46,28 @@ faststudio:
   # true = refuse to start without a media-secret of 32+ characters (the pilot profile sets true).
   require-media-secret: false
 
+  # Encrypts third-party credentials kept in the database (each customer's video library account). Any long random
+  # string, stable across restarts. Blank = a key generated once into <data-dir>/keys/secrets.key (keep that file with
+  # the backups: without it the stored credentials must be entered again). Env: FASTSTUDIO_SECRETS_KEY.
+  secrets-key: "${FASTSTUDIO_SECRETS_KEY:}"
+
+  mux:
+    # Video library connector (Mux) API address; tests point it at a stub. Each customer's account (token, webhook
+    # secret, passthrough tag) is set by a platform administrator in the app, never here. Env: FASTSTUDIO_MUX_API_URL.
+    api-url: "${FASTSTUDIO_MUX_API_URL:https://api.mux.com}"
+
+  edge:
+    # The Cloudflare Worker in worker/ serves every viewer: it builds the live playlists, stitches ads and serves
+    # the video from R2. start.bat runs it locally with "wrangler dev" on port 8787. This server copies finished
+    # videos and schedule snapshots to it. Env: FASTSTUDIO_EDGE_URL.
+    url: "${FASTSTUDIO_EDGE_URL:http://127.0.0.1:8787}"
+    # The Worker's address as players see it; stream URLs handed to viewers start with it. Env: FASTSTUDIO_EDGE_PUBLIC_URL.
+    public-url: "${FASTSTUDIO_EDGE_PUBLIC_URL:http://127.0.0.1:8787}"
+    # Shared with the Worker (its EDGE_SECRET): authorises uploads to R2/KV and signs viewer sessions. 32+ characters.
+    # Blank = nothing is published and live streams won't play. The launcher generates one into data/runtime/edge.env
+    # and worker/.dev.vars. Env: FASTSTUDIO_EDGE_SECRET.
+    secret: "${FASTSTUDIO_EDGE_SECRET:}"
+
   admin:
     # First platform administrator, created on start-up when none exists yet. Only used outside demo mode.
     # The account must choose its own password at first sign-in. Env: FASTSTUDIO_ADMIN_EMAIL / FASTSTUDIO_ADMIN_PASSWORD.

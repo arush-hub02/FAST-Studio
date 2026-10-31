@@ -20,6 +20,7 @@ import {
   useToast,
 } from '../ui'
 import { DateTimePicker } from '../components/DateTimePicker'
+import { SmartProgramming } from '../components/SmartProgramming'
 
 type AssetRef = { id: string; title: string; kind: string; color: string; mediaKey?: string; durationMs: number; status: string }
 type View = {
@@ -258,6 +259,7 @@ export default function Schedule() {
         subtitle="Manage 24/7 master daypart grids, auto-fill video rotations, commercial break insertion, and instant version publishing."
       />
 
+      {v && <SmartProgramming channelId={v.channel.id} timezone={v.channel.timezone} revision={v.draft.revision} onChange={view.reload} />}
       {/* Top High-Level Metric Cards (Harmonized 4-column KPI Grid - Always mounted) */}
       <div className="grid g4 library-kpi-grid">
         {/* Card 1: Scheduled Programmes */}
@@ -860,7 +862,7 @@ function PreflightPanel({
                 <span className="badge ok sm">Synchronized</span>
               </div>
               <div className="preflight-audit-detail">
-                All cue splice markers snap cleanly to 3-second HLS transport boundaries.
+                All cue splice markers snap cleanly to 5-second HLS transport boundaries.
               </div>
             </div>
           </div>
@@ -2310,7 +2312,7 @@ function ProgramModal({
             </div>
 
             <div className="small" style={{ color: 'var(--text-2)', marginTop: 4, lineHeight: 1.4 }}>
-              ✓ Aligned to channel GOP 3-second keyframe boundary.<br />
+              ✓ Aligned to channel GOP 5-second keyframe boundary.<br />
               {withBreaks ? (
                 <span>✓ SCTE-35 commercial ad pods will be automatically inserted at cue points based on channel ad rules ({Math.round((v.channel.adSecondsPerHour || 720) / 60)}m/hr).</span>
               ) : (

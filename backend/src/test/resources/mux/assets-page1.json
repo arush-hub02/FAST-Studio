@@ -1,0 +1,45 @@
+{
+  "data": [
+    {
+      "id": "Kp01aBcDeFgH",
+      "status": "ready",
+      "duration": 1323.456,
+      "created_at": "1761753600",
+      "passthrough": "fast",
+      "meta": { "title": "Ocean Tales: Episode 1" },
+      "master_access": "none",
+      "max_stored_resolution": "HD",
+      "max_stored_frame_rate": 25,
+      "resolution_tier": "1080p",
+      "video_quality": "plus",
+      "aspect_ratio": "16:9",
+      "playback_ids": [ { "policy": "public", "id": "pB7Hh01ocEanTales" } ],
+      "tracks": [
+        { "type": "video", "id": "vT01", "duration": 1323.4, "max_width": 1920, "max_height": 1080, "max_frame_rate": 25 },
+        { "type": "audio", "id": "aT01", "duration": 1323.456, "max_channels": 2, "primary": true }
+      ],
+      "progress": { "state": "completed", "progress": 100 }
+    },
+    {
+      "id": "Zz9OtherTag",
+      "status": "ready",
+      "duration": 61.2,
+      "created_at": "1761753000",
+      "passthrough": "marketing-site",
+      "meta": { "title": "Homepage hero loop" },
+      "master_access": "none",
+      "playback_ids": [ { "policy": "public", "id": "pB7Hh01hero" } ],
+      "tracks": [ { "type": "video", "id": "vT02", "duration": 61.2, "max_width": 1280, "max_height": 720 } ]
+    },
+    {
+      "id": "Pr3paring",
+      "status": "preparing",
+      "created_at": "1761753900",
+      "passthrough": "fast",
+      "meta": { "title": "Still encoding" },
+      "master_access": "none",
+      "progress": { "state": "transcoding", "progress": 42 }
+    }
+  ],
+  "next_cursor": "eyJwYWdlIjoyfQ"
+}

@@ -16,6 +16,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -25,17 +26,20 @@ import java.util.stream.Stream;
 
 /**
  * Real media processing with ffmpeg. Every asset becomes an ABR ladder (360p / 540p / 720p H.264 + AAC) in one
- * ffmpeg pass, each rendition cut into exactly-3-second HLS segments with keyframes on every boundary, plus a
- * master playlist. Identical cadence across renditions, programmes, ads and slates is what lets the playout stitch
- * them together and lets players switch quality at any segment (HOW_FAST_WORKS §2.1).
- * Layout: media/{key}/{0,1,2}/seg_NNNNN.ts + index.m3u8, media/{key}/master.m3u8, media/{key}/thumb.jpg.
- * Media processed before the ladder existed (flat media/{key}/seg_*.ts) keeps working as a single rendition.
- * ponytail: in-process job pool; a durable job queue / media provider replaces it for production.
+ * ffmpeg pass, each rendition cut into exactly-5-second HLS segments with keyframes on every boundary and audio
+ * normalised to EBU R128 (-23 LUFS), plus a master playlist. Identical cadence and loudness across renditions,
+ * programmes, ads and slates is what lets the playout stitch them together and lets players switch quality at any
+ * segment (HOW_FAST_WORKS §2.1). Where the video comes from is a {@link ContentSource} connector.
+ * Layout: media/{key}/{0,1,2}/seg_NNNNN.ts + index.m3u8, media/{key}/master.m3u8, media/{key}/thumb.jpg, where
+ * key = {org slug}/{asset id}.{packaging time}: every packaging run gets a fresh key, so the edge can cache
+ * segments forever. EdgePublisher copies finished folders to R2.
+ * ponytail: in-process job pool; a durable job queue replaces it for production.
  */
 @Service
 public class MediaService {
     private static final Logger log = LoggerFactory.getLogger(MediaService.class);
-    public static final String STANDBY = "_platform/standby", GEO = "_platform/geo";
+    // the cadence is part of the key, so slates are re-made (under a new key) whenever it changes
+    public static final String STANDBY = "_platform/standby-" + Times.SEG_S + "s", GEO = "_platform/geo-" + Times.SEG_S + "s";
 
     public record Rendition(String name, int width, int height, int videoKbps, String level, String codecs, int bandwidth) {}
 
@@ -47,17 +51,22 @@ public class MediaService {
     private final JdbcClient db;
     private final Path mediaDir, uploadDir;
     private final String configuredFfmpeg;
+    private final List<ContentSource> sources;
     private final ExecutorService pool = Executors.newFixedThreadPool(2);
+    // ad creatives must be ready within seconds (they air from the next break), so they never queue behind programmes
+    private final ExecutorService adPool = Executors.newSingleThreadExecutor();
     private final Map<String, Integer> segmentCounts = new ConcurrentHashMap<>();
     private final Map<String, Boolean> ladders = new ConcurrentHashMap<>();
     private volatile String ffmpeg;
 
-    public MediaService(JdbcClient db, @Value("${faststudio.data-dir}") String dataDir, @Value("${faststudio.ffmpeg:}") String ffmpeg) {
+    public MediaService(JdbcClient db, @Value("${faststudio.data-dir}") String dataDir, @Value("${faststudio.ffmpeg:}") String ffmpeg,
+                        List<ContentSource> sources) {
         this.db = db;
         Path data = Path.of(dataDir).toAbsolutePath().normalize();
         this.mediaDir = data.resolve("media");
         this.uploadDir = data.resolve("uploads");
         this.configuredFfmpeg = ffmpeg;
+        this.sources = sources;
     }
 
     public Path mediaDir() { return mediaDir; }
@@ -102,7 +111,7 @@ public class MediaService {
         return hasLadder(mediaKey) ? "master.m3u8" : "index.m3u8";
     }
 
-    /** Number of 3 s segments (same in every rendition). */
+    /** Number of segments (same in every rendition). */
     public int segments(String mediaKey) {
         return segmentCounts.computeIfAbsent(mediaKey, k -> {
             try (Stream<Path> s = Files.list(mediaDir.resolve(k).resolve(variantPath(k, 0)))) {
@@ -120,7 +129,7 @@ public class MediaService {
 
     // ---------------------------------------------------------------- jobs
 
-    record Job(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs) {}
+    public record Job(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs, String mediaKey, String sourceUrl, String sourceRef) {}
 
     @EventListener(ApplicationReadyEvent.class)
     @Order(10)
@@ -146,8 +155,17 @@ public class MediaService {
         } else submit(assetId);
     }
 
+    /** Conditions an ad creative on its own lane, ahead of any programme packaging. */
+    public void enqueueCreative(UUID assetId) {
+        submit(adPool, assetId);
+    }
+
     private void submit(UUID assetId) {
-        pool.submit(() -> {
+        submit(pool, assetId);
+    }
+
+    private void submit(ExecutorService lane, UUID assetId) {
+        lane.submit(() -> {
             try {
                 process(assetId);
             } catch (Exception e) {
@@ -160,48 +178,38 @@ public class MediaService {
     void process(UUID assetId) throws Exception {
         // the job only knows the asset id: look it up as the system, then work inside that asset's tenant
         Job j = TenantScope.bypass(() -> db.sql("""
-                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms
+                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
                 from asset a join organization o on o.id = a.org_id where a.id = :id""")
                 .param("id", assetId).query(Job.class).single());
         if (ffmpeg() == null) {
             fail(assetId, "ffmpeg is not installed on the server, so the video could not be processed.");
             return;
         }
-        String key = j.slug() + "/" + j.id();
+        ContentSource source = sources.stream().filter(s -> s.handles(j)).findFirst().orElse(null);
+        if (source == null) { fail(assetId, "No content connector can supply this video."); return; }
+        String key = j.slug() + "/" + j.id() + "." + Instant.now().getEpochSecond();
         Path out = mediaDir.resolve(key);
-        deleteDir(out);
-        Files.createDirectories(out);
-        forget(key);
-        String err;
-        if (j.generator() != null) {
-            err = encode(generatedInputs(j), "1:a", textFilter(j), out, j.durationMs(), false);
-        } else {
-            Path src = findUpload(j.orgId(), j.id());
-            if (src == null) { fail(assetId, "No uploaded file found. Upload a video file and try again."); return; }
-            String fit = "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1";
-            err = encode(List.of("-i", src.toString()), "0:a:0", fit, out, 0, false);
-            if (err != null) {   // source without an audio track: add silence so it splices with everything else
-                deleteDir(out); Files.createDirectories(out);
-                err = encode(List.of("-i", src.toString(), "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"), "1:a:0", fit, out, 0, true);
+        if (Files.isDirectory(out.getParent())) {   // half-written folders of runs interrupted by a restart
+            try (Stream<Path> s = Files.list(out.getParent())) {
+                for (Path p : s.filter(p -> p.getFileName().toString().startsWith(j.id() + ".")).toList())
+                    if (!mediaDir.resolve(String.valueOf(j.mediaKey())).equals(p)) deleteDir(p);
             }
         }
-        if (err != null) { fail(assetId, "ffmpeg could not process this file: " + err); return; }
+        Files.createDirectories(out);
+        String err = source.ingest(j, out, this);
+        if (err != null) { deleteDir(out); fail(assetId, err); return; }
         int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
-        if (full == 0) { fail(assetId, "The video is shorter than 3 seconds."); return; }
+        if (full == 0) { deleteDir(out); fail(assetId, "The video is shorter than " + Times.SEG_S + " seconds."); return; }
         thumbnail(out, full);
-        forget(key);
         TenantScope.as(j.orgId(), () -> db.sql("update asset set status='READY', status_detail=:d, duration_ms=:ms, media_key=:k, updated_at=now() where id=:id")
-                .param("d", "Processed: " + full + " segments of 3 s in 3 qualities (360p, 540p, 720p) H.264/AAC")
+                .param("d", "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS")
                 .param("ms", full * Times.SEG_MS).param("k", key).param("id", assetId).update());
-        log.info("Asset ready: {} ({} s)", j.title(), full * 3);
-    }
-
-    private Path findUpload(UUID orgId, UUID assetId) throws IOException {
-        Path dir = uploadDir(orgId, assetId);
-        if (!Files.isDirectory(dir)) return null;
-        try (Stream<Path> s = Files.list(dir)) {
-            return s.filter(p -> p.getFileName().toString().startsWith("source")).findFirst().orElse(null);
+        // ponytail: the previous revision's copy on R2 is left behind; add an R2 lifecycle rule when storage matters
+        if (j.mediaKey() != null && !j.mediaKey().equals(key) && !j.mediaKey().startsWith("_platform/")) {
+            deleteDir(mediaDir.resolve(j.mediaKey()));
+            forget(j.mediaKey());
         }
+        log.info("Asset ready: {} ({} s)", j.title(), full * Times.SEG_S);
     }
 
     private void fail(UUID id, String why) {
@@ -210,29 +218,6 @@ public class MediaService {
     }
 
     // ---------------------------------------------------------------- ffmpeg recipes (drawn on a 1280x720 canvas)
-
-    private List<String> generatedInputs(Job j) {
-        String g = j.generator().replace("size=640x360", "size=1280x720");
-        String video = g.startsWith("ad:")
-                ? "color=c=" + g.substring(3).split("\\|")[0] + ":size=1280x720:rate=25"
-                : g;
-        String audio = g.startsWith("ad:") ? "sine=frequency=523:sample_rate=48000,volume=0.04,aformat=channel_layouts=stereo"
-                : "anullsrc=r=48000:cl=stereo";
-        return List.of("-f", "lavfi", "-i", video, "-f", "lavfi", "-i", audio);
-    }
-
-    private String textFilter(Job j) {
-        String band = "drawbox=x=0:y=552:w=iw:h=168:color=" + j.color().replace("#", "0x") + "@0.88:t=fill";
-        if (j.generator().startsWith("ad:")) {
-            String[] parts = j.generator().substring(3).split("\\|");
-            String tagline = parts.length > 1 ? parts[1] : "";
-            return text(j.title(), "(w-text_w)/2", "240", 108, "bold")
-                    + "," + text(tagline, "(w-text_w)/2", "392", 48, "regular")
-                    + "," + text("ADVERTISEMENT  -  fictional demo creative", "(w-text_w)/2", "636", 32, "regular");
-        }
-        return band + "," + text(j.title(), "48", "576", 60, "bold")
-                + "," + text("FAST Studio demo programme   %{pts\\:hms}", "48", "652", 36, "regular");
-    }
 
     private void slate(String key, String title, String subtitle, String c0, String c1, int seconds) {
         Path out = mediaDir.resolve(key);
@@ -250,7 +235,7 @@ public class MediaService {
         }
     }
 
-    private static String text(String s, String x, String y, int size, String weight) {
+    static String text(String s, String x, String y, int size, String weight) {
         // user titles: neutralise drawtext metacharacters; the %{pts} template below is trusted code
         String safe = s.contains("%{") ? s : s.replace("\\", "").replace("'", "\u2019").replace(":", "\u2236").replace("%", "");
         String font = font(weight);
@@ -269,7 +254,7 @@ public class MediaService {
     }
 
     /** Returns null on success, otherwise the last ffmpeg error line. Retries once without text if drawtext is unsupported. */
-    private String encode(List<String> inputs, String audioMap, String base, Path out, long durationMs, boolean shortest) throws Exception {
+    String encode(List<String> inputs, String audioMap, String base, Path out, long durationMs, boolean shortest) throws Exception {
         String err = runEncode(inputs, audioMap, base, out, durationMs, shortest);
         if (err != null && base.contains("drawtext")) {
             String plain = Arrays.stream(base.split(",(?=drawtext|drawbox|scale|pad|setsar)"))
@@ -295,12 +280,15 @@ public class MediaService {
             cmd.addAll(List.of("-map", "[v" + i + "]", "-map", audioMap));
             if (durationMs > 0) cmd.addAll(List.of("-t", String.valueOf(durationMs / 1000.0)));
             if (shortest) cmd.add("-shortest");
+            String gop = String.valueOf(25 * Times.SEG_S);   // 25 fps: exactly one keyframe per segment
             cmd.addAll(List.of(
                     "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "main", "-level", r.level(), "-pix_fmt", "yuv420p", "-r", "25",
-                    "-g", "75", "-keyint_min", "75", "-sc_threshold", "0", "-force_key_frames", "expr:gte(t,n_forced*3)",
+                    "-g", gop, "-keyint_min", gop, "-sc_threshold", "0", "-force_key_frames", "expr:gte(t,n_forced*" + Times.SEG_S + ")",
                     "-b:v", r.videoKbps() + "k", "-maxrate", (r.videoKbps() * 11 / 10) + "k", "-bufsize", (r.videoKbps() * 2) + "k",
+                    // EBU R128: every programme, ad and slate at the same loudness, so joins don't jump in volume
+                    "-af", "loudnorm=I=-23:LRA=7:TP=-2",
                     "-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "96k",
-                    "-f", "hls", "-hls_time", "3", "-hls_playlist_type", "vod",
+                    "-f", "hls", "-hls_time", String.valueOf(Times.SEG_S), "-hls_playlist_type", "vod",
                     "-hls_segment_filename", dir.resolve("seg_%05d.ts").toString(), dir.resolve("index.m3u8").toString()));
         }
         Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
@@ -335,14 +323,14 @@ public class MediaService {
         p.waitFor(60, TimeUnit.SECONDS);
     }
 
-    /** Count only full 3 s segments; a trailing partial segment is never scheduled. */
+    /** Count only full segments; a trailing partial segment is never scheduled. */
     static int fullSegments(Path playlist) throws IOException {
         if (!Files.exists(playlist)) return 0;
         int n = 0;
         for (String line : Files.readAllLines(playlist)) {
             if (!line.startsWith("#EXTINF:")) continue;
             double d = Double.parseDouble(line.substring(8, line.indexOf(',') < 0 ? line.length() : line.indexOf(',')));
-            if (d >= 2.9) n++; else break;
+            if (d >= Times.SEG_S - 0.1) n++; else break;
         }
         return n;
     }

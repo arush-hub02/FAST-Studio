@@ -168,7 +168,7 @@ public class DemoSeeder {
         Map<UUID, Data.Asset> all = data.assets(org);
         List<Data.Asset> pool = assetIds.stream().map(all::get).map(a -> new Data.Asset(a.id(), a.orgId(), a.title(), a.description(), a.kind(),
                 a.genre(), a.language(), a.series(), a.season(), a.episode(), a.durationMs(), a.cuePoints(), "READY", a.statusDetail(),
-                a.mediaKey(), a.color(), a.createdAt(), a.updatedAt())).toList();
+                a.mediaKey(), a.color(), a.createdAt(), a.updatedAt(), a.mediaType())).toList();
         return Planner.autofill(ch, pool, data.policies(org), from, hours, Map.of()).items();
     }
 

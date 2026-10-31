@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, type AssetView, type ChannelView, type RightsDecision } from '../api'
 import { useOrg } from '../app'
+import { DateTimePicker } from '../components/DateTimePicker'
 import { COUNTRIES, Countries, CountryPicker, csv, ErrorBox, flag, fmtDate, Icon, InfoTip, Loading, Modal, PageHead, Sim, Status, useAction, useApi } from '../ui'
 
 export default function RightsPage() {
@@ -89,9 +90,28 @@ function Editor({ view, onClose, onDone }: { view: AssetView; onClose: () => voi
       {!editable && <div className="callout warn"><Icon name="info" />Your role can view but not change licences.</div>}
       <div className="field"><span className="row">May play in <InfoTip text="Pick 'Worldwide' to allow everywhere, then block specific countries below." /></span><CountryPicker value={allowed} onChange={setAllowed} allowWorldwide /></div>
       <div className="field">Never in (blocks always win)<CountryPicker value={blocked} onChange={setBlocked} /></div>
-      <div className="grid g2">
-        <label className="field">Licence starts<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label>
-        <label className="field">Licence ends<span className="hint">A programme must finish by midnight UTC on this date</span><input type="date" value={until} onChange={e => setUntil(e.target.value)} /></label>
+      <div className="grid g2" style={{ gap: 12 }}>
+        <DateTimePicker
+          label="Licence Starts"
+          value={from}
+          onChange={val => setFrom(val ? val.slice(0, 10) : '')}
+          showTime={false}
+          allowTimeToggle={false}
+          showTimezone={false}
+          fixed={false}
+          placeholder="Select start date..."
+        />
+        <DateTimePicker
+          label="Licence Ends"
+          hint="Programme must conclude by midnight UTC"
+          value={until}
+          onChange={val => setUntil(val ? val.slice(0, 10) : '')}
+          showTime={false}
+          allowTimeToggle={false}
+          showTimezone={false}
+          fixed={false}
+          placeholder="Select end date..."
+        />
       </div>
       <label className="check"><input type="checkbox" checked={ads} onChange={e => setAds(e.target.checked)} />Ads may run during this programme</label>
       <label className="field">Notes<input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Contract reference, contact…" /></label>

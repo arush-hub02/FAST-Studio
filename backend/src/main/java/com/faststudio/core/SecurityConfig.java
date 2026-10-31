@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(Tokens.COOKIE_FREE.toArray(String[]::new)).permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())          // SPA assets, public playback (/play/**), media, /.well-known/jwks.json
-                .csrf(c -> c.spa().ignoringRequestMatchers("/play/**", "/oauth/token").ignoringRequestMatchers(req ->
+                .csrf(c -> c.spa().ignoringRequestMatchers("/play/**", "/oauth/token", "/hooks/**").ignoringRequestMatchers(req ->
                         Tokens.cookie(req, Tokens.ACCESS_COOKIE) == null && Tokens.cookie(req, Tokens.REFRESH_COOKIE) == null
                                 && Tokens.cookie(req, "JSESSIONID") == null
                                 && (req.getHeader("Authorization") != null || req.getRequestURI().startsWith("/api/auth/token") || req.getRequestURI().equals("/api/auth/logout"))))

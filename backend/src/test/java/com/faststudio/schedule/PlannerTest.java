@@ -21,7 +21,7 @@ class PlannerTest {
     }
 
     static Data.Asset asset(long ms, String cues) {
-        return new Data.Asset(UUID.randomUUID(), UUID.randomUUID(), "A", "", "MOVIE", "", "en", null, null, null, ms, cues, "READY", "", "k", "#000", T, T);
+        return new Data.Asset(UUID.randomUUID(), UUID.randomUUID(), "A", "", "MOVIE", "", "en", null, null, null, ms, cues, "READY", "", "k", "#000", T, T, "MOVIE");
     }
 
     static Rights.Policy allow(Data.Asset a, boolean ads) {

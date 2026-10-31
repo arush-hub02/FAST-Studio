@@ -47,7 +47,7 @@ public final class Planner {
             boolean past = !e.end().isAfter(now);
             String when = fmt(e.start(), tz);
             if (!Times.aligned(e.start()) || !Times.aligned(e.end()))
-                out.add(new Issue("ERROR", "MISALIGNED", "Item at " + when + " doesn't start on a 3-second boundary.", e.id(), "Remove and re-add it; the editor snaps times automatically.", e.start()));
+                out.add(new Issue("ERROR", "MISALIGNED", "Item at " + when + " doesn't start on a " + Times.SEG_S + "-second boundary.", e.id(), "Remove and re-add it; the editor snaps times automatically.", e.start()));
             if (prev != null) {
                 if (e.start().isBefore(prev.end()))
                     out.add(new Issue("ERROR", "OVERLAP", "Two items overlap at " + when + ". A channel can only play one thing at a time.", e.id(), "Delete one of them or use 'Close gaps' after removing it.", e.start()));

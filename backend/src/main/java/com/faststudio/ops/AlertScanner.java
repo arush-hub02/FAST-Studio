@@ -19,10 +19,12 @@ import java.util.*;
 public class AlertScanner {
     private final Data data;
     private final MailService mail;
+    private final AvailVerifier avails;
 
-    public AlertScanner(Data data, MailService mail) {
+    public AlertScanner(Data data, MailService mail, AvailVerifier avails) {
         this.data = data;
         this.mail = mail;
+        this.avails = avails;
     }
 
     record Recipient(String email, String name) {}
@@ -63,6 +65,13 @@ public class AlertScanner {
             else if (end.isBefore(now.plusSeconds(6 * 3600)))
                 found.add(new A("coverage:" + c.id(), "WARNING", c.name() + ": schedule runs out soon",
                         "The published schedule ends " + Planner.fmt(end, c.timezone()) + ".", "Auto-fill more hours and publish.", "/schedule?channel=" + c.id()));
+            for (AvailVerifier.Result r : avails.results(c.id()))
+                if (!r.passed())
+                    found.add(new A("avails:" + c.id() + ":" + r.markers(), "CRITICAL", c.name() + ": ad breaks earn nothing on " + r.destination(),
+                            "The break at " + Planner.fmt(r.breakStart(), c.timezone()) + " went out with broken " + r.markers() + " markers: "
+                                    + String.join("; ", r.problems()) + ". The stream plays on, but players and ad servers can't fill these breaks.",
+                            "Check the edge has the published schedule and the destination's marker format. This clears when a later break checks clean.",
+                            "/schedule?channel=" + c.id()));
         }
         data.db.sql("select id, title from asset where org_id = :o and status = 'FAILED'").param("o", org)
                 .query((rs, i) -> new A("failed:" + rs.getString("id"), "WARNING", "Video failed to process: " + rs.getString("title"),
@@ -94,7 +103,7 @@ public class AlertScanner {
         for (var row : data.db.sql("select id, dedup_key from alert where org_id = :o and status <> 'RESOLVED'").param("o", org)
                 .query((rs, i) -> Map.entry(rs.getObject("id", UUID.class), rs.getString("dedup_key"))).list()) {
             String k = row.getValue();
-            boolean scannerOwned = k.startsWith("off-air:") || k.startsWith("coverage:") || k.startsWith("failed:") || k.startsWith("expiring:");
+            boolean scannerOwned = k.startsWith("off-air:") || k.startsWith("coverage:") || k.startsWith("failed:") || k.startsWith("expiring:") || k.startsWith("avails:");
             if (scannerOwned && !keys.contains(k))
                 data.db.sql("update alert set status = 'RESOLVED', resolution = 'Cleared automatically: re-check found the problem fixed.', updated_at = now() where id = :id")
                         .param("id", row.getKey()).update();

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +31,13 @@ public class ErrorHandler {
                 .map(f -> f.getField() + ": " + f.getDefaultMessage()).findFirst().orElse("Invalid request");
         ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, msg);
         p.setProperty("code", "VALIDATION");
+        return p;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail malformed(HttpMessageNotReadableException e) {
+        ProblemDetail p=ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,"Invalid request. Check required fields, dates and value types.");
+        p.setProperty("code","VALIDATION");
         return p;
     }
 

@@ -1,0 +1,5 @@
+external_id,title,media_type,source_type,source,connector_key,series,season,episode,genre,language,description,allowed_countries,blocked_countries,rights_start,rights_end,ads_allowed
+movie-001,The River,MOVIE,FILE,the-river.mp4,,,,,Drama,en,Example movie supplied as a local file,IN|GB,,2026-11-01T00:00:00Z,2027-11-01T00:00:00Z,true
+long-road-s01e01,The Long Road - Episode 1,EPISODE,FILE,the-long-road-s01e01.mp4,,The Long Road,1,1,Drama,en,"Episode 1, pilot",IN,,2026-11-01T00:00:00Z,2027-11-01T00:00:00Z,true
+movie-002,Night Train,MOVIE,URL,https://media.example.com/night-train.mp4,,,,,Thriller,en,Replace this example URL with your media URL,IN,,2026-11-01T00:00:00Z,2027-11-01T00:00:00Z,false
+long-road-s01e02,The Long Road - Episode 2,EPISODE,CONNECTOR,ExampleMuxAsset123,tenant-mux-primary,The Long Road,1,2,Drama,en,Replace the connection key and provider asset ID,IN,,2026-11-01T00:00:00Z,2027-11-01T00:00:00Z,true

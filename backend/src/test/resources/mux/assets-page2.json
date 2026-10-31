@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "Er0rred1",
+      "status": "errored",
+      "created_at": "1761750000",
+      "passthrough": "fast",
+      "meta": { "title": "Broken file" },
+      "master_access": "none",
+      "errors": { "type": "invalid_input", "messages": [ "The input file could not be read" ] }
+    },
+    {
+      "id": "Nt2NoTitle",
+      "status": "ready",
+      "duration": 34.9,
+      "created_at": "1761740000",
+      "passthrough": "fast",
+      "master_access": "temporary",
+      "master": { "status": "ready", "url": "https://master.example/Nt2NoTitle/master.mp4?signature=x" },
+      "playback_ids": [ { "policy": "public", "id": "pB7Hh01untitled" } ],
+      "tracks": [ { "type": "video", "id": "vT03", "duration": 34.9, "max_width": 1280, "max_height": 720 } ]
+    }
+  ],
+  "next_cursor": null
+}

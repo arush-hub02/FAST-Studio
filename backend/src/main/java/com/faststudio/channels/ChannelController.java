@@ -1,6 +1,7 @@
 package com.faststudio.channels;
 
 import com.faststudio.core.*;
+import com.faststudio.catalog.MediaSettings;
 import com.faststudio.core.Data.Channel;
 import com.faststudio.schedule.Planner;
 import com.faststudio.schedule.ScheduleController;
@@ -19,10 +20,12 @@ import java.util.*;
 public class ChannelController {
     private final Data data;
     private final Audit audit;
+    private final MediaSettings settings;
 
-    public ChannelController(Data data, Audit audit) {
+    public ChannelController(Data data, Audit audit, MediaSettings settings) {
         this.data = data;
         this.audit = audit;
+        this.settings = settings;
     }
 
     public record ChannelView(Channel channel, ScheduleController.Programme now, ScheduleController.Programme next,
@@ -49,7 +52,7 @@ public class ChannelController {
                     .findFirst().orElse(null);
             if (activeBreak != null) {
                 cur = new ScheduleController.Programme(activeBreak.id(), "Commercial Ad Break", "Programmatic SSAI commercial break",
-                        "Commercial", "AD", "#f59e0b", null, activeBreak.start(), activeBreak.end(), 1, true, null);
+                        "Commercial", "AD", "#f59e0b", null, activeBreak.start(), activeBreak.end(), 1, true, null,null,null,null);
             }
         }
         Integer version = c.publishedVersionId() == null ? null : data.db.sql("select number from schedule_version where id = :v")
@@ -100,7 +103,8 @@ public class ChannelController {
         if (r.assetIds() != null && !r.assetIds().isEmpty()) {
             Channel ch = data.channel(t.orgId(), id);
             var assets = data.assets(t.orgId());
-            var pool = r.assetIds().stream().map(assets::get).filter(Objects::nonNull).toList();
+            Set<String> enabled = new HashSet<>(settings.view(t.orgId()).enabledTypes());
+            var pool = r.assetIds().stream().map(assets::get).filter(Objects::nonNull).filter(a -> enabled.contains(a.mediaType())).toList();
             var plan = Planner.autofill(ch, pool, data.policies(t.orgId()), Instant.now().plusSeconds(60), clamp(r.autofillHours(), 1, 72, 24), Map.of());
             UUID draft = data.draft(t.orgId(), id).id();
             for (var it : plan.items())

@@ -1,6 +1,7 @@
 package com.faststudio.schedule;
 
 import com.faststudio.core.*;
+import com.faststudio.catalog.MediaSettings;
 import com.faststudio.core.Data.Asset;
 import com.faststudio.core.Data.Channel;
 import com.faststudio.core.Data.Entry;
@@ -27,11 +28,13 @@ public class ScheduleController {
     private final Data data;
     private final Audit audit;
     private final MediaSigner signer;
+    private final MediaSettings settings;
 
-    public ScheduleController(Data data, Audit audit, MediaSigner signer) {
+    public ScheduleController(Data data, Audit audit, MediaSigner signer, MediaSettings settings) {
         this.data = data;
         this.audit = audit;
         this.signer = signer;
+        this.settings = settings;
     }
 
     public record AssetRef(UUID id, String title, String kind, String color, String mediaKey, long durationMs, String status) {}
@@ -93,7 +96,8 @@ public class ScheduleController {
                 ? assets.values().stream().sorted(Comparator.comparing(Asset::createdAt)).toList()
                 : r.assetIds().stream().map(assets::get).filter(Objects::nonNull).toList();
         int hours = Math.max(1, Math.min(r.hours() == null ? 24 : r.hours(), 72));
-        Planner.Plan plan = Planner.autofill(ch, pool, data.policies(t.orgId()), from, hours, adPerHour);
+        Set<String> enabled = new HashSet<>(settings.view(t.orgId()).enabledTypes());
+        Planner.Plan plan = Planner.autofill(ch, pool.stream().filter(a -> enabled.contains(a.mediaType())).toList(), data.policies(t.orgId()), from, hours, adPerHour);
         insert(t.orgId(), draft.id(), plan.items());
         audit.log(t, "schedule.autofill", "channel", id, hours + "h, " + plan.items().size() + " items");
         return new EditResult(draft.revision() + 1, plan.notices());
@@ -114,11 +118,12 @@ public class ScheduleController {
         List<Planner.Item> items;
         if ("AD_BREAK".equals(r.kind())) {
             int secs = (int) (Times.snapMs((r.seconds() == null ? ch.breakSeconds() : r.seconds()) * 1000L) / 1000);
-            if (secs <= 0) throw ApiException.bad("Break length must be at least 3 seconds");
+            if (secs <= 0) throw ApiException.bad("Break length must be at least " + Times.SEG_S + " seconds");
             UUID inside = existing.stream().filter(e -> !e.isBreak() && e.end().equals(start)).map(Entry::assetId).findFirst().orElse(null);
             items = List.of(new Planner.Item("AD_BREAK", inside, 0, start, start.plusSeconds(secs), "PROVIDER"));
         } else {
             Asset a = data.asset(t.orgId(), r.assetId());
+            settings.require(t.orgId(), a.mediaType());
             if (!a.ready()) throw ApiException.bad("\"" + a.title() + "\" isn't ready yet, so it can't be scheduled.");
             if (a.kind().equals("AD") || a.kind().equals("SLATE")) throw ApiException.bad("Ads are placed by the ad server inside ad breaks, not scheduled as programmes.");
             if (Boolean.FALSE.equals(r.withBreaks())) {
@@ -265,9 +270,9 @@ public class ScheduleController {
     // ------------------------------------------------------------------ EPG
 
     public record Programme(UUID assetId, String title, String description, String genre, String kind, String color, String mediaKey,
-                            Instant start, Instant end, int adBreaks, boolean now, String thumbUrl) {
+                            Instant start, Instant end, int adBreaks, boolean now, String thumbUrl, String series, Integer season, Integer episode) {
         Programme withThumb(String url) {
-            return new Programme(assetId, title, description, genre, kind, color, mediaKey, start, end, adBreaks, now, url);
+            return new Programme(assetId, title, description, genre, kind, color, mediaKey, start, end, adBreaks, now, url,series,season,episode);
         }
     }
 
@@ -306,7 +311,7 @@ public class ScheduleController {
 
     private static Programme prog(Asset a, Instant s, Instant e, int breaks, Instant now) {
         return new Programme(a.id(), a.title(), a.description(), a.genre(), a.kind(), a.color(), a.mediaKey(), s, e, breaks,
-                !s.isAfter(now) && e.isAfter(now), null);
+                !s.isAfter(now) && e.isAfter(now), null,a.series(),a.season(),a.episode());
     }
 
     @GetMapping(value = "/epg.xml", produces = MediaType.APPLICATION_XML_VALUE)
@@ -325,7 +330,10 @@ public class ScheduleController {
             x.append("  <programme start=\"").append(f.format(p.start())).append("\" stop=\"").append(f.format(p.end()))
                     .append("\" channel=\"").append(esc(cid)).append("\">\n    <title lang=\"").append(esc(ch.language())).append("\">")
                     .append(esc(p.title())).append("</title>\n    <desc lang=\"").append(esc(ch.language())).append("\">").append(esc(p.description()))
-                    .append("</desc>\n    <category lang=\"en\">").append(esc(p.genre())).append("</category>\n  </programme>\n");
+                    .append("</desc>\n    <category lang=\"en\">").append(esc(p.genre())).append("</category>\n");
+            if(p.season()!=null && p.episode()!=null && p.season()>0 && p.episode()>0)
+                x.append("    <episode-num system=\"xmltv_ns\">").append(p.season()-1).append('.').append(p.episode()-1).append(".</episode-num>\n");
+            x.append("  </programme>\n");
         }
         return x.append("</tv>\n").toString();
     }
@@ -355,8 +363,8 @@ public class ScheduleController {
 
     private void copy(UUID org, UUID fromVersion, UUID toVersion) {
         data.db.sql("""
-                insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership)
-                select org_id, :to, kind, asset_id, asset_offset_ms, start_at, end_at, ownership from schedule_entry
+                insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership,rule_id,rule_date)
+                select org_id, :to, kind, asset_id, asset_offset_ms, start_at, end_at, ownership,rule_id,rule_date from schedule_entry
                 where org_id = :o and version_id = :from""").param("to", toVersion).param("o", org).param("from", fromVersion).update();
     }
 }

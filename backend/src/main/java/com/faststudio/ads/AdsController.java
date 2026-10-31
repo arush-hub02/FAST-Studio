@@ -5,6 +5,7 @@ import com.faststudio.core.Data.Entry;
 import com.faststudio.media.MediaSigner;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -20,17 +21,66 @@ public class AdsController {
     private final AdDecisionService decisions;
     private final MediaSigner signer;
 
-    public AdsController(Data data, Audit audit, AdDecisionService decisions, MediaSigner signer) {
+    private final AdSourceAdmin adSources;
+
+    public AdsController(Data data, Audit audit, AdDecisionService decisions, MediaSigner signer, AdSourceAdmin adSources) {
         this.data = data;
         this.audit = audit;
         this.decisions = decisions;
         this.signer = signer;
+        this.adSources = adSources;
+    }
+
+    // ------------------------------------------------------------------ ad sources, as the company sees them
+    // Connectors are managed by the platform administrator (connectors.ConnectorsController). A company sees its
+    // waterfall only with the AD_WATERFALL_VIEW or AD_OWN_TAGS feature, and adds its own VAST tags only with AD_OWN_TAGS.
+
+    private void requireFeature(Tenant t, Feature... any) {
+        List<String> on = Feature.parse(data.db.sql("select features from organization where id = :o").param("o", t.orgId()).query(String.class).single());
+        if (Arrays.stream(any).noneMatch(f -> on.contains(f.name())))
+            throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "This isn't switched on for your company. Ask the platform administrator.");
+    }
+
+    @GetMapping("/ad-sources")
+    List<AdSource.Config> sources(Tenant t) {
+        requireFeature(t, Feature.AD_WATERFALL_VIEW, Feature.AD_OWN_TAGS);
+        return adSources.list(t.orgId(), false);
+    }
+
+    @PostMapping("/ad-sources")
+    Map<String, UUID> addSource(Tenant t, @Valid @RequestBody AdSourceAdmin.AdSourceRequest r) {
+        t.require(Tenant.Perm.ADS_EDIT);
+        requireFeature(t, Feature.AD_OWN_TAGS);
+        return Map.of("id", adSources.add(t.orgId(), t.userId(), r, "TENANT"));
+    }
+
+    @PutMapping("/ad-sources/{id}")
+    Map<String, UUID> updateSource(Tenant t, @PathVariable UUID id, @Valid @RequestBody AdSourceAdmin.AdSourceRequest r) {
+        t.require(Tenant.Perm.ADS_EDIT);
+        requireFeature(t, Feature.AD_OWN_TAGS);
+        adSources.update(t.orgId(), t.userId(), id, r, "TENANT");
+        return Map.of("id", id);
+    }
+
+    @DeleteMapping("/ad-sources/{id}")
+    Map<String, UUID> deleteSource(Tenant t, @PathVariable UUID id) {
+        t.require(Tenant.Perm.ADS_EDIT);
+        requireFeature(t, Feature.AD_OWN_TAGS);
+        adSources.delete(t.orgId(), t.userId(), id, "TENANT");
+        return Map.of("id", id);
+    }
+
+    @PostMapping("/ad-sources/test")
+    AdSourceAdmin.TagTest test(Tenant t, @Valid @RequestBody AdSourceAdmin.TagTestRequest r) {
+        t.require(Tenant.Perm.ADS_EDIT);
+        requireFeature(t, Feature.AD_OWN_TAGS);
+        return adSources.test(t.orgId(), r);
     }
 
     public record Campaign(UUID id, String name, String advertiser, String status, OffsetDateTime startsAt, OffsetDateTime endsAt,
                            String territories, int priority, BigDecimal cpm, UUID creativeAssetId, String creativeTitle,
                            String creativeStatus, long creativeDurationMs, String creativeColor, String mediaKey,
-                           long impressions, long completes, String thumbUrl) {}
+                           long impressions, long completes, String thumbUrl, String audiences, int frequencyCap) {}
 
     @GetMapping("/campaigns")
     List<Campaign> list(Tenant t) {
@@ -42,27 +92,28 @@ public class AdsController {
                        (select count(*) from ad_event e where e.org_id = c.org_id and e.campaign_id = c.id and e.event = 'COMPLETE'
                           and exists (select 1 from ad_event i where i.session_id = e.session_id and i.break_id = e.break_id
                                       and i.campaign_id = e.campaign_id and i.event = 'IMPRESSION')) as completes,
-                       null as thumb_url
+                       null as thumb_url,c.audiences,c.frequency_cap
                 from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
                 where c.org_id = :o order by c.status, c.priority desc, c.name""").param("o", t.orgId()).query(Campaign.class).list()
                 .stream().map(c -> c.mediaKey() == null ? c : new Campaign(c.id(), c.name(), c.advertiser(), c.status(), c.startsAt(), c.endsAt(),
                         c.territories(), c.priority(), c.cpm(), c.creativeAssetId(), c.creativeTitle(), c.creativeStatus(), c.creativeDurationMs(),
-                        c.creativeColor(), c.mediaKey(), c.impressions(), c.completes(), signer.url(c.mediaKey(), "thumb.jpg"))).toList();
+                        c.creativeColor(), c.mediaKey(), c.impressions(), c.completes(), signer.url(c.mediaKey(), "thumb.jpg"),c.audiences(),c.frequencyCap())).toList();
     }
 
     public record CampaignRequest(@NotBlank @Size(max = 80) String name, @NotBlank @Size(max = 80) String advertiser, @NotNull UUID creativeAssetId,
                                   @NotNull OffsetDateTime startsAt, @NotNull OffsetDateTime endsAt, List<String> territories,
-                                  @Min(1) @Max(10) int priority, @NotNull @DecimalMin("0") @DecimalMax("500") BigDecimal cpm) {}
+                                  @Min(1) @Max(10) int priority, @NotNull @DecimalMin("0") @DecimalMax("500") BigDecimal cpm,
+                                  List<String> audiences, @Min(0) @Max(100) Integer frequencyCap) {}
 
     @PostMapping("/campaigns")
     Map<String, UUID> create(Tenant t, @Valid @RequestBody CampaignRequest r) {
         t.require(Tenant.Perm.ADS_EDIT);
         validate(t, r);
         UUID id = data.db.sql("""
-                insert into campaign(org_id, name, advertiser, creative_asset_id, starts_at, ends_at, territories, priority, cpm)
-                values (:o,:n,:a,:cr,:s,:e,:terr,:p,:cpm) returning id""")
+                insert into campaign(org_id, name, advertiser, creative_asset_id, starts_at, ends_at, territories, priority, cpm,audiences,frequency_cap)
+                values (:o,:n,:a,:cr,:s,:e,:terr,:p,:cpm,:aud,:cap) returning id""")
                 .param("o", t.orgId()).param("n", r.name().trim()).param("a", r.advertiser().trim()).param("cr", r.creativeAssetId())
-                .param("s", r.startsAt()).param("e", r.endsAt()).param("terr", terr(r.territories())).param("p", r.priority()).param("cpm", r.cpm())
+                .param("s", r.startsAt()).param("e", r.endsAt()).param("terr", terr(r.territories())).param("p", r.priority()).param("cpm", r.cpm()).param("aud",ViewerContext.audiences(r.audiences())).param("cap",r.frequencyCap()==null?0:r.frequencyCap())
                 .query(UUID.class).single();
         audit.log(t, "campaign.create", "campaign", id, r.name());
         return Map.of("id", id);
@@ -73,10 +124,10 @@ public class AdsController {
         t.require(Tenant.Perm.ADS_EDIT);
         validate(t, r);
         int n = data.db.sql("""
-                update campaign set name=:n, advertiser=:a, creative_asset_id=:cr, starts_at=:s, ends_at=:e, territories=:terr, priority=:p, cpm=:cpm
+                update campaign set name=:n, advertiser=:a, creative_asset_id=:cr, starts_at=:s, ends_at=:e, territories=:terr, priority=:p, cpm=:cpm,audiences=coalesce(:aud,audiences),frequency_cap=coalesce(:cap,frequency_cap)
                 where org_id=:o and id=:id""")
                 .param("n", r.name().trim()).param("a", r.advertiser().trim()).param("cr", r.creativeAssetId()).param("s", r.startsAt())
-                .param("e", r.endsAt()).param("terr", terr(r.territories())).param("p", r.priority()).param("cpm", r.cpm())
+                .param("e", r.endsAt()).param("terr", terr(r.territories())).param("p", r.priority()).param("cpm", r.cpm()).param("aud",r.audiences()==null?null:ViewerContext.audiences(r.audiences())).param("cap",r.frequencyCap())
                 .param("o", t.orgId()).param("id", id).update();
         if (n == 0) throw ApiException.notFound("Campaign");
         audit.log(t, "campaign.update", "campaign", id, r.name());

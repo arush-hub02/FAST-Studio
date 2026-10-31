@@ -1,0 +1,29 @@
+# FAST Studio edge (see src/index.ts). Local: start.bat runs "wrangler dev" with state kept in data/edge.
+# Deploy: create the bucket and namespace, put the namespace id below, set the secret, then "npm run deploy":
+#   npx wrangler r2 bucket create fast-studio-media
+#   npx wrangler kv namespace create SCHEDULES
+#   npx wrangler secret put EDGE_SECRET          (the same value as FASTSTUDIO_EDGE_SECRET on the control plane)
+# and set CONTROL_URL to the control plane's public address and MEDIA_BASE to the bucket's custom domain.
+name = "fast-studio-edge"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+CONTROL_URL = "http://127.0.0.1:8080"
+MEDIA_BASE = ""
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "fast-studio-media"
+
+[[kv_namespaces]]
+binding = "SCHEDULES"
+id = "local-schedules"
+
+[[durable_objects.bindings]]
+name = "DECISIONS"
+class_name = "BreakDecision"
+
+[[migrations]]
+tag = "v1-break-decisions"
+new_sqlite_classes = ["BreakDecision"]

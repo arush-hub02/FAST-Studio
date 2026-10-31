@@ -9,9 +9,13 @@ import java.util.List;
 public final class Times {
     private Times() {}
 
-    /** Every playout segment is exactly 3 s, measured from this fixed epoch (see docs/HOW_FAST_WORKS.md §2.1). */
+    /**
+     * Every playout segment is exactly 5 s, measured from this fixed epoch (see docs/HOW_FAST_WORKS.md §2.1).
+     * 5 s divides every standard spot length (15, 20, 30, 60 s), so an ad replaces slate segment for segment.
+     */
     public static final Instant EPOCH = Instant.parse("2026-01-01T00:00:00Z");
-    public static final long SEG_MS = 3000;
+    public static final long SEG_MS = 5000;
+    public static final int SEG_S = (int) (SEG_MS / 1000);
 
     public static OffsetDateTime utc(Instant i) {
         return i == null ? null : i.atOffset(ZoneOffset.UTC);

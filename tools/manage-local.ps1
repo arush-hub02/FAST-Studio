@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $backendDir = Join-Path $projectRoot 'backend'
+$workerDir = Join-Path $projectRoot 'worker'
 $jarPath = Join-Path $backendDir 'target\backend-0.1.0.jar'
 $runtimeDir = Join-Path $projectRoot 'data\runtime'
 $statePath = Join-Path $runtimeDir 'app.json'
@@ -43,6 +44,24 @@ function Get-WorkspaceProcess([int]$ProcessId) {
     $workingDir = ConvertFrom-JavaProperty $workingDir
     if ($workingDir -and [IO.Path]::GetFullPath($workingDir).TrimEnd('\') -eq $backendDir.TrimEnd('\')) { return $candidate }
     return $null
+}
+
+# The local Cloudflare Worker (wrangler dev) this launcher started: node.exe running this workspace's wrangler.
+function Get-EdgeProcess([int]$ProcessId, [string]$CreatedAt) {
+    $candidate = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId"
+    if (!$candidate -or $candidate.Name -ne 'node.exe') { return $null }
+    if ($candidate.CommandLine -notlike ('*' + (Join-Path $workerDir 'node_modules\wrangler') + '*')) { return $null }
+    if ($candidate.CreationDate.ToUniversalTime().ToString('o') -ne $CreatedAt) { return $null }
+    return $candidate
+}
+
+function Stop-Edge($State) {
+    if (!$State -or !$State.edgeProcessId) { return }
+    $edge = Get-EdgeProcess ([int]$State.edgeProcessId) $State.edgeCreatedAt
+    if ($edge) {
+        & taskkill.exe /PID $edge.ProcessId /T /F | Out-Null
+        Write-Host 'Local Cloudflare Worker stopped.'
+    }
 }
 
 function Get-ListeningProcess {
@@ -113,6 +132,7 @@ try {
             if ($LASTEXITCODE -ne 0) { throw 'Could not stop FAST Studio.' }
             Write-Host 'FAST Studio stopped.'
         } else { Write-Host 'FAST Studio is not running (no verified workspace process found).' }
+        Stop-Edge $state
         if ($Docker -or ($state -and $state.docker)) {
             Invoke-DatabaseCompose -ComposeArguments @('stop', '--timeout', '30', 'db')
             Write-Host 'Docker PostgreSQL stopped. Its data volume is retained.'
@@ -130,9 +150,11 @@ try {
     if (Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue) {
         throw 'Port 8080 is occupied by an unrecognized process; it will not be stopped.'
     }
-    foreach ($tool in @('java.exe', 'npm.cmd')) {
-        if (!(Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Missing $tool. Install Java 21+ and Node.js 20.19+ before starting." }
+    foreach ($tool in @('java.exe', 'npm.cmd', 'node.exe')) {
+        if (!(Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Missing $tool. Install Java 21+ and Node.js 22+ before starting." }
     }
+    $nodeMajor = [int](& node.exe -p "process.versions.node.split('.')[0]")
+    if ($nodeMajor -lt 22) { throw "Node.js 22 or newer is required (found $(& node.exe --version)); the local Cloudflare Worker needs it. With nvm: nvm use 24" }
 
     if ($Pilot -and $Docker) { throw 'Pilot mode uses its own embedded database; -Docker is not supported together with -Pilot yet.' }
     # your own settings (copy .env.example to .env); in pilot mode data-pilot\pilot.env is loaded after it and wins
@@ -196,16 +218,57 @@ try {
             if ($LASTEXITCODE -ne 0) { throw 'Mailer (nodemailer) installation failed.' }
         }
     } finally { Pop-Location }
+    Push-Location $workerDir
+    try {
+        if (!(Test-Path -LiteralPath 'node_modules')) {
+            & npm.cmd ci --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { throw 'Cloudflare Worker (wrangler) installation failed.' }
+        }
+    } finally { Pop-Location }
     Push-Location $backendDir
     try {
         & .\mvnw.cmd -q -DskipTests package
         if ($LASTEXITCODE -ne 0) { throw 'Java build failed.' }
     } finally { Pop-Location }
 
+    # Viewers are served by the Cloudflare Worker (worker/), run locally by wrangler with its R2/KV state in <data>\edge.
+    # It shares one secret with Java: generated once into data\runtime\edge.env unless .env sets FASTSTUDIO_EDGE_SECRET.
+    if (!$env:FASTSTUDIO_EDGE_SECRET) {
+        $edgeEnv = Join-Path $runtimeDir 'edge.env'
+        if (!(Test-Path -LiteralPath $edgeEnv)) {
+            $edgeSecret = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+            Set-Content -LiteralPath $edgeEnv -Encoding ASCII -Value @(
+                "FASTSTUDIO_EDGE_SECRET=$edgeSecret",
+                '# Generated on the first start: shared by FAST Studio and the local Worker (worker\.dev.vars). Keep it private.')
+        }
+        Import-EnvFile $edgeEnv
+    }
+    Set-Content -LiteralPath (Join-Path $workerDir '.dev.vars') -Encoding ASCII -Value "EDGE_SECRET=$env:FASTSTUDIO_EDGE_SECRET"
+    Stop-Edge $state   # a Worker left over from an interrupted start
+    if (Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue) {
+        throw 'Port 8787 (the local Cloudflare Worker) is occupied by another process; it will not be stopped.'
+    }
+    $edgeData = Join-Path $projectRoot $(if ($Pilot) { 'data-pilot\edge' } else { 'data\edge' })
+    $env:WRANGLER_SEND_METRICS = 'false'
+    $wrangler = Join-Path $workerDir 'node_modules\wrangler\bin\wrangler.js'
+    $edge = Start-Process -FilePath (Get-Command node.exe).Source -WorkingDirectory $workerDir -WindowStyle Hidden -PassThru `
+        -ArgumentList @(('"' + $wrangler + '"'), 'dev', '--ip', '127.0.0.1', '--port', '8787', '--persist-to', ('"' + $edgeData + '"')) `
+        -RedirectStandardOutput (Join-Path $runtimeDir 'edge.log') -RedirectStandardError (Join-Path $runtimeDir 'edge-error.log')
+    $edgeCreatedAt = (Get-CimInstance Win32_Process -Filter "ProcessId = $($edge.Id)").CreationDate.ToUniversalTime().ToString('o')
+    @{ processId = 0; createdAt = ''; docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
+    $deadline = (Get-Date).AddSeconds(90)
+    while (!(Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue)) {
+        $edge.Refresh()
+        if ($edge.HasExited) { throw "The local Cloudflare Worker exited. Check $runtimeDir\edge.log and edge-error.log." }
+        if ((Get-Date) -gt $deadline) { throw "The local Cloudflare Worker did not start. Check $runtimeDir\edge.log." }
+        Start-Sleep -Seconds 1
+    }
+    Write-Host 'Local Cloudflare Worker ready: http://127.0.0.1:8787'
+
     $javaPath = (Get-Command java.exe).Source
     $launched = Start-Process -FilePath $javaPath -ArgumentList @('-jar', ('"' + $jarPath + '"')) -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeDir 'app.log') -RedirectStandardError (Join-Path $runtimeDir 'app-error.log')
     $javaProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $($launched.Id)"
-    @{ processId = $launched.Id; createdAt = $javaProcess.CreationDate.ToUniversalTime().ToString('o'); docker = [bool]$Docker; pilot = [bool]$Pilot } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
+    @{ processId = $launched.Id; createdAt = $javaProcess.CreationDate.ToUniversalTime().ToString('o'); docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
     Write-Host ("Starting FAST Studio (" + $(if ($Pilot) { 'real-data pilot, data in data-pilot' } else { 'demo' }) + "). Logs: $runtimeDir")
     $deadline = (Get-Date).AddSeconds(180)
     while ((Get-Date) -lt $deadline) {

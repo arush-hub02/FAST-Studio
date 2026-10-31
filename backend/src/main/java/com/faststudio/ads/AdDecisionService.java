@@ -4,28 +4,43 @@ import com.faststudio.core.Data;
 import com.faststudio.core.Times;
 import com.faststudio.rights.Rights;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import com.faststudio.edge.EdgePublisher;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * Local stand-in for an ad decision server (ADS). Picks eligible campaigns for one break and explains every exclusion.
- * In production this is a VAST request to a real ad server; the stitcher logic around it stays the same.
+ * Fills one ad break for one viewer by working down the tenant's waterfall of ad connectors ({@link AdSource}):
+ * direct-sold campaigns, then any number of external ad servers, each with its own timeout. Never overfills;
+ * whatever stays open plays slate. Every source and campaign left out comes with a reason.
  */
 @Service
 public class AdDecisionService {
-    private final Data data;
-    // ponytail: decisions cached in memory per (session, break) so playlists stay stable; persist when running >1 node.
-    private final Map<String, Decision> cache = new ConcurrentHashMap<>();
+    static final AdSource.Config DEFAULT_DIRECT = new AdSource.Config(null, "Direct-sold campaigns", "DIRECT", null, 0, 0, true, "PLATFORM");
 
-    public AdDecisionService(Data data) {
+    private final Data data;
+    private final Map<String, AdSource> sources;
+    private final TransactionTemplate transactions;
+    private final JsonMapper json;
+    private final EdgePublisher publisher;
+
+    public AdDecisionService(Data data, List<AdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher) {
         this.data = data;
+        this.transactions = new TransactionTemplate(manager);
+        this.json = json;
+        this.publisher = publisher;
+        this.sources = sources.stream().collect(Collectors.toMap(AdSource::kind, Function.identity()));
     }
 
-    public record Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm) {
+    /** One spot. tracking: delivery event -> ad server URLs to call when it happens (external ads only). */
+    public record Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
+                       String source, Map<String, List<String>> tracking) {
         public int segments() { return (int) (durationMs / Times.SEG_MS); }
     }
 
@@ -33,55 +48,64 @@ public class AdDecisionService {
 
     public record Decision(UUID breakId, long breakMs, List<Slot> slots, long filledMs, List<Excluded> excluded, String summary) {}
 
-    record Candidate(UUID id, String name, String advertiser, String status, OffsetDateTime startsAt, OffsetDateTime endsAt,
-                     String territories, int priority, BigDecimal cpm, String creativeStatus, String mediaKey, long durationMs) {}
-
-    public Decision cached(UUID sessionId, UUID breakId) {
-        return cache.get(sessionId + ":" + breakId);
-    }
-
     public Decision decide(UUID org, UUID sessionId, UUID breakId, Instant breakStart, long breakMs, UUID programmeAssetId, String country) {
-        if (sessionId == null) return compute(org, null, breakId, breakStart, breakMs, programmeAssetId, country);
-        if (cache.size() > 50_000) cache.clear();
-        return cache.computeIfAbsent(sessionId + ":" + breakId, k -> compute(org, sessionId, breakId, breakStart, breakMs, programmeAssetId, country));
+        return decide(org, sessionId, breakId, breakStart, breakMs, programmeAssetId, country, AdSource.Viewer.NONE);
     }
 
-    Decision compute(UUID org, UUID sessionId, UUID breakId, Instant at, long breakMs, UUID programmeAssetId, String country) {
-        List<Excluded> excluded = new ArrayList<>();
+    public Decision decide(UUID org, UUID sessionId, UUID breakId, Instant breakStart, long breakMs, UUID programmeAssetId, String country,
+                           AdSource.Viewer viewer) {
+        if (sessionId == null) return compute(org, null, breakId, breakStart, breakMs, programmeAssetId, country, viewer);
+        return transactions.execute(tx -> {
+            // Serialize reservations across sessions of the same permitted viewer, including other server instances.
+            String key = org + ":" + (viewer.key() == null ? sessionId : viewer.key());
+            data.db.sql("select pg_advisory_xact_lock(hashtextextended(:key,0))").param("key",key).query((rs,n)->true).single();
+            Optional<String> prior = data.db.sql("select decision from ad_decision where org_id=:o and session_id=:s and break_id=:b")
+                    .param("o",org).param("s",sessionId).param("b",breakId).query(String.class).optional();
+            if(prior.isPresent()) return json.readValue(prior.get(),Decision.class);
+            Decision result = compute(org,sessionId,breakId,breakStart,breakMs,programmeAssetId,country,viewer);
+            data.db.sql("insert into ad_decision(org_id,session_id,break_id,decision) values (:o,:s,:b,:d)")
+                    .param("o",org).param("s",sessionId).param("b",breakId).param("d",json.writeValueAsString(result)).update();
+            return result;
+        });
+    }
+
+    /** The tenant's waterfall in order; without configuration, direct-sold campaigns only. */
+    public List<AdSource.Config> waterfall(UUID org) {
+        List<AdSource.Config> rows = data.db.sql("select id, name, kind, tag_url, timeout_ms, position, enabled, managed_by from ad_source where org_id = :o order by position, created_at")
+                .param("o", org).query(AdSource.Config.class).list();
+        return rows.isEmpty() ? List.of(DEFAULT_DIRECT) : rows;
+    }
+
+    Decision compute(UUID org, UUID sessionId, UUID breakId, Instant at, long breakMs, UUID programmeAssetId, String country, AdSource.Viewer viewer) {
+        String genre = "";
         if (programmeAssetId != null) {
             Rights.Policy p = data.policy(org, programmeAssetId);
             if (p == null || !p.adsAllowed())
                 return new Decision(breakId, breakMs, List.of(), 0, List.of(), "No ads: the programme's licence doesn't allow advertising.");
+            genre = data.asset(org, programmeAssetId).genre();
         }
-        List<Candidate> all = data.db.sql("""
-                select c.id, c.name, c.advertiser, c.status, c.starts_at, c.ends_at, c.territories, c.priority, c.cpm,
-                       a.status as creative_status, a.media_key, a.duration_ms
-                from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
-                where c.org_id = :o""").param("o", org).query(Candidate.class).list();
-        List<Candidate> eligible = new ArrayList<>();
-        for (Candidate c : all) {
-            List<String> terr = Times.codes(c.territories());
-            if (!c.status().equals("ACTIVE")) excluded.add(new Excluded(c.name(), "Campaign is " + c.status().toLowerCase()));
-            else if (at.isBefore(c.startsAt().toInstant()) || !at.isBefore(c.endsAt().toInstant())) excluded.add(new Excluded(c.name(), "Outside its flight dates"));
-            else if (!terr.contains("WW") && !terr.contains(country)) excluded.add(new Excluded(c.name(), "Not targeting " + country + " (targets " + String.join(", ", terr) + ")"));
-            else if (!"READY".equals(c.creativeStatus())) excluded.add(new Excluded(c.name(), "Creative video isn't processed yet, so it can't be stitched"));
-            else eligible.add(c);
-        }
-        // highest priority first; equal priorities rotate per viewer and break so delivery is spread out
-        Random rnd = new Random(Objects.hash(sessionId, breakId));
-        Collections.shuffle(eligible, rnd);
-        eligible.sort(Comparator.comparingInt(Candidate::priority).reversed());
+        String channel = data.db.sql("""
+                select c.slug from schedule_entry e join schedule_version v on v.org_id = e.org_id and v.id = e.version_id
+                join channel c on c.org_id = v.org_id and c.id = v.channel_id where e.org_id = :o and e.id = :b""")
+                .param("o", org).param("b", breakId).query(String.class).optional().orElse("");
         List<Slot> slots = new ArrayList<>();
+        List<Excluded> excluded = new ArrayList<>();
         Set<String> advertisers = new HashSet<>();
         long left = breakMs;
-        for (Candidate c : eligible) {
-            long d = c.durationMs();
-            if (advertisers.contains(c.advertiser())) excluded.add(new Excluded(c.name(), "Same advertiser already in this break (competitive separation)"));
-            else if (d > left) excluded.add(new Excluded(c.name(), d / 1000 + " s ad doesn't fit the " + left / 1000 + " s left"));
-            else {
-                slots.add(new Slot(c.id(), c.name(), c.advertiser(), c.mediaKey(), d, c.cpm()));
-                advertisers.add(c.advertiser());
-                left -= d;
+        for (AdSource.Config src : waterfall(org)) {
+            AdSource impl = sources.get(src.kind());
+            if (!src.enabled() || impl == null) continue;
+            if (left < Times.SEG_MS) break;
+            var fill = impl.fill(src, new AdSource.Request(org, sessionId, breakId, at, breakMs, left, country, channel, genre, programmeAssetId, viewer, advertisers));
+            excluded.addAll(fill.excluded());
+            for (Slot s : fill.slots()) {
+                if (s.durationMs() > left || s.durationMs() < Times.SEG_MS) continue;   // never overfill
+                if (!publisher.stored(s.mediaKey())) {
+                    excluded.add(new Excluded(s.campaign(),"Creative has not reached the delivery edge yet"));
+                    continue;
+                }
+                slots.add(s);
+                left -= s.durationMs();
             }
         }
         long filled = breakMs - left;

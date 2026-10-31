@@ -51,14 +51,15 @@ public class AuthController {
 
     public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
 
-    public record Membership(UUID orgId, String slug, String name, String status, String role, List<String> permissions, String kind) {}
+    public record Membership(UUID orgId, String slug, String name, String status, String role, List<String> permissions, String kind,
+                             List<String> features) {}
 
     public record Me(UUID id, String name, String email, boolean platformAdmin, List<Membership> memberships, boolean demoMode,
                      boolean mustChangePassword) {}
 
     record UserRow(UUID id, String name, String email, boolean platformAdmin, boolean mustChangePassword) {}
 
-    record MRow(UUID orgId, String slug, String name, String status, String role, String kind) {}
+    record MRow(UUID orgId, String slug, String name, String status, String role, String kind, String features) {}
 
     @GetMapping("/csrf")
     Map<String, String> csrf(CsrfToken token) {
@@ -109,11 +110,11 @@ public class AuthController {
         UserRow u = db.sql("select id, name, email, platform_admin, must_change_password from app_user where id = :id").param("id", id)
                 .query(UserRow.class).single();
         List<Membership> ms = db.sql("""
-                        select o.id as org_id, o.slug, o.name, o.status, m.role, o.kind from membership m
+                        select o.id as org_id, o.slug, o.name, o.status, m.role, o.kind, o.features from membership m
                         join organization o on o.id = m.org_id where m.user_id = :id order by o.name""")
                 .param("id", id).query(MRow.class).list().stream()
                 .map(m -> new Membership(m.orgId(), m.slug(), m.name(), m.status(), m.role(),
-                        Tenant.Role.valueOf(m.role()).perms.stream().map(Enum::name).toList(), m.kind()))
+                        Tenant.Role.valueOf(m.role()).perms.stream().map(Enum::name).toList(), m.kind(), Feature.parse(m.features())))
                 .toList();
         return new Me(u.id(), u.name(), u.email(), u.platformAdmin(), ms, demo, u.mustChangePassword());
     }

@@ -2,6 +2,8 @@
 
 All workflows are planned. IDs map to [Product requirements](PRODUCT_REQUIREMENTS.md); release gates are in [Roadmap](IMPLEMENTATION_ROADMAP.md).
 
+Launch-scope clarification, 30 October 2026: platform/tenant media-type settings, series/season/episode programming with a new episode each broadcast day, and viewer-based ads are required. Detailed behavior, the first implementation, remaining scope and acceptance cases are in [Smart programming and viewer advertising](SMART_PROGRAMMING_AND_VIEWER_ADS.md). Viewer application identity/permission integration remains a customer integration decision; signed context can represent signed-in or permitted anonymous viewers.
+
 ## Tenant onboarding and first channel — F01–F04
 
 Owner authenticates through OIDC, creates/selects an authorized organization, invites staff, uploads or imports media, reviews metadata/QC and assigns rights. The channel wizard selects language, time zone, territories, destination and eligible fallback. Show a readiness checklist rather than treating a saved draft as a running channel.

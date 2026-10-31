@@ -59,7 +59,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
 
 // ---------------------------------------------------------------- shared types
 
-export type Membership = { orgId: string; slug: string; name: string; status: string; role: string; permissions: string[]; kind: 'CUSTOMER' | 'PARTNER' }
+export type Membership = { orgId: string; slug: string; name: string; status: string; role: string; permissions: string[]; kind: 'CUSTOMER' | 'PARTNER'; features: string[] }
 
 /** What a customer can share with a partner (read-only). */
 export const SCOPES: Record<string, { label: string; meaning: string }> = {
@@ -72,10 +72,12 @@ export const SCOPES: Record<string, { label: string; meaning: string }> = {
 export type Me = { id: string; name: string; email: string; platformAdmin: boolean; memberships: Membership[]; demoMode: boolean; mustChangePassword: boolean }
 
 export type Asset = {
-  id: string; title: string; description: string; kind: string; genre: string; language: string; series?: string
+  id: string; title: string; description: string; kind: string; mediaType: string; genre: string; language: string; series?: string
   season?: number; episode?: number; durationMs: number; cuePoints: string; status: string; statusDetail: string
   mediaKey?: string; color: string; createdAt: string; updatedAt: string
 }
+export type MediaType = { key: string; label: string; kind: string; enabled: boolean }
+export type MediaSettingsView = { types: MediaType[]; enabledTypes: string[]; defaultType: string; premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerKeySet: boolean; revision: number }
 export type Policy = {
   id: string; assetId: string; allowedCountries: string; blockedCountries: string; validFrom?: string; validUntil?: string
   adsAllowed: boolean; notes: string
@@ -89,7 +91,7 @@ export type Channel = {
 }
 export type Programme = {
   assetId: string; title: string; description: string; genre: string; kind: string; color: string; mediaKey?: string
-  start: string; end: string; adBreaks: number; now: boolean; thumbUrl?: string
+  start: string; end: string; adBreaks: number; now: boolean; thumbUrl?: string; series?: string; season?: number; episode?: number
 }
 export type ChannelView = {
   channel: Channel; now?: Programme; next?: Programme; scheduledUntil?: string; publishedVersion?: number; readiness: string[]; fallbackTitle?: string

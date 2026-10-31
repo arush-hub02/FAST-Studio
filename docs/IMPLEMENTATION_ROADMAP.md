@@ -1,5 +1,9 @@
 # FAST Studio implementation roadmap
 
+## Launch scope clarification — 30 October 2026
+
+Platform-defined/tenant-enabled media types, series/season/episode management, smart daily episode progression with repeat rules, and viewer-based advertising are required launch capabilities. See [Smart programming and viewer advertising](SMART_PROGRAMMING_AND_VIEWER_ADS.md) for the first implementation, remaining scope, configuration ownership and acceptance cases. This feature implementation is not production sign-off. Re-estimate delivery against the expanded launch scope and the current production-readiness assessment before committing to a date.
+
 ## Status update — 20 October 2026
 
 **R1 working prototype: built.** It runs locally with one command and goes from content → rights → schedule → publish → live HLS playout with SCTE-35 → SSAI/SGAI ads → distribution checks → monitoring/analytics → audit. It has two tenants and seven demo roles. Evidence: 11 backend unit tests plus `tools/smoke-test.mjs` (18 end-to-end checks).

@@ -35,12 +35,14 @@ public class AssetController {
     private final MediaService media;
     private final Audit audit;
     private final MediaSigner signer;
+    private final MediaSettings settings;
 
-    public AssetController(Data data, MediaService media, Audit audit, MediaSigner signer) {
+    public AssetController(Data data, MediaService media, Audit audit, MediaSigner signer, MediaSettings settings) {
         this.data = data;
         this.media = media;
         this.audit = audit;
         this.signer = signer;
+        this.settings = settings;
     }
 
     public record AssetView(Asset asset, String thumbUrl, String previewUrl, Rights.Policy rights, String rightsStatus,
@@ -95,7 +97,7 @@ public class AssetController {
 
     public record CreateRequest(@NotBlank @Size(max = 120) String title, @Size(max = 2000) String description, @NotBlank String kind,
                                 String genre, String language, String series, Integer season, Integer episode, String color,
-                                Integer sampleSeconds, String sampleTagline) {}
+                                Integer sampleSeconds, String sampleTagline, String mediaType) {}
 
     /**
      * Creates a video record. With sampleSeconds set, ffmpeg generates a fictional demo video (no upload needed);
@@ -106,6 +108,9 @@ public class AssetController {
     AssetView create(Tenant t, @Valid @RequestBody CreateRequest r) {
         t.require(Tenant.Perm.ASSETS_EDIT);
         if (!KINDS.contains(r.kind())) throw ApiException.bad("Type must be one of " + KINDS);
+        String type = r.mediaType() == null ? r.kind() : r.mediaType();
+        if (!settings.require(t.orgId(), type).kind().equals(r.kind())) throw ApiException.bad("Media type does not match its scheduling behavior.");
+        episodeMetadata(t.orgId(), r.kind(), r.series(), r.season(), r.episode(), null);
         String generator = null;
         long dur = 0;
         if (r.sampleSeconds() != null) {
@@ -116,11 +121,11 @@ public class AssetController {
                     : SAMPLE_LOOKS.get(Math.floorMod(r.title().hashCode(), SAMPLE_LOOKS.size()));
         }
         UUID id = data.db.sql("""
-                insert into asset(org_id, title, description, kind, genre, language, series, season, episode, color, duration_ms, generator, status, cue_points)
-                values (:o,:title,:d,:k,:g,:l,:s,:se,:ep,:c,:dur,:gen,:st,:cues) returning id""")
+                insert into asset(org_id, title, description, kind, genre, language, series, season, episode, color, duration_ms, generator, status, cue_points, media_type)
+                values (:o,:title,:d,:k,:g,:l,:s,:se,:ep,:c,:dur,:gen,:st,:cues,:mt) returning id""")
                 .param("o", t.orgId()).param("title", r.title().trim()).param("d", Objects.toString(r.description(), ""))
                 .param("k", r.kind()).param("g", Objects.toString(r.genre(), "")).param("l", Objects.toString(r.language(), "en"))
-                .param("s", r.series()).param("se", r.season()).param("ep", r.episode()).param("c", color(r.color()))
+                .param("s", r.series() == null ? null : r.series().trim()).param("se", r.season()).param("ep", r.episode()).param("c", color(r.color())).param("mt", type)
                 .param("dur", dur).param("gen", generator).param("st", generator != null ? "PROCESSING" : "DRAFT")
                 .param("cues", defaultCues(r.kind(), dur)).query(UUID.class).single();
         audit.log(t, "asset.create", "asset", id, r.title() + (generator != null ? " (generated sample)" : ""));
@@ -128,8 +133,8 @@ public class AssetController {
         return get(t, id);
     }
 
-    /** One mid-roll cue point in the middle of longer programmes, snapped to a 3 s segment boundary. */
-    static String defaultCues(String kind, long dur) {
+    /** One mid-roll cue point in the middle of longer programmes, snapped to a segment boundary. */
+    public static String defaultCues(String kind, long dur) {
         if (kind.equals("AD") || dur < 120_000) return "";
         return String.valueOf(Times.snapMs(dur / 2));
     }
@@ -152,7 +157,9 @@ public class AssetController {
         Files.createDirectories(dir);
         try (var s = Files.list(dir)) { for (Path p : s.toList()) Files.deleteIfExists(p); }
         file.transferTo(dir.resolve("source." + ext));    // server-chosen name: no path traversal from the client filename
-        data.db.sql("update asset set status='PROCESSING', status_detail='Uploaded; converting to 3-second HLS segments', generator=null, updated_at=now() where org_id=:o and id=:id")
+        // an upload replaces a library video as the source (ad creatives keep their ad-server identity)
+        data.db.sql("update asset set status='PROCESSING', status_detail='Uploaded; converting to 5-second HLS segments', generator=null, "
+                        + "source_ref = case when source_ref like 'mux%' then null else source_ref end, updated_at=now() where org_id=:o and id=:id")
                 .param("o", t.orgId()).param("id", id).update();
         audit.log(t, "asset.upload", "asset", id, name + " (" + file.getSize() / 1024 + " KB)");
         media.enqueue(id);
@@ -171,12 +178,21 @@ public class AssetController {
     }
 
     public record UpdateRequest(@Size(max = 120) String title, @Size(max = 2000) String description, String genre, String language,
-                                List<Long> cuePoints) {}
+                                List<Long> cuePoints, String series, Integer season, Integer episode, String mediaType) {}
 
     @PatchMapping("/assets/{id}")
-    AssetView update(Tenant t, @PathVariable UUID id, @RequestBody UpdateRequest r) {
+    @Transactional
+    AssetView update(Tenant t, @PathVariable UUID id, @Valid @RequestBody UpdateRequest r) {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Asset a = data.asset(t.orgId(), id);
+        String type = r.mediaType() == null ? a.mediaType() : r.mediaType();
+        String kind = r.mediaType() == null ? a.kind() : settings.require(t.orgId(), type).kind();
+        if (a.kind().equals("AD") != kind.equals("AD"))
+            throw ApiException.bad("Advertisements and programmes cannot be interchanged. Create a separate asset.");
+        String series = r.series() == null ? a.series() : r.series().trim();
+        Integer season = r.season() == null ? a.season() : r.season(), episode = r.episode() == null ? a.episode() : r.episode();
+        if (!kind.equals(a.kind()) || r.series() != null || r.season() != null || r.episode() != null)
+            episodeMetadata(t.orgId(), kind, series, season, episode, id);
         String cues = a.cuePoints();
         if (r.cuePoints() != null) {
             List<Long> snapped = r.cuePoints().stream().map(Times::snapMs).filter(c -> c > 0 && (a.durationMs() == 0 || c < a.durationMs()))
@@ -184,12 +200,22 @@ public class AssetController {
             cues = String.join(",", snapped.stream().map(String::valueOf).toList());
         }
         if (r.title() != null && r.title().isBlank()) throw ApiException.bad("Title can't be empty");
-        data.db.sql("update asset set title=:t, description=:d, genre=:g, language=:l, cue_points=:c, updated_at=now() where org_id=:o and id=:id")
+        data.db.sql("update asset set title=:t, description=:d, genre=:g, language=:l, cue_points=:c, series=:s,season=:se,episode=:ep,media_type=:mt,kind=:kind, updated_at=now() where org_id=:o and id=:id")
                 .param("t", r.title() == null ? a.title() : r.title().trim()).param("d", r.description() == null ? a.description() : r.description())
                 .param("g", r.genre() == null ? a.genre() : r.genre()).param("l", r.language() == null ? a.language() : r.language())
-                .param("c", cues).param("o", t.orgId()).param("id", id).update();
+                .param("c", cues).param("s", series).param("se", season).param("ep", episode).param("mt", type).param("kind",kind).param("o", t.orgId()).param("id", id).update();
         audit.log(t, "asset.update", "asset", id, r.cuePoints() != null ? "cue points: " + cues : "metadata");
         return get(t, id);
+    }
+
+    private void episodeMetadata(UUID org, String kind, String series, Integer season, Integer episode, UUID except) {
+        if (!"EPISODE".equals(kind)) return;
+        if (series == null || series.isBlank() || series.trim().length() > 120 || season == null || season < 1 || episode == null || episode < 1)
+            throw ApiException.bad("Episodes need a series name, a positive season number and a positive episode number.");
+        data.db.sql("select id from organization where id=:o for update").param("o", org).query(UUID.class).single();
+        if (data.db.sql("select count(*) from asset where org_id=:o and kind='EPISODE' and status<>'ARCHIVED' and lower(btrim(series))=lower(:s) and season=:se and episode=:ep and (cast(:id as uuid) is null or id<>:id)")
+                .param("o", org).param("s", series.trim()).param("se", season).param("ep", episode).param("id", except).query(Integer.class).single() > 0)
+            throw ApiException.conflict("DUPLICATE_EPISODE", "This series already has that season and episode number.");
     }
 
     /**

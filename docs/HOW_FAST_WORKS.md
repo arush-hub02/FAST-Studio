@@ -57,6 +57,8 @@ Each platform publishes its own ad-load limits, marker format and EPG format. FA
 
 **Virtual linear vs real playout.** Virtual linear (manifest manipulation) needs no live encoder. It can't burn in graphics, logos or tickers, and it can't do frame-accurate live switching. Real playout decodes and re-encodes a continuous live signal. That supports overlays and live inputs but costs a lot more. **The prototype builds virtual linear**: it's the dominant FAST pattern, and a Java service can do it without any media provider.
 
+**Where it runs in FAST Studio.** Everything a viewer touches runs on Cloudflare: a Worker (`worker/src/playout.ts`) computes each playlist from the channel's schedule snapshot (published to KV by the Java control plane) and the clock, and the video segments come from R2 through the CDN. Segments are exactly 5 s (5 divides every standard spot length: 15, 20, 30, 60 s), so segment *i* covers `[epoch + 5 s × i, +5 s)` and the media sequence is simply *i*: every Worker instance computes the same playlist without coordinating. The Java server is asked only for ad decisions, once per viewer and break.
+
 ### 2.1 How a virtual-linear HLS playlist is computed
 
 Every asset is pre-segmented with the same encoding (codec, profile, resolution ladder, timescale) and fixed-length segments, for example 6 s.
@@ -117,12 +119,12 @@ Ad-insertion mode is configured per **destination**, not per channel. One channe
 
 ### 3.1 SSAI break, step by step
 
-1. Player requests `/play/{org}/{channel}/{session}/720p.m3u8`.
+1. Player requests `/live/{signed session token}/v2.m3u8` from the Worker.
 2. The stitcher builds the virtual-linear window (§2.1) and sees an upcoming break (`brk-7f3a-1`, 120 s).
-3. It calls the ad decision server (ADS) once per session per break. The VAST request carries macros: device IP, user agent, consent and allowed identifiers.
-4. The ADS returns VAST. The stitcher keeps only creatives that are already transcoded to the ladder, and fits them to 120 s, for example 30 + 30 + 15 + 30 = 105 s plus 15 s of slate.
-5. The stitcher swaps the slate segments for ad segments, with `#EXT-X-DISCONTINUITY` at each join.
-6. As the player fetches each ad segment, the server fires the impression and quartile beacons from VAST, or a client tracking API reports them.
+3. About 30 s before the break it asks the control plane for a decision, once per session per break. The control plane works down the tenant's waterfall of ad connectors (direct-sold campaigns, then each external VAST ad server within its timeout). VAST requests carry macros: device IP, user agent, consent and allowed identifiers.
+4. The ADS returns VAST. The stitcher keeps only creatives that are already re-cut to the 5 s ladder (a new one is queued and airs from the next break), and fits them to 120 s, for example 30 + 30 + 15 + 30 = 105 s plus 15 s of slate.
+5. The stitcher swaps slate segments for ad segments one for one, with `#EXT-X-DISCONTINUITY` at each join. The segment count never changes, so the media sequence stays put and the stitcher keeps no per-viewer timeline.
+6. When an ad segment enters the viewer's playlist window, the Worker reports the impression or quartile and the control plane fires that ad's VAST tracking URLs once.
 7. **Fallbacks:** ADS timeout, empty VAST or malformed XML each mean house ad or slate. The break never runs longer than 120 s.
 
 ### 3.2 SGAI break, step by step (HLS Interstitials)

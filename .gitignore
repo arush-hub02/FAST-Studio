@@ -38,3 +38,7 @@ backend/src/main/resources/static/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Cloudflare Worker (local state lives in data/edge)
+worker/.wrangler/
+worker/.dev.vars

@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import Hls from 'hls.js'
 import { api, ApiError } from './api'
 
@@ -56,6 +57,11 @@ const P: Record<string, ReactNode> = {
   chevronDown: <path d="m6 9 6 6 6-6" />,
   shieldCheck: <><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z" /><path d="m9 12 2 2 4-4" /></>,
   list: <><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></>,
+  pause: <><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></>,
+  dollarSign: <><line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></>,
+  target: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></>,
+  copy: <><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></>,
+  filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />,
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof P | string; size?: number }) {
@@ -502,11 +508,122 @@ export function Dropdown({
   const rootRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  const selectedValues = useMemo<string[]>(() => {
+    if (value === undefined || value === null) return []
+    return Array.isArray(value) ? value : [value]
+  }, [value])
+
+  const selectedOptions = useMemo(
+    () => options.filter(o => selectedValues.includes(o.value)),
+    [options, selectedValues]
+  )
+
+  const hasAnyIcon = useMemo(() => options.some(o => !!o.icon), [options])
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return options
+    const q = query.toLowerCase()
+    return options.filter(
+      o =>
+        o.label.toLowerCase().includes(q) ||
+        (o.description && o.description.toLowerCase().includes(q))
+    )
+  }, [options, query])
+
+  const handleSelect = (opt: DropdownOption) => {
+    if (opt.disabled) return
+    if (multiple) {
+      const exists = selectedValues.includes(opt.value)
+      const next = exists
+        ? selectedValues.filter(v => v !== opt.value)
+        : [...selectedValues, opt.value]
+      onChange(next)
+    } else {
+      onChange(opt.value)
+      setOpen(false)
+    }
+  }
+
+  const handleSelectAll = () => {
+    onChange(options.filter(o => !o.disabled).map(o => o.value))
+  }
+
+  const handleClearAll = () => {
+    onChange([])
+  }
+
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [dropUp, setDropUp] = useState(false)
+  const [menuCoords, setMenuCoords] = useState<{
+    top: number
+    bottom: number
+    left: number
+    width: number
+    maxHeight: number
+  } | null>(null)
+
+  const updateMenuPosition = useCallback(() => {
+    if (!rootRef.current) return
+    const rect = rootRef.current.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const spaceBelow = viewportHeight - rect.bottom
+    const spaceAbove = rect.top
+
+    const shouldDropUp = spaceBelow < 260 && spaceAbove > spaceBelow
+    setDropUp(shouldDropUp)
+
+    const menuWidth = Math.max(rect.width, 220)
+    let left = rect.left
+    if (align === 'right') {
+      left = rect.right - menuWidth
+    }
+    left = Math.max(8, Math.min(left, viewportWidth - menuWidth - 8))
+
+    const maxHeight = shouldDropUp
+      ? Math.max(160, rect.top - 12)
+      : Math.max(160, viewportHeight - rect.bottom - 12)
+
+    setMenuCoords({
+      top: rect.bottom + 5,
+      bottom: viewportHeight - rect.top + 5,
+      left,
+      width: align === 'full' ? rect.width : Math.min(menuWidth, viewportWidth - 16),
+      maxHeight,
+    })
+  }, [align])
+
+  const handleToggle = () => {
+    if (disabled) return
+    if (!open) {
+      updateMenuPosition()
+    }
+    setOpen(o => !o)
+  }
+
+  useEffect(() => {
+    if (open) {
+      updateMenuPosition()
+      window.addEventListener('resize', updateMenuPosition)
+      window.addEventListener('scroll', updateMenuPosition, true)
+      return () => {
+        window.removeEventListener('resize', updateMenuPosition)
+        window.removeEventListener('scroll', updateMenuPosition, true)
+      }
+    }
+  }, [open, updateMenuPosition])
+
   // Close on outside click and Escape
   useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
@@ -522,67 +639,6 @@ export function Dropdown({
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [open])
-
-  // Focus search when opened
-  useEffect(() => {
-    if (open && searchable) {
-      setTimeout(() => searchInputRef.current?.focus(), 40)
-    } else {
-      setQuery('')
-    }
-  }, [open, searchable])
-
-  // Filtered options
-  const filtered = query.trim()
-    ? options.filter(
-        o =>
-          o.label.toLowerCase().includes(query.toLowerCase()) ||
-          (o.description && o.description.toLowerCase().includes(query.toLowerCase()))
-      )
-    : options
-
-  // Value helpers
-  const selectedValues: string[] = Array.isArray(value) ? value : value ? [value] : []
-  const selectedOptions = options.filter(o => selectedValues.includes(o.value))
-  const hasAnyIcon = options.some(o => !!o.icon)
-
-  const handleSelect = (opt: DropdownOption) => {
-    if (opt.disabled) return
-    if (multiple) {
-      const next = selectedValues.includes(opt.value)
-        ? selectedValues.filter(v => v !== opt.value)
-        : [...selectedValues, opt.value]
-      onChange(next)
-    } else {
-      onChange(opt.value)
-      setOpen(false)
-    }
-  }
-
-  const handleSelectAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const allFilteredValues = filtered.filter(o => !o.disabled).map(o => o.value)
-    const combined = Array.from(new Set([...selectedValues, ...allFilteredValues]))
-    onChange(combined)
-  }
-
-  const handleClearAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onChange([])
-  }
-
-  const [dropUp, setDropUp] = useState(false)
-
-  const handleToggle = () => {
-    if (disabled) return
-    if (!open && rootRef.current) {
-      const rect = rootRef.current.getBoundingClientRect()
-      const spaceBelow = window.innerHeight - rect.bottom
-      const spaceAbove = rect.top
-      setDropUp(spaceBelow < 250 && spaceAbove > spaceBelow)
-    }
-    setOpen(o => !o)
-  }
 
   return (
     <div
@@ -663,129 +719,148 @@ export function Dropdown({
         </span>
       </button>
 
-      {/* Popover Menu */}
-      {open && (
-        <div className={`dropdown-menu align-${align}`} role="listbox">
-          {searchable && (
-            <div className="dropdown-search-wrap">
-              <Icon name="search" size={14} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="dropdown-search-input"
-                placeholder="Search…"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => e.stopPropagation()}
-              />
-              {query && (
-                <button
-                  type="button"
-                  className="dropdown-search-clear"
-                  onClick={() => setQuery('')}
-                  aria-label="Clear search"
-                >
-                  <Icon name="x" size={12} />
-                </button>
-              )}
-            </div>
-          )}
-
-          {multiple && (
-            <div className="dropdown-multi-toolbar">
-              <span className="dropdown-multi-count">
-                {selectedValues.length} of {options.length} selected
-              </span>
-              <div className="dropdown-multi-actions">
-                <button
-                  type="button"
-                  className="dropdown-toolbar-btn"
-                  onClick={handleSelectAll}
-                >
-                  Select all
-                </button>
-                {selectedValues.length > 0 && (
+      {/* Popover Menu - Portaled to document.body so modals/tables with overflow never clip it */}
+      {open &&
+        menuCoords &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={`dropdown-menu align-${align} ${dropUp ? 'drop-up' : ''}`}
+            role="listbox"
+            style={{
+              position: 'fixed',
+              top: dropUp ? 'auto' : `${menuCoords.top}px`,
+              bottom: dropUp ? `${menuCoords.bottom}px` : 'auto',
+              left: `${menuCoords.left}px`,
+              right: 'auto',
+              width: `${menuCoords.width}px`,
+              minWidth: `${menuCoords.width}px`,
+              maxWidth: `min(420px, calc(100vw - 16px))`,
+              maxHeight: `${menuCoords.maxHeight}px`,
+              zIndex: 99999,
+            }}
+          >
+            {searchable && (
+              <div className="dropdown-search-wrap">
+                <Icon name="search" size={14} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="dropdown-search-input"
+                  placeholder="Search…"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => e.stopPropagation()}
+                />
+                {query && (
                   <button
                     type="button"
-                    className="dropdown-toolbar-btn"
-                    onClick={handleClearAll}
+                    className="dropdown-search-clear"
+                    onClick={() => setQuery('')}
+                    aria-label="Clear search"
                   >
-                    Clear
+                    <Icon name="x" size={12} />
                   </button>
                 )}
               </div>
-            </div>
-          )}
-
-          <div className="dropdown-options-list">
-            {filtered.length === 0 ? (
-              <div className="dropdown-empty">{emptyText}</div>
-            ) : (
-              filtered.map(opt => {
-                const isSelected = selectedValues.includes(opt.value)
-                const hasDesc = !!opt.description
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    disabled={opt.disabled}
-                    className={`dropdown-item ${isSelected ? 'is-selected' : ''} ${
-                      opt.disabled ? 'is-disabled' : ''
-                    } ${hasDesc ? 'has-desc' : ''}`}
-                    onClick={() => handleSelect(opt)}
-                  >
-                    {/* Checkbox for multiple selection */}
-                    {multiple && (
-                      <span className={`dropdown-checkbox ${isSelected ? 'checked' : ''}`}>
-                        {isSelected && <Icon name="check" size={11} />}
-                      </span>
-                    )}
-
-                    {/* Left Icon with alignment spacer */}
-                    {hasAnyIcon && (
-                      <span className="dropdown-item-icon">
-                        {opt.icon ? (
-                          typeof opt.icon === 'string' ? (
-                            <Icon name={opt.icon} size={15} />
-                          ) : (
-                            opt.icon
-                          )
-                        ) : (
-                          <span className="dropdown-icon-spacer" />
-                        )}
-                      </span>
-                    )}
-
-                    {/* Label & Description Column */}
-                    <div className="dropdown-item-text">
-                      <span className="dropdown-item-label">{opt.label}</span>
-                      {opt.description && (
-                        <span className="dropdown-item-desc">{opt.description}</span>
-                      )}
-                    </div>
-
-                    {/* Right Badge or Single Checkmark */}
-                    <div className="dropdown-item-aside">
-                      {opt.badge && (
-                        <span className={`badge ${opt.badgeType ?? 'info'} sm`}>
-                          {opt.badge}
-                        </span>
-                      )}
-                      {!multiple && isSelected && (
-                        <span className="dropdown-item-check">
-                          <Icon name="check" size={14} />
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                )
-              })
             )}
-          </div>
-        </div>
-      )}
+
+            {multiple && (
+              <div className="dropdown-multi-toolbar">
+                <span className="dropdown-multi-count">
+                  {selectedValues.length} of {options.length} selected
+                </span>
+                <div className="dropdown-multi-actions">
+                  <button
+                    type="button"
+                    className="dropdown-toolbar-btn"
+                    onClick={handleSelectAll}
+                  >
+                    Select all
+                  </button>
+                  {selectedValues.length > 0 && (
+                    <button
+                      type="button"
+                      className="dropdown-toolbar-btn"
+                      onClick={handleClearAll}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="dropdown-options-list">
+              {filtered.length === 0 ? (
+                <div className="dropdown-empty">{emptyText}</div>
+              ) : (
+                filtered.map(opt => {
+                  const isSelected = selectedValues.includes(opt.value)
+                  const hasDesc = !!opt.description
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      disabled={opt.disabled}
+                      className={`dropdown-item ${isSelected ? 'is-selected' : ''} ${
+                        opt.disabled ? 'is-disabled' : ''
+                      } ${hasDesc ? 'has-desc' : ''}`}
+                      onClick={() => handleSelect(opt)}
+                    >
+                      {/* Checkbox for multiple selection */}
+                      {multiple && (
+                        <span className={`dropdown-checkbox ${isSelected ? 'checked' : ''}`}>
+                          {isSelected && <Icon name="check" size={11} />}
+                        </span>
+                      )}
+
+                      {/* Left Icon with alignment spacer */}
+                      {hasAnyIcon && (
+                        <span className="dropdown-item-icon">
+                          {opt.icon ? (
+                            typeof opt.icon === 'string' ? (
+                              <Icon name={opt.icon} size={15} />
+                            ) : (
+                              opt.icon
+                            )
+                          ) : (
+                            <span className="dropdown-icon-spacer" />
+                          )}
+                        </span>
+                      )}
+
+                      {/* Label & Description Column */}
+                      <div className="dropdown-item-text">
+                        <span className="dropdown-item-label">{opt.label}</span>
+                        {opt.description && (
+                          <span className="dropdown-item-desc">{opt.description}</span>
+                        )}
+                      </div>
+
+                      {/* Right Badge or Single Checkmark */}
+                      <div className="dropdown-item-aside">
+                        {opt.badge && (
+                          <span className={`badge ${opt.badgeType ?? 'info'} sm`}>
+                            {opt.badge}
+                          </span>
+                        )}
+                        {!multiple && isSelected && (
+                          <span className="dropdown-item-check">
+                            <Icon name="check" size={14} />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

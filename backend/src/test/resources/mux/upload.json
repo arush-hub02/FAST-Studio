@@ -1,0 +1,10 @@
+{
+  "data": {
+    "id": "Up1oadAbc",
+    "url": "https://storage.googleapis.com/video-storage-us-east1-uploads/Up1oadAbc?Expires=1761757200&Signature=abc",
+    "timeout": 3600,
+    "status": "waiting",
+    "cors_origin": "http://localhost:8080",
+    "new_asset_settings": { "passthrough": "fast", "master_access": "temporary", "meta": { "title": "Launch trailer" } }
+  }
+}

@@ -24,10 +24,10 @@ P0 is relative to the assigned release. R3 monetization requirements do not all 
 | ID | Priority / release | Capability and concrete requirement | Commercial value |
 | --- | --- | --- | --- |
 | F01 | P0 / R1 | Organizations, OIDC sign-in, roles, invitations, tenant isolation, audit history | Enterprise trust and account retention |
-| F02 | P0 / R1 | Asset library, upload sessions, metadata, series/episodes, captions and processing lifecycle | Shorter content onboarding |
+| F02 | P0 / R1 | Asset library, upload sessions, platform-defined/tenant-enabled media types, series/seasons/episodes, captions and processing lifecycle | Shorter content onboarding |
 | F03 | P0 / R1 | Rights by time, territory, platform, language and advertising permission; expiry alerts | Prevent unauthorized distribution |
 | F04 | P0 / R1 | Channel wizard, branding, eligible fallback content, lifecycle and readiness checklist | First-channel activation |
-| F05 | P0 / R1 | Schedule templates, repeat rules, gap/overlap checks, episode ordering and manual edits | Lower operator effort |
+| F05 | P0 / R1 | Smart recurring schedules with daily next-episode progression, season rollover, explicit encores, gap/overlap checks and protected manual edits | Lower operator effort |
 | F06 | P0 / R1 | Immutable published versions, stale-edit protection, rollback by new publication, generated EPG | Reliable operations |
 | F07 | P0 / R1 | Preview, current/next programme, rights decision simulator, visible simulation status | Credible sales demonstration |
 | F08 | P0 / R1 | Campaigns, creative approval, ad-pod rules and explainable decision simulator | Demonstrate ad-sales workflow |
@@ -42,7 +42,7 @@ P0 is relative to the assigned release. R3 monetization requirements do not all 
 | F17 | P0 / R3 | One playout/assembly integration, signed playback, real EPG delivery and one approved destination | Operate a paid channel |
 | F18 | P0 / R3 | One ad-server and SSAI integration; marker validation, creative compatibility and slate fallback | Enable actual monetized playback |
 | F19 | P0 / R3 | Direct insertion orders, line items, duration-based reservations, flight dates and paced delivery | Sell inventory directly |
-| F20 | P0 / R3 | Ad-load limits, pod fitting, competitive separation, permitted targeting and identity-aware frequency caps | Protect viewing experience |
+| F20 | P0 / R3 | Per-viewer ad selection using permitted tenant-scoped audiences, contextual fallback, identity-aware frequency caps, ad-load limits, pod fitting and competitive separation | Protect viewing experience |
 | F21 | P0 / R3 | Provider report ingestion, duplicate suppression, discrepancy resolution and billable-impression definitions | Defensible reporting |
 | F22 | P0 / R3 | Effective-dated revenue-share contracts, royalty statements, approval and adjustment ledger | Revenue share and settlement |
 | F23 | P0 / R3 | Channel P&L, cost allocation, revenue per watch hour and incomplete-data warnings | Retain profitable customers |
@@ -83,13 +83,14 @@ P0 is relative to the assigned release. R3 monetization requirements do not all 
 | Feature | Built | Not built |
 | --- | --- | --- |
 | F01 | Local accounts, JWT sign-in, emailed invitations, forgot-password | OIDC / company single sign-on |
-| F02 | Upload, processing, metadata, series fields | Captions; resumable upload |
-| F05 | Auto-fill, manual add, gap close | Recurring templates |
+| F02 | Upload, processing, editable series/season/episode metadata, platform media-type registry and tenant settings | Captions; resumable upload; independent series/season records |
+| F05 | Auto-fill, manual add, gap close, saved weekday episode rules, season rollover, encore, preview and draft materialization | Full RRULE syntax, multiple encores and editing saved rules |
 | F08 | Campaigns, ad decisions | Creative approval workflow; insertion orders |
 | F09 | Destination checks; partner hand-off is simulated | — |
 | F10 | Alerts, acknowledge/resolve, provenance labels | CSV export |
+| F20 | Signed viewer context, contextual fallback, direct campaign audiences, shared hourly selection caps and persisted break decisions | External audience/consent integration and production measurement validation |
 
-Everything else from F11 onward is unstarted, apart from the partner API (part of F30) and partner organizations (part of F31). F45–F54 are unstarted.
+Other items from F11 onward remain planned unless recorded above, in the roadmap or in [Smart programming and viewer advertising](SMART_PROGRAMMING_AND_VIEWER_ADS.md). The partner API (part of F30) and partner organizations (part of F31) also have prototype implementations. Feature implementation does not establish production or commercial acceptance.
 
 ## Competitive review: SoFast
 

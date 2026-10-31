@@ -47,7 +47,7 @@ class CrossTenantMatrixTest {
     @Autowired com.faststudio.core.Tokens tokens;
     @Autowired @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping mapping;
 
-    record Ids(UUID org, UUID channel, UUID asset, UUID adAsset, UUID campaign, UUID entry, UUID destination, UUID user, UUID alert, UUID link) {}
+    record Ids(UUID org, UUID channel, UUID asset, UUID adAsset, UUID campaign, UUID entry, UUID destination, UUID user, UUID alert, UUID link, UUID adSource) {}
 
     Ids aurora() {
         return TenantScope.bypass(() -> {
@@ -63,7 +63,9 @@ class CrossTenantMatrixTest {
                     db.sql("select id from destination where org_id = :o limit 1").param("o", org).query(UUID.class).single(),
                     db.sql("select id from app_user where email = 'operator@aurora.test'").query(UUID.class).single(),
                     alert,
-                    db.sql("select id from partner_link where owner_org_id = :o limit 1").param("o", org).query(UUID.class).single());
+                    db.sql("select id from partner_link where owner_org_id = :o limit 1").param("o", org).query(UUID.class).single(),
+                    db.sql("insert into ad_source(org_id, name, kind, position) values (:o, 'Direct-sold campaigns', 'DIRECT', 0) on conflict (org_id) where kind = 'DIRECT' do update set name = excluded.name returning id")
+                            .param("o", org).query(UUID.class).single());
         });
     }
 
@@ -78,6 +80,7 @@ class CrossTenantMatrixTest {
                   union all select id || name from destination where org_id = :o
                   union all select id || status from alert where org_id = :o and dedup_key = 'matrix-test'
                   union all select user_id || role from membership where org_id = :o
+                  union all select id || name || enabled || position from ad_source where org_id = :o
                   union all select id || status || scopes from partner_link where owner_org_id = :o) x""").param("o", org).query(String.class).single());
     }
 
@@ -95,9 +98,11 @@ class CrossTenantMatrixTest {
                         case "assets" -> a.asset().toString();
                         case "campaigns" -> a.campaign().toString();
                         case "alerts" -> a.alert().toString();
+                        case "ad-sources" -> a.adSource().toString();
                         default -> fail("No test value for {id} after /" + prev + " in " + pattern);
                     };
                     case "entryId" -> a.entry().toString();
+                    case "ruleId" -> a.entry().toString();
                     case "channelId" -> a.channel().toString();
                     case "destinationId" -> a.destination().toString();
                     case "userId" -> a.user().toString();

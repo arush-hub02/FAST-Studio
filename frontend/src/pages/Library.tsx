@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Hls from 'hls.js'
-import { api, type AssetView } from '../api'
+import { api, type AssetView, type MediaSettingsView } from '../api'
 import { useOrg } from '../app'
 import {
   Confirm,
@@ -256,6 +256,7 @@ export default function Library() {
       result = result.filter(
         a =>
           a.asset.title.toLowerCase().includes(query) ||
+          (a.asset.series && a.asset.series.toLowerCase().includes(query)) ||
           (a.asset.genre && a.asset.genre.toLowerCase().includes(query)) ||
           (a.asset.description && a.asset.description.toLowerCase().includes(query))
       )
@@ -945,9 +946,14 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
   const org = useOrg()
   const { busy, run } = useAction()
   const [mode, setMode] = useState<'upload' | 'sample'>('upload')
+  const mediaSettings = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
   const [f, setF] = useState({
     title: '',
     kind: 'MOVIE',
+    mediaType: '',
+    series: '',
+    season: 1,
+    episode: 1,
     genre: 'Action',
     description: '',
     minutes: 3,
@@ -955,6 +961,11 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
     color: '#6366f1',
   })
   const [releaseDateTime, setReleaseDateTime] = useState<string>('')
+  useEffect(() => {
+    const s = mediaSettings.data
+    const type = s?.types.find(t => t.key === s.defaultType)
+    if (type) setF(f => ({ ...f, mediaType: type.key, kind: type.kind }))
+  }, [mediaSettings.data])
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -975,12 +986,15 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
 
 
   async function submit() {
+    if (!mediaSettings.data || !f.mediaType) throw new Error('Wait for your company media settings to load and choose an enabled type.')
     if (!f.title.trim()) throw new Error('Please enter a title for the video.')
     if (mode === 'upload' && !file) throw new Error('Please choose a video file to upload.')
 
     const body = {
       title: f.title.trim(),
       kind: f.kind,
+      mediaType: f.mediaType || f.kind,
+      ...(f.kind === 'EPISODE' ? { series: f.series.trim(), season: Number(f.season), episode: Number(f.episode) } : {}),
       genre: isAd ? 'Advertising' : f.genre.trim(),
       description: f.description.trim(),
       color: f.color,
@@ -1006,8 +1020,8 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
         await api(`/api/orgs/${org.slug}/assets/${v.asset.id}/rights`, {
           method: 'PUT',
           body: {
-            allowedCountries: 'WW',
-            blockedCountries: '',
+            allowedCountries: ['WW'],
+            blockedCountries: [],
             validFrom: new Date(releaseDateTime).toISOString(),
             validUntil: null,
             adsAllowed: true,
@@ -1022,12 +1036,7 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
     return v.asset.id
   }
 
-  const kindOptions: DropdownOption[] = [
-    { value: 'MOVIE', label: 'Feature Movie', icon: 'film', description: 'Full-length movie or documentary' },
-    { value: 'EPISODE', label: 'TV Episode', icon: 'tv', description: 'Episodic series content with season/episode' },
-    { value: 'SHORT', label: 'Short / Interstitial', icon: 'sliders', description: 'Bite-sized clip, filler or vignette' },
-    { value: 'AD', label: 'Commercial Ad', icon: 'megaphone', description: 'Sponsor ad creative for SSAI breaks' },
-  ]
+  const kindOptions: DropdownOption[] = (mediaSettings.data?.types ?? []).filter(t => mediaSettings.data!.enabledTypes.includes(t.key)).map(t => ({ value: t.key, label: t.label, description: t.kind === 'EPISODE' ? 'Series, season and episode metadata required' : `Scheduling behavior: ${t.kind.toLowerCase()}`, icon: t.kind === 'AD' ? 'megaphone' : t.kind === 'EPISODE' ? 'tv' : 'film' }))
 
   return (
     <Modal
@@ -1223,16 +1232,22 @@ function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: 
             <span>Content Format</span>
             <Dropdown
               options={kindOptions}
-              value={f.kind}
+              value={f.mediaType}
               onChange={val => {
-                set('kind', val)
-                set('minutes', val === 'AD' ? 15 : 3)
+                const type = mediaSettings.data?.types.find(t => t.key === val)
+                if (type) setF(f => ({ ...f, mediaType: val, kind: type.kind, minutes: type.kind === 'AD' ? 15 : 3 }))
               }}
               align="full"
             />
           </label>
         </div>
 
+        {mediaSettings.error && <ErrorBox error={mediaSettings.error} retry={mediaSettings.reload} />}
+        {f.kind === 'EPISODE' && <div className="grid g3">
+          <label className="field"><span>Series</span><input maxLength={120} required value={f.series} onChange={e => set('series', e.target.value)} placeholder="e.g. City Stories" /></label>
+          <label className="field"><span>Season number</span><input type="number" min={1} required value={f.season} onChange={e => set('season', Number(e.target.value))} /></label>
+          <label className="field"><span>Episode number</span><input type="number" min={1} required value={f.episode} onChange={e => set('episode', Number(e.target.value))} /></label>
+        </div>}
         {/* Genre Multi-Select */}
         {!isAd && (
           <GenreSelector
@@ -1281,6 +1296,12 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
   const [title, setTitle] = useState(a.title)
   const [description, setDescription] = useState(a.description)
   const [genre, setGenre] = useState(a.genre)
+  const mediaSettings = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const [mediaType, setMediaType] = useState(a.mediaType)
+  const editKind = mediaSettings.data?.types.find(t => t.key === mediaType)?.kind ?? a.kind
+  const [series, setSeries] = useState(a.series ?? '')
+  const [season, setSeason] = useState(a.season ?? 1)
+  const [episode, setEpisode] = useState(a.episode ?? 1)
   const [confirmArchive, setConfirmArchive] = useState(false)
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
   const [manualMinutes, setManualMinutes] = useState('')
@@ -1316,18 +1337,18 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
   const save = (body: object, msg: string) =>
     run(() => api(`/api/orgs/${org.slug}/assets/${a.id}`, { method: 'PATCH', body }), msg).then(onChange)
 
-  const canHaveBreaks = !a.durationMs || a.durationMs >= 6000
-  const maxValidCue = a.durationMs > 0 ? Math.floor((a.durationMs - 1) / 3000) * 3000 : 3600000
+  const canHaveBreaks = !a.durationMs || a.durationMs >= 10000
+  const maxValidCue = a.durationMs > 0 ? Math.floor((a.durationMs - 1) / 5000) * 5000 : 3600000
 
   // Smart Add Cue Point handler (snaps cleanly, avoids duplicates, handles segment boundaries)
   const handleAddBreak = (targetMs: number) => {
-    if (a.durationMs > 0 && a.durationMs < 6000) {
-      alert(`Media duration (${fmtDur(a.durationMs)}) is too short for SSAI ad breaks. A minimum of 6 seconds (2 broadcast segments) is required.`)
+    if (a.durationMs > 0 && a.durationMs < 10000) {
+      alert(`Media duration (${fmtDur(a.durationMs)}) is too short for SSAI ad breaks. A minimum of 10 seconds (2 broadcast segments) is required.`)
       return
     }
-    // Snap to 3000ms boundary
-    let snapped = Math.round(targetMs / 3000) * 3000
-    if (snapped < 3000) snapped = 3000
+    // Snap to the 5000 ms segment boundary
+    let snapped = Math.round(targetMs / 5000) * 5000
+    if (snapped < 5000) snapped = 5000
     if (snapped > maxValidCue) snapped = maxValidCue
 
     if (cues.includes(snapped)) {
@@ -1419,13 +1440,13 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                 }}
                 title="Click anywhere to scrub playhead"
               >
-                {/* 3-Second Segment Ticks (Visual representation of broadcast segment boundaries) */}
+                {/* 5-Second Segment Ticks (Visual representation of broadcast segment boundaries) */}
                 <div className="library-timeline-ticks">
-                  {Array.from({ length: Math.min(40, Math.floor((a.durationMs || 30000) / 3000)) }).map((_, i) => (
+                  {Array.from({ length: Math.min(40, Math.floor((a.durationMs || 30000) / 5000)) }).map((_, i) => (
                     <div
                       key={i}
                       className="library-timeline-tick"
-                      style={{ left: `${((i + 1) * 3000 / (a.durationMs || 1)) * 100}%` }}
+                      style={{ left: `${((i + 1) * 5000 / (a.durationMs || 1)) * 100}%` }}
                     />
                   ))}
                 </div>
@@ -1501,7 +1522,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                   <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
                   <b>Transcoding Video</b>
                   <p className="faint small" style={{ maxWidth: 320 }}>
-                    Converting video to 640×360 and cutting into 3-second segments for live broadcast.
+                    Converting video to 640×360 and cutting into 5-second segments for live broadcast.
                   </p>
                 </>
               ) : a.status === 'FAILED' ? (
@@ -1631,7 +1652,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                 <div>
                   <div className="row" style={{ gap: 6 }}>
                     <h3>Commercial Break Points (SSAI)</h3>
-                    <InfoTip text="Cue points indicate where server-side ads can play during broadcast. Playout snaps cleanly to 3-second boundaries." />
+                    <InfoTip text="Cue points indicate where server-side ads can play during broadcast. Playout snaps cleanly to 5-second boundaries." />
                   </div>
                   <p className="faint small" style={{ marginTop: 3 }}>
                     Easily insert ad breaks at scene cuts, or use 1-click smart presets below.
@@ -1657,7 +1678,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                       >
                         <Icon name="plus" size={15} />
                         <span>
-                          Add Break at Playhead ({fmtDur(Math.max(3000, Math.min(maxValidCue, Math.round(((currentTimeSec * 1000) || 3000) / 3000) * 3000)))})
+                          Add Break at Playhead ({fmtDur(Math.max(5000, Math.min(maxValidCue, Math.round(((currentTimeSec * 1000) || 5000) / 5000) * 5000)))})
                         </span>
                       </button>
                     </div>
@@ -1674,7 +1695,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                       <div className="library-ad-presets-grid">
                         {/* Mid-roll preset */}
                         {(() => {
-                          const midMs = a.durationMs ? Math.round((a.durationMs / 2) / 3000) * 3000 : 60000
+                          const midMs = a.durationMs ? Math.round((a.durationMs / 2) / 5000) * 5000 : 60000
                           const exists = cues.includes(midMs)
                           return (
                             <button
@@ -1695,7 +1716,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
 
                         {/* Intro 00:03 preset */}
                         {(() => {
-                          const openMs = 3000
+                          const openMs = 5000
                           const exists = cues.includes(openMs)
                           return (
                             <button
@@ -1716,8 +1737,8 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
 
                         {/* Dynamic presets for media >= 60s */}
                         {a.durationMs >= 60000 && (() => {
-                          const q1Ms = Math.round((a.durationMs * 0.25) / 3000) * 3000
-                          const q3Ms = Math.round((a.durationMs * 0.75) / 3000) * 3000
+                          const q1Ms = Math.round((a.durationMs * 0.25) / 5000) * 5000
+                          const q3Ms = Math.round((a.durationMs * 0.75) / 5000) * 5000
                           const existsQ1 = cues.includes(q1Ms)
                           const existsQ3 = cues.includes(q3Ms)
                           return (
@@ -1759,7 +1780,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                           <Icon name="clock" size={13} />
                           <b>Custom Timestamp Insertion</b>
                         </span>
-                        <span className="faint small">Snaps cleanly to 3s segment</span>
+                        <span className="faint small">Snaps cleanly to 5s segment</span>
                       </div>
 
                       <form onSubmit={handleManualAdd} className="library-ad-manual-form">
@@ -1797,10 +1818,10 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                         {(() => {
                           const parsedMs = ((parseInt(manualMinutes || '0', 10) * 60) + parseInt(manualSeconds || '0', 10)) * 1000
                           if (parsedMs > 0) {
-                            const snappedMs = Math.max(3000, Math.min(maxValidCue, Math.round(parsedMs / 3000) * 3000))
+                            const snappedMs = Math.max(5000, Math.min(maxValidCue, Math.round(parsedMs / 5000) * 5000))
                             return (
                               <span className="library-time-snap-pill">
-                                ⚡ Snaps to <b>{fmtDur(snappedMs)}</b> (Seg #{Math.round(snappedMs / 3000)})
+                                ⚡ Snaps to <b>{fmtDur(snappedMs)}</b> (Seg #{Math.round(snappedMs / 5000)})
                               </span>
                             )
                           }
@@ -1835,7 +1856,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                     <div>
                       <b>Media Duration Too Short for SSAI Ad Insertion ({fmtDur(a.durationMs)})</b>
                       <p style={{ margin: '4px 0 0', opacity: 0.88, fontSize: 12, lineHeight: 1.45 }}>
-                        FAST Studio linear playout streams in standardized 3-second broadcast segments. SSAI mid-roll ad insertion requires media of at least 6 seconds (minimum 2 broadcast segments) so ad breaks can splice cleanly between segment boundaries.
+                        FAST Studio linear playout streams in standardized 5-second broadcast segments. SSAI mid-roll ad insertion requires media of at least 10 seconds (minimum 2 broadcast segments) so ad breaks can splice cleanly between segment boundaries.
                       </p>
                     </div>
                   </div>
@@ -1856,7 +1877,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                     <button
                       type="button"
                       className="btn sm primary"
-                      onClick={() => handleAddBreak(a.durationMs ? Math.round((a.durationMs / 2) / 3000) * 3000 : 60000)}
+                      onClick={() => handleAddBreak(a.durationMs ? Math.round((a.durationMs / 2) / 5000) * 5000 : 60000)}
                     >
                       + Add Mid-roll
                     </button>
@@ -1977,6 +1998,15 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
           <div className="stack" style={{ gap: 14 }}>
             <div className="card card-pad stack">
               <h3>Edit Video Information</h3>
+              <label className="field"><span>Media type</span><select disabled={!editable || !mediaSettings.data} value={mediaType} onChange={e => setMediaType(e.target.value)}>
+                {!mediaSettings.data?.types.some(t => t.key === a.mediaType && mediaSettings.data?.enabledTypes.includes(t.key)) && <option value={a.mediaType}>{a.mediaType} (existing)</option>}
+                {mediaSettings.data?.types.filter(t => mediaSettings.data?.enabledTypes.includes(t.key) && (t.kind === 'AD') === (a.kind === 'AD')).map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+              </select></label>
+              {editKind === 'EPISODE' && <div className="grid g3">
+                <label className="field"><span>Series</span><input disabled={!editable} maxLength={120} value={series} onChange={e => setSeries(e.target.value)} /></label>
+                <label className="field"><span>Season</span><input disabled={!editable} type="number" min={1} value={season} onChange={e => setSeason(Number(e.target.value))} /></label>
+                <label className="field"><span>Episode</span><input disabled={!editable} type="number" min={1} value={episode} onChange={e => setEpisode(Number(e.target.value))} /></label>
+              </div>}
               <label className="field">
                 <span>Title</span>
                 <input
@@ -2011,7 +2041,7 @@ function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: ()
                     type="button"
                     className="btn primary"
                     disabled={busy}
-                    onClick={() => save({ title: title.trim(), genre: genre.trim(), description: description.trim() }, 'Video details updated')}
+                    onClick={() => save({ title: title.trim(), genre: genre.trim(), description: description.trim(), ...(mediaType !== a.mediaType ? { mediaType } : {}), ...(editKind === 'EPISODE' ? { series: series.trim(), season, episode } : {}) }, 'Video details updated')}
                   >
                     Save Changes
                   </button>

@@ -17,6 +17,8 @@ import Analytics from './pages/Analytics'
 import Team from './pages/Team'
 import Learn from './pages/Learn'
 import Platform from './pages/Platform'
+import Connectors from './pages/Connectors'
+import Settings, { PlatformMediaTypes } from './pages/Settings'
 import Email from './pages/Email'
 import Partners from './pages/Partners'
 import PartnerHome from './pages/PartnerHome'
@@ -67,6 +69,8 @@ export default function App() {
         <Route element={me ? <Shell /> : <RedirectToLogin />}>
           <Route path="/platform" element={<Platform />} />
           <Route path="/platform/email" element={<Email />} />
+          <Route path="/platform/connectors" element={<Connectors />} />
+          <Route path="/platform/media-types" element={<PlatformMediaTypes />} />
           <Route path="/welcome" element={<NoAccess />} />
           <Route path="/:org" element={<OrgGuard />}>
             <Route index element={<OrgHome />} />
@@ -83,6 +87,7 @@ export default function App() {
             <Route path="monitoring" element={<Monitoring />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="team" element={<Team />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="learn" element={<Learn />} />
             <Route path="*" element={<NotFound />} />
           </Route>
@@ -176,6 +181,7 @@ const NAV: NavGroup[] = [
     { to: 'monitoring', icon: 'activity', label: 'Monitoring', hint: 'Alerts & activity log' },
     { to: 'analytics', icon: 'chart', label: 'Analytics', hint: 'Viewing & ad results' },
     { to: 'team', icon: 'users', label: 'Team', hint: 'People & permissions' },
+    { to: 'settings', icon: 'sliders', label: 'Settings', hint: 'Media, programming & viewer ads' },
   ] },
   { group: 'Help', items: [{ to: 'learn', icon: 'book', label: 'How FAST works', hint: 'SSAI, SGAI, SCTE-35 explained' }] },
 ]
@@ -359,7 +365,6 @@ function Shell() {
             onClick={() => nav(current ? `/${current.slug}` : '/')}
             role="button"
             tabIndex={0}
-            title={collapsed ? "FAST Studio · Click to expand" : "FAST Studio Home"}
             onMouseEnter={e => showItemPopover(e, { label: 'FAST Studio', hint: 'Platform Home · Click logo to expand (Ctrl+B)' })}
             onMouseLeave={hidePopover}
           >
@@ -385,7 +390,7 @@ function Shell() {
             type="button"
             className="nav-toggle-btn"
             onClick={toggleCollapse}
-            title={collapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+            title={collapsed ? undefined : "Collapse sidebar (Ctrl+B)"}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={16} />
@@ -398,7 +403,6 @@ function Shell() {
             type="button"
             className="nav-expand-btn"
             onClick={toggleCollapse}
-            title="Expand sidebar (Ctrl+B)"
             aria-label="Expand sidebar"
             onMouseEnter={e => showItemPopover(e, { label: 'Expand Sidebar', hint: 'Press Ctrl+B or click to expand' })}
             onMouseLeave={hidePopover}
@@ -425,7 +429,6 @@ function Shell() {
                     to={`/${current.slug}${i.to ? '/' + i.to : ''}`}
                     end={!i.to}
                     className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                    title={collapsed ? `${i.label}${itemTag ? ` [${itemTag}]` : ''}${i.hint ? ` — ${i.hint}` : ''}` : undefined}
                     onMouseEnter={e => showItemPopover(e, { label: i.label, hint: i.hint, tag: itemTag, tagType: itemTagType })}
                     onMouseLeave={hidePopover}
                   >
@@ -463,7 +466,6 @@ function Shell() {
                 to="/platform"
                 end
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                title={collapsed ? 'Organizations [Admin] — Customer tenants' : undefined}
                 onMouseEnter={e => showItemPopover(e, { label: 'Organizations', hint: 'Customer tenants', tag: 'Admin', tagType: 'accent' })}
                 onMouseLeave={hidePopover}
               >
@@ -478,9 +480,20 @@ function Shell() {
                 {collapsed && <span className="nav-collapsed-dot accent" />}
               </NavLink>
               <NavLink
+                to="/platform/connectors"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                onMouseEnter={e => showItemPopover(e, { label: 'Connectors', hint: 'Content, storage & ad servers', tag: 'Admin', tagType: 'accent' })}
+                onMouseLeave={hidePopover}
+              >
+                <Icon name="link" size={17} />
+                <div className="nav-text-col">
+                  <span className="nav-label">Connectors</span>
+                  <small>Content, storage & ad servers</small>
+                </div>
+              </NavLink>
+              <NavLink
                 to="/platform/email"
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                title={collapsed ? 'Email — Templates & sent emails' : undefined}
                 onMouseEnter={e => showItemPopover(e, { label: 'Email', hint: 'Templates & sent emails' })}
                 onMouseLeave={hidePopover}
               >
@@ -497,7 +510,6 @@ function Shell() {
         {/* Nav Footer (Fixed at bottom) */}
         <div
           className="nav-foot"
-          title={me.demoMode ? 'Prototype build · fictional data' : 'Pilot · your real data'}
           onMouseEnter={e => showItemPopover(e, { label: 'System Status', hint: me.demoMode ? 'Prototype build · fictional data' : 'Pilot · live system' })}
           onMouseLeave={hidePopover}
         >

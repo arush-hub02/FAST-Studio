@@ -24,7 +24,7 @@ public class Data {
 
     public record Asset(UUID id, UUID orgId, String title, String description, String kind, String genre, String language,
                         String series, Integer season, Integer episode, long durationMs, String cuePoints, String status,
-                        String statusDetail, String mediaKey, String color, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+                        String statusDetail, String mediaKey, String color, OffsetDateTime createdAt, OffsetDateTime updatedAt, String mediaType) {
         public List<Long> cues() {
             if (cuePoints == null || cuePoints.isBlank()) return List.of();
             return Arrays.stream(cuePoints.split(",")).map(String::trim).filter(s -> !s.isEmpty()).map(Long::parseLong)
@@ -51,7 +51,7 @@ public class Data {
         public boolean isBreak() { return "AD_BREAK".equals(kind); }
     }
 
-    static final String ASSET_COLS = "id, org_id, title, description, kind, genre, language, series, season, episode, duration_ms, cue_points, status, status_detail, media_key, color, created_at, updated_at";
+    static final String ASSET_COLS = "id, org_id, title, description, kind, genre, language, series, season, episode, duration_ms, cue_points, status, status_detail, media_key, color, created_at, updated_at, coalesce(media_type,kind) as media_type";
 
     public Asset asset(UUID org, UUID id) {
         return db.sql("select " + ASSET_COLS + " from asset where org_id = :o and id = :id").param("o", org).param("id", id)

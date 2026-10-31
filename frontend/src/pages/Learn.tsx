@@ -46,7 +46,7 @@ function WhatIsFast() {
 
 function Pipeline({ base }: { base: string }) {
   const steps = [
-    ['Upload & prepare', 'Videos are converted into identical 3-second pieces.', 'library'],
+    ['Upload & prepare', 'Videos are converted into identical 5-second pieces.', 'library'],
     ['Licence', 'Rules say where and when each video may play.', 'rights'],
     ['Schedule', 'A timeline decides what plays every second, with ad breaks.', 'schedule'],
     ['Playout', 'The server turns schedule + clock into a live playlist.', 'watch'],
@@ -60,7 +60,7 @@ function Pipeline({ base }: { base: string }) {
         <Link key={t} to={`${base}/${to}`} className="pipe-step" style={{ color: 'inherit', textDecoration: 'none' }}>
           <div className="n">{i + 1}</div><b>{t}</b><p className="faint" style={{ marginTop: 4 }}>{d}</p></Link>
       ))}</div>
-      <p className="muted">Under the hood the live stream is an <b>HLS playlist</b>: a text file listing the next few 3-second video pieces. The player re-downloads it every few seconds.
+      <p className="muted">Under the hood the live stream is an <b>HLS playlist</b>: a text file listing the next few 5-second video pieces. The player re-downloads it every few seconds.
         Open <Link to={`${base}/watch`}>Watch live → Under the hood</Link> to see it update in real time.</p>
     </section>
   )

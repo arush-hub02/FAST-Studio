@@ -12,7 +12,7 @@ function client() {
     const headers = { Cookie: cookie(), Accept: accept }
     if (method !== 'GET') headers['X-XSRF-TOKEN'] = decodeURIComponent(jar.get('XSRF-TOKEN') ?? '')
     if (body) headers['Content-Type'] = 'application/json'
-    const res = await fetch(BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, redirect: 'manual' })
+    const res = await fetch(path.startsWith('http') ? path : BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, redirect: 'manual' })
     for (const c of res.headers.getSetCookie?.() ?? []) { const [kv] = c.split(';'); const i = kv.indexOf('='); jar.set(kv.slice(0, i), kv.slice(i + 1)) }
     const text = await res.text()
     let json; try { json = JSON.parse(text) } catch { json = undefined }
@@ -68,17 +68,24 @@ const start = await anon.req('/play/sessions', { method: 'POST', body: { org: 'a
 ok(start.status === 200 && start.json.playlistUrl, 'public playback session starts for a live channel')
 const master = (await anon.req(start.json.playlistUrl)).text
 ok((master.match(/#EXT-X-STREAM-INF/g) ?? []).length === 3 && master.includes('RESOLUTION=1280x720'), 'master playlist offers the 360p/540p/720p ladder')
-const variant = s => `/play/${s}/v/0.m3u8`
-const pl = (await anon.req(variant(start.json.sessionId))).text
-const pl720 = (await anon.req(`/play/${start.json.sessionId}/v/2.m3u8`)).text
+// live playlists come from the Cloudflare Worker (the edge), at the URL the session start hands out
+const variant = (s, n = 0) => s.playlistUrl.replace(/master\.m3u8$/, `v${n}.m3u8`)
+const pl = (await anon.req(variant(start.json))).text
+const pl720 = (await anon.req(variant(start.json, 2))).text
 ok(pl.startsWith('#EXTM3U') && /#EXT-X-MEDIA-SEQUENCE:\d+/.test(pl), 'live HLS media playlist served')
-ok(/#EXTINF:3\.000,/.test(pl) && /#EXT-X-PROGRAM-DATE-TIME/.test(pl), 'playlist has 3 s segments and program-date-time')
+ok(/#EXTINF:5\.000,/.test(pl) && /#EXT-X-PROGRAM-DATE-TIME/.test(pl), 'playlist has 5 s segments and program-date-time')
 ok(pl.match(/#EXT-X-MEDIA-SEQUENCE:\d+/)[0] === pl720.match(/#EXT-X-MEDIA-SEQUENCE:\d+/)[0], 'all renditions share the same media sequence (seamless quality switching)')
 
-// signed media URLs: valid works, unsigned / tampered / other-folder do not
-const segUrl = pl.split(/\r?\n/).find(l => l.startsWith('/media/s/'))
-ok(!!segUrl, 'segments are served through signed /media/s/… URLs')
-ok((await anon.req(segUrl, { accept: '*/*' })).status === 200, 'signed segment URL plays')
+const edgeSeg = pl.split(/\r?\n/).find(l => l.endsWith('.ts'))
+ok(!!edgeSeg && (await anon.req(edgeSeg, { accept: '*/*' })).status === 200, 'segments are served by the edge (R2)')
+const token = start.json.playlistUrl.split('/live/')[1].split('/')[0]
+const forged = start.json.playlistUrl.replace(token, token.split('.')[0] + '.AAAA')
+ok((await anon.req(forged)).status === 403, 'a tampered stream token is rejected by the edge')
+
+// signed operator media URLs (library previews): valid works, unsigned / tampered / other-folder do not
+const segUrl = (await owner.req('/api/orgs/aurora/campaigns')).json.find(c => c.thumbUrl)?.thumbUrl
+ok(!!segUrl, 'library media is served through signed /media/s/… URLs')
+ok((await anon.req(segUrl, { accept: '*/*' })).status === 200, 'signed media URL works')
 const [, , , exp, sig, scope, folder, ...file] = segUrl.split('/')
 ok((await anon.req(`/media/${scope}/${folder}/${file.join('/')}`, { accept: '*/*' })).status >= 400, 'unsigned media path is not served')
 ok((await anon.req(`/media/s/${exp}/${sig.slice(0, -2)}xx/${scope}/${folder}/${file.join('/')}`, { accept: '*/*' })).status === 403, 'tampered signature is rejected')
@@ -100,7 +107,7 @@ ok(sim.decision && sim.decision.excluded.some(x => /Not targeting IN|paused/.tes
 ok(sim.decision.filledMs <= sim.decision.breakMs, 'ads never overrun the break')
 
 const de = await anon.req('/play/sessions', { method: 'POST', body: { org: 'aurora', channel: 'aurora-action', country: 'DE' } })
-const dePl = (await anon.req(variant(de.json.sessionId))).text
+const dePl = (await anon.req(variant(de.json))).text
 const deSegs = dePl.split(/\r?\n/).filter(l => l.endsWith('.ts'))
 ok(deSegs.length > 0 && deSegs.every(l => l.includes('_platform/geo')) && !dePl.includes('#EXT-X-DATERANGE'), 'viewer outside channel countries gets only the region-block screen (no ads, no markers)')
 

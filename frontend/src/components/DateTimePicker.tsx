@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon } from '../ui'
 
 export interface TimezoneOption {
@@ -36,7 +37,13 @@ export function formatDateTimeTz(
 ): string {
   if (!value) return ''
   try {
-    const d = typeof value === 'string' ? new Date(value) : value
+    let d: Date
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && (!opts?.timezone || opts.timezone === 'local')) {
+      const [y, m, day] = value.split('-').map(Number)
+      d = new Date(y, m - 1, day, 12, 0, 0)
+    } else {
+      d = typeof value === 'string' ? new Date(value) : value
+    }
     if (isNaN(d.getTime())) return String(value)
 
     const tz = opts?.timezone && opts.timezone !== 'local' ? opts.timezone : undefined
@@ -173,27 +180,14 @@ export function DateTimePicker({
 }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [activePlacement, setActivePlacement] = useState<'bottom' | 'top'>('bottom')
+  const [coords, setCoords] = useState<{
+    top: number
+    bottom: number
+    left: number
+    maxHeight: number
+  } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // Auto-detect available viewport space and flip upward if needed
-  useEffect(() => {
-    if (isOpen && containerRef.current) {
-      if (placement === 'bottom' || placement === 'top') {
-        setActivePlacement(placement)
-        return
-      }
-      const rect = containerRef.current.getBoundingClientRect()
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-      const spaceBelow = viewportHeight - rect.bottom
-      const spaceAbove = rect.top
-      // Popover requires ~390px. If not enough room below and more space above, open upwards!
-      if (spaceBelow < 410 && spaceAbove > spaceBelow) {
-        setActivePlacement('top')
-      } else {
-        setActivePlacement('bottom')
-      }
-    }
-  }, [isOpen, placement])
+  const popoverRef = useRef<HTMLDivElement>(null)
 
   // Internal state for optional time toggle
   const [hasTime, setHasTime] = useState<boolean>(() => {
@@ -208,9 +202,64 @@ export function DateTimePicker({
     }
   }, [initialShowTime])
 
+  // Dynamic positioning for floating popover (immune to overflow clipping in modals)
+  const updatePosition = useCallback(() => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+
+    // Required height: Date-only is ~290px, with time section is ~390px
+    const requiredHeight = !initialShowTime || !hasTime ? 290 : 390
+    const spaceBelow = viewportHeight - rect.bottom
+    const spaceAbove = rect.top
+
+    let chosenPlacement: 'bottom' | 'top' = 'bottom'
+    if (placement === 'bottom' || placement === 'top') {
+      chosenPlacement = placement
+    } else if (spaceBelow >= requiredHeight) {
+      chosenPlacement = 'bottom'
+    } else if (spaceAbove >= requiredHeight) {
+      chosenPlacement = 'top'
+    } else {
+      chosenPlacement = spaceBelow >= spaceAbove ? 'bottom' : 'top'
+    }
+
+    const popoverWidth = 320
+    const left = Math.max(8, Math.min(rect.left, viewportWidth - popoverWidth - 8))
+    const maxHeight =
+      chosenPlacement === 'bottom'
+        ? Math.max(200, viewportHeight - rect.bottom - 16)
+        : Math.max(200, rect.top - 16)
+
+    setCoords({
+      top: rect.bottom + 6,
+      bottom: viewportHeight - rect.top + 6,
+      left,
+      maxHeight,
+    })
+    setActivePlacement(chosenPlacement)
+  }, [placement, initialShowTime, hasTime])
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition()
+      window.addEventListener('resize', updatePosition)
+      window.addEventListener('scroll', updatePosition, true)
+      return () => {
+        window.removeEventListener('resize', updatePosition)
+        window.removeEventListener('scroll', updatePosition, true)
+      }
+    }
+  }, [isOpen, updatePosition])
+
   // Parse current value into a working date object or null
   const parsedDate = useMemo(() => {
     if (!value) return null
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [y, m, d] = value.split('-').map(Number)
+      return new Date(y, m - 1, d, 12, 0, 0)
+    }
     const d = new Date(value)
     return isNaN(d.getTime()) ? null : d
   }, [value])
@@ -255,7 +304,13 @@ export function DateTimePicker({
   // Close on outside click
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        popoverRef.current &&
+        !popoverRef.current.contains(target)
+      ) {
         setIsOpen(false)
       }
     }
@@ -698,9 +753,23 @@ export function DateTimePicker({
         </div>
       </div>
 
-      {/* Dropdown Popover */}
-      {isOpen && (
-        <div className={`dtpicker-popover placement-${activePlacement}`}>
+      {/* Dropdown Popover (Portaled to document.body to avoid clipping inside modals/containers) */}
+      {isOpen &&
+        coords &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            className={`dtpicker-popover placement-${activePlacement}`}
+            style={{
+              position: 'fixed',
+              top: activePlacement === 'bottom' ? coords.top : 'auto',
+              bottom: activePlacement === 'top' ? coords.bottom : 'auto',
+              left: coords.left,
+              maxHeight: coords.maxHeight,
+              zIndex: 99999,
+            }}
+            onMouseDown={e => e.stopPropagation()}
+          >
           {/* Header Bar */}
           <div className="dtpicker-popover-header">
             <div className="dtpicker-month-nav">
@@ -915,7 +984,8 @@ export function DateTimePicker({
               Done
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

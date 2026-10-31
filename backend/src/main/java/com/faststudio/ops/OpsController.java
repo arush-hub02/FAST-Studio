@@ -20,11 +20,13 @@ public class OpsController {
     private final Data data;
     private final Audit audit;
     private final AlertScanner scanner;
+    private final AvailVerifier avails;
 
-    public OpsController(Data data, Audit audit, AlertScanner scanner) {
+    public OpsController(Data data, Audit audit, AlertScanner scanner, AvailVerifier avails) {
         this.data = data;
         this.audit = audit;
         this.scanner = scanner;
+        this.avails = avails;
     }
 
     // ------------------------------------------------------------------ home dashboard
@@ -100,6 +102,13 @@ public class OpsController {
     List<Alert> scanNow(Tenant t) {
         scanner.scanOrg(t.orgId());
         return alerts(t, "open");
+    }
+
+    /** Latest avail check per marker format (AvailVerifier); empty until a break has aired since the server started. */
+    @GetMapping("/orgs/{org}/channels/{id}/avails")
+    List<AvailVerifier.Result> avails(Tenant t, @PathVariable UUID id) {
+        data.channel(t.orgId(), id);   // 404 unless it is this organisation's channel
+        return avails.results(id);
     }
 
     // ------------------------------------------------------------------ audit
