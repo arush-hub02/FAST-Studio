@@ -78,7 +78,7 @@ class ConnectorsTest {
 
     @Test @Order(3)
     void viewShowsNamesAndOrderButNeverThePlatformsTagUrls() throws Exception {
-        assertEquals(200, call(put("/api/platform/orgs/" + aurora() + "/features"), "admin@platform.test", "{\"features\":[\"AD_WATERFALL_VIEW\",\"NOT_A_FEATURE\"]}")
+        assertEquals(200, call(put("/api/platform/orgs/" + aurora() + "/features"), "admin@platform.test", "{\"features\":[\"AD_WATERFALL_VIEW\"]}")   // keys outside the plan now get 422 (TenantConfigurationTest)
                 .getResponse().getStatus());
         String list = call(get("/api/orgs/" + aurora() + "/ad-sources"), "operator@aurora.test", null).getResponse().getContentAsString();
         assertTrue(list.contains("Platform GAM"), list);

@@ -1,5 +1,7 @@
 package com.faststudio.ads;
 
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import com.faststudio.core.Data;
 import com.faststudio.core.Times;
 import com.faststudio.rights.Rights;
@@ -29,12 +31,15 @@ public class AdDecisionService {
     private final TransactionTemplate transactions;
     private final JsonMapper json;
     private final EdgePublisher publisher;
+    private final TenantConfigurationServiceV1_0 configuration;
 
-    public AdDecisionService(Data data, List<AdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher) {
+    public AdDecisionService(Data data, List<AdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher,
+                              TenantConfigurationServiceV1_0 configuration) {
         this.data = data;
         this.transactions = new TransactionTemplate(manager);
         this.json = json;
         this.publisher = publisher;
+        this.configuration=configuration;
         this.sources = sources.stream().collect(Collectors.toMap(AdSource::kind, Function.identity()));
     }
 
@@ -95,6 +100,7 @@ public class AdDecisionService {
         for (AdSource.Config src : waterfall(org)) {
             AdSource impl = sources.get(src.kind());
             if (!src.enabled() || impl == null) continue;
+            if (src.kind().equals("VAST") && !configuration.driverEnabled(org,"VAST")) continue;
             if (left < Times.SEG_MS) break;
             var fill = impl.fill(src, new AdSource.Request(org, sessionId, breakId, at, breakMs, left, country, channel, genre, programmeAssetId, viewer, advertisers));
             excluded.addAll(fill.excluded());

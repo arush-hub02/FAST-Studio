@@ -59,7 +59,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
 
 // ---------------------------------------------------------------- shared types
 
-export type Membership = { orgId: string; slug: string; name: string; status: string; role: string; permissions: string[]; kind: 'CUSTOMER' | 'PARTNER'; features: string[] }
+export type Membership = { orgId: string; slug: string; name: string; status: string; role: string; permissions: string[]; kind: 'CUSTOMER' | 'PARTNER'; features: string[]; tenantId: string | null; tenantName: string | null }
 
 /** What a customer can share with a partner (read-only). */
 export const SCOPES: Record<string, { label: string; meaning: string }> = {
@@ -79,6 +79,7 @@ export type Asset = {
 export type MediaType = { key: string; label: string; kind: string; enabled: boolean }
 export type MediaSettingsView = { types: MediaType[]; enabledTypes: string[]; defaultType: string; premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerKeySet: boolean; revision: number }
 export type ProjectDetails = {
+  configuration: import('./features/configuration/types').Configuration
   schemaVersion: number
   project: { id: string; slug: string; name: string; kind: string; status: string }
   access: { role: string; permissions: string[]; features: string[] }

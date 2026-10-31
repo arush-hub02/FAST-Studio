@@ -127,56 +127,53 @@ No generic plugin marketplace or hot-loaded provider framework is required. Impl
 
 ## Folder architecture
 
-Use the requested top-level controller/service separation, with media-focused subpackages:
+Follow the project-wide layout in [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) (adopted 2026-10-31, replacing the earlier `controller/`, `integration/`, `jobs/` proposal). Media placement:
 
 ```text
 backend/src/main/java/com/faststudio/
-  controller/media/
-    AssetController.java
-    MediaImportController.java
-    MediaConnectionController.java
-    MediaSyncController.java
-    MediaWebhookController.java
-  service/media/
-    AssetService.java
-    MediaImportService.java
+  v1_0/controllers/studio/media/
+    AssetControllerV1_0.java
+    MediaImportControllerV1_0.java
+    MediaSyncControllerV1_0.java
+  v1_0/controllers/platform/connectors/
+    MediaConnectionControllerV1_0.java
+  v1_0/controllers/webhook/
+    MuxWebhookControllerV1_0.java
+  v1_0/services/media/
+    AssetServiceV1_0.java
+    MediaImportServiceV1_0.java
     MediaSyncService.java
     UploadSessionService.java
     MediaPreparationService.java
-  repository/media/
+  v1_0/services/webhook/
+    MediaWebhookServiceV1_0.java
+    parsers/IWebhookParser.java, MuxWebhookParser.java, WebhookParserFactory.java
+  v1_0/repositories/media/
     AssetRepository.java
     MediaConnectionRepository.java
     MediaImportRepository.java
     MediaJobRepository.java
-  dto/media/
-    AssetRequests.java
-    ImportRequests.java
-    ImportViews.java
-    ConnectionViews.java
-  model/media/
-    ImportBatch.java
-    ImportItem.java
-    MediaJob.java
-    AssetSource.java
-  integration/media/
-    MediaProviderConnector.java
-    MediaProviderRegistry.java
+  v1_0/dto/media/
+    AssetRequests.java, ImportRequests.java, ImportViews.java, ConnectionViews.java
+    ImportBatch.java, ImportItem.java, MediaJob.java, AssetSource.java   (records)
+  v1_0/util/mediaProvider/
+    IMediaProvider.java
+    MediaProviderResolverService.java
     ProviderCapabilities.java
-  integration/mux/
-    MuxClient.java
-    MuxConnector.java
+  v1_0/util/mux/
+    MuxClientService.java
     MuxWebhookVerifier.java
-  jobs/media/
-    MediaJobDispatcher.java
-    MediaPreparationWorker.java
+  messaging/v1_0/media/
+    MediaJobPublisherV1_0.java
+    MediaJobObserverV1_0.java
     MediaReconciliationJob.java
 ```
 
 Controllers: request binding, endpoint authorization and response mapping.
 Services: use-case rules, reusable validation, idempotency, transaction boundaries and audit actions.
 Repositories: tenant-scoped SQL using current JdbcClient; keep the RLS protection.
-Integration adapters: provider HTTP, authentication, pagination and provider response/webhook translation.
-Jobs: lease/execute/retry background stages using the same services.
+`util/` adapters: provider HTTP, authentication, pagination and provider response/webhook translation.
+`messaging/v1_0`: lease/execute/retry background stages using the same services.
 
 Use records where useful for DTOs, but do not keep all API contracts, SQL and business rules nested inside a large controller. Do not create one-file-per-trivial-field or unused interfaces just to populate folders.
 

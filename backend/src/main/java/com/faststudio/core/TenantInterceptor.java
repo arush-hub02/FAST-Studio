@@ -1,5 +1,7 @@
 package com.faststudio.core;
 
+import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
@@ -41,8 +43,10 @@ public class TenantInterceptor implements HandlerInterceptor {
         String key = vars.get("org");
         UUID id = asUuid(key);
         Row row = db.sql("""
-                select o.id as org_id, o.slug, o.name, o.status, m.role, o.kind
+                select o.id as org_id, o.slug, o.name,
+                case when t.status='SUSPENDED' then 'SUSPENDED' else o.status end as status, m.role, o.kind
                 from organization o join membership m on m.org_id = o.id
+                left join customer_tenant t on t.id=o.tenant_id
                 where""" + (id != null ? " o.id = :key" : " o.slug = :key") + " and m.user_id = :user and o.kind <> 'PLATFORM'")
                 .param("key", id != null ? id : key).param("user", userId)
                 .query(Row.class).optional()
@@ -51,7 +55,9 @@ public class TenantInterceptor implements HandlerInterceptor {
         if ("PARTNER".equals(row.kind()) && !req.getRequestURI().matches(".*/api/orgs/[^/]+/members(/.*)?")) throw ApiException.notFound("Page");
         if (!"ACTIVE".equals(row.status())) throw new ApiException(HttpStatus.FORBIDDEN, "ORG_SUSPENDED",
                 "This organization is suspended by the platform administrator. Your data is kept safe; contact support.");
-        req.setAttribute(ATTR, new Tenant(row.orgId(), row.slug(), row.name(), userId, Tenant.Role.valueOf(row.role()), row.kind()));
+        var role=Tenant.Role.valueOf(row.role());
+        req.setAttribute(ATTR, new Tenant(row.orgId(), row.slug(), row.name(), userId, role, row.kind(),
+                AccessRoleServiceV1_0.permissions(db,row.orgId(),userId,role)));
         res.setHeader("X-Org-Id", row.orgId().toString());
         MDC.put("orgId", row.orgId().toString());
         TenantScope.set(row.orgId());       // database row-level security now only shows this tenant's rows

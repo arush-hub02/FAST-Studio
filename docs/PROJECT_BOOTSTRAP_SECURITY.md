@@ -31,7 +31,7 @@ Credential entry by an authorized administrator is a write operation: newly ente
 
 ## Folder boundary
 
-The new project bootstrap demonstrates controller/project, service/project, repository/project and dto/project separation. Public ad-decision DTOs are under dto/media. Existing asset/Mux ingestion extraction continues in the next stage; this change does not claim all legacy controllers have been reorganized.
+The new project bootstrap demonstrates controller/project, service/project, repository/project and dto/project separation. Public ad-decision DTOs are under dto/media. Existing asset/Mux ingestion extraction continues in the next stage; this change does not claim all legacy controllers have been reorganized. Since 2026-10-31 these classes live in the [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) layout: `v1_0/controllers/studio/project/ProjectDetailsControllerV1_0`, `v1_0/controllers/platform/project/PlatformProjectDetailsControllerV1_0`, `v1_0/services/project/ProjectDetailsServiceV1_0`, `v1_0/repositories/project`, `v1_0/dto/project` and `v1_0/dto/media`. API paths are unchanged.
 
 ## Validation and remaining production gates
 

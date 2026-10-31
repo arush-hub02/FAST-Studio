@@ -33,7 +33,7 @@ Angular implementation: feature routes, typed reactive forms and established Ang
 | Tenancy in the database | Migration `V2`: RLS policies on every tenant table; app pool runs as restricted role `faststudio_app`; `TenantAwareDataSource` stamps the tenant on each connection checkout; migrations use an owner pool (`@FlywayDataSource`). See MULTITENANCY.md. |
 | Ads | `AdDecisionService` (local ADS stand-in) → SSAI segments served through `/play/{s}/ad/...` (server beacons) or an SGAI asset list (client beacons) |
 
-Module packages: `core` (auth, tenancy, data, audit), `catalog`, `rights`, `channels`, `schedule`, `playout`, `ads`, `distribution`, `ops`, `team`, `media`, `demo`. Multitenancy details: [MULTITENANCY.md](MULTITENANCY.md). Media path explained: [HOW_FAST_WORKS.md](HOW_FAST_WORKS.md).
+Current module packages: `core` (auth, tenancy, data, audit), `catalog`, `rights`, `channels`, `schedule`, `playout`, `ads`, `distribution`, `ops`, `team`, `media`, `demo`. Target layout and incremental migration rules: [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md). Multitenancy details: [MULTITENANCY.md](MULTITENANCY.md). Media path explained: [HOW_FAST_WORKS.md](HOW_FAST_WORKS.md).
 
 ## Logical topology
 

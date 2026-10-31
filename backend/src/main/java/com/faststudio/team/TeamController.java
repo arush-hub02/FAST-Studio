@@ -1,5 +1,7 @@
 package com.faststudio.team;
 
+import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import com.faststudio.core.*;
 import com.faststudio.mail.EmailTemplates;
 import com.faststudio.mail.MailService;
@@ -23,14 +25,17 @@ public class TeamController {
     private final Accounts accounts;
     private final MailService mail;
     private final Tokens tokens;
+    private final AccessRoleServiceV1_0 accessRoles;
 
-    public TeamController(Data data, Audit audit, PasswordEncoder encoder, Accounts accounts, MailService mail, Tokens tokens) {
+    public TeamController(Data data, Audit audit, PasswordEncoder encoder, Accounts accounts, MailService mail, Tokens tokens,
+                          AccessRoleServiceV1_0 accessRoles) {
         this.data = data;
         this.audit = audit;
         this.encoder = encoder;
         this.accounts = accounts;
         this.mail = mail;
         this.tokens = tokens;
+        this.accessRoles=accessRoles;
     }
 
     private String name(UUID userId) {
@@ -69,15 +74,15 @@ public class TeamController {
                 "expiresAt", EmailTemplates.when(link.expiresAt())));
     }
 
-    public record Member(UUID userId, String name, String email, String role, OffsetDateTime createdAt) {}
+    public record Member(UUID userId, String name, String email, String role, OffsetDateTime createdAt, String customRoleKey) {}
 
     @GetMapping("/orgs/{org}/members")
     List<Member> members(Tenant t) {
-        return data.db.sql("select u.id as user_id, u.name, u.email, m.role, m.created_at from membership m join app_user u on u.id = m.user_id where m.org_id = :o order by m.role, u.name")
+        return data.db.sql("select u.id as user_id, u.name, u.email, m.role, m.created_at, m.custom_role_key from membership m join app_user u on u.id = m.user_id where m.org_id = :o order by m.role, u.name")
                 .param("o", t.orgId()).query(Member.class).list();
     }
 
-    public record InviteRequest(@NotBlank @Email String email, @NotBlank @Size(max = 80) String name, @NotBlank String role) {}
+    public record InviteRequest(@NotBlank @Email String email, @NotBlank @Size(max = 80) String name, @NotBlank String role, String customRoleKey) {}
 
     public record InviteResult(Member member, String temporaryPassword, String note) {}
 
@@ -85,7 +90,7 @@ public class TeamController {
     @Transactional
     InviteResult invite(Tenant t, @Valid @RequestBody InviteRequest r) {
         t.require(Tenant.Perm.TEAM_MANAGE);
-        Tenant.Role role = role(t, r.role());
+        Tenant.Role role = grant(t, r.role(), r.customRoleKey());
         ceiling(t, role);
         String email = r.email().trim().toLowerCase(Locale.ROOT);
         UUID uid = data.db.sql("select id from app_user where email = :e").param("e", email).query(UUID.class).optional().orElse(null);
@@ -97,7 +102,7 @@ public class TeamController {
         }
         int exists = data.db.sql("select count(*) from membership where org_id = :o and user_id = :u").param("o", t.orgId()).param("u", uid).query(Integer.class).single();
         if (exists > 0) throw ApiException.conflict("ALREADY_MEMBER", email + " is already a member.");
-        data.db.sql("insert into membership(org_id, user_id, role) values (:o,:u,:r)").param("o", t.orgId()).param("u", uid).param("r", role.name()).update();
+        data.db.sql("insert into membership(org_id, user_id, role,custom_role_key) values (:o,:u,:r,:custom)").param("o", t.orgId()).param("u", uid).param("r", role.name()).param("custom",r.customRoleKey()).update();
         tokens.bump(List.of(uid));                 // their sign-in token gains this organization on its next refresh
         audit.log(t, "member.invite", "user", uid, email + " as " + role);
         Member m = members(t).stream().filter(x -> x.email().equals(email)).findFirst().orElseThrow();
@@ -127,18 +132,18 @@ public class TeamController {
         return new ResetLinkResult("/reset-password?token=" + link.token(), link.expiresAt(), resetNote(email));
     }
 
-    public record RoleRequest(@NotBlank String role) {}
+    public record RoleRequest(@NotBlank String role, String customRoleKey) {}
 
     @PatchMapping("/orgs/{org}/members/{userId}")
     @Transactional
     Map<String, String> changeRole(Tenant t, @PathVariable UUID userId, @Valid @RequestBody RoleRequest r) {
         t.require(Tenant.Perm.TEAM_MANAGE);
-        Tenant.Role target = role(t, r.role());
+        Tenant.Role target = grant(t, r.role(), r.customRoleKey());
         Tenant.Role current = currentRole(t, userId);
         ceiling(t, target);
         ceiling(t, current);
-        if (current == Tenant.Role.top(t.kind()) && target != current) lastOwnerGuard(t);
-        data.db.sql("update membership set role = :r where org_id = :o and user_id = :u").param("r", target.name()).param("o", t.orgId()).param("u", userId).update();
+        if (current == Tenant.Role.top(t.kind()) && (target != current || r.customRoleKey()!=null)) lastOwnerGuard(t);
+        data.db.sql("update membership set role = :r,custom_role_key=:custom where org_id = :o and user_id = :u").param("r", target.name()).param("custom",r.customRoleKey()).param("o", t.orgId()).param("u", userId).update();
         tokens.bump(List.of(userId));
         audit.log(t, "member.role", "user", userId, current + " → " + target);
         return Map.of("role", target.name());
@@ -170,7 +175,8 @@ public class TeamController {
 
     private void lastOwnerGuard(Tenant t) {
         Tenant.Role top = Tenant.Role.top(t.kind());
-        int owners = data.db.sql("select count(*) from membership where org_id = :o and role = :r").param("o", t.orgId()).param("r", top.name()).query(Integer.class).single();
+        data.db.sql("select id from organization where id=:o for update").param("o",t.orgId()).query(UUID.class).single();
+        int owners = data.db.sql("select count(*) from membership where org_id = :o and role = :r and custom_role_key is null").param("o", t.orgId()).param("r", top.name()).query(Integer.class).single();
         if (owners <= 1) throw ApiException.conflict("LAST_OWNER", "An organization must keep at least one " + label(top).toLowerCase(Locale.ROOT) + ".");
     }
 
@@ -180,6 +186,17 @@ public class TeamController {
         try { role = Tenant.Role.valueOf(r); } catch (Exception e) { throw ApiException.bad("Unknown role " + r); }
         if (role.partner() != t.partnerOrg()) throw ApiException.bad(label(role) + " is not a role in this kind of organization.");
         return role;
+    }
+
+    private Tenant.Role grant(Tenant t,String role,String custom) {
+        if(custom!=null) {
+            var definition=accessRoles.assignable(t,custom);
+            if(!definition.baseRole().equals(role))throw ApiException.bad("The role ceiling does not match the selected role.");
+            return role(t,role);
+        }
+        var target=role(t,role);
+        if(!t.permissions().containsAll(target.perms))throw new ApiException(HttpStatus.FORBIDDEN,"ROLE_CEILING","You cannot grant permissions you do not hold.");
+        return target;
     }
 
     // ------------------------------------------------------------------ platform administration
@@ -219,6 +236,7 @@ public class TeamController {
     @Transactional
     Map<String, Object> createOrg(@Valid @RequestBody CreateOrg r) {
         requirePlatform();
+        try { java.time.ZoneId.of(r.timezone()); } catch(Exception e) { throw ApiException.bad("Unknown timezone."); }
         if (data.db.sql("select count(*) from organization where slug = :s").param("s", r.slug()).query(Integer.class).single() > 0)
             throw ApiException.conflict("SLUG_TAKEN", "That organization ID is taken.");
         String kind = r.kind() == null ? "CUSTOMER" : r.kind();

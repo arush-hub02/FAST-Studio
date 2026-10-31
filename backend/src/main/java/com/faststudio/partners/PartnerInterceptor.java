@@ -1,5 +1,7 @@
 package com.faststudio.partners;
 
+import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import com.faststudio.core.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,8 +44,8 @@ public class PartnerInterceptor implements HandlerInterceptor {
 
     /** Who is calling, for which partner, and (on /sources/{owner}/…) what was shared. */
     public record Ctx(UUID partnerId, String partnerSlug, String partnerName, UUID userId, Tenant.Role role, UUID clientId, String clientName,
-                      Set<String> callerScopes, Link link) {
-        public boolean admin() { return role == Tenant.Role.PARTNER_ADMIN; }
+                      Set<String> callerScopes, Link link, boolean canManage) {
+        public boolean admin() { return canManage; }
 
         public String caller() { return clientName != null ? "API client '" + clientName + "'" : "a person"; }
 
@@ -109,7 +111,8 @@ public class PartnerInterceptor implements HandlerInterceptor {
                     partner.name() + " (" + (clientName != null ? "API client '" + clientName + "'" : "portal") + ") read " + need.value()
                             + " — " + req.getRequestURI().replaceAll(".*/sources/[^/]+", ""));
         }
-        req.setAttribute(ATTR, new Ctx(partner.id(), partner.slug(), partner.name(), userId, role, clientId, clientName, callerScopes, link));
+        boolean canManage=userId!=null&&AccessRoleServiceV1_0.permissions(db,partner.id(),userId,role).contains(Tenant.Perm.PARTNER_MANAGE);
+        req.setAttribute(ATTR, new Ctx(partner.id(), partner.slug(), partner.name(), userId, role, clientId, clientName, callerScopes, link,canManage));
         return true;
     }
 

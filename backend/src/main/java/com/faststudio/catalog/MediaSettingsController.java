@@ -1,6 +1,8 @@
 package com.faststudio.catalog;
 
 import com.faststudio.core.*;
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+import tools.jackson.databind.json.JsonMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,8 +15,12 @@ public class MediaSettingsController {
     private final MediaSettings settings;
     private final Audit audit;
     private final Secrets secrets;
-    public MediaSettingsController(Data data, MediaSettings settings, Audit audit, Secrets secrets) {
+    private final TenantConfigurationServiceV1_0 configuration;
+    private final JsonMapper json;
+    public MediaSettingsController(Data data, MediaSettings settings, Audit audit, Secrets secrets,
+                                   TenantConfigurationServiceV1_0 configuration, JsonMapper json) {
         this.data = data; this.settings = settings; this.audit = audit; this.secrets = secrets;
+        this.configuration = configuration; this.json = json;
     }
     @GetMapping("/api/platform/media-types")
     List<MediaSettings.Type> types() { return settings.catalog(); }
@@ -68,6 +74,14 @@ public class MediaSettingsController {
             default_type=:def,premiere_time=:at,weekdays=:days,personalized_ads=:ads,revision=tenant_settings.revision+1""")
                 .param("o", t.orgId()).param("types", String.join(",", r.enabledTypes().stream().distinct().toList())).param("def", r.defaultType())
                 .param("at", MediaSettings.time(r.premiereTime())).param("days", MediaSettings.daysCsv(r.weekdays())).param("ads", r.personalizedAds()).update();
+        // The three columns above are a rollback mirror only; the product reads these dynamic properties (V15).
+        // Only changed values become project overrides, so untouched fields keep inheriting tenant/global defaults.
+        configuration.writeProjectValueIfChanged(t.orgId(), TenantConfigurationServiceV1_0.PREMIERE_TIME,
+                json.getNodeFactory().stringNode(MediaSettings.time(r.premiereTime()).toString()));
+        configuration.writeProjectValueIfChanged(t.orgId(), TenantConfigurationServiceV1_0.WEEKDAYS,
+                json.getNodeFactory().stringNode(MediaSettings.daysCsv(r.weekdays())));
+        configuration.writeProjectValueIfChanged(t.orgId(), TenantConfigurationServiceV1_0.PERSONALIZED_ADS,
+                json.getNodeFactory().booleanNode(r.personalizedAds()));
         audit.log(t, "settings.update", "organization", t.orgId(), "Media, programming and viewer advertising defaults");
         return view(t);
     }

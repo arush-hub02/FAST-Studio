@@ -1,5 +1,7 @@
 package com.faststudio.core;
 
+import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -52,14 +54,14 @@ public class AuthController {
     public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
 
     public record Membership(UUID orgId, String slug, String name, String status, String role, List<String> permissions, String kind,
-                             List<String> features) {}
+                             List<String> features, UUID tenantId, String tenantName) {}
 
     public record Me(UUID id, String name, String email, boolean platformAdmin, List<Membership> memberships, boolean demoMode,
                      boolean mustChangePassword) {}
 
     record UserRow(UUID id, String name, String email, boolean platformAdmin, boolean mustChangePassword) {}
 
-    record MRow(UUID orgId, String slug, String name, String status, String role, String kind, String features) {}
+    record MRow(UUID orgId, String slug, String name, String status, String role, String kind, String features, UUID tenantId, String tenantName) {}
 
     @GetMapping("/csrf")
     Map<String, String> csrf(CsrfToken token) {
@@ -110,11 +112,12 @@ public class AuthController {
         UserRow u = db.sql("select id, name, email, platform_admin, must_change_password from app_user where id = :id").param("id", id)
                 .query(UserRow.class).single();
         List<Membership> ms = db.sql("""
-                        select o.id as org_id, o.slug, o.name, o.status, m.role, o.kind, o.features from membership m
-                        join organization o on o.id = m.org_id where m.user_id = :id order by o.name""")
+                        select o.id as org_id, o.slug, o.name, case when t.status='SUSPENDED' then 'SUSPENDED' else o.status end as status,
+                        m.role, o.kind, o.features, o.tenant_id, t.name as tenant_name from membership m
+                        join organization o on o.id = m.org_id left join customer_tenant t on t.id=o.tenant_id where m.user_id = :id order by t.name,o.name""")
                 .param("id", id).query(MRow.class).list().stream()
                 .map(m -> new Membership(m.orgId(), m.slug(), m.name(), m.status(), m.role(),
-                        Tenant.Role.valueOf(m.role()).perms.stream().map(Enum::name).toList(), m.kind(), Feature.parse(m.features())))
+                        AccessRoleServiceV1_0.permissions(db,m.orgId(),id,Tenant.Role.valueOf(m.role())).stream().map(Enum::name).toList(), m.kind(), Feature.parse(m.features()),m.tenantId(),m.tenantName()))
                 .toList();
         return new Me(u.id(), u.name(), u.email(), u.platformAdmin(), ms, demo, u.mustChangePassword());
     }

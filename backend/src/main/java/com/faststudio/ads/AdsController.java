@@ -1,5 +1,7 @@
 package com.faststudio.ads;
 
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import com.faststudio.core.*;
 import com.faststudio.core.Data.Entry;
 import com.faststudio.media.MediaSigner;
@@ -22,13 +24,16 @@ public class AdsController {
     private final MediaSigner signer;
 
     private final AdSourceAdmin adSources;
+    private final TenantConfigurationServiceV1_0 configuration;
 
-    public AdsController(Data data, Audit audit, AdDecisionService decisions, MediaSigner signer, AdSourceAdmin adSources) {
+    public AdsController(Data data, Audit audit, AdDecisionService decisions, MediaSigner signer, AdSourceAdmin adSources,
+                         TenantConfigurationServiceV1_0 configuration) {
         this.data = data;
         this.audit = audit;
         this.decisions = decisions;
         this.signer = signer;
         this.adSources = adSources;
+        this.configuration=configuration;
     }
 
     // ------------------------------------------------------------------ ad sources, as the company sees them
@@ -36,7 +41,7 @@ public class AdsController {
     // waterfall only with the AD_WATERFALL_VIEW or AD_OWN_TAGS feature, and adds its own VAST tags only with AD_OWN_TAGS.
 
     private void requireFeature(Tenant t, Feature... any) {
-        List<String> on = Feature.parse(data.db.sql("select features from organization where id = :o").param("o", t.orgId()).query(String.class).single());
+        List<String> on = configuration.effectiveFeatures(t.orgId(),data.db.sql("select features from organization where id = :o").param("o", t.orgId()).query(String.class).single());
         if (Arrays.stream(any).noneMatch(f -> on.contains(f.name())))
             throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "This isn't switched on for your company. Ask the platform administrator.");
     }
@@ -158,7 +163,7 @@ public class AdsController {
 
     public record SimulateRequest(@NotNull UUID channelId, @NotBlank String country) {}
 
-    public record Simulation(Instant breakStart, long breakSeconds, String ownership, String programme, com.faststudio.dto.media.AdDecisionView decision, boolean simulated) {}
+    public record Simulation(Instant breakStart, long breakSeconds, String ownership, String programme, com.faststudio.v1_0.dto.media.AdDecisionView decision, boolean simulated) {}
 
     /** Runs the ad decision for the channel's next published break, with a reason for every campaign left out. */
     @PostMapping("/ads/simulate")
@@ -171,6 +176,6 @@ public class AdsController {
                 .orElseThrow(() -> ApiException.conflict("NO_BREAKS", "No upcoming ad breaks in the published schedule."));
         String programme = b.assetId() == null ? "Between programmes" : "Inside \"" + data.asset(t.orgId(), b.assetId()).title() + "\"";
         var d = decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
-        return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, com.faststudio.dto.media.AdDecisionView.from(d), true);
+        return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, com.faststudio.v1_0.dto.media.AdDecisionView.from(d), true);
     }
 }

@@ -112,3 +112,30 @@ Admin API (sign-in token in the `fs_at` HttpOnly cookie + `X-XSRF-TOKEN`, or `Au
 | Tools | `POST /api/tools/scte35/decode`, `GET /api/tools/scte35/example` |
 
 Public viewer API (no admin session): `POST /play/sessions {org, channel, destinationId?, country}` (country is a **labelled simulation**), `GET /play/{session}/live.m3u8`, `GET /play/{session}/ad/{breakId}/{slot}/{n}.ts` (SSAI segment + server beacon), `GET /play/{session}/asset-list/{breakId}.json` (SGAI), `GET /play/{session}/slate/{seconds}.m3u8`, `POST /play/{session}/beacons`, `GET /play/{session}/info`. Media: `GET /media/{orgSlug}/{assetId}/…`.
+
+## Tenant configuration endpoints (local, 2026-10-31)
+
+Platform administrators (`/api/platform/**`):
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET/PUT /api/platform/plans` | List / create-or-update subscription plans |
+| `GET/PUT /api/platform/connector-definitions` | List / create-or-update connector definitions |
+| `GET/PUT /api/platform/property-definitions`, `DELETE …/{key}/default` | Custom property definitions and global defaults |
+| `GET/PUT /api/platform/access-roles` | Custom organization roles |
+| `GET /api/platform/tenants`, `GET …/{tenant}/settings`, `GET …/{tenant}/owners` | Tenants, resolved tenant configuration, candidate project owners |
+| `PUT …/{tenant}/subscription`, `POST …/{tenant}/status` | Plan/status (optimistic `expectedRevision`), suspend/re-activate |
+| `PUT …/{tenant}/properties/{key}`, `PUT …/{tenant}/connectors/{key}` | Tenant value; connector grant |
+| `POST …/{tenant}/projects` | New project under the tenant |
+| `GET …/{tenant}/projects/{project}/settings`, `PUT …/properties/{key}`, `PUT …/connectors/{key}` | Project scope as platform admin |
+
+Inside a project (`/api/orgs/{org}`, membership required):
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /configuration`, `PUT /configuration/properties/{key}`, `PUT /configuration/connectors/{key}` | Project scope; writes need TEAM_MANAGE and project OWNER/ADMIN |
+| `GET /tenant-settings`, `PUT /tenant-settings/properties/{key}` | Tenant scope; writes need TEAM_MANAGE and tenant OWNER |
+| `GET /members/roles` | Built-in and custom roles assignable here, with names and descriptions |
+| `GET /project-details` | Bootstrap; `schemaVersion` 2 adds `configuration` |
+
+Values are JSON (`{"value": …}`); `{"reset": true}` removes an override so the scope inherits again. Secret values are write-only.

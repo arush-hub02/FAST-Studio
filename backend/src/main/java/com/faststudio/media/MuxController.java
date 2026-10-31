@@ -1,5 +1,7 @@
 package com.faststudio.media;
 
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import com.faststudio.catalog.AssetController;
 import com.faststudio.catalog.MediaSettings;
 import com.faststudio.core.*;
@@ -37,8 +39,10 @@ public class MuxController {
     private final JsonMapper json;
     private final String appUrl;
     private final MediaSettings settings;
+    private final TenantConfigurationServiceV1_0 configuration;
 
-    public MuxController(Data data, MuxSource mux, MediaService media, Audit audit, JsonMapper json, @Value("${faststudio.app-url}") String appUrl, MediaSettings settings) {
+    public MuxController(Data data, MuxSource mux, MediaService media, Audit audit, JsonMapper json, @Value("${faststudio.app-url}") String appUrl, MediaSettings settings,
+                         TenantConfigurationServiceV1_0 configuration) {
         this.data = data;
         this.mux = mux;
         this.media = media;
@@ -46,6 +50,7 @@ public class MuxController {
         this.json = json;
         this.appUrl = appUrl.replaceAll("/+$", "");
         this.settings = settings;
+        this.configuration=configuration;
     }
 
     // ------------------------------------------------------------------ platform administration (WebConfig: admins only)
@@ -108,7 +113,7 @@ public class MuxController {
     SyncResult sync(Tenant t) throws InterruptedException {
         t.require(Tenant.Perm.ASSETS_EDIT);
         String features = data.db.sql("select features from organization where id = :o").param("o", t.orgId()).query(String.class).single();
-        if (!Feature.parse(features).contains(Feature.LIBRARY_SYNC.name()))
+        if (!configuration.effectiveFeatures(t.orgId(),features).contains(Feature.LIBRARY_SYNC.name()))
             throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "This isn't switched on for your company. Ask the platform administrator.");
         SyncResult r = importLibrary(t.orgId());
         audit.log(t, "library.sync", "asset", null, r.videos() + " videos in the library, " + r.added() + " added");
@@ -129,6 +134,7 @@ public class MuxController {
     }
 
     private MuxSource.Account connected(UUID org) {
+        if (!configuration.driverEnabled(org,"MUX")) throw new ApiException(HttpStatus.FORBIDDEN,"CONNECTOR_DISABLED","The video library connector is disabled for this project.");
         MuxSource.Account a = mux.account(org);
         if (a == null) throw ApiException.conflict("LIBRARY_NOT_CONNECTED", MuxSource.NOT_CONNECTED);
         return a;

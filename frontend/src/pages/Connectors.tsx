@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import { AdSources } from '../components/AdSources'
 import { MuxConnector } from '../components/MuxConnector'
@@ -16,16 +17,17 @@ type Overview = {
 export default function Connectors() {
   const orgs = useApi<Org[]>('/api/platform/orgs')
   const customers = (orgs.data ?? []).filter(o => o.kind === 'CUSTOMER')
-  const [orgId, setOrgId] = useState('')
+  const [search] = useSearchParams()
+  const [orgId, setOrgId] = useState(search.get('project')??'')
   useEffect(() => { if (!orgId && customers.length) setOrgId(customers[0].id) }, [customers, orgId])
 
   if (orgs.error?.status === 403) return <div className="page"><div className="callout bad"><Icon name="shield" />Platform administrators only.</div></div>
   return (
     <div className="page">
-      <PageHead title="Connectors" subtitle="What each company's channels connect to: content platforms, media storage and ad servers. Companies never see credentials or tag URLs; the feature switches decide what they see." />
+      <PageHead title="Project connections" subtitle="Provision credentials and ad sources for an isolated project. Global definitions and tenant/project enablement are managed separately." actions={<Link className="btn" to="/platform/configuration">Global connector definitions</Link>}/>
       {orgs.error ? <ErrorBox error={orgs.error} retry={orgs.reload} /> : !orgs.data ? <Loading /> : (
         <label className="row" style={{ gap: 10, marginBottom: 16 }}>
-          <b className="small">Company</b>
+          <b className="small">Project</b>
           <select className="input" style={{ maxWidth: 320 }} value={orgId} onChange={e => setOrgId(e.target.value)}>
             {customers.map(o => <option key={o.id} value={o.id}>{o.name} (/{o.slug}){o.status !== 'ACTIVE' ? ' · suspended' : ''}</option>)}
           </select>

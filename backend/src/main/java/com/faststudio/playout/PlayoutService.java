@@ -24,11 +24,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlayoutService {
     private final Data data;
     private final AdDecisionService ads;
+    private final com.faststudio.catalog.MediaSettings settings;
     private final Set<String> slateRecorded = ConcurrentHashMap.newKeySet();
 
-    public PlayoutService(Data data, AdDecisionService ads) {
+    public PlayoutService(Data data, AdDecisionService ads, com.faststudio.catalog.MediaSettings settings) {
         this.data = data;
         this.ads = ads;
+        this.settings = settings;
     }
 
     public record Session(UUID id, UUID orgId, UUID channelId, UUID destinationId, String country, String adMode,
@@ -83,7 +85,7 @@ public class PlayoutService {
     }
 
     public AdDecisionService.Decision decision(Session s, Entry brk, AdSource.Viewer viewer) {
-        boolean enabled = data.db.sql("select count(*) from tenant_settings where org_id=:o and personalized_ads=true").param("o",s.orgId()).query(Integer.class).single()>0;
+        boolean enabled = settings.personalizedAds(s.orgId());   // dynamic property since V15
         boolean personalized = enabled && s.personalizedUntil()!=null && s.personalizedUntil().toInstant().isAfter(Instant.now());
         viewer = new AdSource.Viewer(viewer.ip(),viewer.userAgent(),personalized?s.viewerKey():null,personalized?com.faststudio.core.Times.codes(s.audiences()):List.of());
         AdDecisionService.Decision d = ads.decide(s.orgId(), s.id(), brk.id(), brk.start(), brk.durationMs(), brk.assetId(), s.country(), viewer);

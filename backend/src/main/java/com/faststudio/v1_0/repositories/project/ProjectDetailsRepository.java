@@ -1,7 +1,7 @@
-package com.faststudio.repository.project;
+package com.faststudio.v1_0.repositories.project;
 
 import com.faststudio.core.ApiException;
-import com.faststudio.dto.project.ProjectDetails;
+import com.faststudio.v1_0.dto.project.ProjectDetails;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 

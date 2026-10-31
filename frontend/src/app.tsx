@@ -16,7 +16,9 @@ import Monitoring from './pages/Monitoring'
 import Analytics from './pages/Analytics'
 import Team from './pages/Team'
 import Learn from './pages/Learn'
-import Platform from './pages/Platform'
+import PartnerOrganizations from './pages/Platform'
+import Platform from './pages/TenantAdmin'
+import GlobalConfiguration from './pages/GlobalConfiguration'
 import Connectors from './pages/Connectors'
 import Settings, { PlatformMediaTypes } from './pages/Settings'
 import Email from './pages/Email'
@@ -73,6 +75,8 @@ export default function App() {
         <Route path="/login" element={me ? <Navigate to={landing(me)} replace /> : <Login />} />
         <Route element={me ? <Shell /> : <RedirectToLogin />}>
           <Route path="/platform" element={<Platform />} />
+          <Route path="/platform/partners" element={<PartnerOrganizations />} />
+          <Route path="/platform/configuration" element={<GlobalConfiguration />} />
           <Route path="/platform/email" element={<Email />} />
           <Route path="/platform/connectors" element={<Connectors />} />
           <Route path="/platform/media-types" element={<PlatformMediaTypes />} />
@@ -480,19 +484,21 @@ function Shell() {
                 to="/platform"
                 end
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                onMouseEnter={e => showItemPopover(e, { label: 'Organizations', hint: 'Customer tenants', tag: 'Admin', tagType: 'accent' })}
+                onMouseEnter={e => showItemPopover(e, { label: 'Tenants', hint: 'Customers, projects & subscriptions', tag: 'Admin', tagType: 'accent' })}
                 onMouseLeave={hidePopover}
               >
                 <Icon name="building" size={17} />
                 <div className="nav-text-col">
                   <div className="nav-title-row">
-                    <span className="nav-label">Organizations</span>
+                    <span className="nav-label">Tenants</span>
                     <span className="nav-tag accent">Admin</span>
                   </div>
-                  <small>Customer tenants</small>
+                  <small>Customers, projects & subscriptions</small>
                 </div>
                 {collapsed && <span className="nav-collapsed-dot accent" />}
               </NavLink>
+              <NavLink to="/platform/partners" className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name="users" size={17}/><div className="nav-text-col"><span className="nav-label">Partner organizations</span><small>Sharing & external access</small></div></NavLink>
+              <NavLink to="/platform/configuration" className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name="sliders" size={17}/><div className="nav-text-col"><span className="nav-label">Global configuration</span><small>Properties, plans, connectors & roles</small></div></NavLink>
               <NavLink
                 to="/platform/connectors"
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
@@ -543,15 +549,15 @@ function Shell() {
             <Dropdown
               options={me.memberships.map(m => ({
                 value: m.slug,
-                label: m.name,
-                description: `${m.kind === 'PARTNER' ? 'Partner portal' : 'Content owner'} · ${m.role.replace('_', ' ').toLowerCase()}`,
+                label: m.kind==='PARTNER'?m.name:`${m.tenantName??m.name} / ${m.name}`,
+                description: `${m.kind === 'PARTNER' ? 'Partner organization' : 'Project'} · ${m.role.replace('_', ' ').toLowerCase()}`,
                 icon: 'building',
                 badge: m.kind === 'PARTNER' ? 'Partner' : undefined,
                 badgeType: 'sim',
               }))}
               value={current?.slug}
               onChange={val => nav('/' + val)}
-              placeholder="Choose organization…"
+              placeholder="Choose project or partner…"
               searchable={me.memberships.length > 2}
               style={{ minWidth: 240 }}
             />

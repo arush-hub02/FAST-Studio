@@ -1,5 +1,7 @@
 package com.faststudio.connectors;
 
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import com.faststudio.ads.AdSource;
 import com.faststudio.ads.AdSourceAdmin;
 import com.faststudio.core.*;
@@ -26,13 +28,16 @@ public class ConnectorsController {
     private final AdSourceAdmin adSources;
     private final EdgeClient edge;
     private final EdgePublisher publisher;
+    private final TenantConfigurationServiceV1_0 configuration;
 
-    public ConnectorsController(Data data, Audit audit, AdSourceAdmin adSources, EdgeClient edge, EdgePublisher publisher) {
+    public ConnectorsController(Data data, Audit audit, AdSourceAdmin adSources, EdgeClient edge, EdgePublisher publisher,
+                                TenantConfigurationServiceV1_0 configuration) {
         this.data = data;
         this.audit = audit;
         this.adSources = adSources;
         this.edge = edge;
         this.publisher = publisher;
+        this.configuration=configuration;
     }
 
     record Org(UUID id, String name, String kind, String features) {}
@@ -62,8 +67,9 @@ public class ConnectorsController {
                     .param("o", orgId).query(String.class).list();
             var storage = new Storage("Cloudflare R2 (via the edge Worker)", edge.configured(), edge.publicUrl(), keys.size(),
                     keys.stream().filter(publisher::stored).count());
-            return new Overview(orgId, o.name(), Feature.parse(o.features()),
-                    Arrays.stream(Feature.values()).map(f -> new FeatureOption(f.name(), f.label)).toList(), adSources.list(orgId, true), storage);
+            return new Overview(orgId, o.name(), configuration.effectiveFeatures(orgId,o.features()),
+                    configuration.effectiveFeatures(orgId,configuration.plans().stream().flatMap(p->p.features().stream()).distinct().collect(java.util.stream.Collectors.joining(",")))
+                            .stream().map(f->new FeatureOption(f,Arrays.stream(Feature.values()).filter(v->v.name().equals(f)).map(v->v.label).findFirst().orElse(f))).toList(), adSources.list(orgId, true), storage);
         });
     }
 
@@ -72,7 +78,8 @@ public class ConnectorsController {
     @PutMapping("/features")
     Map<String, List<String>> features(@PathVariable UUID orgId, @Valid @RequestBody FeaturesRequest r) {
         org(orgId);
-        List<String> on = Feature.parse(String.join(",", r.features()));
+        // Features outside the tenant's plan are rejected rather than silently dropped.
+        List<String> on = configuration.requirePlanFeatures(orgId, r.features());
         data.db.sql("update organization set features = :f where id = :id").param("f", String.join(",", on)).param("id", orgId).update();
         audit.log(orgId, Auth.userId(), "features.update", "organization", orgId, on.isEmpty() ? "none" : String.join(", ", on));
         return Map.of("features", on);

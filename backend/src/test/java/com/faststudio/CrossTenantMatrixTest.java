@@ -107,6 +107,7 @@ class CrossTenantMatrixTest {
                     case "destinationId" -> a.destination().toString();
                     case "userId" -> a.user().toString();
                     case "linkId" -> a.link().toString();
+                    case "key" -> "matrix-property";
                     default -> fail("No test value for path variable {" + name + "} in " + pattern + " — map it so the matrix covers this endpoint");
                 };
             }

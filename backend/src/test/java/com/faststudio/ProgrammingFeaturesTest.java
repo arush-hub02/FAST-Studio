@@ -45,6 +45,8 @@ class ProgrammingFeaturesTest {
     @BeforeEach void reset() {
         when(publisher.stored(anyString())).thenReturn(true);
         TenantScope.bypass(()->db.sql("delete from tenant_settings where org_id=:o").param("o",org()).update());
+        // Since V15 programming/ad settings are dynamic properties; clear project overrides too.
+        TenantScope.bypass(()->db.sql("delete from project_property_value where org_id=:o and property_key in ('programming.premiere_time','programming.weekdays','ads.personalized')").param("o",org()).update());
         TenantScope.bypass(()->db.sql("update campaign set status='PAUSED' where org_id=:o and name='Audience ad' and advertiser like 'Advertiser-%'").param("o",org()).update());
     }
     MvcResult call(MockHttpServletRequestBuilder request,String email,Object body) throws Exception {
@@ -146,6 +148,7 @@ class ProgrammingFeaturesTest {
         String key="viewer-test-secret-"+UUID.randomUUID();
         TenantScope.bypass(()->db.sql("insert into tenant_settings(org_id,enabled_types,default_type,personalized_ads,viewer_secret) values (:o,'MOVIE,EPISODE,SHORT,AD,PROMO','MOVIE',true,:s)")
                 .param("o",org()).param("s",secrets.seal(key)).update());
+        TenantScope.bypass(()->db.sql("insert into project_property_value(org_id,property_key,value) values (:o,'ads.personalized','true')").param("o",org()).update());
         return key;
     }
     String viewerToken(String key,String subject,String audience,boolean consent,long exp) throws Exception {

@@ -107,7 +107,7 @@ public class PlaybackController {
      * list (SGAI). Ads are listed only up to the first creative not yet copied to the edge; slate covers the rest.
      */
     @GetMapping("/{session}/decisions/{breakId}")
-    com.faststudio.dto.media.AdDecisionView decision(@PathVariable UUID session, @PathVariable UUID breakId,
+    com.faststudio.v1_0.dto.media.AdDecisionView decision(@PathVariable UUID session, @PathVariable UUID breakId,
                                         @RequestHeader(value = "X-Viewer-IP", defaultValue = "") String ip,
                                         @RequestHeader(value = "X-Viewer-UA", defaultValue = "") String ua) {
         var s = playout.session(session);
@@ -117,9 +117,9 @@ public class PlaybackController {
             if (!publisher.stored(slot.mediaKey())) break;
             ready.add(slot);
         }
-        if (ready.size() == d.slots().size()) return com.faststudio.dto.media.AdDecisionView.from(d);
+        if (ready.size() == d.slots().size()) return com.faststudio.v1_0.dto.media.AdDecisionView.from(d);
         long filled = ready.stream().mapToLong(AdDecisionService.Slot::durationMs).sum();
-        return com.faststudio.dto.media.AdDecisionView.from(new AdDecisionService.Decision(d.breakId(), d.breakMs(), ready, filled, d.excluded(), d.summary()));
+        return com.faststudio.v1_0.dto.media.AdDecisionView.from(new AdDecisionService.Decision(d.breakId(), d.breakMs(), ready, filled, d.excluded(), d.summary()));
     }
 
     public record Beacon(UUID breakId, UUID campaignId, @NotBlank String event) {}
@@ -150,7 +150,7 @@ public class PlaybackController {
     // ------------------------------------------------------------------ what's on (for the player overlay)
 
     public record BreakInfo(UUID id, Instant start, Instant end, String ownership, boolean filledByUs, String scteOut,
-                            com.faststudio.dto.media.AdDecisionView decision) {}
+                            com.faststudio.v1_0.dto.media.AdDecisionView decision) {}
 
     public record EventRow(String event, String campaign, int seconds, java.time.OffsetDateTime occurredAt) {}
 
@@ -175,7 +175,7 @@ public class PlaybackController {
             boolean active = !b.start().isAfter(now);
             AdDecisionService.Decision d = ours && !"PASSTHROUGH".equals(s.adMode()) && active ? playout.decision(s, b) : null;
             BreakInfo bi = new BreakInfo(b.id(), b.start(), b.end(), b.ownership(), ours && !"PASSTHROUGH".equals(s.adMode()),
-                    PlayoutService.scteHex(b, true), com.faststudio.dto.media.AdDecisionView.from(d));
+                    PlayoutService.scteHex(b, true), com.faststudio.v1_0.dto.media.AdDecisionView.from(d));
             if (active) curBreak = bi;
             else if (upcoming.size() < 3) upcoming.add(bi);
         }

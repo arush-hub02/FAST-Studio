@@ -8,6 +8,29 @@ FAST Studio uses **one shared database schema**. Every customer company is an `o
 
 This is the cheapest model to run and migrate, and it scales to thousands of small tenants. The trade-off is that isolation depends on getting every query right. So the design puts that check in one place and has the database enforce it as well.
 
+## 1b. Tenant → project hierarchy (implemented locally 2026-10-31, migrations V13–V15)
+
+The earlier model treated every `organization` as a tenant, which made partner organizations tenants too. It is now:
+
+```text
+Platform (global definitions: subscription plans, connector definitions, custom property definitions + global defaults, custom roles)
+└── Customer tenant  (customer_tenant: subscription plan/status, connector grants, tenant property values)
+    └── Project       (organization kind=CUSTOMER, tenant_id set: content, channels, members, project overrides, connector opt-in/out)
+Partner organization  (organization kind=PARTNER, tenant_id null: no content; sees only what projects share with it)
+```
+
+- **Organization types.** `organization.kind` is CUSTOMER (a project of a tenant) or PARTNER. A database check enforces `kind = CUSTOMER ⇔ tenant_id is not null`. Existing customer organization IDs became both the tenant ID and the first project ID, so content foreign keys, RLS, public links and partner sharing are unchanged.
+- **RLS stays project-scoped.** `app.org_id` is still the project. Tenant tables (`tenant_property_value`, `tenant_connector`) are readable only while operating a project of that tenant (`fs_customer_tenant_ok`). The tenant-wide channel count uses a narrow `security definer` aggregate so sibling projects' channel rows stay invisible.
+- **Subscription plans** (`subscription_plan`) set max projects and max channels **across the tenant**, plus the feature keys the tenant's projects may switch on. The plan is the only channel limit; `organization.max_channels` is legacy and no longer enforced. Payment collection is not connected.
+- **Connectors.** Platform defines connectors (`connector_definition`: MUX, VAST, R2 or CUSTOM driver). Platform grants each tenant a connector (`tenant_connector`); each project may opt out (`project_connector`). Mux sync, the media library bootstrap and VAST ad decisions check `driverEnabled(project, driver)` (cached 30 s per node). CUSTOM connectors store configuration only until an adapter exists.
+- **Dynamic properties.** Platform defines typed properties (`property_definition`: STRING/NUMBER/BOOLEAN/SELECT, optional connector binding, secret flag, project-override flag). Values resolve **project override → tenant value → global default**. Secrets are sealed at rest and never returned. Since V15 the built-in settings `programming.premiere_time`, `programming.weekdays` and `ads.personalized` are properties too (with their domain validation); existing values were migrated as project overrides.
+- **Who edits what.** Platform admin: everything, including secrets and tenant connector grants. Tenant OWNER (owner of any project in the tenant): tenant-wide values. Project OWNER/ADMIN (with TEAM_MANAGE): project overrides and connector opt-in/out. Members: read resolved values.
+- **Roles.** Both organization types have built-in roles plus platform-defined custom roles (`access_role`, per type). A custom role picks a built-in ceiling and may only remove permissions; a disabled custom role falls back to VIEW only.
+- **Tokens.** User tokens carry `tid` only when the active organization is a customer project; partner and platform identities have no tenant.
+- **Code.** `v1_0/controllers/platform/tenancy`, `v1_0/controllers/studio/{configuration,team,project}`, `v1_0/services/tenancy`, `v1_0/repositories/tenancy`, `v1_0/dto/tenancy` (see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md)). Tests: `TenantConfigurationTest`.
+
+Not done: billing/invoicing, tenant-level SSO, existing-data migration rehearsal on a production-like copy.
+
 ## 2. Five layers of isolation
 
 | # | Layer | How | Status |

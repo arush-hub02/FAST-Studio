@@ -61,3 +61,23 @@ Tables: `organization`, `app_user`, `membership`, `asset` (incl. `cue_points`, `
 Later migrations: `V2` row-level security; `V3` `app_user.must_change_password`/`password_changed_at` and `password_reset` (SHA-256 of single-use, 24-hour tokens); `V4` `email_template` (platform-wide overrides of built-in templates) and `email_message` (outbox and sent log; the real content, which can hold one-time secrets, is cleared once delivered). `V5`: `organization.kind`/`tenant_id`, platform organization, `app_user.token_version`, `refresh_token`. `V6`: partner roles, `partner_link` + `partner_link_channel`, `api_client`, `audit_event.via_org_id` ([PARTNER_ACCESS_AND_TOKENS.md](PARTNER_ACCESS_AND_TOKENS.md)).
 
 All tenant tables use composite `(org_id, id)` keys and composite foreign keys (see [MULTITENANCY.md](MULTITENANCY.md)). Not yet built from the model above: renditions/jobs as tables, approvals, insertion orders/line items, reservations, billing and finance records, inbox/outbox.
+
+## Tenant hierarchy tables (V13–V15, local, 2026-10-31)
+
+Full model and rules: [MULTITENANCY.md §1b](MULTITENANCY.md).
+
+| Table | Scope | Purpose |
+| --- | --- | --- |
+| `customer_tenant` | platform | Customer account: `slug`, `name`, `status` (ACTIVE/SUSPENDED), `plan_key`, `subscription_status` (TRIAL/ACTIVE/PAUSED/CANCELLED), `revision` for optimistic locking |
+| `organization.tenant_id` | — | Owning tenant of a CUSTOMER project; null for PARTNER/PLATFORM (check constraint) |
+| `subscription_plan` | global | `max_projects`, `max_channels` (tenant-wide), `monthly_price`, `currency`, comma-separated `features` |
+| `connector_definition` | global | `key`, `category`, `driver` (MUX/VAST/R2/CUSTOM, immutable), `enabled` |
+| `tenant_connector` | tenant (RLS via `fs_customer_tenant_ok`) | Connector granted to a tenant |
+| `project_connector` | project (RLS) | Project opt-in/out; no row = inherit the tenant grant |
+| `property_definition` | global | Typed custom property, `options` (JSON), `default_value` (JSON, sealed if secret), `project_override`, `revision` |
+| `tenant_property_value` | tenant (RLS) | Tenant value (JSON text, sealed if secret) |
+| `project_property_value` | project (RLS) | Project override (JSON text, sealed if secret) |
+| `access_role` | global | Custom role per organization `kind`, with a built-in `base_role` ceiling and allowed `permissions` |
+| `membership.custom_role_key` | — | Optional custom role; `membership.role` holds its ceiling |
+
+`tenant_settings.premiere_time`, `weekdays` and `personalized_ads` are kept for rollback only since V15; the values live in the property tables.

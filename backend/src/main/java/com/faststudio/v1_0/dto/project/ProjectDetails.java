@@ -1,11 +1,12 @@
-package com.faststudio.dto.project;
+package com.faststudio.v1_0.dto.project;
 
 import java.util.List;
 import java.util.UUID;
 
 /** Explicit browser-safe projection; never add provider credentials or raw configuration objects here. */
 public record ProjectDetails(int schemaVersion, Project project, Access access, Media media,
-                             Connectors connectors, Summary summary) {
+                             Connectors connectors, Summary summary,
+                             com.faststudio.v1_0.dto.tenancy.TenantConfiguration.Settings configuration) {
     public record Project(UUID id, String slug, String name, String kind, String status) {}
     public record Access(String role, List<String> permissions, List<String> features) {}
     public record MediaType(String key, String label, String kind) {}

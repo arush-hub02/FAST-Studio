@@ -1,4 +1,4 @@
-package com.faststudio.dto.media;
+package com.faststudio.v1_0.dto.media;
 
 import com.faststudio.ads.AdDecisionService;
 

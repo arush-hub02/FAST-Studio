@@ -5,7 +5,7 @@ import { ResetLinkModal } from './Password'
 
 type Org = { id: string; slug: string; name: string; status: string; country: string; timezone: string; plan: string; maxChannels: number; members: number; channels: number; liveChannels: number; videos: number; sessions: number; createdAt: string; kind: 'CUSTOMER' | 'PARTNER'; partnerLinks: number }
 
-export default function Platform() {
+export default function PartnerOrganizations() {
   const list = useApi<Org[]>('/api/platform/orgs')
   const [creating, setCreating] = useState(false)
   const [toggling, setToggling] = useState<Org | null>(null)
@@ -13,12 +13,12 @@ export default function Platform() {
   if (list.error?.status === 403) return <div className="page"><div className="callout bad"><Icon name="shield" />Platform administrators only.</div></div>
   return (
     <div className="page">
-      <PageHead title="Organizations" subtitle="Customer companies and partners (tenants) on this platform. You see usage and health — not their videos, schedules or money. Each tenant's data is isolated by the database itself."
-        actions={<button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New organization</button>} />
+      <PageHead title="Partner organizations" subtitle="External TV platforms, apps and business partners. Partner organizations receive explicitly shared project access; they are not customer tenants or subscription accounts."
+        actions={<button className="btn primary" onClick={() => setCreating(true)}><Icon name="plus" />New partner organization</button>} />
       <section className="card">
         {!list.data ? <div className="card-pad"><Loading /></div> : (
           <table className="table"><thead><tr><th>Organization</th><th>Status</th><th>Plan</th><th>Members</th><th>Channels (live)</th><th>Videos</th><th>Viewer sessions</th><th>Since</th><th /></tr></thead>
-            <tbody>{list.data.map(o => (
+            <tbody>{list.data.filter(o => o.kind === 'PARTNER').map(o => (
               <tr key={o.id}><td><b>{o.name}</b>{o.kind === 'PARTNER' && <span className="badge sim" style={{ marginLeft: 6 }}>partner</span>}<div className="faint">/{o.slug} · {o.country} · {o.timezone}{o.partnerLinks > 0 && ` · ${o.partnerLinks} active sharing${o.partnerLinks > 1 ? 's' : ''}`}</div></td><td><Status value={o.status} /></td>
                 <td>{o.plan}<div className="faint">max {o.maxChannels} channels</div></td><td>{o.members}</td><td>{o.channels} ({o.liveChannels})</td><td>{o.videos}</td><td>{o.sessions}</td>
                 <td className="small">{fmtDate(o.createdAt)}</td>
@@ -31,29 +31,24 @@ export default function Platform() {
         text={toggling.status === 'ACTIVE' ? 'Their team can no longer sign in to manage anything. Nothing is deleted, and channels already on air keep playing so viewers are not cut off.' : 'Their team regains access straight away.'}
         onClose={() => setToggling(null)} onConfirm={() => run(() => api(`/api/platform/orgs/${toggling.id}/status`, { body: { status: toggling.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' } }), 'Updated').then(list.reload)} />}
       <ResetCard />
-      {creating && <CreateOrg onClose={() => setCreating(false)} onDone={list.reload} />}
+      {creating && <CreateOrg kind="PARTNER" onClose={() => setCreating(false)} onDone={list.reload} />}
     </div>
   )
 }
 
-function CreateOrg({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
-  const [f, setF] = useState({ name: '', slug: '', country: 'IN', timezone: 'Asia/Kolkata', ownerName: '', ownerEmail: '', kind: 'CUSTOMER' })
+export function CreateOrg({ onClose, onDone, kind }: { onClose: () => void; onDone: () => void; kind:'CUSTOMER'|'PARTNER' }) {
+  const [f, setF] = useState({ name: '', slug: '', country: 'IN', timezone: 'Asia/Kolkata', ownerName: '', ownerEmail: '', kind })
   const [result, setResult] = useState<{ ownerTemporaryPassword?: string; note: string } | null>(null)
   const { busy, run } = useAction()
   const set = (k: string, v: string) => setF(x => ({ ...x, [k]: v, ...(k === 'name' && !x.slug ? {} : {}) }))
   return (
-    <Modal title="New organization" subtitle="Creates an empty, isolated workspace and its first owner." onClose={onClose}
+    <Modal title={kind==='PARTNER'?'New partner organization':'New customer tenant'} subtitle={kind==='PARTNER'?'Creates a partner identity and its first administrator.':'Creates a customer tenant with its first isolated project and owner. More projects can be added under tenant settings.'} onClose={onClose}
       footer={result ? <button className="btn primary" onClick={onClose}>Done</button> : <><button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn primary" disabled={busy} onClick={() => run(() => api<{ ownerTemporaryPassword?: string; note: string }>('/api/platform/orgs', { body: f }), 'Organization created').then(r => { if (r) { setResult(r); onDone() } })}>Create</button></>}>
       {result ? <div className="callout sim"><Icon name="sparkle" /><div>Created. {result.note}{result.ownerTemporaryPassword && <div style={{ marginTop: 8 }}>Owner's one-time password: <code style={{ fontSize: 15 }}>{result.ownerTemporaryPassword}</code></div>}</div></div> : <>
-        <label className="field">Kind of organization
-          <select value={f.kind} onChange={e => set('kind', e.target.value)}>
-            <option value="CUSTOMER">Customer: a content owner that runs FAST channels</option>
-            <option value="PARTNER">Partner: a TV platform, app or ad partner that receives shared channels</option>
-          </select></label>
         <div className="grid g2">
           <label className="field">Company name<input value={f.name} onChange={e => { set('name', e.target.value); setF(x => ({ ...x, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })) }} /></label>
-          <label className="field">Organization ID<span className="hint">Used in links, e.g. /{f.slug || 'acme'}</span><input value={f.slug} onChange={e => set('slug', e.target.value)} /></label>
+          <label className="field">{kind==='PARTNER'?'Partner ID':'First project slug'}<span className="hint">Used in links, e.g. /{f.slug || 'acme'}</span><input value={f.slug} onChange={e => set('slug', e.target.value)} /></label>
           <label className="field">Country (2 letters)<input value={f.country} maxLength={2} onChange={e => set('country', e.target.value.toUpperCase())} /></label>
           <label className="field">Time zone<input value={f.timezone} onChange={e => set('timezone', e.target.value)} /></label>
           <label className="field">{f.kind === 'PARTNER' ? 'Partner admin name' : 'Owner name'}<input value={f.ownerName} onChange={e => set('ownerName', e.target.value)} /></label>

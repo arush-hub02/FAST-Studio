@@ -1,5 +1,7 @@
 package com.faststudio.core;
 
+import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -100,7 +102,11 @@ public class Tokens {
                 .claim("platform_roles", u.platformAdmin() ? List.of("PLATFORM_ADMIN") : List.of())
                 .claim("projects", List.of())           // project-scoped access arrives later (plan P5); empty = none yet
                 .claim("ver", u.tokenVersion());
-        if (active != null) c.claim("tid", active.tenantId().toString()).claim("org", claim(active)).claim("perms", perms(active.role()));
+        if (active != null) {
+            c.claim("org", claim(active)).claim("perms", active.role().equals("PLATFORM_ADMIN")?List.of():
+                    AccessRoleServiceV1_0.permissions(db,active.id(),userId,Tenant.Role.valueOf(active.role())).stream().map(Enum::name).sorted().toList());
+            if (active.tenantId() != null) c.claim("tid", active.tenantId().toString());
+        }
         else c.claim("perms", List.of());
         if (orgs.size() <= MAX_ORGS) c.claim("orgs", orgs.stream().map(Tokens::claim).toList());
         else c.claim("orgs_truncated", true);    // clients read /api/auth/me instead
@@ -156,7 +162,7 @@ public class Tokens {
         JwtClaimsSet c = JwtClaimsSet.builder().issuer(issuer).audience(List.of(AUDIENCE)).subject(clientId.toString())
                 .issuedAt(now).notBefore(now).expiresAt(exp).id(UUID.randomUUID().toString())
                 .claim("typ", "service").claim("client_name", clientName).claim("scope", scope)
-                .claim("tid", org.tenantId().toString()).claim("org", claim(org)).build();
+                .claim("org", claim(org)).build();
         JwsHeader header = JwsHeader.with(SignatureAlgorithm.ES256).keyId(keys.signingKeyId()).type("JWT").build();
         return new Access(encoder.encode(JwtEncoderParameters.from(header, c)).getTokenValue(), exp, org);
     }

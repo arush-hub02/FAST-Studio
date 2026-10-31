@@ -1,14 +1,23 @@
 package com.faststudio.catalog;
 
 import com.faststudio.core.*;
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
 import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.util.*;
 
+/**
+ * Media and programming settings of a project.
+ *
+ * <p>Media types (platform catalogue + project entitlement) and the viewer key stay in {@code tenant_settings}.
+ * Premiere time, weekdays and personalized ads are dynamic properties since V15: they resolve
+ * project override → tenant value → global default through {@link TenantConfigurationServiceV1_0#effective}.
+ */
 @Service
 public class MediaSettings {
     private final Data data;
-    public MediaSettings(Data data) { this.data = data; }
+    private final TenantConfigurationServiceV1_0 configuration;
+    public MediaSettings(Data data, TenantConfigurationServiceV1_0 configuration) { this.data = data; this.configuration = configuration; }
     public record Type(String key, String label, String kind, boolean enabled) {}
     public record Row(String enabledTypes, String defaultType, LocalTime premiereTime, String weekdays,
                       boolean personalizedAds, String viewerSecret, int revision) {}
@@ -33,9 +42,20 @@ public class MediaSettings {
         List<String> on = row == null ? keys : Times.codes(row.enabledTypes()).stream().filter(keys::contains).toList();
         String def = row != null && on.contains(row.defaultType()) ? row.defaultType()
                 : on.contains("MOVIE") ? "MOVIE" : on.stream().findFirst().orElse("");
-        return new View(types, on, def, row == null ? "20:00" : row.premiereTime().toString(),
-                days(row == null ? "1,2,3,4,5,6,7" : row.weekdays()), row != null && row.personalizedAds(),
+        return new View(types, on, def, premiereTime(org), days(weekdays(org)), personalizedAds(org),
                 row != null && row.viewerSecret() != null, row == null ? 0 : row.revision());
+    }
+
+    // Resolved dynamic properties; the hardcoded fallbacks only apply if a global default was removed from the database.
+    public String premiereTime(UUID org) { return text(org, TenantConfigurationServiceV1_0.PREMIERE_TIME, "20:00"); }
+    public String weekdays(UUID org) { return text(org, TenantConfigurationServiceV1_0.WEEKDAYS, "1,2,3,4,5,6,7"); }
+    public boolean personalizedAds(UUID org) {
+        var v = configuration.effective(org, TenantConfigurationServiceV1_0.PERSONALIZED_ADS);
+        return v != null && v.asBoolean();
+    }
+    private String text(UUID org, String key, String fallback) {
+        var v = configuration.effective(org, key);
+        return v == null ? fallback : v.asString();
     }
     public Type require(UUID org, String key) {
         View v = view(org);

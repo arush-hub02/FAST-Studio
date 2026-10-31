@@ -163,7 +163,7 @@ class ProjectDetailsTest {
                 30_000, java.math.BigDecimal.ONE, "VAST", Map.of("IMPRESSION", List.of(TAG)));
         var decision = new com.faststudio.ads.AdDecisionService.Decision(UUID.randomUUID(), 30_000, List.of(slot),
                 30_000, List.of(), "Filled");
-        String browser = json.writeValueAsString(com.faststudio.dto.media.AdDecisionView.from(decision));
+        String browser = json.writeValueAsString(com.faststudio.v1_0.dto.media.AdDecisionView.from(decision));
         assertFalse(browser.contains(TAG));
         assertFalse(browser.contains("tracking"));
         assertTrue(json.writeValueAsString(decision).contains(TAG), "Server persistence must keep tracking for callbacks");

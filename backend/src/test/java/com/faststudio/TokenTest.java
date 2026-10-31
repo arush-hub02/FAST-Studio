@@ -138,7 +138,7 @@ class TokenTest {
         assertEquals(List.of(), c.get("projects"));
         assertInstanceOf(Number.class, c.get("ver"));
         assertEquals(Map.of("id", platform.toString(), "slug", "_platform", "kind", "PLATFORM", "role", "PLATFORM_ADMIN"), org(c));
-        assertEquals(platform.toString(), c.get("tid"), "one org = one tenant for now");
+        assertNull(c.get("tid"), "the platform identity is not a customer tenant");
         assertEquals(List.of(org(c)), orgs(c));
         Map<String, Object> header = json.readValue(Base64.getUrlDecoder().decode(token.split("\\.")[0]), Map.class);
         assertEquals("ES256", header.get("alg"));

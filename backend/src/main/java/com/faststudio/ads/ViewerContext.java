@@ -26,7 +26,7 @@ public class ViewerContext {
     public Verified verify(UUID org, String token) {
         if(token==null || token.isBlank()) return Verified.CONTEXTUAL;
         MediaSettings.Row row=settings.row(org);
-        if(row==null || !row.personalizedAds()) return Verified.CONTEXTUAL;
+        if(row==null || !settings.personalizedAds(org)) return Verified.CONTEXTUAL;   // dynamic property since V15
         try {
             if(token.length()>8192 || row.viewerSecret()==null) throw new IllegalArgumentException();
             String[] parts=token.split("\\.",-1);

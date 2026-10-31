@@ -3,16 +3,22 @@ import { Link } from 'react-router-dom'
 import { api, type MediaSettingsView, type MediaType } from '../api'
 import { useOrg } from '../app'
 import { ErrorBox, Loading, PageHead, useAction, useApi } from '../ui'
+import { ConfigurationEditor } from '../features/configuration/ConfigurationEditor'
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export default function Settings() {
   const org = useOrg()
   const view = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const [scope,setScope]=useState('project')
   return <div className="page stack">
-    <PageHead title="Tenant settings" subtitle="Media types, programming defaults and viewer advertising for this company." />
+    <PageHead title="Settings" subtitle={`${org.tenantName??org.name} / ${org.name}. Tenant defaults are inherited by its projects.`} />
+    <div className="row-wrap"><button className={'btn '+(scope==='project'?'primary':'')} aria-pressed={scope==='project'} onClick={()=>setScope('project')}>Project settings</button><button className={'btn '+(scope==='tenant'?'primary':'')} aria-pressed={scope==='tenant'} onClick={()=>setScope('tenant')}>Tenant settings</button></div>
+    <ConfigurationEditor key={scope} base={`/api/orgs/${org.slug}/${scope==='project'?'configuration':'tenant-settings'}`} onSaved={org.reloadProject}/>
+    {scope==='project'&&<>
     {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
       <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
+    </>}
   </div>
 }
 

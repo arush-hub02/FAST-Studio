@@ -1,5 +1,7 @@
 package com.faststudio.channels;
 
+import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import com.faststudio.core.*;
 import com.faststudio.catalog.MediaSettings;
 import com.faststudio.core.Data.Channel;
@@ -21,11 +23,13 @@ public class ChannelController {
     private final Data data;
     private final Audit audit;
     private final MediaSettings settings;
+    private final TenantConfigurationServiceV1_0 configuration;
 
-    public ChannelController(Data data, Audit audit, MediaSettings settings) {
+    public ChannelController(Data data, Audit audit, MediaSettings settings, TenantConfigurationServiceV1_0 configuration) {
         this.data = data;
         this.audit = audit;
         this.settings = settings;
+        this.configuration = configuration;
     }
 
     public record ChannelView(Channel channel, ScheduleController.Programme now, ScheduleController.Programme next,
@@ -79,9 +83,8 @@ public class ChannelController {
     @Transactional
     ChannelView create(Tenant t, @Valid @RequestBody CreateRequest r) {
         t.require(Tenant.Perm.CHANNELS_EDIT);
-        int count = data.db.sql("select count(*) from channel where org_id = :o and status <> 'ARCHIVED'").param("o", t.orgId()).query(Integer.class).single();
-        int max = data.db.sql("select max_channels from organization where id = :o").param("o", t.orgId()).query(Integer.class).single();
-        if (count >= max) throw ApiException.conflict("PLAN_LIMIT", "Your plan allows " + max + " channels. Archive one or ask the platform admin to raise the limit.");
+        // The tenant's subscription plan is the only channel limit; it is shared by all projects of the tenant.
+        configuration.reserveChannel(t.orgId());
         String slug = slugify(r.name());
         int clash = data.db.sql("select count(*) from channel where org_id = :o and slug like :s").param("o", t.orgId()).param("s", slug + "%").query(Integer.class).single();
         if (clash > 0) slug = slug + "-" + (clash + 1);
