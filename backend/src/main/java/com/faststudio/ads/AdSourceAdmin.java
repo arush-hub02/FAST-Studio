@@ -61,11 +61,17 @@ public class AdSourceAdmin {
         return id;
     }
 
-    /** onlyManagedBy = TENANT limits a company to its own rows; null (platform) may edit any. */
+    /** Blank write-only credentials preserve the stored URL; ownership is checked before reading it. */
     public void update(UUID org, UUID actor, UUID id, AdSourceRequest r, String onlyManagedBy) {
+        String tag = "VAST".equals(r.kind()) && (r.tagUrl() == null || r.tagUrl().isBlank())
+                ? data.db.sql("select tag_url from ad_source where org_id=:o and id=:id and kind='VAST'"
+                        + (onlyManagedBy == null ? "" : " and managed_by=:by"))
+                    .param("o", org).param("id", id).params(by(onlyManagedBy)).query(String.class).optional()
+                    .orElseThrow(() -> ApiException.notFound("Ad source"))
+                : checkTag(r);
         int n = data.db.sql("update ad_source set name = :n, tag_url = :u, timeout_ms = :ms, enabled = :en where org_id = :o and id = :id and kind = :k"
                         + (onlyManagedBy == null ? "" : " and managed_by = :by"))
-                .param("n", r.name().trim()).param("u", checkTag(r)).param("ms", r.timeoutMs()).param("en", r.enabled())
+                .param("n", r.name().trim()).param("u", tag).param("ms", r.timeoutMs()).param("en", r.enabled())
                 .param("o", org).param("id", id).param("k", r.kind()).params(by(onlyManagedBy)).update();
         if (n == 0) throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.update", "ad_source", id, r.name());
@@ -107,13 +113,13 @@ public class AdSourceAdmin {
                         .param("o", org).param("r", a.ref()).query(VastSource.Creative.class).optional().orElse(null);
                 String status = c == null ? (r.prepare() ? "Queued for conditioning" : "New: will be conditioned when first served (or tick 'prepare')")
                         : "READY".equals(c.status()) ? "Ready (conditioned to " + c.durationMs() / 1000 + " s)" : c.status().charAt(0) + c.status().substring(1).toLowerCase();
-                out.add(new TestAd(a.title(), a.advertiser(), a.durationMs(), a.mediaUrl(), a.tracking().values().stream().mapToInt(List::size).sum(), status));
+                out.add(new TestAd(a.title(), a.advertiser(), a.durationMs(), null, a.tracking().values().stream().mapToInt(List::size).sum(), status));
             }
-            return new TagTest(url, ms, out, null);
+            return new TagTest("[REDACTED]", ms, out, null);
         } catch (ApiException e) {
-            return new TagTest(url, (System.nanoTime() - start) / 1_000_000L, List.of(), e.getMessage());
+            return new TagTest("[REDACTED]", (System.nanoTime() - start) / 1_000_000L, List.of(), "The provider request failed. Check the configured address and network policy.");
         } catch (Exception e) {
-            return new TagTest(url, (System.nanoTime() - start) / 1_000_000L, List.of(), VastSource.reason(e));
+            return new TagTest("[REDACTED]", (System.nanoTime() - start) / 1_000_000L, List.of(), VastSource.reason(e));
         }
     }
 

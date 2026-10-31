@@ -78,6 +78,21 @@ export type Asset = {
 }
 export type MediaType = { key: string; label: string; kind: string; enabled: boolean }
 export type MediaSettingsView = { types: MediaType[]; enabledTypes: string[]; defaultType: string; premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerKeySet: boolean; revision: number }
+export type ProjectDetails = {
+  schemaVersion: number
+  project: { id: string; slug: string; name: string; kind: string; status: string }
+  access: { role: string; permissions: string[]; features: string[] }
+  media: {
+    types: Pick<MediaType, 'key' | 'label' | 'kind'>[]; enabledTypes: string[]; defaultType: string
+    premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerIntegrationConfigured: boolean; revision: number
+  }
+  connectors: {
+    media: { provider: string; state: string; environment: string; credentialsConfigured: boolean; webhookConfigured: boolean; capabilities: string[] }[]
+    advertising: { id: string; name: string; kind: string; enabled: boolean; managedBy: string; configured: boolean }[]
+    delivery: { origin: string; cdn: string; configured: boolean }
+  }
+  summary: { assets: number; readyAssets: number; channels: number }
+}
 export type Policy = {
   id: string; assetId: string; allowedCountries: string; blockedCountries: string; validFrom?: string; validUntil?: string
   adsAllowed: boolean; notes: string

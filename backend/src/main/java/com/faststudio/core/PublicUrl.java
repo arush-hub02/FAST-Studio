@@ -18,11 +18,11 @@ public final class PublicUrl {
         try {
             u = URI.create(url.trim());
         } catch (IllegalArgumentException e) {
-            throw ApiException.bad("Not a valid address: " + url);
+            throw ApiException.bad("Not a valid media/provider address.");
         }
         String scheme = u.getScheme() == null ? "" : u.getScheme().toLowerCase();
-        if (!scheme.equals("http") && !scheme.equals("https")) throw ApiException.bad("Only http(s) addresses are allowed: " + url);
-        if (u.getHost() == null) throw ApiException.bad("The address has no host: " + url);
+        if (!scheme.equals("http") && !scheme.equals("https")) throw ApiException.bad("Only http(s) addresses are allowed.");
+        if (u.getHost() == null || u.getUserInfo() != null) throw ApiException.bad("Use a valid host without embedded credentials.");
         try {
             for (InetAddress a : InetAddress.getAllByName(u.getHost()))
                 if (a.isLoopbackAddress() || a.isSiteLocalAddress() || a.isLinkLocalAddress() || a.isAnyLocalAddress()

@@ -65,7 +65,8 @@ class ConnectorsTest {
         assertEquals(200, add.getResponse().getStatus(), add.getResponse().getContentAsString());
         platformSource = add.getResponse().getContentAsString().replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
         String view = call(get(base + "/connectors"), "admin@platform.test", null).getResponse().getContentAsString();
-        assertTrue(view.contains("Platform GAM") && view.contains("iu=/platform-account") && view.contains("Direct-sold campaigns"), view);
+        assertTrue(view.contains("Platform GAM") && view.contains("Direct-sold campaigns"), view);
+        assertFalse(view.contains("iu=/platform-account"), "Stored connector URLs are write-only, including for platform administrators");
     }
 
     @Test @Order(2)
@@ -94,7 +95,8 @@ class ConnectorsTest {
         MvcResult own = call(post(path), "ads@aurora.test", vast("Our own tag", OWN));
         assertEquals(200, own.getResponse().getStatus(), own.getResponse().getContentAsString());
         String list = call(get(path), "ads@aurora.test", null).getResponse().getContentAsString();
-        assertTrue(list.contains("iu=/company-account") && list.contains("\"managedBy\":\"TENANT\""), "a company sees its own tag");
+        assertTrue(list.contains("\"managedBy\":\"TENANT\""), "a company sees its own connector metadata");
+        assertFalse(list.contains("iu=/company-account"), "Stored tenant connector URLs are write-only");
         assertEquals(404, call(delete(path + "/" + platformSource), "ads@aurora.test", null).getResponse().getStatus(), "the platform's source is not the company's");
         assertEquals(405, call(post(path + "/order"), "ads@aurora.test", "{\"ids\":[]}").getResponse().getStatus(), "only the platform orders the waterfall");
         assertEquals(422, call(post(path), "ads@aurora.test", "{\"name\":\"x\",\"kind\":\"DIRECT\",\"timeoutMs\":1000,\"enabled\":true}").getResponse().getStatus());

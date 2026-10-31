@@ -3,7 +3,7 @@
 Viewer identity comes from the customer viewer application, separately from the staff who use FAST Studio. The application can represent a signed-in user or an anonymous viewer using an opaque identifier. Do not place email addresses or identifying profile data in the subject or audience keys.
 
 1. In Tenant settings, an owner/admin saves the allowed media/programming defaults and enables viewer personalization.
-2. Create a viewer integration signing key. Copy the one-time value to the **viewer application server**, never its browser/mobile client. FAST Studio stores the key encrypted. Rotating it clears existing session audience context for future decisions; already finalized breaks keep their committed timeline.
+2. Generate a random base64url signing key of at least 32 characters on the **viewer application server** and configure that same key through the authorized tenant Settings write-only form. FAST Studio encrypts it and never returns it through read APIs or a create-key response. Keep it out of viewer browser/mobile clients. Rotating it clears existing session audience context for future decisions; already finalized breaks keep their committed timeline.
 3. The application server checks the viewer's personalization permission and signs the context below. The key is tenant-specific; the org claim must be that customer's UUID, not its slug.
 4. Send the token as `viewerToken` in the JSON body of `POST /play/sessions`, along with the existing org/channel/destination/country fields. Watch live also has an optional signed-context field for integration testing. The response's stream token contains no audience keys or viewer subject.
 

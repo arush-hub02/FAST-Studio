@@ -158,7 +158,7 @@ public class AdsController {
 
     public record SimulateRequest(@NotNull UUID channelId, @NotBlank String country) {}
 
-    public record Simulation(Instant breakStart, long breakSeconds, String ownership, String programme, AdDecisionService.Decision decision, boolean simulated) {}
+    public record Simulation(Instant breakStart, long breakSeconds, String ownership, String programme, com.faststudio.dto.media.AdDecisionView decision, boolean simulated) {}
 
     /** Runs the ad decision for the channel's next published break, with a reason for every campaign left out. */
     @PostMapping("/ads/simulate")
@@ -171,6 +171,6 @@ public class AdsController {
                 .orElseThrow(() -> ApiException.conflict("NO_BREAKS", "No upcoming ad breaks in the published schedule."));
         String programme = b.assetId() == null ? "Between programmes" : "Inside \"" + data.asset(t.orgId(), b.assetId()).title() + "\"";
         var d = decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
-        return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, d, true);
+        return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, com.faststudio.dto.media.AdDecisionView.from(d), true);
     }
 }

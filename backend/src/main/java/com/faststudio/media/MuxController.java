@@ -63,7 +63,7 @@ public class MuxController {
         MuxSource.Account a = mux.account(id);
         String hook = appUrl + "/hooks/mux/" + id;
         return a == null ? new AccountView(false, null, null, null, false, hook)
-                : new AccountView(true, a.tokenId().substring(0, Math.min(4, a.tokenId().length())) + "…", a.environment(), a.tag(), a.webhookSecret() != null, hook);
+                : new AccountView(true, null, a.environment(), a.tag(), a.webhookSecret() != null, hook);
     }
 
     @PutMapping("/api/platform/orgs/{orgId}/connectors/mux")

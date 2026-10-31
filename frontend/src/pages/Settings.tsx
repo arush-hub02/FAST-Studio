@@ -50,13 +50,15 @@ function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload:
       </fieldset>
       {!editable && <p className="faint">An owner or administrator can change these settings.</p>}
     </form>
-    {editable && <section className="card card-pad stack" aria-label="Viewer integration key">
+    {editable && <form className="card card-pad stack" aria-label="Viewer integration key"
+      onSubmit={e => { e.preventDefault(); run(() => api<MediaSettingsView>(`${base}/viewer-key`, { body: { key } }), 'Signing key saved; stored credentials are never returned').then(r => { if (r) { setForm(r); reload(); org.reloadProject() } }).finally(() => setKey('')) }}>
       <h2>Viewer integration</h2>
       <p>{initial.viewerKeySet ? 'A signing key is configured.' : 'No signing key is configured.'} Keep it only on your viewer application server. Rotating it revokes existing context for future decisions; in-progress breaks retain their committed ads.</p>
-      <button type="button" className="btn" disabled={busy || !initial.revision} onClick={() => run(() => api<{ key: string }>(`${base}/viewer-key`, { method: 'POST' }), 'Key created; copy it to your viewer application server').then(r => { if (r) { setKey(r.key); setForm(f => ({ ...f, revision: f.revision + 1, viewerKeySet: true })) } })}>Create / rotate signing key</button>
-      {key && <label className="field"><span>New key — copy now, it will not be shown again</span><input readOnly type="password" value={key} onFocus={e => e.target.select()} /><button type="button" className="btn" onClick={() => navigator.clipboard.writeText(key)}>Copy key</button></label>}
+      <p className="faint">Generate a random signing key on your viewer application server, then enter it here to configure or rotate the integration. Stored keys cannot be retrieved.</p>
+      <label className="field"><span>Replacement signing key</span><input type="password" autoComplete="new-password" required minLength={32} maxLength={256} pattern="[A-Za-z0-9_-]+" value={key} disabled={busy || !initial.revision} onChange={e => setKey(e.target.value)} /></label>
+      <button type="submit" className="btn" disabled={busy || !initial.revision || key.length < 32}>Save replacement signing key</button>
       {!initial.revision && <p className="faint">Save tenant settings first.</p>}
-    </section>}
+    </form>}
   </>
 }
 

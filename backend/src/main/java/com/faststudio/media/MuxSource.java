@@ -142,11 +142,11 @@ public class MuxSource implements ContentSource {
         try {
             res = http.send(req, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
-            log.warn("Mux {} {} failed: {}", method, path, e.toString());
+            log.warn("Mux {} {} failed ({})", method, path, e.getClass().getSimpleName());
             throw unavailable(0);
         }
         if (res.statusCode() / 100 != 2) {
-            log.warn("Mux {} {} answered {}: {}", method, path, res.statusCode(), res.body());
+            log.warn("Mux {} {} answered {}", method, path, res.statusCode());
             throw unavailable(res.statusCode());
         }
         return json.readTree(res.body());

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, ensureCsrf, type Me, type Membership } from './api'
-import { Dropdown, Icon, initials, useApi } from './ui'
+import { api, ensureCsrf, type Me, type Membership, type ProjectDetails } from './api'
+import { Dropdown, ErrorBox, Icon, initials, Loading, useApi } from './ui'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Library from './pages/Library'
@@ -32,14 +32,19 @@ import { ProfileSettingsModal } from './components/ProfileSettingsModal'
 type Session = { me: Me | null; refresh: () => Promise<void>; logout: () => Promise<void> }
 const SessionCtx = createContext<Session>({ me: null, refresh: async () => {}, logout: async () => {} })
 export const useSession = () => useContext(SessionCtx)
+const ProjectCtx = createContext<{ details: ProjectDetails; reload: () => void } | null>(null)
 
 /** Current organization from the URL; permissions come from the server-issued membership (UI hint only — the API enforces). */
-export function useOrg(): Membership & { can: (p: string) => boolean; base: string } {
+export function useOrg(): Membership & { can: (p: string) => boolean; base: string; project: ProjectDetails | null; reloadProject: () => void } {
   const { me } = useSession()
+  const bootstrap = useContext(ProjectCtx)
   const { org } = useParams()
   const m = me?.memberships.find(x => x.slug === org)
   if (!m) throw new Error('No membership')
-  return { ...m, can: (p: string) => m.permissions.includes(p), base: '/' + m.slug }
+  const project = bootstrap?.details.project.id === m.orgId ? bootstrap.details : null
+  const permissions = project?.access.permissions ?? m.permissions
+  return { ...m, role: project?.access.role ?? m.role, permissions, features: project?.access.features ?? m.features,
+    can: (p: string) => permissions.includes(p), base: '/' + m.slug, project, reloadProject: bootstrap?.reload ?? (() => {}) }
 }
 
 export default function App() {
@@ -127,7 +132,16 @@ function OrgGuard() {
   if (m.status !== 'ACTIVE') return (
     <div className="page"><div className="callout bad"><Icon name="alert" /><div><b>{m.name} is suspended.</b> The platform administrator has paused access. Your data is kept safe.</div></div></div>
   )
-  return <Outlet />
+  return m.kind === 'PARTNER' ? <Outlet /> : <ProjectBootstrap key={m.orgId} membership={m} />
+}
+
+/** Login and tenant changes fetch a fresh, allowlisted project context; never persist it in browser storage. */
+function ProjectBootstrap({ membership }: { membership: Membership }) {
+  const project = useApi<ProjectDetails>(`/api/orgs/${membership.slug}/project-details`)
+  if (project.error) return <div className="page"><ErrorBox error={project.error} retry={project.reload} /></div>
+  if (project.loading || !project.data || project.data.project.id !== membership.orgId)
+    return <div className="page"><Loading /></div>
+  return <ProjectCtx.Provider value={{ details: project.data, reload: project.reload }}><Outlet /></ProjectCtx.Provider>
 }
 
 /** Customers start at Home; partner organizations at what is shared with them. */

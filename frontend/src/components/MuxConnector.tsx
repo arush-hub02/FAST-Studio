@@ -38,7 +38,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
       {a.connected && !editing && (
         <>
           <div className="kv" style={{ gridTemplateColumns: '150px 1fr' }}>
-            <span>Access token</span><span className="mono small">{a.tokenId}</span>
+            <span>Access token</span><span>Configured · write-only</span>
             <span>Environment</span><span>{a.environment || '-'}</span>
             <span>Passthrough tag</span><span className="mono small">{a.passthroughTag || 'none (imports every asset)'}</span>
             <span>Webhook</span><span>{a.webhookSecretSet ? 'Signing secret saved' : "No signing secret: uploads won't turn Ready on their own"}</span>
@@ -54,7 +54,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
       {(editing || !a.connected) && (
         <div className="stack" style={{ gap: 8 }}>
           <div className="row-wrap" style={{ gap: 8 }}>
-            <input className="input mono" style={{ flex: '1 1 180px' }} autoComplete="off" aria-label="Mux access token ID"
+            <input type="password" className="input mono" style={{ flex: '1 1 180px' }} autoComplete="new-password" aria-label="Mux access token ID"
                    placeholder={a.connected ? 'Access token ID (blank = keep)' : 'Access token ID'} value={form.tokenId} onChange={set('tokenId')} />
             <input className="input mono" style={{ flex: '1 1 180px' }} type="password" autoComplete="new-password" aria-label="Mux access token secret"
                    placeholder={a.connected ? 'Token secret (blank = keep)' : 'Token secret'} value={form.tokenSecret} onChange={set('tokenSecret')} />

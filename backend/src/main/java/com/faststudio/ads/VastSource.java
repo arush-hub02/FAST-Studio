@@ -175,7 +175,7 @@ public class VastSource implements AdSource {
             try {
                 http.sendAsync(HttpRequest.newBuilder(PublicUrl.check(u)).timeout(Duration.ofSeconds(5)).GET().build(), HttpResponse.BodyHandlers.discarding());
             } catch (ApiException e) {
-                log.debug("Skipping tracking URL {}: {}", u, e.getMessage());
+                log.debug("Skipping a tracking URL blocked by outbound policy");
             }
         }
     }
@@ -259,7 +259,8 @@ public class VastSource implements AdSource {
     }
 
     static String reason(Exception e) {
-        return e instanceof java.net.http.HttpTimeoutException || "timed out".equals(e.getMessage()) ? "timed out" : String.valueOf(e.getMessage());
+        if (e instanceof java.net.http.HttpTimeoutException || "timed out".equals(e.getMessage())) return "timed out";
+        return e.getMessage() != null && e.getMessage().matches("HTTP [0-9]{3}") ? e.getMessage() : "provider request failed";
     }
 
     static String trim(String s, int max) { return s.length() <= max ? s : s.substring(0, max); }

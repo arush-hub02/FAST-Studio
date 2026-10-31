@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import java.security.SecureRandom;
 import java.util.*;
 
 @RestController
@@ -72,17 +71,20 @@ public class MediaSettingsController {
         audit.log(t, "settings.update", "organization", t.orgId(), "Media, programming and viewer advertising defaults");
         return view(t);
     }
+    public record ViewerKeyRequest(@NotBlank @Size(min=32, max=256)
+            @Pattern(regexp="[A-Za-z0-9_-]+")
+            @com.fasterxml.jackson.annotation.JsonProperty(access=com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY) String key) {
+        @Override public String toString() { return "ViewerKeyRequest[key=REDACTED]"; }
+    }
     @PostMapping("/api/orgs/{org}/settings/viewer-key")
     @Transactional
-    Map<String,String> viewerKey(Tenant t) {
+    MediaSettings.View viewerKey(Tenant t, @Valid @RequestBody ViewerKeyRequest request) {
         t.require(Tenant.Perm.TEAM_MANAGE);
         if (settings.row(t.orgId()) == null) throw ApiException.bad("Save your settings before creating an integration key.");
-        byte[] random = new byte[32]; new SecureRandom().nextBytes(random);
-        String key = Base64.getUrlEncoder().withoutPadding().encodeToString(random);
         data.db.sql("update tenant_settings set viewer_secret=:s,revision=revision+1 where org_id=:o")
-                .param("s", secrets.seal(key)).param("o", t.orgId()).update();
+                .param("s", secrets.seal(request.key())).param("o", t.orgId()).update();
         data.db.sql("update playback_session set viewer_key=null,audiences='',personalized_until=null where org_id=:o").param("o",t.orgId()).update();
         audit.log(t, "viewer-key.rotate", "organization", t.orgId(), "Previous viewer context tokens are revoked for future sessions");
-        return Map.of("key", key);
+        return settings.view(t.orgId());
     }
 }

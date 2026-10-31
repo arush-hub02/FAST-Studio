@@ -22,7 +22,7 @@ public class RemoteSource implements ContentSource {
             return e.getMessage();
         }
         String err = encodeUrl(j.sourceUrl(), out, packager);
-        return err == null ? null : "ffmpeg could not process " + j.sourceUrl() + ": " + err;
+        return err == null ? null : "The remote video could not be processed. Verify the source and try again.";
     }
 
     /** Packages the video at a public http(s) URL; null on success, else ffmpeg's last error line. */

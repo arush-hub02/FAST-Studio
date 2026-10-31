@@ -89,7 +89,7 @@ export function AdSources({ base, mode, canAddOwn = false }: { base: string; mod
             <input className="input" style={{ flex: '1 1 110px', maxWidth: 140 }} type="number" min={100} max={5000} step={100} value={form.timeoutMs}
                    onChange={e => setForm({ ...form, timeoutMs: +e.target.value })} aria-label="Timeout in milliseconds" />
           </div>
-          <input className="input mono" placeholder="VAST tag URL, e.g. https://ads.example.com/vast?pod=[POD_DURATION]&cb=[CACHEBUSTER]" value={form.tagUrl}
+          <input type="password" autoComplete="new-password" className="input mono" placeholder="Write-only VAST tag URL" value={form.tagUrl}
                  onChange={e => setForm({ ...form, tagUrl: e.target.value })} aria-label="VAST tag URL" />
           <span className="faint small">Macros filled in per viewer and break: <span className="mono">{MACROS}</span></span>
           <div className="row" style={{ gap: 8 }}>
