@@ -1,6 +1,9 @@
 package com.faststudio;
 
-import com.faststudio.core.TenantScope;
+import com.faststudio.v1_0.core.auth.Tokens;
+import com.faststudio.v1_0.core.partner.PartnerScope;
+import com.faststudio.v1_0.core.tenant.TenantScope;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,7 +47,7 @@ class CrossTenantMatrixTest {
 
     @Autowired MockMvc mvc;
     @Autowired JdbcClient db;
-    @Autowired com.faststudio.core.Tokens tokens;
+    @Autowired Tokens tokens;
     @Autowired @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping mapping;
 
     record Ids(UUID org, UUID channel, UUID asset, UUID adAsset, UUID campaign, UUID entry, UUID destination, UUID user, UUID alert, UUID link, UUID adSource) {}
@@ -181,7 +184,7 @@ class CrossTenantMatrixTest {
         UUID partner = db.sql("select id from organization where slug = 'partner-tv'").query(UUID.class).single();
         UUID sam = db.sql("select id from app_user where email = 'partner@partnertv.test'").query(UUID.class).single();
         Map<String, UUID> ch = new HashMap<>();
-        com.faststudio.core.TenantScope.bypass(() -> { db.sql("select slug, id from channel where org_id in (:a, :n)").param("a", aurora).param("n", northwind)
+        TenantScope.bypass(() -> { db.sql("select slug, id from channel where org_id in (:a, :n)").param("a", aurora).param("n", northwind)
                 .query((rs, i) -> ch.put(rs.getString("slug"), rs.getObject("id", UUID.class))).list(); return null; });
         String bearer = "Bearer " + tokens.mint(sam, partner, UUID.randomUUID()).token();
         Ids a = aurora();
@@ -192,7 +195,7 @@ class CrossTenantMatrixTest {
             for (String pattern : e.getKey().getPatternValues()) {
                 if (!pattern.startsWith("/api/partners/{partner}/sources/{owner}")) continue;
                 covered++;
-                String scope = e.getValue().getMethodAnnotation(com.faststudio.partners.PartnerScope.class).value();
+                String scope = e.getValue().getMethodAnnotation(PartnerScope.class).value();
                 java.util.function.BiFunction<UUID, UUID, String> path = (owner, channel) -> pattern.replace("{partner}", partner.toString())
                         .replace("{owner}", owner.toString()).replace("{channelId}", channel.toString());
                 int other = get(path.apply(northwind, ch.get("sports-classics")), bearer).getResponse().getStatus();

@@ -1,7 +1,10 @@
 package com.faststudio.v1_0.repositories.tenancy;
 
-import com.faststudio.core.ApiException;
 import com.faststudio.v1_0.dto.tenancy.TenantConfiguration.*;
+
+import com.faststudio.v1_0.core.common.ApiException;
+import com.faststudio.v1_0.core.tenant.Tenant;
+
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 

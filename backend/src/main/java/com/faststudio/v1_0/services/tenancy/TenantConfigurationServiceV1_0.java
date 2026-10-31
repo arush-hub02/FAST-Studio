@@ -1,10 +1,20 @@
 package com.faststudio.v1_0.services.tenancy;
 
-import com.faststudio.catalog.MediaSettings;
-import com.faststudio.core.*;
 import com.faststudio.v1_0.dto.tenancy.TenantConfiguration.*;
-import com.faststudio.v1_0.repositories.tenancy.TenantConfigurationRepository;
 import com.faststudio.v1_0.repositories.tenancy.TenantConfigurationRepository.Definition;
+
+import com.faststudio.v1_0.core.auth.Auth;
+import com.faststudio.v1_0.core.auth.Tokens;
+import com.faststudio.v1_0.core.common.ApiException;
+import com.faststudio.v1_0.core.common.Audit;
+import com.faststudio.v1_0.core.common.Feature;
+import com.faststudio.v1_0.core.common.Secrets;
+import com.faststudio.v1_0.core.common.Times;
+import com.faststudio.v1_0.core.tenant.Tenant;
+import com.faststudio.v1_0.core.tenant.TenantScope;
+import com.faststudio.v1_0.repositories.tenancy.TenantConfigurationRepository;
+import com.faststudio.v1_0.services.media.MediaSettingsServiceV1_0;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +47,8 @@ public class TenantConfigurationServiceV1_0 {
 
     /** Extra domain validation for built-in properties, on top of the type check. */
     private static final Map<String, Consumer<JsonNode>> SYSTEM = Map.of(
-            PREMIERE_TIME, v -> MediaSettings.time(v.asString()),
-            WEEKDAYS, v -> MediaSettings.days(v.asString()),
+            PREMIERE_TIME, v -> MediaSettingsServiceV1_0.time(v.asString()),
+            WEEKDAYS, v -> MediaSettingsServiceV1_0.days(v.asString()),
             PERSONALIZED_ADS, v -> {});
 
     private final TenantConfigurationRepository repository;

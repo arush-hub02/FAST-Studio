@@ -1,14 +1,15 @@
 package com.faststudio.v1_0.services.project;
 
-import com.faststudio.catalog.MediaSettings;
-import com.faststudio.core.Feature;
-import com.faststudio.core.Tenant;
-import com.faststudio.core.TenantScope;
-import com.faststudio.edge.EdgeClient;
+import com.faststudio.v1_0.core.common.Feature;
+import com.faststudio.v1_0.core.tenant.Tenant;
+import com.faststudio.v1_0.core.tenant.TenantScope;
 import com.faststudio.v1_0.dto.project.ProjectDetails;
 import com.faststudio.v1_0.repositories.project.ProjectDetailsRepository;
 import com.faststudio.v1_0.repositories.tenancy.TenantConfigurationRepository;
+import com.faststudio.v1_0.services.media.MediaSettingsServiceV1_0;
 import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+import com.faststudio.v1_0.util.cloudflare.EdgeClient;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +24,12 @@ import java.util.UUID;
 @Service
 public class ProjectDetailsServiceV1_0 {
     private final ProjectDetailsRepository repository;
-    private final MediaSettings settings;
+    private final MediaSettingsServiceV1_0 settings;
     private final EdgeClient edge;
     private final TenantConfigurationServiceV1_0 configuration;
     private final TenantConfigurationRepository tenancy;
 
-    public ProjectDetailsServiceV1_0(ProjectDetailsRepository repository, MediaSettings settings, EdgeClient edge,
+    public ProjectDetailsServiceV1_0(ProjectDetailsRepository repository, MediaSettingsServiceV1_0 settings, EdgeClient edge,
                                      TenantConfigurationServiceV1_0 configuration, TenantConfigurationRepository tenancy) {
         this.repository = repository;
         this.settings = settings;

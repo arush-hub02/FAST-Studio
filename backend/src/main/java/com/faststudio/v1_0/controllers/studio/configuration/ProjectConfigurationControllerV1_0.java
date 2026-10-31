@@ -1,10 +1,12 @@
 package com.faststudio.v1_0.controllers.studio.configuration;
 
-import com.faststudio.core.Tenant;
 import com.faststudio.v1_0.dto.tenancy.TenantConfiguration.Enable;
 import com.faststudio.v1_0.dto.tenancy.TenantConfiguration.Value;
+
+import com.faststudio.v1_0.core.tenant.Tenant;
 import com.faststudio.v1_0.repositories.tenancy.TenantConfigurationRepository;
 import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

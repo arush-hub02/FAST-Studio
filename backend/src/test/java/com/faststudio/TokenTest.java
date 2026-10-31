@@ -1,6 +1,8 @@
 package com.faststudio;
 
-import com.faststudio.core.TokenKeys;
+import com.faststudio.v1_0.core.auth.TokenKeys;
+import com.faststudio.v1_0.core.tenant.TenantScope;
+
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
@@ -337,9 +339,9 @@ class TokenTest {
     @Test @Order(11)
     void platformActionsAreAuditedAsThePlatformOrganization() {
         UUID platform = db.sql("select id from organization where kind = 'PLATFORM'").query(UUID.class).single();
-        int rows = com.faststudio.core.TenantScope.bypass(() -> db.sql("select count(*) from audit_event where action like 'platform.%' and org_id is distinct from :p and action <> 'platform.org.create' and action not like 'platform.org.%'")
+        int rows = TenantScope.bypass(() -> db.sql("select count(*) from audit_event where action like 'platform.%' and org_id is distinct from :p and action <> 'platform.org.create' and action not like 'platform.org.%'")
                 .param("p", platform).query(Integer.class).single());
         assertEquals(0, rows, "platform administration always names the platform organization (or the org it acted on)");
-        assertTrue(com.faststudio.core.TenantScope.bypass(() -> db.sql("select count(*) from audit_event where org_id = :p").param("p", platform).query(Integer.class).single()) > 0);
+        assertTrue(TenantScope.bypass(() -> db.sql("select count(*) from audit_event where org_id = :p").param("p", platform).query(Integer.class).single()) > 0);
     }
 }

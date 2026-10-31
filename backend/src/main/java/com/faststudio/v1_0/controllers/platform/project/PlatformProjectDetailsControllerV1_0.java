@@ -2,6 +2,7 @@ package com.faststudio.v1_0.controllers.platform.project;
 
 import com.faststudio.v1_0.dto.project.ProjectDetails;
 import com.faststudio.v1_0.services.project.ProjectDetailsServiceV1_0;
+
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

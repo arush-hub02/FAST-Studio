@@ -1,6 +1,6 @@
 # Backend folder architecture
 
-Status: **adopted target layout, 2026-10-31.** Tenancy and project-bootstrap code already live under `v1_0/` (see mapping); everything else is still in its legacy package. New and touched backend code follows this document; legacy packages move only when their use case is being changed (see [Migration rules](#migration-rules)).
+Status: **adopted 2026-10-31; applied to the whole backend in restructure step 1 (same day).** Every class lives under `v1_0/` (except `BackendApplication`). Mixed-audience controllers and SQL inside controllers are being split in step 1b (see PROGRESS.md).
 
 The layout follows the user's reference microservice structure (Enveu build-manager service) and adapts it to this single Spring Boot backend. Where FAST Studio deviates from the reference, the reason is stated below.
 
@@ -106,31 +106,47 @@ backend/src/main/java/com/faststudio/
 | `rabbitMQ/v1_0` | `messaging/v1_0` | Agreed architecture: PostgreSQL job rows are authoritative (outbox) and Cloudflare Queues transports job IDs (PROGRESS.md). Same publisher/observer shape; transport-neutral name. If the user requires RabbitMQ, only the adapter inside this folder changes |
 | `core/` absent | `v1_0/core/` | Tenant context, RLS scope and auth primitives are shared by every feature |
 
-## Current → target mapping
+## Where everything moved (restructure step 1, 2026-10-31)
 
-Moves happen when the use case is touched, not in bulk.
+Old package → new location (all under `com.faststudio.v1_0`). API paths did not change.
 
-| Current package | Target |
+| Old | New |
 | --- | --- |
-| `core/*Config`, `WebConfig` | `v1_0/config/` |
-| `core/` (Tenant*, Auth, Tokens, Audit, ApiException …) | `v1_0/core/{tenant,auth,common}/` |
-| `core/AuthController`, `JwksController` | `v1_0/controllers/auth/` |
-| `catalog/AssetController`, `media/MediaController`, `catalog/MediaSettingsController` | `v1_0/controllers/studio/media/` + `services/media/` + `repositories/media/` |
-| `media/MuxController` (platform part) | `v1_0/controllers/platform/connectors/`; webhook part → `controllers/webhook/` |
-| `media/MuxSource`, `RemoteSource`, `UploadSource`, `ContentSource` | `v1_0/util/mux/`, `util/mediaProvider/`; use-case logic → `services/media/` |
-| `media/MediaService` (in-memory executor) | `services/media/` + `messaging/v1_0/media/` (Stage 2) |
-| `channels/`, `schedule/`, `rights/`, `ads/`, `distribution/`, `ops/`, `team/`, `mail/` | `v1_0/controllers/studio/<feature>/` + `services/<feature>/` (+ `util/` for VAST, mail transport) |
-| `partners/` | `v1_0/controllers/partner/` + `services/partner/` |
-| `playout/PlaybackController`, viewer ad decision/beacon endpoints | `v1_0/controllers/viewer/` |
-| `edge/EdgeClient`, `EdgePublisher` | `v1_0/util/cloudflare/` |
-| `controller/project`, `service/project`, `repository/project`, `dto/project`, `dto/media` | **Done 2026-10-31:** `v1_0/controllers/studio/project/`, `controllers/platform/project/`, `services/project/`, `repositories/project/`, `dto/project/`, `dto/media/` |
-| `controller/tenancy`, `service/tenancy`, `repository/tenancy`, `dto/tenancy` | **Done 2026-10-31:** `v1_0/controllers/platform/tenancy/`, `controllers/studio/configuration/`, `controllers/studio/team/`, `services/tenancy/`, `repositories/tenancy/`, `dto/tenancy/` |
-| `demo/DemoSeeder` | `v1_0/config/demo/` |
+| `core` Spring config: SecurityConfig, WebConfig, DatabaseConfig, AdminBootstrap | `config/` |
+| `core/DemoAccounts`, `demo/DemoSeeder` | `config/demo/` |
+| `core` tenant context: Tenant, TenantInterceptor, TenantScope, TenantScopeFilter, TenantAwareDataSource | `core/tenant/` |
+| `core` auth: Auth, Accounts, Tokens, TokenKeys, PasswordChangeGuard | `core/auth/` |
+| `core` common: ApiException, ErrorHandler, Audit, Data, Feature, PublicUrl, Secrets, Times | `core/common/` |
+| `partners` PartnerInterceptor, PartnerScope, PartnerScopes | `core/partner/` |
+| `core/AuthController`, `JwksController` | `controllers/auth/AuthControllerV1_0`, `JwksControllerV1_0` |
+| `catalog/AssetController`, `MediaSettingsController` | `controllers/studio/media/AssetControllerV1_0`, `MediaSettingsControllerV1_0` |
+| `channels/ChannelController` | `controllers/studio/channels/ChannelControllerV1_0` |
+| `schedule/ScheduleController`, `ProgrammingController` | `controllers/studio/programming/…V1_0` |
+| `ads/AdsController` | `controllers/studio/ads/AdsControllerV1_0` |
+| `distribution/DistributionController`, `partners/PartnerSharingController` | `controllers/studio/distribution/…V1_0` |
+| `ops/OpsController` | `controllers/studio/monitoring/OpsControllerV1_0` |
+| `team/TeamController` | `controllers/studio/team/TeamControllerV1_0` |
+| `connectors/ConnectorsController`, `media/MuxController` | `controllers/platform/connectors/…V1_0` |
+| `mail/EmailController` | `controllers/platform/email/EmailControllerV1_0` |
+| `partners/PartnerApiController`, `ApiClientController` | `controllers/partner/…V1_0` |
+| `playout/PlaybackController`, `media/MediaController` | `controllers/viewer/PlaybackControllerV1_0`, `MediaFileControllerV1_0` |
+| `ads/AdDecisionService`, `AdSourceAdmin`, `ViewerContext` | `services/ads/AdDecisionServiceV1_0`, `AdSourceAdminService`, `ViewerContextService` |
+| `ads/AdSource`, `DirectSoldSource`, `VastSource` | `services/ads/sources/IAdSource`, `DirectSoldSource`, `VastSource` |
+| `catalog/MediaSettings`, `media/MediaService`, `MediaSigner`, `MediaStore` | `services/media/MediaSettingsServiceV1_0`, `MediaServiceV1_0`, `MediaSigner`, `MediaStore` |
+| `media/ContentSource`, `GeneratedSource`, `RemoteSource`, `UploadSource`, `MuxSource` | `services/media/sources/IContentSource`, … |
+| `schedule/ProgrammingService`, `Planner`, `ProgrammingRefresh` | `services/programming/ProgrammingServiceV1_0`, `Planner`, `ProgrammingRefresh` |
+| `playout/PlayoutService`, `Scte35` | `services/playout/PlayoutServiceV1_0`, `Scte35` |
+| `rights/Rights` | `services/rights/Rights` |
+| `ops/AlertScanner`, `AvailVerifier` | `services/ops/` |
+| `mail/MailService`, `EmailTemplates` | `services/mail/MailServiceV1_0`, `EmailTemplates` |
+| `edge/EdgeClient`, `EdgePublisher` | `util/cloudflare/` |
+| tenancy and project bootstrap | already under `v1_0` (tenant redesign commit) |
 
-## Migration rules
+Tests moved next to the class they exercise (same package, for package-private access); cross-cutting tests stay in `com.faststudio`.
 
-1. Move a use case only while changing it; move its tests and callers in the same change. No package-wide rename commit.
-2. Keep every public API path, response shape and permission check. Run `CrossTenantMatrixTest` and the feature's tests after each move.
-3. Do not move files another agent has claimed in PROGRESS.md; coordinate first.
-4. Stage 1 of [MEDIA_INGESTION_PLAN.md](MEDIA_INGESTION_PLAN.md) is the first use of this layout.
-5. Record each move in PROGRESS.md so the mapping table above can be marked done.
+## Rules from now on
+
+1. New code goes into the matching `controllers/<audience>/<feature>`, `services/<feature>`, `repositories/<feature>`, `dto/<feature>` or `util/<provider>` folder.
+2. Keep every public API path, response shape and permission check. Run `CrossTenantMatrixTest` and the feature's tests after each change.
+3. Controllers do not hold SQL; step 1b moves remaining SQL from controllers into repositories/services feature by feature (tracked in PROGRESS.md).
+4. Do not move files another agent has claimed in PROGRESS.md; coordinate first.

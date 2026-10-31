@@ -1,6 +1,7 @@
 package com.faststudio;
 
-import com.faststudio.core.TenantScope;
+import com.faststudio.v1_0.core.tenant.TenantScope;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

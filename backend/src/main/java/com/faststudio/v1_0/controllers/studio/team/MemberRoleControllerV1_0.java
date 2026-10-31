@@ -1,7 +1,8 @@
 package com.faststudio.v1_0.controllers.studio.team;
 
-import com.faststudio.core.Tenant;
+import com.faststudio.v1_0.core.tenant.Tenant;
 import com.faststudio.v1_0.services.tenancy.AccessRoleServiceV1_0;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 

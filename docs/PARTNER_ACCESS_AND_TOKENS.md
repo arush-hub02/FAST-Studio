@@ -159,7 +159,7 @@ The partner **never** sees the video library, uploads, rights, campaigns, money,
 | `POST /oauth/token` ✅ (P4) | Partner API clients: `client_credentials` (form fields or HTTP Basic) → 10-minute `service` token (`typ` service, `org` = the partner, `scope`, `client_name`). It works only under `/api/partners/**` and stops at once when the client is revoked. |
 | `GET /.well-known/jwks.json` | Public keys, so partners and our own services can verify tokens |
 
-Built with Spring Security's resource server (`JwtDecoder` with issuer, audience, expiry, type and version checks) and a `NimbusJwtEncoder` (`core/Tokens.java`, `core/TokenKeys.java`). `TenantInterceptor` reads the org from the path, checks it against the token and the database, and stamps `TenantScope` as before. Session sign-in stays available for one release (`faststudio.auth.mode=session`).
+Built with Spring Security's resource server (`JwtDecoder` with issuer, audience, expiry, type and version checks) and a `NimbusJwtEncoder` (`v1_0/core/auth/Tokens.java`, `v1_0/core/auth/TokenKeys.java`). `TenantInterceptor` reads the org from the path, checks it against the token and the database, and stamps `TenantScope` as before. Session sign-in stays available for one release (`faststudio.auth.mode=session`).
 
 ## 5. Data model changes (migrations V5 and V6 ✅)
 

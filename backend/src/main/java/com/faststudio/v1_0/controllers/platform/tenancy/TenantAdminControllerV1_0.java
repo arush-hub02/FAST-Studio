@@ -1,7 +1,9 @@
 package com.faststudio.v1_0.controllers.platform.tenancy;
 
 import com.faststudio.v1_0.dto.tenancy.TenantConfiguration.*;
+
 import com.faststudio.v1_0.services.tenancy.TenantConfigurationServiceV1_0;
+
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;

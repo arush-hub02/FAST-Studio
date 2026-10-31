@@ -1,8 +1,12 @@
 package com.faststudio;
 
-import com.faststudio.core.*;
-import com.faststudio.edge.EdgePublisher;
-import com.faststudio.schedule.ProgrammingService;
+import com.faststudio.v1_0.core.auth.Tokens;
+import com.faststudio.v1_0.core.common.ApiException;
+import com.faststudio.v1_0.core.common.Secrets;
+import com.faststudio.v1_0.core.tenant.TenantScope;
+import com.faststudio.v1_0.services.programming.ProgrammingServiceV1_0;
+import com.faststudio.v1_0.util.cloudflare.EdgePublisher;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -111,10 +115,10 @@ class ProgrammingFeaturesTest {
         assertEquals(0,blocked.path("placements").size()); assertTrue(blocked.path("notices").toString().contains("conflicts"));
     }
     @Test void wallClockSchedulingDoesNotDriftAcrossDstAndRejectsAmbiguousTimes() {
-        assertEquals(Duration.ofHours(23),Duration.between(ProgrammingService.wallClock(LocalDate.of(2027,3,13),LocalTime.of(20,0),"America/New_York"),ProgrammingService.wallClock(LocalDate.of(2027,3,14),LocalTime.of(20,0),"America/New_York")));
-        assertEquals(Duration.ofHours(25),Duration.between(ProgrammingService.wallClock(LocalDate.of(2027,11,6),LocalTime.of(20,0),"America/New_York"),ProgrammingService.wallClock(LocalDate.of(2027,11,7),LocalTime.of(20,0),"America/New_York")));
-        assertThrows(ApiException.class,()->ProgrammingService.wallClock(LocalDate.of(2027,3,14),LocalTime.of(2,30),"America/New_York"));
-        assertThrows(ApiException.class,()->ProgrammingService.wallClock(LocalDate.of(2027,11,7),LocalTime.of(1,30),"America/New_York"));
+        assertEquals(Duration.ofHours(23),Duration.between(ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,3,13),LocalTime.of(20,0),"America/New_York"),ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,3,14),LocalTime.of(20,0),"America/New_York")));
+        assertEquals(Duration.ofHours(25),Duration.between(ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,11,6),LocalTime.of(20,0),"America/New_York"),ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,11,7),LocalTime.of(20,0),"America/New_York")));
+        assertThrows(ApiException.class,()->ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,3,14),LocalTime.of(2,30),"America/New_York"));
+        assertThrows(ApiException.class,()->ProgrammingServiceV1_0.wallClock(LocalDate.of(2027,11,7),LocalTime.of(1,30),"America/New_York"));
     }
     @Test void settingsAreEnforcedAndEpisodeMetadataIsRequired() throws Exception {
         String base="/api/orgs/aurora";

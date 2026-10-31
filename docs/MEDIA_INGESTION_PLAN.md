@@ -13,7 +13,7 @@ Media ownership remains: Mux generates programme renditions; packaging/export wo
 
 ## What exists and what changes
 
-| Existing code | Observed issue | Planned change |
+| Existing code (paths before the 2026-10-31 restructure; see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md#current--target-mapping)) | Observed issue | Planned change |
 | --- | --- | --- |
 | catalog/AssetController.java | HTTP, SQL, metadata/episode validation, rights updates and processing submission share a controller | Thin media controllers; extract tenant-aware asset/rights services and repositories |
 | media/MuxController.java | Account administration, direct upload, catalogue import, asset upsert and webhook translation mixed together | Separate connection, catalogue sync, upload and webhook use cases |
