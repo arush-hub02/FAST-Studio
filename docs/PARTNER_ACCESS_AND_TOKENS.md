@@ -161,6 +161,22 @@ The partner **never** sees the video library, uploads, rights, campaigns, money,
 
 Built with Spring Security's resource server (`JwtDecoder` with issuer, audience, expiry, type and version checks) and a `NimbusJwtEncoder` (`v1/core/auth/Tokens.java`, `v1/core/auth/TokenKeys.java`). `TenantInterceptor` reads the org from the path, checks it against the token and the database, and stamps `TenantScope` as before. Session sign-in stays available for one release (`faststudio.auth.mode=session`).
 
+### 4.3 Personal access tokens — ✅ built (V17, 2026-11-01)
+
+Long-lived tokens a person creates on their profile (API Tokens tab) for scripts and AI assistants (MCP clients). Sent as `Authorization: Bearer fsp_…`.
+
+| Item | Decision |
+| --- | --- |
+| Who | Everyone. Scope = one organization they belong to (customer or partner), or `platform` for platform administrators. |
+| Role ceiling | A role at or below theirs in that scope (customer roles, partner roles, or `PLATFORM_ADMIN`). On every call the permissions are the ceiling **and** their current role (custom roles included); the role is the lower of the two. |
+| Expiry | 7 / 30 / 90 / 365 days, a custom 1–3650 days, or none. At most 25 active tokens per person. |
+| Storage | SHA-256 of the token, a short hint for the list, scope, ceiling, created / expires / last used (written at most once a minute) / revoked. |
+| Use | The bearer resolver exchanges the token for a normal 10-minute JWT (`typ` user, `pat`, `pat_role`, `pat_scope`, `amr` ["pat"], only that org; platform scope has `platform_roles` only). All normal checks then apply. Invalid, revoked, expired or out-of-scope tokens get 401 and are logged per address (`token-ip`); valid tokens are never blocked by those failures (256-bit tokens can't be guessed, and one stale script must not lock out a shared office address). |
+| Fence | Customer: `/api/orgs/**`. Partner: `/api/partners/**` and `/api/orgs/**` (its members page). Platform: `/api/platform/**`. All: `GET /api/auth/me`. Never account endpoints (password, tokens). |
+| Endpoints | `GET` / `POST /api/auth/personal-tokens`, `DELETE /api/auth/personal-tokens/{id}` (signed-in person only; the token value is in the POST answer once, `Cache-Control: no-store`). |
+
+There is no FAST Studio MCP server yet; an MCP server would call this API with the person's token.
+
 ## 5. Data model changes (migrations V5 and V6 ✅)
 
 | Change | Why |

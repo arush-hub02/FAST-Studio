@@ -74,6 +74,20 @@
       "apis": ["POST /api/auth/forgot", "POST /api/auth/reset", "POST /api/orgs/{org}/members/{userId}/password-reset", "POST /api/platform/password-reset"],
       "watch": ["used_at set or expires_at in the past = 'link expired or already used'."]
     },
+    "auth_attempt": {
+      "feature": "Accounts & sign-in",
+      "purpose": "Rate-limit log: one row per counted sign-in failure, reset-email request or bad partner/personal token, per account (email hash) or client address. Shared by all servers; rows older than a day are deleted hourly.",
+      "pages": ["/login", "/reset-password"],
+      "apis": ["POST /api/auth/login", "POST /api/auth/token", "POST /api/auth/forgot", "POST /oauth/token", "Any call with Authorization: Bearer fsp_…"],
+      "watch": ["429 RATE_LIMITED = too many rows in the window for that bucket (login-email 5/5 min, login-ip 20/15 min, forgot-ip 10/h, client-ip 20/15 min; token-ip is only logged, never blocks).", "To unlock someone early, delete their rows (bucket = limit name + ':' + key)."]
+    },
+    "personal_access_token": {
+      "feature": "Accounts & sign-in",
+      "purpose": "Personal access tokens people create on their profile for scripts and MCP clients: one organization (or the platform), a role ceiling and an optional expiry. Only the token's SHA-256 hash is kept.",
+      "pages": ["/:org (profile, API Tokens tab)", "/platform (profile, API Tokens tab)"],
+      "apis": ["GET /api/auth/personal-tokens", "POST /api/auth/personal-tokens", "DELETE /api/auth/personal-tokens/{id}", "Any call with Authorization: Bearer fsp_…"],
+      "watch": ["401 with a fsp_ token = revoked_at set, expires_at passed, the owner left the organization or is no longer a platform admin.", "org_id null = platform scope (role_key PLATFORM_ADMIN)."]
+    },
     "customer_tenant": {
       "feature": "Tenants & configuration",
       "purpose": "A customer account. Owns one or more projects, has a subscription plan and status.",

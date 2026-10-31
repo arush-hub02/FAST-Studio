@@ -10,6 +10,11 @@ Proposed engineering requirements. The original prohibitions on fake broadcasts,
 - Keep platform support access time-limited, justified, approved and audited. Platform administration must not grant silent broad customer content/finance access.
 - External identities and viewer/playback credentials have separate audiences/scopes from administration sessions.
 
+**Built (2026-11-01):**
+- Sign-in, script-token, forgot-password and partner client-credential requests are rate-limited in the database (`auth_attempt`, migration V16): 5 failures per account per 5 minutes, 20 failures per client address per 15 minutes, 10 reset emails per address per hour. Shared by all servers, kept across restarts, emails stored as hashes. The client address honours X-Forwarded-For only from private-network proxies (`server.forward-headers-strategy=native`).
+- Personal access tokens (`fsp_…`, migration V17) for scripts and MCP clients: per person, one scope (an organization, or the platform for platform administrators), a role ceiling and an optional expiry. Only the SHA-256 is stored. Each use is exchanged for a normal 10-minute JWT, narrowed to the intersection of the ceiling and the owner's current role, and fenced to that scope's API; they can't manage passwords or tokens. See docs/FEATURES.html.
+- Pages send Content-Security-Policy (`script-src 'self'`, `frame-ancestors 'none'`, `object-src 'none'`; media/connect also the delivery edge), Referrer-Policy `strict-origin-when-cross-origin` and Permissions-Policy.
+
 ## Effective rights policy
 
 Evaluate asset, channel, destination and contractual restrictions together. Default to deny when required rights data is missing. Explicit prohibitions take precedence; otherwise the requested territory/platform/language and full playback interval must be allowed at every applicable restrictive level. Distinguish "no applicable policy" from an explicit unrestricted policy.
@@ -30,6 +35,8 @@ Specific jurisdictional obligations, consent strings, retention and seller discl
 
 - Store credentials in a backend secret mechanism; return references and redacted status. Never write API secrets into React/Angular bundles, logs, seed data or CSV exports.
 - Validate media URLs, VAST tags, redirects and webhook destinations against SSRF rules; block private/link-local/metadata destinations and revalidate resolution/redirects. Disable unsafe XML external entities and bound payload size/wrapper depth/timeouts.
+  - **Built:** `PublicUrl` blocks loopback, private, link-local, carrier-grade NAT, NAT64/IPv4-mapped, reserved and multicast addresses; VAST fetches and remote media follow redirects by hand with every hop checked (at most 5). Not yet: pinning the checked address against DNS rebinding.
+  - **Built:** VAST ad-tag URLs are encrypted at rest (AES-256-GCM, the same key as Mux credentials); plaintext rows from before are sealed at start-up.
 - Use expiring signed upload/download URLs bound to allowed object/resource actions; verify size/type/checksum server-side. Validate uploaded media outside the request thread and quarantine failed inputs.
 - Verify provider webhook signatures before persistence/processing, protect against replay and map provider identity to tenant internally. Use scoped outbound signing keys with rotation for future customer webhooks.
 - Escape untrusted display metadata and protect CSV exports from spreadsheet formula execution. Parameterize queries, validate filter fields and rate-limit expensive/reporting operations.

@@ -57,6 +57,25 @@ public class WebConfig implements WebMvcConfigurer {
                 return true;
             }
         }).addPathPatterns("/api/**").excludePathPatterns("/api/partners/**");
+        // personal access tokens (scripts, AI assistants) work only in the API of their scope, plus reading who they act as;
+        // never account settings such as passwords or other tokens. Customer: /api/orgs. Partner: /api/partners and its
+        // /api/orgs/{org}/members. Platform: /api/platform. The org/partner interceptors then pin the exact organization.
+        registry.addInterceptor(new HandlerInterceptor() {
+            @Override
+            public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+                String scope = Tokens.personalScope();
+                if (scope == null) return true;
+                String path = req.getRequestURI().substring(req.getContextPath().length());
+                boolean ok = ("GET".equals(req.getMethod()) && path.equals("/api/auth/me")) || switch (scope) {
+                    case "CUSTOMER" -> path.startsWith("/api/orgs/");
+                    case "PARTNER" -> path.startsWith("/api/partners/") || path.startsWith("/api/orgs/");
+                    case "PLATFORM" -> path.startsWith("/api/platform/");
+                    default -> false;
+                };
+                if (!ok) throw new ApiException(HttpStatus.FORBIDDEN, "PERSONAL_TOKEN", "This personal access token can't be used for " + path + ".");
+                return true;
+            }
+        }).addPathPatterns("/api/**");
         registry.addInterceptor(passwordGuard).addPathPatterns("/api/**").excludePathPatterns("/api/auth/**");
         registry.addInterceptor(tenantInterceptor).addPathPatterns("/api/orgs/**");
         registry.addInterceptor(partnerInterceptor).addPathPatterns("/api/partners/**");

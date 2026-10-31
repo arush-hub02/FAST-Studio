@@ -1,7 +1,9 @@
 package com.faststudio.v1.config;
 
 import com.faststudio.v1.core.auth.TokenKeys;
+import com.faststudio.v1.core.auth.Throttle;
 import com.faststudio.v1.core.auth.Tokens;
+import com.faststudio.v1.services.auth.PersonalTokenServiceV1;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +43,8 @@ import java.util.UUID;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain chain(HttpSecurity http, Tokens tokens, @Value("${faststudio.edge.public-url:}") String edgePublicUrl) throws Exception {
+    SecurityFilterChain chain(HttpSecurity http, Tokens tokens, PersonalTokenServiceV1 personal,
+                              @Value("${faststudio.edge.public-url:}") String edgePublicUrl) throws Exception {
         http.headers(h -> h
                 .contentSecurityPolicy(c -> c.policyDirectives(contentSecurityPolicy(edgePublicUrl)))
                 .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
@@ -61,10 +64,21 @@ public class SecurityConfig {
         if (tokens.enabled())
             http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .logout(l -> l.disable())                 // AuthControllerV1 closes the sign-in and clears the cookies
-                    .oauth2ResourceServer(o -> o.bearerTokenResolver(tokens::resolve).jwt(Customizer.withDefaults()).authenticationEntryPoint(unauthorized));
+                    .oauth2ResourceServer(o -> o.bearerTokenResolver(req -> bearer(req, tokens, personal)).jwt(Customizer.withDefaults()).authenticationEntryPoint(unauthorized));
         else
             http.logout(l -> l.logoutUrl("/api/auth/logout").logoutSuccessHandler((q, r, a) -> r.setStatus(204)));
         return http.build();
+    }
+
+    /**
+     * The access token of a request. A personal access token (fsp_…) is exchanged for a short-lived one here; when it is
+     * not valid it is passed on unchanged, so the JWT decoder rejects it with 401 like any other bad token.
+     */
+    static String bearer(jakarta.servlet.http.HttpServletRequest req, Tokens tokens, PersonalTokenServiceV1 personal) {
+        String t = tokens.resolve(req);
+        if (t == null || !t.startsWith(PersonalTokenServiceV1.PREFIX)) return t;
+        String exchanged = personal.exchange(t, Throttle.ip(req));
+        return exchanged != null ? exchanged : t;
     }
 
     /**

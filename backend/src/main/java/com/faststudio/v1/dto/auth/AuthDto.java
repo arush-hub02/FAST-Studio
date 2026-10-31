@@ -1,8 +1,12 @@
 package com.faststudio.v1.dto.auth;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,4 +35,22 @@ public final class AuthDto {
 
     /** Seeded fictional account shown on the demo sign-in page (demo mode only). */
     public record DemoAccount(String email, String name, String role, String description) {}
+
+    /**
+     * A personal access token as listed to its owner (never the token itself). expiresAt null = never expires; org fields
+     * null and roleKey PLATFORM_ADMIN = platform-administration scope.
+     */
+    public record PersonalToken(UUID id, String name, String tokenHint, UUID orgId, String orgSlug, String orgName, String roleKey,
+                                OffsetDateTime createdAt, OffsetDateTime expiresAt, OffsetDateTime lastUsedAt) {}
+
+    /**
+     * New personal access token. org = an organization you belong to (id or slug), or "platform" (platform administrators,
+     * role PLATFORM_ADMIN). role = the most it may do: a role at or below yours there, e.g. ANALYST for read-only.
+     * expiresInDays null = never expires; otherwise 1 to 3650 days.
+     */
+    public record CreatePersonalToken(@NotBlank @Size(max = 80) String name, @NotBlank String org, @NotBlank String role,
+                                      @Min(1) @Max(3650) Integer expiresInDays) {}
+
+    /** The only time the token is shown: store it now (for example in the MCP client's configuration). */
+    public record CreatedPersonalToken(String token, PersonalToken details) {}
 }

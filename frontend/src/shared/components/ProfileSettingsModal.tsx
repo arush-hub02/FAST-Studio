@@ -3,8 +3,9 @@ import { useSession } from '../../app/App'
 import { useTheme, type ThemeMode, type ThemeAccent, type ThemeDensity } from '../../app/theme'
 import { Icon, Modal, initials, useToast } from '../ui'
 import { api, type Me } from '../api'
+import { PersonalTokens } from './PersonalTokens'
 
-type Tab = 'appearance' | 'account' | 'security' | 'shortcuts'
+type Tab = 'appearance' | 'account' | 'security' | 'tokens' | 'shortcuts'
 
 const THEME_OPTIONS: { id: ThemeMode; label: string; desc: string; icon: string; previewBg: string; previewCard: string }[] = [
   {
@@ -169,6 +170,13 @@ export function ProfileSettingsModal({ currentOrgName, onClose }: { currentOrgNa
             onClick={() => setTab('security')}
           >
             <Icon name="shield" size={15} /> Security & Password
+          </button>
+          <button
+            type="button"
+            className={`settings-tab-btn ${tab === 'tokens' ? 'active' : ''}`}
+            onClick={() => setTab('tokens')}
+          >
+            <Icon name="key" size={15} /> API Tokens
           </button>
           <button
             type="button"
@@ -381,6 +389,8 @@ export function ProfileSettingsModal({ currentOrgName, onClose }: { currentOrgNa
               </button>
             </form>
           )}
+
+          {tab === 'tokens' && <PersonalTokens />}
 
           {tab === 'shortcuts' && (
             <div className="stack" style={{ gap: 12 }}>

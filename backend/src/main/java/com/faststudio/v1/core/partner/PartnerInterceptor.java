@@ -97,6 +97,8 @@ public class PartnerInterceptor implements HandlerInterceptor {
                     .query(String.class).optional().orElseThrow(() -> ApiException.notFound("Partner"));
             if (jwt != null && !tokenLists(jwt, partner.id())) throw ApiException.notFound("Partner");
             role = Tenant.Role.valueOf(r);
+            var ceiling = Tokens.personalCeiling();               // a personal access token: never above its chosen role
+            if (ceiling != null) role = permissions.forPersonalToken(partner.id(), userId, role, ceiling).role();
             callerScopes = PartnerScopes.ALL.keySet();             // people see everything that is shared with their org
         }
         if (!"ACTIVE".equals(partner.status())) throw new ApiException(HttpStatus.FORBIDDEN, "ORG_SUSPENDED",
@@ -124,9 +126,16 @@ public class PartnerInterceptor implements HandlerInterceptor {
                     partner.name() + " (" + (clientName != null ? "API client '" + clientName + "'" : "portal") + ") read " + need.value()
                             + " — " + req.getRequestURI().replaceAll(".*/sources/[^/]+", ""));
         }
-        boolean canManage=userId!=null&&permissions.of(partner.id(),userId,role).contains(Tenant.Perm.PARTNER_MANAGE);
+        boolean canManage = userId != null && (Tokens.personalCeiling() == null
+                ? permissions.of(partner.id(), userId, role)
+                : permissions.forPersonalToken(partner.id(), userId, Tenant.Role.valueOf(memberRole(partner.id(), userId)), Tokens.personalCeiling()).perms())
+                .contains(Tenant.Perm.PARTNER_MANAGE);
         req.setAttribute(ATTR, new Ctx(partner.id(), partner.slug(), partner.name(), userId, role, clientId, clientName, callerScopes, link,canManage));
         return true;
+    }
+
+    private String memberRole(UUID org, UUID user) {
+        return db.sql("select role from membership where org_id = :o and user_id = :u").param("o", org).param("u", user).query(String.class).single();
     }
 
     private Org org(String key, String kind) {

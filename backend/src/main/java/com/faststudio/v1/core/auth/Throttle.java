@@ -28,6 +28,9 @@ public class Throttle {
     /** Failed partner client-credential requests per client address. */
     public static final Limit CLIENT_IP = new Limit("client-ip", 20, Duration.ofMinutes(15));
 
+    /** Unknown, revoked or expired personal access tokens per client address: logged for monitoring, never blocking. */
+    public static final Limit TOKEN_IP = new Limit("token-ip", 20, Duration.ofMinutes(15));
+
     public record Limit(String name, int max, Duration window) {}
 
     private final AuthAttemptRepository attempts;

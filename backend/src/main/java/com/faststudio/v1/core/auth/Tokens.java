@@ -139,6 +139,7 @@ public class Tokens {
         String typ = jwt.getClaimAsString("typ");
         if ("service".equals(typ)) return clientActive(UUID.fromString(jwt.getSubject()));
         if (!"user".equals(typ)) return false;
+        if (jwt.getClaimAsString("pat") != null && !personalActive(UUID.fromString(jwt.getClaimAsString("pat")))) return false;
         return jwt.getClaim("ver") instanceof Number n && n.intValue() == version(UUID.fromString(jwt.getSubject()));
     }
 
@@ -170,6 +171,67 @@ public class Tokens {
         JwsHeader header = JwsHeader.with(SignatureAlgorithm.ES256).keyId(keys.signingKeyId()).type("JWT").build();
         return new Access(encoder.encode(JwtEncoderParameters.from(header, c)).getTokenValue(), exp, org);
     }
+
+    /**
+     * Short-lived access token for a personal access token (typ "user", flagged with "pat"). Organization scope: only that
+     * organization and the narrowed role/permissions, no platform roles. Platform scope (org null): platform
+     * administration only, no organizations. "pat_scope" (CUSTOMER, PARTNER or PLATFORM) decides which APIs it may call.
+     * Minted on each use, so a revoked or expired personal token, a removed membership or a changed role applies at once.
+     */
+    public Access mintPersonal(UUID userId, OrgClaim org, UUID tokenId, String ceiling, Permissions.Effective effective) {
+        UserRow u = db.sql("select id, name, email, platform_admin, must_change_password, token_version from app_user where id = :id")
+                .param("id", userId).query(UserRow.class).single();
+        Instant now = Instant.now(), exp = now.plus(ACCESS_TTL);
+        JwtClaimsSet.Builder c = JwtClaimsSet.builder().issuer(issuer).audience(List.of(AUDIENCE)).subject(userId.toString())
+                .issuedAt(now).notBefore(now).expiresAt(exp).id(UUID.randomUUID().toString())
+                .claim("typ", "user").claim("sid", tokenId.toString()).claim("pat", tokenId.toString()).claim("pat_role", ceiling)
+                .claim("pat_scope", org == null ? "PLATFORM" : org.kind())
+                .claim("name", u.name()).claim("email", u.email()).claim("amr", List.of("pat"))
+                .claim("pwd_change_required", u.mustChangePassword()).claim("projects", List.of()).claim("ver", u.tokenVersion());
+        if (org == null) c.claim("platform_roles", List.of("PLATFORM_ADMIN")).claim("orgs", List.of()).claim("perms", List.of());
+        else {
+            Map<String, Object> orgClaim = claim(new OrgClaim(org.id(), org.tenantId(), org.slug(), org.kind(), effective.role().name()));
+            c.claim("platform_roles", List.of()).claim("org", orgClaim).claim("orgs", List.of(orgClaim))
+                    .claim("perms", effective.perms().stream().map(Enum::name).sorted().toList());
+            if (org.tenantId() != null) c.claim("tid", org.tenantId().toString());
+        }
+        JwsHeader header = JwsHeader.with(SignatureAlgorithm.ES256).keyId(keys.signingKeyId()).type("JWT").build();
+        return new Access(encoder.encode(JwtEncoderParameters.from(header, c.build())).getTokenValue(), exp, org);
+    }
+
+    /** The request was made with a personal access token (scripts, AI assistants). */
+    public static boolean isPersonal() {
+        Jwt j = current();
+        return j != null && j.getClaimAsString("pat") != null;
+    }
+
+    /** The organization role ceiling of the personal access token behind this request, or null (none, or platform scope). */
+    public static Tenant.Role personalCeiling() {
+        Jwt j = current();
+        String r = j == null ? null : j.getClaimAsString("pat_role");
+        return r == null || "PLATFORM_ADMIN".equals(r) ? null : Tenant.Role.valueOf(r);
+    }
+
+    /** CUSTOMER, PARTNER or PLATFORM for personal access tokens; null otherwise. */
+    public static String personalScope() {
+        Jwt j = current();
+        return j == null ? null : j.getClaimAsString("pat_scope");
+    }
+
+    private final Map<UUID, long[]> personal = new ConcurrentHashMap<>();   // personal token -> {active 1/0, fetched at ms}
+
+    boolean personalActive(UUID token) {
+        long now = System.currentTimeMillis();
+        long[] v = personal.get(token);
+        if (v != null && now - v[1] < VERSION_CACHE.toMillis()) return v[0] == 1;
+        boolean active = db.sql("select count(*) from personal_access_token where id = :t and revoked_at is null and (expires_at is null or expires_at > now())")
+                .param("t", token).query(Integer.class).single() > 0;
+        personal.put(token, new long[]{active ? 1 : 0, now});
+        return active;
+    }
+
+    /** A revoked personal token stops working at once. */
+    public void forgetPersonal(UUID token) { personal.remove(token); }
 
     public static boolean isService() {
         Jwt j = current();

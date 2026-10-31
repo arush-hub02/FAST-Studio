@@ -62,8 +62,10 @@ public class TenantInterceptor implements HandlerInterceptor {
         if (!"ACTIVE".equals(row.status())) throw new ApiException(HttpStatus.FORBIDDEN, "ORG_SUSPENDED",
                 "This organization is suspended by the platform administrator. Your data is kept safe; contact support.");
         var role=Tenant.Role.valueOf(row.role());
-        req.setAttribute(ATTR, new Tenant(row.orgId(), row.slug(), row.name(), userId, role, row.kind(),
-                permissions.of(row.orgId(),userId,role)));
+        var ceiling = Tokens.personalCeiling();
+        var effective = ceiling == null ? new Permissions.Effective(role, permissions.of(row.orgId(), userId, role))
+                : permissions.forPersonalToken(row.orgId(), userId, role, ceiling);
+        req.setAttribute(ATTR, new Tenant(row.orgId(), row.slug(), row.name(), userId, effective.role(), row.kind(), effective.perms()));
         res.setHeader("X-Org-Id", row.orgId().toString());
         MDC.put("orgId", row.orgId().toString());
         TenantScope.set(row.orgId());       // database row-level security now only shows this tenant's rows
