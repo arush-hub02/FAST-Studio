@@ -6,6 +6,8 @@ Turn a video library into 24/7 TV channels with ads: upload, licence, schedule, 
 
 > Demo environment: companies, people, ads and money are fictional. Simulated parts are labelled in the UI.
 
+> **Agents (Codex, Claude and others):** read [AGENTS.md](AGENTS.md) and [PROGRESS.md](PROGRESS.md) before working. Claim your task and update progress, verification and the next action before every handoff. The detailed continuation plan is [docs/MEDIA_INGESTION_PLAN.md](docs/MEDIA_INGESTION_PLAN.md).
+
 ## Start it
 
 Needs **Java 21+** and **Node.js 22+** (the local Cloudflare Worker needs it; with nvm: `nvm use 24`). By default PostgreSQL starts inside the app, ffmpeg comes from npm, and the viewer-facing Cloudflare Worker runs locally under `wrangler dev` (no Cloudflare account needed).

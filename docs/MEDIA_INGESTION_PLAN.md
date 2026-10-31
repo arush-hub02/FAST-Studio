@@ -1,6 +1,8 @@
 # Media ingestion implementation plan
 Prepared 31 October 2026, Asia/Calcutta. Status: staged implementation started; the first security/bootstrap slice is recorded below.
 
+Agent workflow: read [AGENTS.md](../AGENTS.md) and the current [PROGRESS.md](../PROGRESS.md), claim a stage before implementation, and update the shared checkpoint before handoff. This document is the detailed design; PROGRESS.md records which parts actually exist and their verification.
+
 Implementation checkpoint: the existing work was committed as 88e533b, pushed and fast-forwarded into main. New work is isolated on codex/media-ingestion. The first slice adds a tenant-scoped project-details bootstrap, the requested controller/service/repository/DTO boundaries, and write-only credential response protections. See [Project bootstrap security](PROJECT_BOOTSTRAP_SECURITY.md). Existing asset/Mux extraction, durable batches and the ingestion UI remain the subsequent stages below.
 
 ## Intended result

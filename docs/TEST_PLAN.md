@@ -1,6 +1,6 @@
 # FAST Studio release verification plan
 
-This is a proposed test plan; no application tests have been run because application code is absent. Documentation validation is separate from runtime verification.
+This is the release verification plan for the implemented prototype. Production acceptance cases below are not all complete. See [PROGRESS.md](../PROGRESS.md) for dated implementation/test evidence and known limitations; historical results here are not a new test run.
 
 ## Critical acceptance coverage
 
@@ -47,7 +47,7 @@ Security verification includes direct-object access, role escalation, CSRF/sessi
 
 For each shipped feature record implemented/simulated/unavailable status, test result, environment, build/version, provider evidence and known limitations. R1 needs repeatable demo and documented setup; R2 additionally needs verified payment/usage, restore and support evidence; R3 needs stream/partner/measurement/finance approvals. A passing UI screenshot or simulator does not satisfy a real integration gate.
 
-## Automated today (prototype)
+## Historical prototype checks (20 October 2026)
 
 | Suite | Command | Covers |
 | --- | --- | --- |
