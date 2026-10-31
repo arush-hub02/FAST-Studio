@@ -1006,7 +1006,7 @@ Automated version: run `node tools/smoke-test.mjs` (27 checks in demo mode, 6–
 | `mail/` | Email templates and their checks (`EmailTemplates.java`), outbox queue and nodemailer hand-off (`MailService.java`), Email page API. The sender itself is `mailer/send.mjs`. |
 | `demo/` | Fictional demo data (demo mode only) |
 
-Frontend screens live in `frontend/src/pages/`, one file per menu item.
+Frontend screens live in `frontend/src/features/<feature>/`, grouped like the backend (see [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md)).
 
 ### Main data tables
 

@@ -1,42 +1,61 @@
 # Frontend folder architecture
 
-Status: **adopted 2026-10-31** as part of restructure step 1 (see [PROGRESS.md](../PROGRESS.md)). Mirrors the backend audiences and features in [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md), so a feature has the same name on both sides.
+Status: **applied 2026-10-31** (restructure step 1). Mirrors the backend audiences and features in [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md), so a feature has the same name on both sides. Routes and URLs did not change.
 
-## Target tree
+## Tree
 
 ```text
 frontend/src/
-├── main.tsx                         # entry: mounts <App/>
-├── app/                             # application shell — nothing feature-specific
-│   ├── App.tsx                      #   routes, session/org context, navigation shell (was app.tsx)
-│   ├── theme.tsx                    #   light/dark theme
-│   └── styles.css                   #   global styles
-├── shared/                          # reused by several features; no feature imports another feature
-│   ├── api.ts                       #   HTTP client, CSRF, shared API types (was api.ts)
-│   ├── ui.tsx                       #   UI kit: Modal, PageHead, Loading, useApi, useAction … (was ui.tsx)
-│   └── components/                  #   DateTimePicker, ProfileSettingsModal
+├── main.tsx                          # entry: mounts <App/> inside the router and toast provider
+├── app/                              # application shell
+│   ├── App.tsx                       #   routes, session/org context (useSession, useOrg), navigation shell
+│   ├── theme.tsx                     #   light/dark theme
+│   └── styles.css                    #   global styles
+├── shared/                           # used by more than one feature
+│   ├── api.ts                        #   HTTP client, CSRF, shared API types
+│   ├── ui.tsx                        #   UI kit: Modal, PageHead, Loading, ErrorBox, useApi, useAction …
+│   ├── components/                   #   AdSources, DateTimePicker, ProfileSettingsModal
+│   └── configuration/                #   ConfigurationEditor + types (tenant/project settings and platform admin)
 └── features/
-    ├── auth/                        # Login, Password (reset / change)
-    ├── home/                        # Home, Guide, Learn
-    ├── library/                     # Library (media assets)
-    ├── rights/                      # Rights (licences, windows)
-    ├── channels/                    # Channels, Watch (player preview)
-    ├── programming/                 # Schedule, SmartProgramming
-    ├── ads/                         # Ads, AdSources
-    ├── distribution/                # Distribution, Partners (sharing with partner organizations)
-    ├── monitoring/                  # Monitoring, Analytics
-    ├── team/                        # Team
-    ├── settings/                    # Settings + configuration editor (project / tenant scope)
-    ├── partner/                     # PartnerHome, PartnerApi (partner portal)
-    └── platform/                    # platform admin: TenantAdmin, PartnerOrganizations, GlobalConfiguration,
-                                     #   Connectors, MuxConnector, Email
+    ├── auth/                         # Login, Password (reset / change, ResetLinkModal)
+    ├── home/                         # Home, Guide, Learn
+    ├── library/                      # Library
+    ├── rights/                       # Rights
+    ├── channels/                     # Channels, Watch
+    ├── programming/                  # Schedule, SmartProgramming
+    ├── ads/                          # Ads
+    ├── distribution/                 # Distribution, Partners (sharing with partner organizations)
+    ├── monitoring/                   # Monitoring, Analytics
+    ├── team/                         # Team
+    ├── settings/                     # Settings (media types, programming defaults, configuration tabs)
+    ├── partner/                      # PartnerHome, PartnerApi (partner portal)
+    └── platform/                     # platform admin: TenantAdmin, PartnerOrganizations, GlobalConfiguration,
+                                      #   Connectors, MuxConnector, Email
 ```
 
-Each feature folder holds its pages (`XxxPage.tsx` naming is not required; existing names are kept) and the components only it uses. A component used by two features moves to `shared/components/`.
+| Old | New |
+| --- | --- |
+| `app.tsx`, `theme.tsx`, `styles.css` | `app/` (`app.tsx` → `App.tsx`) |
+| `api.ts`, `ui.tsx` | `shared/` |
+| `components/*` | `shared/components/` (AdSources, DateTimePicker, ProfileSettingsModal) or the owning feature (MuxConnector → platform, SmartProgramming → programming) |
+| `features/configuration/*` | `shared/configuration/` |
+| `pages/X.tsx` | `features/<feature>/X.tsx` (`Platform.tsx` → `platform/PartnerOrganizations.tsx`) |
 
 ## Rules
 
-- `app/` may import `features/` and `shared/`; `features/` import `shared/` only; `shared/` imports nothing above it.
-- API paths live next to the feature that calls them; shared types that several features use stay in `shared/api.ts`.
-- Routes and URLs do not change in a restructure.
-- Verify with `npx tsc --noEmit` and `npm run build` after each move.
+- `app/` may import `features/` and `shared/`. `features/` import `shared/` and the session/org hooks from `app/App` (`useSession`, `useOrg`). `shared/` imports only `shared/` (and those hooks).
+- A component used by two features moves to `shared/components/`.
+- Verify with `npx tsc --noEmit` and `npm run build` after each change; check pages in the browser.
+
+## Known exceptions (clean up in step 2)
+
+These pages still import a helper exported by another feature's page:
+
+| Importer | Imports from | What |
+| --- | --- | --- |
+| `channels/Channels` | `library/Library` | asset picker/helpers |
+| `monitoring/Monitoring` | `home/Home` | shared dashboard pieces |
+| `platform/Connectors`, `programming/SmartProgramming` | `settings/Settings` | `DAYS`, `PlatformMediaTypes` |
+| `platform/PartnerOrganizations`, `team/Team` | `auth/Password` | `ResetLinkModal` |
+
+Move each exported helper into `shared/` when that page is next changed.
