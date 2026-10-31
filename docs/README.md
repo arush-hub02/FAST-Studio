@@ -36,7 +36,7 @@
 | V6 | No asset **cue points**, so mid-roll ads had nowhere to go | Medium | Added cue points (F39), an editor in the Library, and use in auto-fill. |
 | V7 | Multitenancy described only as principles; channel-slug scope, suspension behaviour, playback-side tenancy, platform-admin visibility and per-tenant config undefined | Medium | [MULTITENANCY.md](MULTITENANCY.md). Slugs: org globally unique, channel unique per org. Suspension blocks admin but not running channels. Platform admin sees counts only. Composite FKs built. |
 | V8 | API naming drift between the original brief (`/api/v1/assets`, `/rights/evaluate`) and API_SPECIFICATION (`/organizations/{id}/…`, `/rights/evaluations`) | Low | Prototype uses org-scoped paths `/api/orgs/{slug}/…`. API_SPECIFICATION lists the as-built routes; the original brief is now a historical input. |
-| V9 | The brief text duplicated whole docs (roadmap copied verbatim), so they drift | Low | `docs/` is the source of truth; `FAST produxt.txt` is kept as the original brief only. |
+| V9 | The brief text duplicated whole docs (roadmap copied verbatim), so they drift | Low | `docs/` is the source of truth; `docs/ORIGINAL_BRIEF.txt` is kept as the original brief only. |
 | V10 | R1 scope (F01–F10 incl. insertion orders, creative approval workflows) too large for a first working prototype; no "destination conformance" concept | Medium | R1 prototype re-scoped around the real end-to-end path. Added F40–F44: playout, markers, ad modes, destination profiles, launch checklist. Order/approval workflows move to R3. |
 | V11 | Test plan had no media/marker tests | Medium | Unit tests for SCTE-35/CRC, rights and the scheduler; an end-to-end smoke test for isolation, playout and markers. |
 
