@@ -1,5 +1,6 @@
 package com.faststudio.v1.services.media.sources;
 
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.PublicUrl;
 import com.faststudio.v1.services.media.MediaServiceV1;
@@ -14,10 +15,10 @@ import java.util.List;
 @Component
 public class RemoteSource implements IContentSource {
     @Override
-    public boolean handles(MediaServiceV1.Job job) { return job.sourceUrl() != null; }
+    public boolean handles(ProcessingJob job) { return job.sourceUrl() != null; }
 
     @Override
-    public String ingest(MediaServiceV1.Job j, Path out, MediaServiceV1 packager) throws Exception {
+    public String ingest(ProcessingJob j, Path out, MediaServiceV1 packager) throws Exception {
         try {
             PublicUrl.check(j.sourceUrl());
         } catch (ApiException e) {

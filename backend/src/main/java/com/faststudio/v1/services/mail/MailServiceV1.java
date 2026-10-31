@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
+import com.faststudio.v1.repositories.mail.EmailMessageRepository;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.JsonNode;
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class MailServiceV1 {
     private static final Logger log = LoggerFactory.getLogger(MailServiceV1.class);
 
-    private final JdbcClient db;
+    private final EmailMessageRepository messages;
     private final EmailTemplates templates;
     private final JsonMapper json;
     private final String smtpUrl, from, appUrl, node;
@@ -40,11 +40,11 @@ public class MailServiceV1 {
     // ponytail: one node process per email, one at a time; fine for account and alert mail, batch it for newsletters.
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
 
-    public MailServiceV1(JdbcClient db, EmailTemplates templates, JsonMapper json,
+    public MailServiceV1(EmailMessageRepository messages, EmailTemplates templates, JsonMapper json,
                        @Value("${faststudio.mail.smtp-url:}") String smtpUrl, @Value("${faststudio.mail.from}") String from,
                        @Value("${faststudio.app-url}") String appUrl, @Value("${faststudio.mail.node:node}") String node,
                        @Value("${faststudio.data-dir}") String dataDir) {
-        this.db = db;
+        this.messages = messages;
         this.templates = templates;
         this.json = json;
         this.smtpUrl = smtpUrl.strip();
@@ -84,12 +84,7 @@ public class MailServiceV1 {
     public UUID send(UUID orgId, String template, String to, Map<String, String> vars) {
         var real = templates.render(template, vars, appUrl, false);
         var shown = templates.render(template, vars, appUrl, true);
-        UUID id = db.sql("""
-                insert into email_message(org_id, template, to_email, subject, body_text, body_html, pending_subject, pending_text, pending_html)
-                values (:o,:t,:to,:s,:bt,:bh,:ps,:pt,:ph) returning id""")
-                .param("o", orgId).param("t", template).param("to", to).param("s", shown.subject()).param("bt", shown.text())
-                .param("bh", shown.html()).param("ps", real.subject()).param("pt", real.text()).param("ph", real.html())
-                .query(UUID.class).single();
+        UUID id = messages.insertQueued(orgId, template, to, shown.subject(), shown.text(), shown.html(), real.subject(), real.text(), real.html());
         if (TransactionSynchronizationManager.isSynchronizationActive())
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -100,23 +95,18 @@ public class MailServiceV1 {
     }
 
     public boolean retry(UUID id) {
-        int n = db.sql("update email_message set status = 'QUEUED', detail = null where id = :id and status = 'FAILED' and pending_text is not null")
-                .param("id", id).update();
-        if (n > 0) worker.submit(() -> deliver(id));
-        return n > 0;
+        boolean queued = messages.requeueFailed(id);
+        if (queued) worker.submit(() -> deliver(id));
+        return queued;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     void resumeQueued() {
-        db.sql("select id from email_message where status = 'QUEUED' order by created_at").query(UUID.class).list()
-                .forEach(id -> worker.submit(() -> deliver(id)));
+        messages.queuedIds().forEach(id -> worker.submit(() -> deliver(id)));
     }
 
-    record Pending(String toEmail, String pendingSubject, String pendingText, String pendingHtml) {}
-
     void deliver(UUID id) {
-        Pending p = db.sql("select to_email, pending_subject, pending_text, pending_html from email_message where id = :id and status = 'QUEUED'")
-                .param("id", id).query(Pending.class).optional().orElse(null);
+        EmailMessageRepository.Pending p = messages.pending(id).orElse(null);
         if (p == null) return;
         String status, detail;
         try {
@@ -146,12 +136,6 @@ public class MailServiceV1 {
             log.warn("Email {} to {} failed: {}", id, p.toEmail(), detail);
         }
         boolean done = !status.equals("FAILED");
-        db.sql("""
-                update email_message set status = :s, detail = :d, attempts = attempts + 1, sent_at = case when :done then now() end,
-                  pending_subject = case when :done then null else pending_subject end,
-                  pending_text = case when :done then null else pending_text end,
-                  pending_html = case when :done then null else pending_html end
-                where id = :id""")
-                .param("s", status).param("d", detail.length() > 500 ? detail.substring(0, 500) : detail).param("done", done).param("id", id).update();
+        messages.recordAttempt(id, status, detail.length() > 500 ? detail.substring(0, 500) : detail, done);
     }
 }

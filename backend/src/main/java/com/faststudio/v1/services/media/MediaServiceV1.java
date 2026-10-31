@@ -2,6 +2,8 @@ package com.faststudio.v1.services.media;
 
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
+import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.services.media.sources.IContentSource;
 
 import org.slf4j.Logger;
@@ -10,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -50,7 +51,7 @@ public class MediaServiceV1 {
             new Rendition("540p", 960, 540, 1400, "3.1", "avc1.4d401f,mp4a.40.2", 1_700_000),
             new Rendition("720p", 1280, 720, 2500, "3.1", "avc1.4d401f,mp4a.40.2", 2_900_000));
 
-    private final JdbcClient db;
+    private final AssetRepository assets;
     private final Path mediaDir, uploadDir;
     private final String configuredFfmpeg;
     private final List<IContentSource> sources;
@@ -61,9 +62,9 @@ public class MediaServiceV1 {
     private final Map<String, Boolean> ladders = new ConcurrentHashMap<>();
     private volatile String ffmpeg;
 
-    public MediaServiceV1(JdbcClient db, @Value("${faststudio.data-dir}") String dataDir, @Value("${faststudio.ffmpeg:}") String ffmpeg,
+    public MediaServiceV1(AssetRepository assets, @Value("${faststudio.data-dir}") String dataDir, @Value("${faststudio.ffmpeg:}") String ffmpeg,
                         List<IContentSource> sources) {
-        this.db = db;
+        this.assets = assets;
         Path data = Path.of(dataDir).toAbsolutePath().normalize();
         this.mediaDir = data.resolve("media");
         this.uploadDir = data.resolve("uploads");
@@ -131,8 +132,6 @@ public class MediaServiceV1 {
 
     // ---------------------------------------------------------------- jobs
 
-    public record Job(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs, String mediaKey, String sourceUrl, String sourceRef) {}
-
     @EventListener(ApplicationReadyEvent.class)
     @Order(10)
     public void onStart() {
@@ -144,7 +143,7 @@ public class MediaServiceV1 {
         pool.submit(() -> slate(STANDBY, "We'll be right back", "Programming resumes shortly", "0x1e1b4b", "0x4338ca", 60));
         pool.submit(() -> slate(GEO, "Not available in your region", "This programme isn't licensed where you are watching", "0x3f1d1d", "0x9f1239", 30));
         // resume jobs interrupted by a restart (system work across tenants)
-        TenantScope.bypass(() -> db.sql("select id from asset where status = 'PROCESSING'").query(UUID.class).list()).forEach(this::enqueue);
+        TenantScope.bypass(assets::processingIds).forEach(this::enqueue);
     }
 
     /** Queues processing; inside a transaction it waits for the commit so the job can see the new row. */
@@ -179,10 +178,7 @@ public class MediaServiceV1 {
 
     void process(UUID assetId) throws Exception {
         // the job only knows the asset id: look it up as the system, then work inside that asset's tenant
-        Job j = TenantScope.bypass(() -> db.sql("""
-                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
-                from asset a join organization o on o.id = a.org_id where a.id = :id""")
-                .param("id", assetId).query(Job.class).single());
+        ProcessingJob j = TenantScope.bypass(() -> assets.job(assetId));
         if (ffmpeg() == null) {
             fail(assetId, "ffmpeg is not installed on the server, so the video could not be processed.");
             return;
@@ -203,9 +199,9 @@ public class MediaServiceV1 {
         int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
         if (full == 0) { deleteDir(out); fail(assetId, "The video is shorter than " + Times.SEG_S + " seconds."); return; }
         thumbnail(out, full);
-        TenantScope.as(j.orgId(), () -> db.sql("update asset set status='READY', status_detail=:d, duration_ms=:ms, media_key=:k, updated_at=now() where id=:id")
-                .param("d", "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS")
-                .param("ms", full * Times.SEG_MS).param("k", key).param("id", assetId).update());
+        TenantScope.as(j.orgId(), () -> assets.markReady(assetId,
+                "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+                full * Times.SEG_MS, key));
         // ponytail: the previous revision's copy on R2 is left behind; add an R2 lifecycle rule when storage matters
         if (j.mediaKey() != null && !j.mediaKey().equals(key) && !j.mediaKey().startsWith("_platform/")) {
             deleteDir(mediaDir.resolve(j.mediaKey()));
@@ -215,8 +211,7 @@ public class MediaServiceV1 {
     }
 
     private void fail(UUID id, String why) {
-        TenantScope.bypass(() -> db.sql("update asset set status='FAILED', status_detail=:d, updated_at=now() where id=:id")
-                .param("d", why).param("id", id).update());
+        TenantScope.bypass(() -> assets.markFailed(id, why));
     }
 
     // ---------------------------------------------------------------- ffmpeg recipes (drawn on a 1280x720 canvas)

@@ -1,5 +1,6 @@
 package com.faststudio.v1.services.media.sources;
 
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
 import org.springframework.stereotype.Component;
@@ -16,10 +17,10 @@ public class UploadSource implements IContentSource {
     static final String FIT = "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1";
 
     @Override
-    public boolean handles(MediaServiceV1.Job job) { return job.generator() == null && job.sourceUrl() == null && job.sourceRef() == null; }
+    public boolean handles(ProcessingJob job) { return job.generator() == null && job.sourceUrl() == null && job.sourceRef() == null; }
 
     @Override
-    public String ingest(MediaServiceV1.Job j, Path out, MediaServiceV1 packager) throws Exception {
+    public String ingest(ProcessingJob j, Path out, MediaServiceV1 packager) throws Exception {
         Path src = findUpload(packager.uploadDir(j.orgId(), j.id()));
         if (src == null) return "No uploaded file found. Upload a video file and try again.";
         String err = packager.encode(List.of("-i", src.toString()), "0:a:0", FIT, out, 0, false);

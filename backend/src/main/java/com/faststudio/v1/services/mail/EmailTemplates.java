@@ -3,7 +3,8 @@ package com.faststudio.v1.services.mail;
 import com.faststudio.v1.core.common.ApiException;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import com.faststudio.v1.repositories.mail.EmailTemplateRepository;
+import com.faststudio.v1.repositories.mail.EmailTemplateRepository.Saved;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
 
@@ -138,10 +139,10 @@ public class EmailTemplates {
     private static final Pattern URL = Pattern.compile("https?://[^\\s<]+");
     private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("d MMM yyyy, HH:mm z", Locale.ENGLISH);
 
-    private final JdbcClient db;
+    private final EmailTemplateRepository repository;
 
-    public EmailTemplates(JdbcClient db) {
-        this.db = db;
+    public EmailTemplates(EmailTemplateRepository repository) {
+        this.repository = repository;
     }
 
     public static String when(OffsetDateTime t) {
@@ -154,14 +155,12 @@ public class EmailTemplates {
         return d;
     }
 
-    record Saved(String key, String subject, String body, OffsetDateTime updatedAt) {}
-
     public record View(String key, String name, String description, List<String> variables, List<String> required,
                        String subject, String body, boolean customized, OffsetDateTime updatedAt, String defaultSubject, String defaultBody) {}
 
     public List<View> list() {
         Map<String, Saved> o = new HashMap<>();
-        db.sql("select key, subject, body, updated_at from email_template").query(Saved.class).list().forEach(x -> o.put(x.key(), x));
+        repository.saved().forEach(x -> o.put(x.key(), x));
         return DEFAULTS.stream().map(d -> {
             Saved x = o.get(d.key());
             List<String> vars = new ArrayList<>(d.vars());
@@ -193,15 +192,12 @@ public class EmailTemplates {
     public void save(String key, String subject, String body, UUID by) {
         List<String> p = problems(key, subject, body);
         if (!p.isEmpty()) throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "TEMPLATE_INVALID", String.join(" ", p));
-        db.sql("""
-                insert into email_template(key, subject, body, updated_by) values (:k,:s,:b,:u)
-                on conflict (key) do update set subject = excluded.subject, body = excluded.body, updated_by = excluded.updated_by, updated_at = now()""")
-                .param("k", key).param("s", def(key).subject() == null ? null : subject.strip()).param("b", body.strip()).param("u", by).update();
+        repository.save(key, def(key).subject() == null ? null : subject.strip(), body.strip(), by);
     }
 
     public void reset(String key) {
         def(key);
-        db.sql("delete from email_template where key = :k").param("k", key).update();
+        repository.delete(key);
     }
 
     public record Rendered(String subject, String text, String html) {}

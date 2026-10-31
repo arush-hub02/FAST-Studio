@@ -1,5 +1,6 @@
 package com.faststudio.v1.repositories.media;
 
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +19,29 @@ public class AssetRepository {
     public AssetRepository(JdbcClient db) { this.db = db; }
 
     private record Usage(UUID assetId, String channel) {}
+
+    // --- processing (called by the media workers; callers choose the tenant scope) ---
+
+    /** Assets left half-processed, e.g. by a restart. */
+    public List<UUID> processingIds() {
+        return db.sql("select id from asset where status = 'PROCESSING'").query(UUID.class).list();
+    }
+
+    public ProcessingJob job(UUID id) {
+        return db.sql("""
+                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
+                from asset a join organization o on o.id = a.org_id where a.id = :id""")
+                .param("id", id).query(ProcessingJob.class).single();
+    }
+
+    public boolean markReady(UUID id, String detail, long durationMs, String mediaKey) {
+        return db.sql("update asset set status='READY', status_detail=:d, duration_ms=:ms, media_key=:k, updated_at=now() where id=:id")
+                .param("d", detail).param("ms", durationMs).param("k", mediaKey).param("id", id).update() > 0;
+    }
+
+    public boolean markFailed(UUID id, String why) {
+        return db.sql("update asset set status='FAILED', status_detail=:d, updated_at=now() where id=:id").param("d", why).param("id", id).update() > 0;
+    }
 
     /** Channels that air each asset in their published schedule from now on. */
     public Map<UUID, List<String>> upcomingAirings(UUID org) {

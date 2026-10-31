@@ -1,5 +1,6 @@
 package com.faststudio.v1.services.media.sources;
 
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
 import org.springframework.stereotype.Component;
@@ -13,15 +14,15 @@ import static com.faststudio.v1.services.media.MediaServiceV1.text;
 @Component
 public class GeneratedSource implements IContentSource {
     @Override
-    public boolean handles(MediaServiceV1.Job job) { return job.generator() != null; }
+    public boolean handles(ProcessingJob job) { return job.generator() != null; }
 
     @Override
-    public String ingest(MediaServiceV1.Job j, Path out, MediaServiceV1 packager) throws Exception {
+    public String ingest(ProcessingJob j, Path out, MediaServiceV1 packager) throws Exception {
         String err = packager.encode(inputs(j), "1:a", filter(j), out, j.durationMs(), false);
         return err == null ? null : "ffmpeg could not process this file: " + err;
     }
 
-    private static List<String> inputs(MediaServiceV1.Job j) {
+    private static List<String> inputs(ProcessingJob j) {
         String g = j.generator().replace("size=640x360", "size=1280x720");
         String video = g.startsWith("ad:")
                 ? "color=c=" + g.substring(3).split("\\|")[0] + ":size=1280x720:rate=25"
@@ -31,7 +32,7 @@ public class GeneratedSource implements IContentSource {
         return List.of("-f", "lavfi", "-i", video, "-f", "lavfi", "-i", audio);
     }
 
-    private static String filter(MediaServiceV1.Job j) {
+    private static String filter(ProcessingJob j) {
         String band = "drawbox=x=0:y=552:w=iw:h=168:color=" + j.color().replace("#", "0x") + "@0.88:t=fill";
         if (j.generator().startsWith("ad:")) {
             String[] parts = j.generator().substring(3).split("\\|");

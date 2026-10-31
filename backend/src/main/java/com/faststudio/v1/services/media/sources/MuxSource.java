@@ -1,16 +1,17 @@
 package com.faststudio.v1.services.media.sources;
 
+import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
+import com.faststudio.v1.repositories.media.MuxAccountRepository;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -40,14 +41,14 @@ public class MuxSource implements IContentSource {
     static final int PAGE = 100;
     static final Duration MASTER_WAIT = Duration.ofMinutes(30);
 
-    private final JdbcClient db;
+    private final MuxAccountRepository accounts;
     private final Secrets secrets;
     private final JsonMapper json;
     private final String apiUrl;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
-    public MuxSource(JdbcClient db, Secrets secrets, JsonMapper json, @Value("${faststudio.mux.api-url:https://api.mux.com}") String apiUrl) {
-        this.db = db;
+    public MuxSource(MuxAccountRepository accounts, Secrets secrets, JsonMapper json, @Value("${faststudio.mux.api-url:https://api.mux.com}") String apiUrl) {
+        this.accounts = accounts;
         this.secrets = secrets;
         this.json = json;
         this.apiUrl = apiUrl.replaceAll("/+$", "");
@@ -58,27 +59,16 @@ public class MuxSource implements IContentSource {
         public boolean includes(Asset a) { return tag.isEmpty() || tag.equals(a.passthrough()); }
     }
 
-    record Row(String tokenId, String tokenSecret, String webhookSecret, String environment, String passthroughTag) {}
-
     /** The tenant's account, or null when none is set up. */
     public Account account(UUID org) {
-        return TenantScope.as(org, () -> db.sql("select token_id, token_secret, webhook_secret, environment, passthrough_tag from mux_account where org_id = :o")
-                .param("o", org).query(Row.class).optional()
+        return TenantScope.as(org, () -> accounts.find(org)
                 .map(r -> new Account(secrets.open(r.tokenId()), secrets.open(r.tokenSecret()), secrets.open(r.webhookSecret()), r.environment(), r.passthroughTag()))
                 .orElse(null));
     }
 
     /** Stores the account encrypted; a null token id or secret keeps the stored one. */
     public void save(UUID org, String tokenId, String tokenSecret, String webhookSecret, String environment, String tag) {
-        Map<String, Object> p = new HashMap<>(Map.of("o", org, "e", environment, "t", tag));
-        p.put("i", secrets.seal(tokenId));
-        p.put("s", secrets.seal(tokenSecret));
-        p.put("w", secrets.seal(webhookSecret));
-        if (db.sql("""
-                update mux_account set token_id = coalesce(:i, token_id), token_secret = coalesce(:s, token_secret), webhook_secret = coalesce(:w, webhook_secret),
-                  environment = :e, passthrough_tag = :t, updated_at = now() where org_id = :o""").params(p).update() == 0)
-            db.sql("insert into mux_account(org_id, token_id, token_secret, webhook_secret, environment, passthrough_tag) values (:o, :i, :s, :w, :e, :t)")
-                    .params(p).update();
+        accounts.save(org, secrets.seal(tokenId), secrets.seal(tokenSecret), secrets.seal(webhookSecret), environment, tag);
     }
 
     /** The fields we use from a Mux asset object (listings, asset detail and webhook payloads share it). */
@@ -163,10 +153,10 @@ public class MuxSource implements IContentSource {
     // ------------------------------------------------------------------ IContentSource
 
     @Override
-    public boolean handles(MediaServiceV1.Job job) { return job.sourceRef() != null && job.sourceRef().startsWith(REF); }
+    public boolean handles(ProcessingJob job) { return job.sourceRef() != null && job.sourceRef().startsWith(REF); }
 
     @Override
-    public String ingest(MediaServiceV1.Job j, Path out, MediaServiceV1 packager) throws Exception {
+    public String ingest(ProcessingJob j, Path out, MediaServiceV1 packager) throws Exception {
         Account a = account(j.orgId());
         if (a == null) return NOT_CONNECTED;
         String url;
