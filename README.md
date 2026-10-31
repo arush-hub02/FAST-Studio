@@ -224,6 +224,12 @@ node tools/smoke-test.mjs
 
 The first command runs unit tests: SCTE-35 encode/decode and CRC, rights rules, scheduling rules. The second runs against a running server and checks tenant isolation, roles, the live playlist, markers, EPG, ad decisions and geo rules.
 
+### Continuous integration
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every push and pull request, in three parallel jobs: backend `./mvnw clean test` (Java 21, embedded PostgreSQL), frontend `npm run build` (type-check + build), and the Worker tests. It also fails when a controller or service runs SQL, or when a frontend feature imports another feature. Test reports are kept for 7 days when the backend job fails. The local smoke test and launcher checks need a running Windows demo and stay manual.
+
+To make a red check block merging, turn on branch protection for `main` in GitHub (Settings → Branches → require status checks: `Backend tests (Java 21)`, `Frontend type-check and build`, `Cloudflare Worker tests`).
+
 ## Known limitations
 
 The Worker keeps ad decisions and discontinuity counts per isolate (move them to the Cache API if viewers hop isolates mid-break); ad decisions are cached in memory on the control plane (single server); the first time an external ad server returns a creative it can't air yet (it is re-cut to 5 s first; the tag tester can prepare it in advance); only VAST linear MP4 creatives are used; in demo mode the media-signing key is random per run (pilot mode keeps a stable one); email templates are platform-wide (not per company yet); local accounts (with JWT sign-in tokens) rather than company single sign-on; partner organizations not built yet (planned: `docs/PARTNER_ACCESS_AND_TOKENS.md`); backups are cold copies that need a short stop. Media processed before the quality ladder existed plays as a single quality — delete `data/` to regenerate the demo with all three qualities. Details and next steps: `docs/IMPLEMENTATION_ROADMAP.md`.

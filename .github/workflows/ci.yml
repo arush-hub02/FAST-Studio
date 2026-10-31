@@ -1,0 +1,82 @@
+# Checks every push and pull request: backend tests, frontend type-check + build, Cloudflare Worker tests.
+# The three jobs run in parallel; a red job blocks nothing by itself, so protect main with "require status checks".
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests (Java 21)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: SQL only in repositories
+        run: |
+          if grep -rln "\.sql(" backend/src/main/java/com/faststudio/v1/controllers backend/src/main/java/com/faststudio/v1/services; then
+            echo "::error::Controllers and services must not run SQL; add a repository method (docs/BACKEND_ARCHITECTURE.md)."
+            exit 1
+          fi
+      # Clean build: never trust compiled classes from a previous run. Embedded PostgreSQL starts inside the tests.
+      - run: sh ./mvnw -B -ntp clean test
+        working-directory: backend
+      - name: Keep test reports when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
+
+  frontend:
+    name: Frontend type-check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      # `build` runs `tsc -b` first, so type errors fail here.
+      - run: npm run build
+        working-directory: frontend
+      - name: No screen imports another feature
+        run: |
+          if grep -rnE "from '\.\./[a-z]+/" frontend/src/features; then
+            echo "::error::A feature imports another feature; move the shared code to frontend/src/shared (docs/FRONTEND_ARCHITECTURE.md)."
+            exit 1
+          fi
+
+  worker:
+    name: Cloudflare Worker tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: worker
+      - run: npm test
+        working-directory: worker
