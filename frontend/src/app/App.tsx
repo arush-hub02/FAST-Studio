@@ -1,34 +1,36 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, ensureCsrf, type Me, type Membership, type ProjectDetails } from '../shared/api'
 import { Dropdown, ErrorBox, Icon, initials, Loading, useApi } from '../shared/ui'
 import Login from '../features/auth/Login'
-import Home from '../features/home/Home'
-import Library from '../features/library/Library'
-import Channels from '../features/channels/Channels'
-import Schedule from '../features/programming/Schedule'
-import Guide from '../features/home/Guide'
-import Watch from '../features/channels/Watch'
-import Ads from '../features/ads/Ads'
-import RightsPage from '../features/rights/Rights'
-import Distribution from '../features/distribution/Distribution'
-import Monitoring from '../features/monitoring/Monitoring'
-import Analytics from '../features/monitoring/Analytics'
-import Team from '../features/team/Team'
-import Learn from '../features/home/Learn'
-import PartnerOrganizations from '../features/platform/PartnerOrganizations'
-import Platform from '../features/platform/TenantAdmin'
-import GlobalConfiguration from '../features/platform/GlobalConfiguration'
-import Connectors from '../features/platform/Connectors'
-import Settings from '../features/settings/Settings'
-import { PlatformMediaTypes } from '../features/platform/MediaTypes'
-import Email from '../features/platform/Email'
-import Partners from '../features/distribution/Partners'
-import PartnerHome from '../features/partner/PartnerHome'
-import PartnerApi from '../features/partner/PartnerApi'
 import { ForcedPasswordChange, ResetPassword } from '../features/auth/Password'
 import { ThemeProvider, useTheme } from './theme'
 import { ProfileSettingsModal } from '../shared/components/ProfileSettingsModal'
+
+// Each screen is its own chunk, downloaded the first time it is opened.
+const Home = lazy(() => import('../features/home/Home'))
+const Library = lazy(() => import('../features/library/Library'))
+const Channels = lazy(() => import('../features/channels/Channels'))
+const Schedule = lazy(() => import('../features/programming/Schedule'))
+const Guide = lazy(() => import('../features/home/Guide'))
+const Watch = lazy(() => import('../features/channels/Watch'))
+const Ads = lazy(() => import('../features/ads/Ads'))
+const RightsPage = lazy(() => import('../features/rights/Rights'))
+const Distribution = lazy(() => import('../features/distribution/Distribution'))
+const Monitoring = lazy(() => import('../features/monitoring/Monitoring'))
+const Analytics = lazy(() => import('../features/monitoring/Analytics'))
+const Team = lazy(() => import('../features/team/Team'))
+const Learn = lazy(() => import('../features/home/Learn'))
+const PartnerOrganizations = lazy(() => import('../features/platform/PartnerOrganizations'))
+const Platform = lazy(() => import('../features/platform/TenantAdmin'))
+const GlobalConfiguration = lazy(() => import('../features/platform/GlobalConfiguration'))
+const Connectors = lazy(() => import('../features/platform/Connectors'))
+const Settings = lazy(() => import('../features/settings/Settings'))
+const PlatformMediaTypes = lazy(() => import('../features/platform/MediaTypes').then(m => ({ default: m.PlatformMediaTypes })))
+const Email = lazy(() => import('../features/platform/Email'))
+const Partners = lazy(() => import('../features/distribution/Partners'))
+const PartnerHome = lazy(() => import('../features/partner/PartnerHome'))
+const PartnerApi = lazy(() => import('../features/partner/PartnerApi'))
 
 // ---------------------------------------------------------------- session
 
@@ -69,6 +71,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <SessionCtx.Provider value={{ me, refresh, logout }}>
+      <Suspense fallback={<Loading />}>
         <Routes>
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* a temporary password must be replaced before anything else (the API enforces this too) */}
@@ -105,6 +108,7 @@ export default function App() {
         </Route>
         </>}
       </Routes>
+      </Suspense>
     </SessionCtx.Provider>
   </ThemeProvider>
   )
@@ -605,7 +609,7 @@ function Shell() {
             />
           )}
         </header>
-        <main className="content" id="main"><Outlet /></main>
+        <main className="content" id="main"><Suspense fallback={<Loading />}><Outlet /></Suspense></main>
       </div>
 
       {/* Floating unclipped popover for collapsed icons */}

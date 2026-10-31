@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import Hls from 'hls.js'
 import { api, ApiError } from './api'
 
 // ---------------------------------------------------------------- icons (inline, stroke-based)
@@ -367,25 +366,31 @@ export function VideoPlayer({ src, live, onEvent, poster }: { src: string | null
     const video = ref.current
     if (!video || !src) return
     setErr(null)
-    if (!Hls.isSupported()) {
-      video.src = src     // Safari plays HLS natively (incl. interstitials)
-      return
-    }
-    const hls = new Hls({ liveSyncDurationCount: 3, enableInterstitialPlayback: true })
-    hls.loadSource(src)
-    hls.attachMedia(video)
-    hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => { /* autoplay blocked: user presses play */ }) })
-    hls.on(Hls.Events.INTERSTITIAL_ASSET_STARTED, (_e, d) => cb.current?.({ type: 'interstitial-start', uri: d.asset?.uri }))
-    hls.on(Hls.Events.INTERSTITIAL_ASSET_ENDED, (_e, d) => cb.current?.({ type: 'interstitial-end', uri: d.asset?.uri }))
-    hls.on(Hls.Events.ERROR, (_e, d) => {
-      if (d.fatal) {
-        setErr(d.details)
-        cb.current?.({ type: 'error', message: d.details })
-        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) setTimeout(() => hls.startLoad(), 3000)
-        else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
+    let hls: import('hls.js').default | undefined
+    let cancelled = false
+    // hls.js is large: download it only when a player is actually shown.
+    import('hls.js').then(({ default: Hls }) => {
+      if (cancelled) return
+      if (!Hls.isSupported()) {
+        video.src = src     // Safari plays HLS natively (incl. interstitials)
+        return
       }
+      const h = hls = new Hls({ liveSyncDurationCount: 3, enableInterstitialPlayback: true })
+      h.loadSource(src)
+      h.attachMedia(video)
+      h.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => { /* autoplay blocked: user presses play */ }) })
+      h.on(Hls.Events.INTERSTITIAL_ASSET_STARTED, (_e, d) => cb.current?.({ type: 'interstitial-start', uri: d.asset?.uri }))
+      h.on(Hls.Events.INTERSTITIAL_ASSET_ENDED, (_e, d) => cb.current?.({ type: 'interstitial-end', uri: d.asset?.uri }))
+      h.on(Hls.Events.ERROR, (_e, d) => {
+        if (d.fatal) {
+          setErr(d.details)
+          cb.current?.({ type: 'error', message: d.details })
+          if (d.type === Hls.ErrorTypes.NETWORK_ERROR) setTimeout(() => h.startLoad(), 3000)
+          else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) h.recoverMediaError()
+        }
+      })
     })
-    return () => hls.destroy()
+    return () => { cancelled = true; hls?.destroy() }
   }, [src])
   return (
     <div className="player">

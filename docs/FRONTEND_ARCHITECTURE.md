@@ -45,6 +45,7 @@ frontend/src/
 ## Rules
 
 - `app/` may import `features/` and `shared/`. `features/` import `shared/` and the session/org hooks from `app/App` (`useSession`, `useOrg`). `shared/` imports only `shared/` (and those hooks).
+- Screens are lazy-loaded in `app/App.tsx` (`lazy(() => import(...))`), so each screen is its own download. Add new screens the same way. Large libraries used by one component are imported inside it (`import('hls.js')` in `VideoPlayer`), not at the top of a shared module.
 - A component used by two features moves to `shared/components/`.
 - A screen file keeps the page component. Its dialogs, drawers, wizards and large panels go into sibling files in the same feature folder (`PascalCase.tsx`); types and option lists they share go into a small lowercase module (`scheduleShared.ts`, `channelOptions.ts`). Sibling files never import the screen file.
 - Verify with `npx tsc --noEmit` and `npm run build` after each change; check pages in the browser.
