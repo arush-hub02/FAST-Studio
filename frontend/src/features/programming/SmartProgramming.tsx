@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type AssetView, type MediaSettingsView } from '../../shared/api'
 import { useOrg } from '../../app/App'
-import { ErrorBox, Loading, useAction, useApi } from '../../shared/ui'
-import { DAYS } from '../settings/Settings'
+import { DAYS, ErrorBox, Loading, useAction, useApi } from '../../shared/ui'
 
 type Rule = { id: string; series: string; startDate: string; endDate: string; premiereTime: string; repeatTime?: string; weekdays: string; startSeason: number; startEpisode: number; loop: boolean; enabled: boolean }
 type Preview = { revision: number; placements: { date: string; title: string; season: number; episode: number; encore: boolean; start: string; end: string }[]; notices: string[] }

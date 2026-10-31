@@ -4,6 +4,7 @@ import { useOrg, useSession } from '../../app/App'
 import type { Alert, AuditRow, ChannelView } from '../../shared/api'
 import {
   ago,
+  describeAction,
   ChannelLogo,
   Dropdown,
   type DropdownOption,
@@ -279,7 +280,7 @@ export default function Home() {
                       <div className="home-activity-body grow">
                         <div>
                           <b className="home-activity-actor">{a.actor}</b>{' '}
-                          <span className="home-activity-verb">{describe(a.action)}</span>
+                          <span className="home-activity-verb">{describeAction(a.action)}</span>
                           {a.detail && <span className="home-activity-detail"> — {a.detail}</span>}
                         </div>
                       </div>
@@ -447,15 +448,3 @@ function getActivityIcon(action: string) {
   if (action.startsWith('rights.')) return 'shield'
   return 'activity'
 }
-
-const VERBS: Record<string, string> = {
-  'auth.login': 'signed in', 'asset.create': 'added a video', 'asset.upload': 'uploaded a file', 'asset.update': 'edited a video', 'asset.archive': 'archived a video',
-  'rights.update': 'changed a licence', 'channel.create': 'created a channel', 'channel.update': 'edited a channel', 'channel.live': 'took a channel live',
-  'channel.stopped': 'stopped a channel', 'channel.archived': 'archived a channel', 'schedule.publish': 'published a schedule', 'schedule.autofill': 'auto-filled a schedule',
-  'schedule.add': 'added to a schedule', 'schedule.remove': 'removed from a schedule', 'schedule.close_gaps': 'closed schedule gaps', 'schedule.clear': 'cleared a schedule',
-  'schedule.restore': 'restored an old schedule', 'campaign.create': 'created a campaign', 'campaign.update': 'edited a campaign', 'campaign.paused': 'paused a campaign',
-  'campaign.active': 'resumed a campaign', 'campaign.ended': 'ended a campaign', 'distribution.publish': 'sent a channel to a destination',
-  'destination.create': 'added a destination', 'alert.acknowledge': 'acknowledged an alert', 'alert.resolve': 'resolved an alert', 'member.invite': 'invited a member',
-  'member.role': 'changed a role', 'member.remove': 'removed a member',
-}
-export function describe(action: string) { return VERBS[action] ?? action }

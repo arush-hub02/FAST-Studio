@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../../shared/api'
 import { useOrg, useSession } from '../../app/App'
 import { Confirm, fmtDate, Icon, initials, Loading, Modal, PageHead, useAction, useApi } from '../../shared/ui'
-import { ResetLinkModal } from '../auth/Password'
+import { ResetLinkModal } from '../../shared/components/ResetLinkModal'
 
 type Member = { userId: string; name: string; email: string; role: string; createdAt: string; customRoleKey?: string }
 /** Built-in and custom roles assignable in this organization; the server supplies names and descriptions. */

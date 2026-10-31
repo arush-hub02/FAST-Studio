@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../../shared/api'
 import { Confirm, fmtDate, Icon, Loading, Modal, PageHead, Status, useAction, useApi } from '../../shared/ui'
-import { ResetLinkModal } from '../auth/Password'
+import { ResetLinkModal } from '../../shared/components/ResetLinkModal'
 
 type Org = { id: string; slug: string; name: string; status: string; country: string; timezone: string; plan: string; maxChannels: number; members: number; channels: number; liveChannels: number; videos: number; sessions: number; createdAt: string; kind: 'CUSTOMER' | 'PARTNER'; partnerLinks: number }
 

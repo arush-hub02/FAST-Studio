@@ -13,8 +13,8 @@ frontend/src/
 │   └── styles.css                    #   global styles
 ├── shared/                           # used by more than one feature
 │   ├── api.ts                        #   HTTP client, CSRF, shared API types
-│   ├── ui.tsx                        #   UI kit: Modal, PageHead, Loading, ErrorBox, useApi, useAction …
-│   ├── components/                   #   AdSources, DateTimePicker, ProfileSettingsModal
+│   ├── ui.tsx                        #   UI kit: Modal, PageHead, Loading, ErrorBox, useApi, useAction, DAYS, describeAction …
+│   ├── components/                   #   AdSources, DateTimePicker, GenreSelector, ProfileSettingsModal, ResetLinkModal
 │   └── configuration/                #   ConfigurationEditor + types (tenant/project settings and platform admin)
 └── features/
     ├── auth/                         # Login, Password (reset / change, ResetLinkModal)
@@ -30,14 +30,14 @@ frontend/src/
     ├── settings/                     # Settings (media types, programming defaults, configuration tabs)
     ├── partner/                      # PartnerHome, PartnerApi (partner portal)
     └── platform/                     # platform admin: TenantAdmin, PartnerOrganizations, GlobalConfiguration,
-                                      #   Connectors, MuxConnector, Email
+                                      #   Connectors, MediaTypes, MuxConnector, Email
 ```
 
 | Old | New |
 | --- | --- |
 | `app.tsx`, `theme.tsx`, `styles.css` | `app/` (`app.tsx` → `App.tsx`) |
 | `api.ts`, `ui.tsx` | `shared/` |
-| `components/*` | `shared/components/` (AdSources, DateTimePicker, ProfileSettingsModal) or the owning feature (MuxConnector → platform, SmartProgramming → programming) |
+| `components/*` | `shared/components/` (AdSources, DateTimePicker, GenreSelector, ProfileSettingsModal, ResetLinkModal) or the owning feature (MuxConnector → platform, SmartProgramming → programming) |
 | `features/configuration/*` | `shared/configuration/` |
 | `pages/X.tsx` | `features/<feature>/X.tsx` (`Platform.tsx` → `platform/PartnerOrganizations.tsx`) |
 
@@ -47,15 +47,10 @@ frontend/src/
 - A component used by two features moves to `shared/components/`.
 - Verify with `npx tsc --noEmit` and `npm run build` after each change; check pages in the browser.
 
-## Known exceptions (clean up in step 2)
+## Cross-feature imports
 
-These pages still import a helper exported by another feature's page:
+None: no file under `features/` imports from another feature (cleaned up in step 2, 2026-10-31). Check with:
 
-| Importer | Imports from | What |
-| --- | --- | --- |
-| `channels/Channels` | `library/Library` | asset picker/helpers |
-| `monitoring/Monitoring` | `home/Home` | shared dashboard pieces |
-| `platform/Connectors`, `programming/SmartProgramming` | `settings/Settings` | `DAYS`, `PlatformMediaTypes` |
-| `platform/PartnerOrganizations`, `team/Team` | `auth/Password` | `ResetLinkModal` |
-
-Move each exported helper into `shared/` when that page is next changed.
+```bash
+grep -rnE "from '\.\./[a-z]+/" frontend/src/features
+```

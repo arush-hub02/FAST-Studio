@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../shared/api'
 import { AdSources } from '../../shared/components/AdSources'
 import { MuxConnector } from './MuxConnector'
-import { TenantMediaEntitlements } from '../settings/Settings'
+import { TenantMediaEntitlements } from './MediaTypes'
 import { ErrorBox, Icon, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 
 // Platform administrator: everything a company's channels connect to (content platforms, media storage, ad servers)

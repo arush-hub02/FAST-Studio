@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, type Alert, type AuditRow } from '../../shared/api'
 import { useOrg } from '../../app/App'
-import { ago, Empty, fmtDayTime, Icon, Loading, Modal, PageHead, Status, useAction, useApi } from '../../shared/ui'
-import { describe } from '../home/Home'
+import { ago, describeAction, Empty, fmtDayTime, Icon, Loading, Modal, PageHead, Status, useAction, useApi } from '../../shared/ui'
 
 export default function Monitoring() {
   const org = useOrg()
@@ -50,7 +49,7 @@ export default function Monitoring() {
           {!audit.data ? <div className="card-pad"><Loading /></div> : (
             <table className="table"><thead><tr><th>When</th><th>Who</th><th>What</th><th>Details</th></tr></thead>
               <tbody>{audit.data.map(r => (
-                <tr key={r.id}><td className="small" title={r.createdAt}>{fmtDayTime(r.createdAt)}</td><td><b>{r.actor}</b></td><td>{describe(r.action)}<div className="faint mono">{r.action}</div></td><td className="small muted">{r.detail}</td></tr>
+                <tr key={r.id}><td className="small" title={r.createdAt}>{fmtDayTime(r.createdAt)}</td><td><b>{r.actor}</b></td><td>{describeAction(r.action)}<div className="faint mono">{r.action}</div></td><td className="small muted">{r.detail}</td></tr>
               ))}</tbody></table>
           )}
         </section>

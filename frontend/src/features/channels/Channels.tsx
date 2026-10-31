@@ -24,7 +24,7 @@ import {
   useAction,
   useApi,
 } from '../../shared/ui'
-import { GenreSelector } from '../library/Library'
+import { GenreSelector } from '../../shared/components/GenreSelector'
 
 const TIMEZONE_OPTIONS: DropdownOption[] = [
   { value: 'Asia/Kolkata', label: 'Asia/Kolkata (IST +05:30)', icon: 'clock', description: 'Indian Standard Time' },

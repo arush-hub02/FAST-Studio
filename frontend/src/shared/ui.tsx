@@ -874,3 +874,19 @@ export {
   type DateTimePickerProps,
   type TimezoneOption,
 } from './components/DateTimePicker'
+
+/** Human wording for an audit action key (falls back to the key). */
+const VERBS: Record<string, string> = {
+  'auth.login': 'signed in', 'asset.create': 'added a video', 'asset.upload': 'uploaded a file', 'asset.update': 'edited a video', 'asset.archive': 'archived a video',
+  'rights.update': 'changed a licence', 'channel.create': 'created a channel', 'channel.update': 'edited a channel', 'channel.live': 'took a channel live',
+  'channel.stopped': 'stopped a channel', 'channel.archived': 'archived a channel', 'schedule.publish': 'published a schedule', 'schedule.autofill': 'auto-filled a schedule',
+  'schedule.add': 'added to a schedule', 'schedule.remove': 'removed from a schedule', 'schedule.close_gaps': 'closed schedule gaps', 'schedule.clear': 'cleared a schedule',
+  'schedule.restore': 'restored an old schedule', 'campaign.create': 'created a campaign', 'campaign.update': 'edited a campaign', 'campaign.paused': 'paused a campaign',
+  'campaign.active': 'resumed a campaign', 'campaign.ended': 'ended a campaign', 'distribution.publish': 'sent a channel to a destination',
+  'destination.create': 'added a destination', 'alert.acknowledge': 'acknowledged an alert', 'alert.resolve': 'resolved an alert', 'member.invite': 'invited a member',
+  'member.role': 'changed a role', 'member.remove': 'removed a member',
+}
+export function describeAction(action: string) { return VERBS[action] ?? action }
+
+/** Weekday names in ISO order (index 0 = Monday = 1). */
+export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
