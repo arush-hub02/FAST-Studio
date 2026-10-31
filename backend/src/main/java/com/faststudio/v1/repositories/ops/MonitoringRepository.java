@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -105,5 +106,75 @@ public class MonitoringRepository {
                   (select count(*) from ad_event e where e.org_id = :o and e.event = 'IMPRESSION' and e.occurred_at::date = d::date) as impressions,
                   (select count(*) from playback_session s where s.org_id = :o and s.created_at::date = d::date) as sessions
                 from generate_series(current_date - 6, current_date, interval '1 day') d order by d""").param("o", org).query(DayStat.class).list();
+    }
+
+    // --- alert scanner (system jobs; callers set the tenant scope) ---
+
+    public record LiveChannel(UUID orgId, String orgSlug, UUID channelId) {}
+
+    public record AlertOrg(String name, String slug) {}
+
+    public record Recipient(String email, String name) {}
+
+    public record FailedAsset(UUID id, String title) {}
+
+    public record Expiring(UUID assetId, String title, OffsetDateTime validUntil) {}
+
+    public record OpenAlert(UUID id, String dedupKey) {}
+
+    /** Live channels of every tenant (run under TenantScope.bypass). */
+    public List<LiveChannel> liveChannels() {
+        return db.sql("""
+                select o.id as org_id, o.slug as org_slug, c.id as channel_id from channel c join organization o on o.id = c.org_id
+                where c.status = 'LIVE'""").query(LiveChannel.class).list();
+    }
+
+    public List<UUID> activeCustomerProjects() {
+        return db.sql("select id from organization where status = 'ACTIVE' and kind = 'CUSTOMER'").query(UUID.class).list();
+    }
+
+    public AlertOrg alertOrg(UUID org) {
+        return db.sql("select name, slug from organization where id = :o").param("o", org).query(AlertOrg.class).single();
+    }
+
+    /** Members who can act on an alert. */
+    public List<Recipient> alertRecipients(UUID org) {
+        return db.sql("""
+                select u.email, u.name from membership m join app_user u on u.id = m.user_id
+                where m.org_id = :o and m.role in ('OWNER', 'ADMIN', 'CHANNEL_OPERATOR')""").param("o", org).query(Recipient.class).list();
+    }
+
+    public List<FailedAsset> failedAssets(UUID org) {
+        return db.sql("select id, title from asset where org_id = :o and status = 'FAILED'").param("o", org).query(FailedAsset.class).list();
+    }
+
+    /** Assets in a published schedule whose licence ends within 7 days. */
+    public List<Expiring> expiringLicences(UUID org) {
+        return db.sql("""
+                select distinct a.id as asset_id, a.title, r.valid_until from schedule_entry e
+                join channel c on c.org_id = e.org_id and c.published_version_id = e.version_id
+                join asset a on a.org_id = e.org_id and a.id = e.asset_id
+                join rights_policy r on r.org_id = a.org_id and r.asset_id = a.id
+                where e.org_id = :o and e.end_at > now() and r.valid_until is not null and r.valid_until < now() + interval '7 days'""")
+                .param("o", org).query(Expiring.class).list();
+    }
+
+    /** Opens the alert, or refreshes the detail of the open one with the same key. True when it was newly raised. */
+    public boolean raiseAlert(UUID org, String key, String severity, String title, String detail, String suggestion, String link) {
+        return db.sql("""
+                insert into alert(org_id, dedup_key, severity, title, detail, suggestion, link) values (:o,:k,:s,:t,:d,:sg,:l)
+                on conflict (org_id, dedup_key) where status <> 'RESOLVED' do update set detail = excluded.detail, updated_at = now()
+                returning (xmax = 0)""")
+                .param("o", org).param("k", key).param("s", severity).param("t", title).param("d", detail)
+                .param("sg", suggestion).param("l", link).query(Boolean.class).single();
+    }
+
+    public List<OpenAlert> unresolvedAlerts(UUID org) {
+        return db.sql("select id, dedup_key from alert where org_id = :o and status <> 'RESOLVED'").param("o", org).query(OpenAlert.class).list();
+    }
+
+    public void autoResolve(UUID alert) {
+        db.sql("update alert set status = 'RESOLVED', resolution = 'Cleared automatically: re-check found the problem fixed.', updated_at = now() where id = :id")
+                .param("id", alert).update();
     }
 }

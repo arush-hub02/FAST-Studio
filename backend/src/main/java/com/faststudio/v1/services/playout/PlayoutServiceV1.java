@@ -7,6 +7,8 @@ import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
+import com.faststudio.v1.dto.playout.PlaybackDto.Session;
+import com.faststudio.v1.repositories.playout.PlaybackRepository;
 import com.faststudio.v1.services.ads.AdDecisionServiceV1;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
@@ -27,27 +29,21 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class PlayoutServiceV1 {
     private final Data data;
+    private final PlaybackRepository repository;
     private final AdDecisionServiceV1 ads;
     private final MediaSettingsServiceV1 settings;
     private final Set<String> slateRecorded = ConcurrentHashMap.newKeySet();
 
-    public PlayoutServiceV1(Data data, AdDecisionServiceV1 ads, MediaSettingsServiceV1 settings) {
+    public PlayoutServiceV1(Data data, PlaybackRepository repository, AdDecisionServiceV1 ads, MediaSettingsServiceV1 settings) {
         this.data = data;
+        this.repository = repository;
         this.ads = ads;
         this.settings = settings;
     }
 
-    public record Session(UUID id, UUID orgId, UUID channelId, UUID destinationId, String country, String adMode,
-                          OffsetDateTime createdAt, String markerFormat, String destKind, String destName,
-                          String viewerKey, String audiences, OffsetDateTime personalizedUntil) {}
-
     /** Looks the viewer session up by its unguessable id (system lookup), then scopes the request to its tenant. */
     public Session session(UUID id) {
-        Session s = TenantScope.bypass(() -> data.db.sql("""
-                select s.id, s.org_id, s.channel_id, s.destination_id, s.country, s.ad_mode, s.created_at,
-                       d.marker_format, d.kind as dest_kind, d.name as dest_name,s.viewer_key,s.audiences,s.personalized_until
-                from playback_session s join destination d on d.org_id = s.org_id and d.id = s.destination_id where s.id = :id""")
-                .param("id", id).query(Session.class).optional()).orElseThrow(() -> ApiException.notFound("Playback session"));
+        Session s = TenantScope.bypass(() -> repository.session(id)).orElseThrow(() -> ApiException.notFound("Playback session"));
         TenantScope.set(s.orgId());
         return s;
     }
@@ -59,11 +55,7 @@ public class PlayoutServiceV1 {
 
     /** Returns 1 when recorded, 0 for a repeat (one event of each type per ad, break and session). */
     public int recordEvent(Session s, UUID breakId, UUID campaignId, String event, int seconds) {
-        return data.db.sql("""
-                insert into ad_event(org_id, session_id, channel_id, break_id, campaign_id, event, seconds)
-                values (:o,:s,:c,:b,:camp,:e,:sec) on conflict do nothing""")
-                .param("o", s.orgId()).param("s", s.id()).param("c", s.channelId()).param("b", breakId)
-                .param("camp", campaignId).param("e", event).param("sec", seconds).update();
+        return repository.insertAdEvent(s.orgId(), s.id(), s.channelId(), breakId, campaignId, event, seconds);
     }
 
     /** time_signal + segmentation descriptor; provider vs distributor placement opportunity follows the pod's owner. */
@@ -78,8 +70,7 @@ public class PlayoutServiceV1 {
 
     public Entry breakEntry(Session s, UUID breakId) {
         Channel ch = data.channel(s.orgId(), s.channelId());
-        return data.db.sql("select e.id,e.version_id,e.kind,e.asset_id,e.asset_offset_ms,e.start_at,e.end_at,e.ownership from schedule_entry e join schedule_version v on v.org_id=e.org_id and v.id=e.version_id where e.org_id=:o and e.id=:id and e.kind='AD_BREAK' and v.channel_id=:ch and v.number>0")
-                .param("o", s.orgId()).param("id", breakId).param("ch",s.channelId()).query(Entry.class).optional()
+        return repository.publishedBreak(s.orgId(), s.channelId(), breakId)
                 .filter(e -> ch.publishedVersionId() != null)
                 .orElseThrow(() -> ApiException.notFound("Ad break"));
     }

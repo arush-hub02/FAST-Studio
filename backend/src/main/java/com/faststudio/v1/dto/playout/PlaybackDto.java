@@ -15,6 +15,11 @@ import java.util.UUID;
 public final class PlaybackDto {
     private PlaybackDto() {}
 
+    /** A viewer's playback session with the destination it plays through. */
+    public record Session(UUID id, UUID orgId, UUID channelId, UUID destinationId, String country, String adMode,
+                          OffsetDateTime createdAt, String markerFormat, String destKind, String destName,
+                          String viewerKey, String audiences, OffsetDateTime personalizedUntil) {}
+
     /** {@code country} is an explicit, labelled simulation; production would take it from a trusted edge/geo-IP header. */
     public record StartRequest(@NotBlank String org, @NotBlank String channel, UUID destinationId,
                                @NotBlank @Pattern(regexp = "[A-Za-z]{2}") String country, String viewerToken) {}

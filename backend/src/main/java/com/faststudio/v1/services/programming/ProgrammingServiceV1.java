@@ -2,6 +2,8 @@ package com.faststudio.v1.services.programming;
 
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Data;
+import com.faststudio.v1.dto.programming.ProgrammingDto.Rule;
+import com.faststudio.v1.repositories.programming.ProgrammingRuleRepository;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
 import com.faststudio.v1.services.rights.Rights;
 
@@ -13,17 +15,15 @@ import java.util.*;
 public class ProgrammingServiceV1 {
     private final Data data;
     private final MediaSettingsServiceV1 settings;
-    public ProgrammingServiceV1(Data data, MediaSettingsServiceV1 settings) { this.data = data; this.settings = settings; }
-    public record Rule(UUID id, UUID orgId, UUID channelId, String series, LocalDate startDate, LocalDate endDate,
-                       LocalTime premiereTime, LocalTime repeatTime, String weekdays, int startSeason, int startEpisode,
-                       boolean loop, boolean enabled) {}
-    public record Occurrence(LocalDate airDate, UUID assetId) {}
+    private final ProgrammingRuleRepository repository;
+    public ProgrammingServiceV1(Data data, MediaSettingsServiceV1 settings, ProgrammingRuleRepository repository) {
+        this.data = data; this.settings = settings; this.repository = repository;
+    }
     public record Placement(UUID ruleId, LocalDate date, UUID assetId, String title, int season, int episode,
                             boolean encore, Instant start, Instant end, List<Planner.Item> items) {}
     public record Preview(int revision, List<Placement> placements, List<String> notices) {}
     public List<Rule> rules(UUID org, UUID channel) {
-        return data.db.sql("select id,org_id,channel_id,series,start_date,end_date,premiere_time,repeat_time,weekdays,start_season,start_episode,loop,enabled from programming_rule where org_id=:o and channel_id=:c order by created_at,id")
-                .param("o", org).param("c", channel).query(Rule.class).list();
+        return repository.rules(org, channel);
     }
     public Preview preview(UUID org, UUID channel, List<Rule> rules, LocalDate through) {
         Data.Channel ch = data.channel(org, channel);
@@ -42,8 +42,7 @@ public class ProgrammingServiceV1 {
                     && a.season() != null && a.episode() != null && a.season() > 0 && a.episode() > 0)
                     .sorted(Comparator.comparing(Data.Asset::season).thenComparing(Data.Asset::episode).thenComparing(Data.Asset::id)).toList();
             Map<LocalDate,UUID> done = new HashMap<>();
-            if (r.id() != null) data.db.sql("select air_date,asset_id from programming_occurrence where org_id=:o and rule_id=:r order by air_date")
-                    .param("o", org).param("r", r.id()).query(Occurrence.class).list().forEach(x -> done.put(x.airDate(), x.assetId()));
+            if (r.id() != null) repository.occurrences(org, r.id()).forEach(x -> done.put(x.airDate(), x.assetId()));
             int season = r.startSeason(), episode = r.startEpisode();
             LocalDate today = LocalDate.now(ZoneId.of(ch.timezone()));
             for (LocalDate day = r.startDate(); !day.isAfter(r.endDate()) && !day.isAfter(through); day = day.plusDays(1)) {

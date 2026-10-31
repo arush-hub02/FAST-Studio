@@ -1,5 +1,6 @@
 package com.faststudio.v1.controllers.studio.programming;
 
+import com.faststudio.v1.dto.programming.ProgrammingDto.Rule;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.dto.programming.ProgrammingDto.*;
 import com.faststudio.v1.services.programming.ProgrammingRuleServiceV1;
@@ -20,7 +21,7 @@ public class ProgrammingControllerV1 {
     public ProgrammingControllerV1(ProgrammingRuleServiceV1 rules) { this.rules = rules; }
 
     @GetMapping
-    List<ProgrammingServiceV1.Rule> list(Tenant t, @PathVariable UUID id) { return rules.list(t, id); }
+    List<Rule> list(Tenant t, @PathVariable UUID id) { return rules.list(t, id); }
 
     @PostMapping("/preview")
     ProgrammingServiceV1.Preview preview(Tenant t, @PathVariable UUID id, @Valid @RequestBody RuleRequest r) { return rules.preview(t, id, r); }

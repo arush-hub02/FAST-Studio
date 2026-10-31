@@ -7,6 +7,10 @@ import com.faststudio.v1.services.playout.PlaybackServiceV1;
 import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
+import com.faststudio.v1.repositories.ops.MonitoringRepository;
+import com.faststudio.v1.repositories.ops.MonitoringRepository.LiveChannel;
+import com.faststudio.v1.repositories.playout.PlaybackRepository;
+import com.faststudio.v1.repositories.playout.PlaybackRepository.Destination;
 import com.faststudio.v1.util.cloudflare.EdgeClient;
 
 import org.slf4j.Logger;
@@ -36,13 +40,17 @@ public class AvailVerifier {
     static final String INTERSTITIAL = "com.apple.hls.interstitial";
 
     private final Data data;
+    private final MonitoringRepository monitoring;
+    private final PlaybackRepository destinations;
     private final EdgeClient edge;
     private final PlaybackServiceV1 playback;
     private final Map<UUID, Map<String, Result>> results = new ConcurrentHashMap<>();
     private final Map<String, Watch> watching = new HashMap<>();   // scheduler thread only
 
-    public AvailVerifier(Data data, EdgeClient edge, PlaybackServiceV1 playback) {
+    public AvailVerifier(Data data, MonitoringRepository monitoring, PlaybackRepository destinations, EdgeClient edge, PlaybackServiceV1 playback) {
         this.data = data;
+        this.monitoring = monitoring;
+        this.destinations = destinations;
         this.edge = edge;
         this.playback = playback;
     }
@@ -52,10 +60,6 @@ public class AvailVerifier {
                          boolean passed, List<String> problems, Instant checkedAt) {}
 
     public List<Result> results(UUID channel) { return List.copyOf(results.getOrDefault(channel, Map.of()).values()); }
-
-    record ChannelRow(UUID orgId, String orgSlug, UUID channelId) {}
-
-    record Dest(String name, String kind, String adMode, String markerFormat) {}
 
     static final class Watch {
         final UUID breakId;
@@ -72,10 +76,8 @@ public class AvailVerifier {
     @Scheduled(initialDelay = 15_000, fixedDelay = 20_000)   // well under WINDOW_MS, so consecutive playlists overlap
     public void tick() {
         if (!edge.configured()) return;   // EdgePublisher warns about that
-        List<ChannelRow> rows = TenantScope.bypass(() -> data.db.sql("""
-                select o.id as org_id, o.slug as org_slug, c.id as channel_id from channel c join organization o on o.id = c.org_id
-                where c.status = 'LIVE'""").query(ChannelRow.class).list());
-        for (ChannelRow r : rows) {
+        List<LiveChannel> rows = TenantScope.bypass(monitoring::liveChannels);
+        for (LiveChannel r : rows) {
             try {
                 if (!TenantScope.as(r.orgId(), () -> verify(r, Instant.now()))) return;   // edge unreachable: EdgePublisher reports it
             } catch (RuntimeException e) {
@@ -85,22 +87,21 @@ public class AvailVerifier {
     }
 
     /** One fetch per format for the break on air (if any); false when the edge can't be reached. */
-    boolean verify(ChannelRow r, Instant now) {
+    boolean verify(LiveChannel r, Instant now) {
         Channel ch = data.channel(r.orgId(), r.channelId());
         if (ch.publishedVersionId() == null || ch.territoryList().isEmpty()) return true;
         Instant settled = ch.updatedAt().toInstant().plusSeconds(60);   // until then the edge may still serve the previous snapshot
         // breaks whose first segment has entered the live playlist and whose end hasn't left it yet
         List<Entry> airing = data.entries(r.orgId(), ch.publishedVersionId(), now.minusMillis(WINDOW_MS), now).stream()
                 .filter(e -> e.isBreak() && !e.start().isBefore(settled) && now.isAfter(e.start().plusMillis(Times.SEG_MS))).toList();
-        Map<String, Dest> probes = new LinkedHashMap<>();
-        data.db.sql("select name, kind, ad_mode, marker_format from destination where org_id = :o order by created_at")
-                .param("o", r.orgId()).query(Dest.class).list()
+        Map<String, Destination> probes = new LinkedHashMap<>();
+        destinations.destinations(r.orgId())
                 .forEach(d -> probes.putIfAbsent("SGAI".equals(d.adMode()) ? "INTERSTITIAL" : d.markerFormat(), d));
         Map<String, Result> latest = results.computeIfAbsent(ch.id(), k -> new ConcurrentHashMap<>());
         latest.keySet().retainAll(probes.keySet());
         for (var p : probes.entrySet()) {
             String markers = p.getKey(), key = ch.id() + "|" + markers;
-            Dest d = p.getValue();
+            Destination d = p.getValue();
             Watch w = watching.get(key);
             Entry b = airing.stream().filter(e -> expected(d, e) && !(w != null && w.done && w.breakId.equals(e.id()))).findFirst().orElse(null);
             if (b == null) continue;
@@ -132,7 +133,7 @@ public class AvailVerifier {
     }
 
     /** SGAI players only get interstitials for breaks we fill (ours() in worker/src/playout.ts); cue markers go out for every break. */
-    static boolean expected(Dest d, Entry b) {
+    static boolean expected(Destination d, Entry b) {
         return !"SGAI".equals(d.adMode()) || "OWNED_WEB".equals(d.kind()) || "PROVIDER".equals(b.ownership());
     }
 

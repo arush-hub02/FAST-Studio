@@ -1,7 +1,8 @@
 package com.faststudio.v1.repositories.programming;
 
 import com.faststudio.v1.core.common.Times;
-import com.faststudio.v1.services.programming.ProgrammingServiceV1;
+import com.faststudio.v1.dto.programming.ProgrammingDto.Occurrence;
+import com.faststudio.v1.dto.programming.ProgrammingDto.Rule;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +19,7 @@ public class ProgrammingRuleRepository {
 
     public ProgrammingRuleRepository(JdbcClient db) { this.db = db; }
 
-    public UUID insertRule(UUID org, UUID channel, ProgrammingServiceV1.Rule r) {
+    public UUID insertRule(UUID org, UUID channel, Rule r) {
         return db.sql("""
                 insert into programming_rule(org_id, channel_id, series, start_date, end_date, premiere_time, repeat_time, weekdays, start_season, start_episode, loop)
                 values (:o, :c, :s, :from, :to, :at, :rep, :days, :se, :ep, :loop) returning id""")
@@ -45,6 +46,16 @@ public class ProgrammingRuleRepository {
     }
 
     /** Records which episode a rule placed on a date (encores are not recorded), so later runs continue the sequence. */
+    public List<Rule> rules(UUID org, UUID channel) {
+        return db.sql("select id,org_id,channel_id,series,start_date,end_date,premiere_time,repeat_time,weekdays,start_season,start_episode,loop,enabled from programming_rule where org_id=:o and channel_id=:c order by created_at,id")
+                .param("o", org).param("c", channel).query(Rule.class).list();
+    }
+
+    public List<Occurrence> occurrences(UUID org, UUID rule) {
+        return db.sql("select air_date,asset_id from programming_occurrence where org_id=:o and rule_id=:r order by air_date")
+                .param("o", org).param("r", rule).query(Occurrence.class).list();
+    }
+
     public void insertOccurrence(UUID org, UUID rule, LocalDate date, UUID asset) {
         db.sql("insert into programming_occurrence(org_id, rule_id, air_date, asset_id) values (:o, :r, :d, :a)")
                 .param("o", org).param("r", rule).param("d", date).param("a", asset).update();

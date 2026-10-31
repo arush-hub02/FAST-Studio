@@ -1,5 +1,6 @@
 package com.faststudio.v1.services.programming;
 
+import com.faststudio.v1.dto.programming.ProgrammingDto.Rule;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.common.Data;
@@ -36,13 +37,13 @@ public class ProgrammingRuleServiceV1 {
         this.audit = audit;
     }
 
-    public List<ProgrammingServiceV1.Rule> list(Tenant t, UUID channel) {
+    public List<Rule> list(Tenant t, UUID channel) {
         data.channel(t.orgId(), channel);
         return programming.rules(t.orgId(), channel);
     }
 
     /** Validates a request into a rule: future range of at most a year, repeat after premiere, series has episodes. */
-    private ProgrammingServiceV1.Rule rule(Tenant t, UUID channel, RuleRequest r) {
+    private Rule rule(Tenant t, UUID channel, RuleRequest r) {
         Data.Channel ch = data.channel(t.orgId(), channel);
         if (r.startDate().isBefore(LocalDate.now(ZoneId.of(ch.timezone()))) || r.endDate().isBefore(r.startDate()) || r.endDate().isAfter(r.startDate().plusDays(366)))
             throw ApiException.bad("Choose a future date range of at most one year.");
@@ -52,7 +53,7 @@ public class ProgrammingRuleServiceV1 {
         boolean hasEpisodes = data.assets(t.orgId()).values().stream()
                 .anyMatch(a -> "EPISODE".equals(a.kind()) && a.series() != null && a.series().trim().equalsIgnoreCase(r.series().trim()));
         if (!hasEpisodes) throw ApiException.bad("Add episodes for this series to the Library first.");
-        return new ProgrammingServiceV1.Rule(null, t.orgId(), channel, r.series().trim(), r.startDate(), r.endDate(), at, repeat,
+        return new Rule(null, t.orgId(), channel, r.series().trim(), r.startDate(), r.endDate(), at, repeat,
                 MediaSettingsServiceV1.daysCsv(r.weekdays()), r.startSeason(), r.startEpisode(), r.loop(), true);
     }
 
