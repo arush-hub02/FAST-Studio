@@ -131,41 +131,41 @@ Follow the project-wide layout in [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE
 
 ```text
 backend/src/main/java/com/faststudio/
-  v1_0/controllers/studio/media/
-    AssetControllerV1_0.java
-    MediaImportControllerV1_0.java
-    MediaSyncControllerV1_0.java
-  v1_0/controllers/platform/connectors/
-    MediaConnectionControllerV1_0.java
-  v1_0/controllers/webhook/
-    MuxWebhookControllerV1_0.java
-  v1_0/services/media/
-    AssetServiceV1_0.java
-    MediaImportServiceV1_0.java
+  v1/controllers/studio/media/
+    AssetControllerV1.java
+    MediaImportControllerV1.java
+    MediaSyncControllerV1.java
+  v1/controllers/platform/connectors/
+    MediaConnectionControllerV1.java
+  v1/controllers/webhook/
+    MuxWebhookControllerV1.java
+  v1/services/media/
+    AssetServiceV1.java
+    MediaImportServiceV1.java
     MediaSyncService.java
     UploadSessionService.java
     MediaPreparationService.java
-  v1_0/services/webhook/
-    MediaWebhookServiceV1_0.java
+  v1/services/webhook/
+    MediaWebhookServiceV1.java
     parsers/IWebhookParser.java, MuxWebhookParser.java, WebhookParserFactory.java
-  v1_0/repositories/media/
+  v1/repositories/media/
     AssetRepository.java
     MediaConnectionRepository.java
     MediaImportRepository.java
     MediaJobRepository.java
-  v1_0/dto/media/
+  v1/dto/media/
     AssetRequests.java, ImportRequests.java, ImportViews.java, ConnectionViews.java
     ImportBatch.java, ImportItem.java, MediaJob.java, AssetSource.java   (records)
-  v1_0/util/mediaProvider/
+  v1/util/mediaProvider/
     IMediaProvider.java
     MediaProviderResolverService.java
     ProviderCapabilities.java
-  v1_0/util/mux/
+  v1/util/mux/
     MuxClientService.java
     MuxWebhookVerifier.java
-  messaging/v1_0/media/
-    MediaJobPublisherV1_0.java
-    MediaJobObserverV1_0.java
+  messaging/v1/media/
+    MediaJobPublisherV1.java
+    MediaJobObserverV1.java
     MediaReconciliationJob.java
 ```
 
@@ -173,7 +173,7 @@ Controllers: request binding, endpoint authorization and response mapping.
 Services: use-case rules, reusable validation, idempotency, transaction boundaries and audit actions.
 Repositories: tenant-scoped SQL using current JdbcClient; keep the RLS protection.
 `util/` adapters: provider HTTP, authentication, pagination and provider response/webhook translation.
-`messaging/v1_0`: lease/execute/retry background stages using the same services.
+`messaging/v1`: lease/execute/retry background stages using the same services.
 
 Use records where useful for DTOs, but do not keep all API contracts, SQL and business rules nested inside a large controller. Do not create one-file-per-trivial-field or unused interfaces just to populate folders.
 

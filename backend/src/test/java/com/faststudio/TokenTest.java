@@ -1,7 +1,7 @@
 package com.faststudio;
 
-import com.faststudio.v1_0.core.auth.TokenKeys;
-import com.faststudio.v1_0.core.tenant.TenantScope;
+import com.faststudio.v1.core.auth.TokenKeys;
+import com.faststudio.v1.core.tenant.TenantScope;
 
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWKSet;

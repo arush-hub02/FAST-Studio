@@ -1,8 +1,8 @@
 package com.faststudio;
 
-import com.faststudio.v1_0.core.auth.Tokens;
-import com.faststudio.v1_0.core.partner.PartnerScope;
-import com.faststudio.v1_0.core.tenant.TenantScope;
+import com.faststudio.v1.core.auth.Tokens;
+import com.faststudio.v1.core.partner.PartnerScope;
+import com.faststudio.v1.core.tenant.TenantScope;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

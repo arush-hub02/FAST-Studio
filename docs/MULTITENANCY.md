@@ -27,7 +27,7 @@ Partner organization  (organization kind=PARTNER, tenant_id null: no content; se
 - **Who edits what.** Platform admin: everything, including secrets and tenant connector grants. Tenant OWNER (owner of any project in the tenant): tenant-wide values. Project OWNER/ADMIN (with TEAM_MANAGE): project overrides and connector opt-in/out. Members: read resolved values.
 - **Roles.** Both organization types have built-in roles plus platform-defined custom roles (`access_role`, per type). A custom role picks a built-in ceiling and may only remove permissions; a disabled custom role falls back to VIEW only.
 - **Tokens.** User tokens carry `tid` only when the active organization is a customer project; partner and platform identities have no tenant.
-- **Code.** `v1_0/controllers/platform/tenancy`, `v1_0/controllers/studio/{configuration,team,project}`, `v1_0/services/tenancy`, `v1_0/repositories/tenancy`, `v1_0/dto/tenancy` (see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md)). Tests: `TenantConfigurationTest`.
+- **Code.** `v1/controllers/platform/tenancy`, `v1/controllers/studio/{configuration,team,project}`, `v1/services/tenancy`, `v1/repositories/tenancy`, `v1/dto/tenancy` (see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md)). Tests: `TenantConfigurationTest`.
 
 Not done: billing/invoicing, tenant-level SSO, existing-data migration rehearsal on a production-like copy.
 
