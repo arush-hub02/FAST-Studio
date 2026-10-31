@@ -17,6 +17,8 @@ Then open **http://localhost:8080**. The first start downloads libraries and gen
 
 On Windows the Java server and the local Worker (port 8787) run in the background. Startup waits for both before opening the browser. Logs are in `data/runtime/app.log`, `app-error.log` and `edge.log`. The Worker's local R2 and KV live in `data/edge`. Repeated starts recognize this workspace's running server. Stop targets only a verified workspace Java process, shuts down its embedded database cleanly, and retains data. The original relative-jar/Maven launch can also be recognized when the JDK's `jcmd` is available. An unrecognized process on port 8080 is left alone. For troubleshooting, run `start.bat -NoBrowser` from a terminal.
 
+The Windows launcher now checks that the HTML application and API both respond before opening a browser. Java runs from a hash-named copy in `data/runtime/releases/`, so rebuilding Maven's output cannot overwrite the running package. If the existing process is unhealthy, stop it with `stop.bat` and start again to rebuild. When the default Node version is too old, the launcher can use an already-installed compatible NVM runtime for this launch without changing the system-wide selection.
+
 ### Where is the database? Is it in Docker?
 
 The default database is **embedded PostgreSQL 14**, with database name/user `postgres`, on localhost port `54329`. Its files are in `data/pg`. No Docker image or container is needed in this mode. Tables are created by Flyway from `backend/src/main/resources/db/migration`; fictional records are inserted by `DemoSeeder`.

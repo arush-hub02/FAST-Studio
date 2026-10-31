@@ -13,6 +13,7 @@ $backendDir = Join-Path $projectRoot 'backend'
 $workerDir = Join-Path $projectRoot 'worker'
 $jarPath = Join-Path $backendDir 'target\backend-0.1.0.jar'
 $runtimeDir = Join-Path $projectRoot 'data\runtime'
+$releaseDir = Join-Path $runtimeDir 'releases'
 $statePath = Join-Path $runtimeDir 'app.json'
 $credentialsPath = Join-Path $runtimeDir 'docker.env'
 $composePath = Join-Path $projectRoot 'compose.yaml'
@@ -27,12 +28,48 @@ function ConvertFrom-JavaProperty([string]$Value) {
     })
 }
 
+function New-RuntimeJar {
+    New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
+    $digest = (Get-FileHash -LiteralPath $jarPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $runtimeJar = Join-Path $releaseDir ($digest + '.jar')
+    if (!(Test-Path -LiteralPath $runtimeJar)) { Copy-Item -LiteralPath $jarPath -Destination $runtimeJar }
+    if ((Get-FileHash -LiteralPath $runtimeJar -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) {
+        throw 'The runtime package does not match the build. Stop concurrent builds and try again.'
+    }
+    return $runtimeJar
+}
+
+function Test-ApplicationReady {
+    try {
+        $ui = Invoke-WebRequest "$appUrl/" -UseBasicParsing -TimeoutSec 5
+        if ($ui.StatusCode -ne 200 -or [string]$ui.Headers['Content-Type'] -notmatch 'text/html' -or $ui.Content -notmatch 'id=["'']root["'']') { return $false }
+        $api = Invoke-WebRequest "$appUrl/api/auth/demo-accounts" -UseBasicParsing -TimeoutSec 5
+        return $api.StatusCode -eq 200
+    } catch { return $false }
+}
+
+function Find-CompatibleNode([string[]]$Roots) {
+    $candidates = foreach ($root in ($Roots | Where-Object { $_ } | Select-Object -Unique)) {
+        if (!(Test-Path -LiteralPath $root -PathType Container)) { continue }
+        foreach ($directory in Get-ChildItem -LiteralPath $root -Directory) {
+            if ($directory.Name -notmatch '^v(\d+\.\d+\.\d+)$') { continue }
+            $version = [version]$Matches[1]
+            $node = Join-Path $directory.FullName 'node.exe'
+            if ($version -ge [version]'22.12.0' -and (Test-Path -LiteralPath $node)) {
+                [pscustomobject]@{ Version = $version; Path = $node }
+            }
+        }
+    }
+    return ($candidates | Sort-Object Version -Descending | Select-Object -First 1).Path
+}
+
 # Identify the workspace as well as the PID; never stop every Java process.
 function Get-WorkspaceProcess([int]$ProcessId) {
     $candidate = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId"
     if (!$candidate -or $candidate.Name -ne 'java.exe') { return $null }
     $command = $candidate.CommandLine
     if ($command -match ('-jar\s+"?' + [regex]::Escape($jarPath) + '"?(?:\s|$)')) { return $candidate }
+    if ($command -match ('-jar\s+"?' + [regex]::Escape($releaseDir) + '[\\/][a-f0-9]{64}\.jar"?(?:\s|$)')) { return $candidate }
 
     # Recognize the original launcher, which used a relative jar/classpath.
     if ($command -notmatch '(?:-jar\s+target[/\\]backend-0\.1\.0\.jar|com\.faststudio\.BackendApplication)') { return $null }
@@ -142,8 +179,11 @@ try {
     }
 
     if ($appProcess) {
+        if (!(Test-ApplicationReady)) {
+            throw 'FAST Studio is running but its UI/API is unhealthy. Run stop.bat, then start.bat to rebuild and recover. Check data/runtime/app.log.'
+        }
         Write-Host "FAST Studio is already running at $appUrl (PID $($appProcess.ProcessId))."
-        Write-Host 'Use stop.bat before changing database mode or rebuilding.'
+        Write-Host 'Use stop.bat, then start.bat to apply code or database-mode changes.'
         if (!$NoBrowser) { Start-Process $appUrl }
         exit 0
     }
@@ -153,8 +193,13 @@ try {
     foreach ($tool in @('java.exe', 'npm.cmd', 'node.exe')) {
         if (!(Get-Command $tool -ErrorAction SilentlyContinue)) { throw "Missing $tool. Install Java 21+ and Node.js 22+ before starting." }
     }
-    $nodeMajor = [int](& node.exe -p "process.versions.node.split('.')[0]")
-    if ($nodeMajor -lt 22) { throw "Node.js 22 or newer is required (found $(& node.exe --version)); the local Cloudflare Worker needs it. With nvm: nvm use 24" }
+    $nodeVersion = [version](& node.exe -p "process.versions.node")
+    if ($nodeVersion -lt [version]'22.12.0') {
+        $compatibleNode = Find-CompatibleNode @($env:NVM_HOME, (Join-Path $env:LOCALAPPDATA 'nvm'), (Join-Path $env:APPDATA 'nvm'))
+        if (!$compatibleNode) { throw "Node.js 22.12 or newer is required (found $nodeVersion). Install Node 24 or select it with nvm use 24." }
+        $env:PATH = (Split-Path $compatibleNode -Parent) + ';' + $env:PATH
+        Write-Host 'Using the installed compatible Node runtime for this launch only.'
+    }
 
     if ($Pilot -and $Docker) { throw 'Pilot mode uses its own embedded database; -Docker is not supported together with -Pilot yet.' }
     # your own settings (copy .env.example to .env); in pilot mode data-pilot\pilot.env is loaded after it and wins
@@ -231,6 +276,9 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Java build failed.' }
     } finally { Pop-Location }
 
+    # Never run from Maven's mutable output: rebuilding it can corrupt a live Spring Boot process.
+    $runtimeJar = New-RuntimeJar
+
     # Viewers are served by the Cloudflare Worker (worker/), run locally by wrangler with its R2/KV state in <data>\edge.
     # It shares one secret with Java: generated once into data\runtime\edge.env unless .env sets FASTSTUDIO_EDGE_SECRET.
     if (!$env:FASTSTUDIO_EDGE_SECRET) {
@@ -266,7 +314,7 @@ try {
     Write-Host 'Local Cloudflare Worker ready: http://127.0.0.1:8787'
 
     $javaPath = (Get-Command java.exe).Source
-    $launched = Start-Process -FilePath $javaPath -ArgumentList @('-jar', ('"' + $jarPath + '"')) -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeDir 'app.log') -RedirectStandardError (Join-Path $runtimeDir 'app-error.log')
+    $launched = Start-Process -FilePath $javaPath -ArgumentList @('-jar', ('"' + $runtimeJar + '"')) -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeDir 'app.log') -RedirectStandardError (Join-Path $runtimeDir 'app-error.log')
     $javaProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $($launched.Id)"
     @{ processId = $launched.Id; createdAt = $javaProcess.CreationDate.ToUniversalTime().ToString('o'); docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
     Write-Host ("Starting FAST Studio (" + $(if ($Pilot) { 'real-data pilot, data in data-pilot' } else { 'demo' }) + "). Logs: $runtimeDir")
@@ -275,8 +323,7 @@ try {
         $launched.Refresh()
         if ($launched.HasExited) { throw "Java exited. Check $runtimeDir\app.log and app-error.log." }
         try {
-            $response = Invoke-WebRequest 'http://127.0.0.1:8080/api/auth/demo-accounts' -UseBasicParsing -TimeoutSec 5
-            if ($response.StatusCode -eq 200) {
+            if (Test-ApplicationReady) {
                 Write-Host "Ready: $appUrl"
                 if (!$NoBrowser) { Start-Process $appUrl }
                 exit 0
