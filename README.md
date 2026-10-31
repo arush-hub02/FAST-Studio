@@ -226,9 +226,25 @@ The first command runs unit tests: SCTE-35 encode/decode and CRC, rights rules, 
 
 ### Continuous integration
 
-[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every push and pull request, in three parallel jobs: backend `./mvnw clean test` (Java 21, embedded PostgreSQL), frontend `npm run build` (type-check + build), and the Worker tests. It also fails when a controller or service runs SQL, or when a frontend feature imports another feature. Test reports are kept for 7 days when the backend job fails. The local smoke test and launcher checks need a running Windows demo and stay manual.
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every push and pull request, in four parallel jobs: backend `./mvnw clean test` (Java 21, embedded PostgreSQL), frontend `npm run build` (type-check + build), the Worker tests, and a browser smoke test that starts the app in demo mode and opens every main screen as the demo owner ([frontend/e2e/smoke.spec.ts](frontend/e2e/smoke.spec.ts)). It also fails when a controller or service runs SQL, or when a frontend feature imports another feature. Test reports, screenshots and traces are kept for 7 days when a job fails.
+
+Run the browser smoke test locally against a running demo: `cd frontend && npx playwright install chromium && npm run e2e` (`E2E_BASE_URL` changes the address). The local smoke test and launcher checks need a running Windows demo and stay manual.
 
 To make a red check block merging, turn on branch protection for `main` in GitHub (Settings → Branches → require status checks: `Backend tests (Java 21)`, `Frontend type-check and build`, `Cloudflare Worker tests`).
+
+## Container image
+
+The [Dockerfile](Dockerfile) builds one image with the backend, the built frontend, the mailer, ffmpeg and Node.js, running as a non-root user:
+
+```bash
+docker build -t fast-studio .
+```
+
+```bash
+docker run -p 8080:8080 -v fs-data:/data --env-file .env fast-studio
+```
+
+It starts in the real-data pilot profile (no demo data); add `-e SPRING_PROFILES_ACTIVE=default` for demo mode. Data lives in the `/data` volume. For production set `DB_URL`, `DB_USER` and `DB_PASSWORD` to a managed PostgreSQL; without them the built-in database runs inside the container. The Cloudflare Worker is deployed separately (`cd worker && npx wrangler deploy`); set `FASTSTUDIO_EDGE_URL`, `FASTSTUDIO_EDGE_PUBLIC_URL` and `FASTSTUDIO_EDGE_SECRET` to reach it. No secrets are baked into the image.
 
 ## Known limitations
 

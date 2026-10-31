@@ -19,12 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
+      # MailTest sends through the real mailer (mailer/send.mjs + nodemailer), so it needs Node and those packages.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mailer/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: mailer
       - name: SQL only in repositories
         run: |
           if grep -rln "\.sql(" backend/src/main/java/com/faststudio/v1/controllers backend/src/main/java/com/faststudio/v1/services; then
@@ -36,7 +44,7 @@ jobs:
         working-directory: backend
       - name: Keep test reports when something fails
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: surefire-reports
           path: backend/target/surefire-reports/
@@ -47,8 +55,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -70,8 +78,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -80,3 +88,47 @@ jobs:
         working-directory: worker
       - run: npm test
         working-directory: worker
+
+  e2e:
+    name: Browser smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: sh ./mvnw -B -ntp -DskipTests package
+        working-directory: backend
+      # Demo mode with a throwaway data folder; video processing is off (screens only need the seeded catalogue).
+      - name: Start FAST Studio
+        run: |
+          FASTSTUDIO_DATA_DIR="$RUNNER_TEMP/fs-data" FASTSTUDIO_FFMPEG=disabled \
+            nohup java -jar backend/target/backend-*.jar > "$RUNNER_TEMP/app.log" 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://localhost:8080/actuator/health > /dev/null && exit 0; sleep 2; done
+          echo "::error::FAST Studio did not become healthy"; tail -50 "$RUNNER_TEMP/app.log"; exit 1
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e
+        working-directory: frontend
+      - name: Keep screenshots, traces and the server log when something fails
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-results
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            ${{ runner.temp }}/app.log
+          retention-days: 7
