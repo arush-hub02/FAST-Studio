@@ -1,12 +1,12 @@
 package com.faststudio.v1.core.partner;
 
 import com.faststudio.v1.core.auth.Auth;
+import com.faststudio.v1.core.auth.Permissions;
 import com.faststudio.v1.core.auth.Tokens;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantScope;
-import com.faststudio.v1.services.tenancy.AccessRoleServiceV1;
 
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,12 +43,14 @@ public class PartnerInterceptor implements HandlerInterceptor {
         return (Ctx) req.getAttribute(ATTR);
     }
     private final JdbcClient db;
+    private final Permissions permissions;
     private final Audit audit;
     private final int perMinute;
     private final Map<UUID, Deque<Long>> calls = new ConcurrentHashMap<>();
 
-    public PartnerInterceptor(JdbcClient db, Audit audit, @Value("${faststudio.partners.rate-limit-per-minute:120}") int perMinute) {
+    public PartnerInterceptor(JdbcClient db, Permissions permissions, Audit audit, @Value("${faststudio.partners.rate-limit-per-minute:120}") int perMinute) {
         this.db = db;
+        this.permissions = permissions;
         this.audit = audit;
         this.perMinute = perMinute;
     }
@@ -122,7 +124,7 @@ public class PartnerInterceptor implements HandlerInterceptor {
                     partner.name() + " (" + (clientName != null ? "API client '" + clientName + "'" : "portal") + ") read " + need.value()
                             + " — " + req.getRequestURI().replaceAll(".*/sources/[^/]+", ""));
         }
-        boolean canManage=userId!=null&&AccessRoleServiceV1.permissions(db,partner.id(),userId,role).contains(Tenant.Perm.PARTNER_MANAGE);
+        boolean canManage=userId!=null&&permissions.of(partner.id(),userId,role).contains(Tenant.Perm.PARTNER_MANAGE);
         req.setAttribute(ATTR, new Ctx(partner.id(), partner.slug(), partner.name(), userId, role, clientId, clientName, callerScopes, link,canManage));
         return true;
     }

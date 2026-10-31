@@ -1,9 +1,9 @@
 package com.faststudio.v1.core.tenant;
 
 import com.faststudio.v1.core.auth.Auth;
+import com.faststudio.v1.core.auth.Permissions;
 import com.faststudio.v1.core.auth.Tokens;
 import com.faststudio.v1.core.common.ApiException;
-import com.faststudio.v1.services.tenancy.AccessRoleServiceV1;
 
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,9 +31,11 @@ import java.util.UUID;
 public class TenantInterceptor implements HandlerInterceptor {
     public static final String ATTR = "fs.tenant";
     private final JdbcClient db;
+    private final Permissions permissions;
 
-    public TenantInterceptor(JdbcClient db) {
+    public TenantInterceptor(JdbcClient db, Permissions permissions) {
         this.db = db;
+        this.permissions = permissions;
     }
 
     record Row(UUID orgId, String slug, String name, String status, String role, String kind) {}
@@ -61,7 +63,7 @@ public class TenantInterceptor implements HandlerInterceptor {
                 "This organization is suspended by the platform administrator. Your data is kept safe; contact support.");
         var role=Tenant.Role.valueOf(row.role());
         req.setAttribute(ATTR, new Tenant(row.orgId(), row.slug(), row.name(), userId, role, row.kind(),
-                AccessRoleServiceV1.permissions(db,row.orgId(),userId,role)));
+                permissions.of(row.orgId(),userId,role)));
         res.setHeader("X-Org-Id", row.orgId().toString());
         MDC.put("orgId", row.orgId().toString());
         TenantScope.set(row.orgId());       // database row-level security now only shows this tenant's rows

@@ -11,7 +11,7 @@ import com.faststudio.v1.dto.auth.AuthDto.*;
 import com.faststudio.v1.repositories.auth.UserAccountRepository;
 import com.faststudio.v1.services.mail.EmailTemplates;
 import com.faststudio.v1.services.mail.MailServiceV1;
-import com.faststudio.v1.services.tenancy.AccessRoleServiceV1;
+import com.faststudio.v1.core.auth.Permissions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,15 +31,17 @@ import java.util.UUID;
 public class AccountServiceV1 {
     private final UserAccountRepository repository;
     private final Accounts accounts;
+    private final Permissions permissions;
     private final Tokens tokens;
     private final MailServiceV1 mail;
     private final Audit audit;
     private final boolean demo;
 
-    public AccountServiceV1(UserAccountRepository repository, Accounts accounts, Tokens tokens, MailServiceV1 mail, Audit audit,
+    public AccountServiceV1(UserAccountRepository repository, Accounts accounts, Permissions permissions, Tokens tokens, MailServiceV1 mail, Audit audit,
                             @Value("${faststudio.demo}") boolean demo) {
         this.repository = repository;
         this.accounts = accounts;
+        this.permissions = permissions;
         this.tokens = tokens;
         this.mail = mail;
         this.audit = audit;
@@ -53,7 +55,7 @@ public class AccountServiceV1 {
         var u = repository.user(id);
         List<Membership> memberships = repository.memberships(id).stream()
                 .map(m -> new Membership(m.orgId(), m.slug(), m.name(), m.status(), m.role(),
-                        AccessRoleServiceV1.permissions(repository.db(), m.orgId(), id, Tenant.Role.valueOf(m.role())).stream().map(Enum::name).toList(),
+                        permissions.of(m.orgId(), id, Tenant.Role.valueOf(m.role())).stream().map(Enum::name).toList(),
                         m.kind(), Feature.parse(m.features()), m.tenantId(), m.tenantName()))
                 .toList();
         return new Me(u.id(), u.name(), u.email(), u.platformAdmin(), memberships, demo, u.mustChangePassword());

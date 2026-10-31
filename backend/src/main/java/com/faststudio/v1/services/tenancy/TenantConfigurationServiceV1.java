@@ -75,8 +75,7 @@ public class TenantConfigurationServiceV1 {
     // ------------------------------------------------------------------ access checks
 
     public boolean admin() {
-        return repository.db().sql("select platform_admin from app_user where id = :u").param("u", Auth.userId())
-                .query(Boolean.class).single();
+        return repository.platformAdmin(Auth.userId());
     }
 
     private void requirePlatform() {
@@ -91,9 +90,9 @@ public class TenantConfigurationServiceV1 {
         if (project != null && !repository.tenant(project).equals(tenant)) throw ApiException.notFound("Project");
         if (admin()) return project;
         // Not a member at all: report "not found" so other tenants' IDs are not confirmed.
-        UUID readable = memberProject(tenant, project, "").orElseThrow(() -> ApiException.notFound("Tenant or project"));
+        UUID readable = memberProject(tenant, project, List.of()).orElseThrow(() -> ApiException.notFound("Tenant or project"));
         if (!write) return readable;
-        String roles = project == null ? " and m.role = 'OWNER'" : " and m.role in ('OWNER','ADMIN')";
+        List<String> roles = project == null ? List.of("OWNER") : List.of("OWNER", "ADMIN");
         return memberProject(tenant, project, roles).orElseThrow(() -> new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN",
                 project == null ? "Only a tenant owner can change tenant-wide defaults." : "Only project owners and admins can change project settings."));
     }
@@ -102,17 +101,8 @@ public class TenantConfigurationServiceV1 {
      * An active project of the tenant (or the given project) where the caller is a member with the given role filter.
      * Prefers the project of the current request, so audit rows land in the project RLS is scoped to.
      */
-    private Optional<UUID> memberProject(UUID tenant, UUID project, String roleFilter) {
-        UUID current = TenantScope.org();
-        var q = repository.db().sql("""
-                select o.id from organization o join membership m on m.org_id = o.id
-                join customer_tenant t on t.id = o.tenant_id
-                where o.tenant_id = :t and m.user_id = :u and o.status = 'ACTIVE' and t.status = 'ACTIVE'"""
-                        + (project == null ? "" : " and o.id = :p") + roleFilter
-                        + " order by (o.id = cast(:current as uuid)) desc nulls last, o.id limit 1")
-                .param("t", tenant).param("u", Auth.userId()).param("current", current);
-        if (project != null) q = q.param("p", project);
-        return q.query(UUID.class).optional();
+    private Optional<UUID> memberProject(UUID tenant, UUID project, List<String> roles) {
+        return repository.memberProject(tenant, project, Auth.userId(), TenantScope.org(), roles);
     }
 
     // ------------------------------------------------------------------ plans and tenants (platform only)
@@ -137,18 +127,11 @@ public class TenantConfigurationServiceV1 {
         if (p.features().stream().anyMatch(f -> !f.matches("[A-Z][A-Z0-9_]{0,79}")))
             throw ApiException.bad("Feature keys must use uppercase letters, digits and underscores.");
         // Lock every tenant on this plan so a concurrent project/channel creation cannot slip past the new limits.
-        repository.db().sql("select id from customer_tenant where plan_key = :k order by id for update").param("k", p.key()).query(UUID.class).list();
+        repository.lockTenantsOnPlan(p.key());
         for (Account t : repository.accounts())
             if (t.planKey().equals(p.key()) && (t.projects() > p.maxProjects() || t.channels() > p.maxChannels()))
                 throw ApiException.conflict("PLAN_IN_USE", "This plan would fall below an existing tenant's usage.");
-        repository.db().sql("""
-                insert into subscription_plan(key, name, enabled, max_projects, max_channels, monthly_price, currency, features)
-                values (:k, :n, :e, :p, :c, :price, :currency, :f)
-                on conflict (key) do update set name = excluded.name, enabled = excluded.enabled, max_projects = excluded.max_projects,
-                    max_channels = excluded.max_channels, monthly_price = excluded.monthly_price, currency = excluded.currency,
-                    features = excluded.features""")
-                .param("k", p.key()).param("n", p.name()).param("e", p.enabled()).param("p", p.maxProjects()).param("c", p.maxChannels())
-                .param("price", p.monthlyPrice()).param("currency", p.currency()).param("f", String.join(",", p.features())).update();
+        repository.savePlan(p);
         audit.platform(Auth.userId(), "plan.save", "plan", null, p.key());
     }
 
@@ -161,9 +144,7 @@ public class TenantConfigurationServiceV1 {
         if (!p.enabled()) throw ApiException.bad("This plan is not available for assignment.");
         if (t.projects() > p.maxProjects() || t.channels() > p.maxChannels())
             throw ApiException.conflict("PLAN_LIMIT", "Current usage exceeds the selected plan.");
-        int n = repository.db().sql("update customer_tenant set plan_key = :p, subscription_status = :s, revision = revision + 1 where id = :t and revision = :v")
-                .param("p", p.key()).param("s", request.status()).param("t", tenant).param("v", request.expectedRevision()).update();
-        if (n == 0) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the tenant before saving.");
+        if (!repository.setSubscription(tenant, p.key(), request.status(), request.expectedRevision())) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the tenant before saving.");
         audit.platform(Auth.userId(), "tenant.subscription.update", "tenant", tenant, p.key() + " / " + request.status());
     }
 
@@ -172,8 +153,7 @@ public class TenantConfigurationServiceV1 {
     public void status(UUID tenant, String status) {
         requirePlatform();
         if (status == null || !Set.of("ACTIVE", "SUSPENDED").contains(status)) throw ApiException.bad("Invalid status.");
-        if (repository.db().sql("update customer_tenant set status = :s, revision = revision + 1 where id = :t")
-                .param("s", status).param("t", tenant).update() == 0) throw ApiException.notFound("Tenant");
+        if (!repository.setStatus(tenant, status)) throw ApiException.notFound("Tenant");
         for (Project p : repository.projects(tenant)) tokens.bumpOrg(p.id());
         audit.platform(Auth.userId(), "tenant.status.update", "tenant", tenant, status);
     }
@@ -188,22 +168,12 @@ public class TenantConfigurationServiceV1 {
         if (!t.status().equals("ACTIVE")) throw ApiException.bad("Activate the tenant before adding projects.");
         if (t.projects() >= p.maxProjects()) throw ApiException.conflict("PLAN_LIMIT", "The tenant has reached its project limit.");
         try { ZoneId.of(request.timezone()); } catch (Exception e) { throw ApiException.bad("Unknown timezone."); }
-        if (repository.db().sql("select count(*) from organization where slug = :s").param("s", request.slug()).query(Integer.class).single() > 0)
+        if (repository.slugTaken(request.slug()))
             throw ApiException.conflict("SLUG_TAKEN", "Project slug is already in use.");
         if (repository.owners(tenant).stream().noneMatch(o -> o.id().equals(request.ownerUserId())))
             throw ApiException.bad("Choose an existing owner/admin of this tenant as the new project owner.");
-        // max_channels on organization is legacy; the tenant plan is the enforced limit (see reserveChannel).
-        UUID id = repository.db().sql("""
-                insert into organization(tenant_id, slug, name, country, timezone, kind, max_channels)
-                values (:t, :s, :n, :c, :tz, 'CUSTOMER', :max) returning id""")
-                .param("t", tenant).param("s", request.slug()).param("n", request.name()).param("c", request.country())
-                .param("tz", request.timezone()).param("max", p.maxChannels()).query(UUID.class).single();
-        repository.db().sql("insert into membership(org_id, user_id, role) values (:p, :u, 'OWNER')")
-                .param("p", id).param("u", request.ownerUserId()).update();
-        // Every project starts with the owned web player as its first destination, like legacy organizations.
-        repository.db().sql("""
-                insert into destination(org_id, name, kind, ad_mode, marker_format, max_ad_seconds_per_hour)
-                values (:p, 'Web player', 'OWNED_WEB', 'SSAI', 'DATERANGE', 720)""").param("p", id).update();
+        // The tenant plan's channel limit is enforced in reserveChannel; every project starts with the owned web player.
+        UUID id = repository.insertProject(tenant, request, p.maxChannels());
         tokens.bump(List.of(request.ownerUserId()));
         audit.platform(Auth.userId(), "project.create", "project", id, request.slug());
         return repository.projects(tenant).stream().filter(x -> x.id().equals(id)).findFirst().orElseThrow();
@@ -224,13 +194,7 @@ public class TenantConfigurationServiceV1 {
         requirePlatform();
         Connector old = connectors().stream().filter(x -> x.key().equals(c.key())).findFirst().orElse(null);
         if (old != null && !old.driver().equals(c.driver())) throw ApiException.bad("A connector's driver cannot change. Create a new definition.");
-        repository.db().sql("""
-                insert into connector_definition(key, name, category, driver, enabled, description)
-                values (:k, :n, :c, :d, :e, :description)
-                on conflict (key) do update set name = excluded.name, category = excluded.category,
-                    enabled = excluded.enabled, description = excluded.description""")
-                .param("k", c.key()).param("n", c.name()).param("c", c.category()).param("d", c.driver()).param("e", c.enabled())
-                .param("description", Objects.toString(c.description(), "")).update();
+        repository.saveConnector(c, Objects.toString(c.description(), ""));
         driverCache.clear();
         audit.platform(Auth.userId(), "connector.definition.save", "connector", null, c.key());
     }
@@ -343,21 +307,11 @@ public class TenantConfigurationServiceV1 {
                 validate(candidate, json.readTree(old.secret() ? secrets.open(stored) : stored));
 
         if (old == null) {
-            repository.db().sql("""
-                    insert into property_definition(key, label, value_type, connector_key, secret, project_override, enabled, options, default_value)
-                    values (:k, :l, :t, :c, :s, :o, :e, :options, :v)""")
-                    .param("k", p.key()).param("l", p.label()).param("t", p.valueType()).param("c", blank(p.connectorKey()))
-                    .param("s", p.secret()).param("o", p.projectOverride()).param("e", p.enabled())
-                    .param("options", candidate.options()).param("v", value).update();
+            repository.insertDefinition(candidate, value);
         } else {
             // A blank secret means "keep the stored default"; clearing uses the explicit reset endpoint.
             if (p.secret() && value == null) value = old.defaultValue();
-            int changed = repository.db().sql("""
-                    update property_definition set label = :l, project_override = :o, enabled = :e, options = :options,
-                        default_value = :v, revision = revision + 1 where key = :k and revision = :rev""")
-                    .param("l", p.label()).param("o", p.projectOverride()).param("e", p.enabled()).param("options", candidate.options())
-                    .param("v", value).param("k", p.key()).param("rev", p.expectedRevision() == null ? -1 : p.expectedRevision()).update();
-            if (changed == 0) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the property before saving.");
+            if (!repository.updateDefinition(candidate, value, p.expectedRevision() == null ? -1 : p.expectedRevision())) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the property before saving.");
         }
         audit.platform(Auth.userId(), "property.definition.save", "property", null, p.key());
     }
@@ -367,7 +321,7 @@ public class TenantConfigurationServiceV1 {
         requirePlatform();
         repository.definition(key);
         if (SYSTEM.containsKey(key)) throw ApiException.bad("Built-in properties need a global default.");
-        repository.db().sql("update property_definition set default_value = null, revision = revision + 1 where key = :k").param("k", key).update();
+        repository.clearDefault(key);
         audit.platform(Auth.userId(), "property.default.clear", "property", null, key);
     }
 
@@ -403,8 +357,8 @@ public class TenantConfigurationServiceV1 {
             Account account = repository.account(tenant);
             // Non-admins only see the projects they are a member of.
             List<Project> projects = repository.projects(tenant).stream()
-                    .filter(p -> platform || isMember(p.id(), null)).toList();
-            boolean editable = platform || (project == null ? isTenantOwner(tenant) : isMember(scope, "('OWNER','ADMIN')"));
+                    .filter(p -> platform || isMember(p.id(), List.of())).toList();
+            boolean editable = platform || (project == null ? isTenantOwner(tenant) : isMember(scope, List.of("OWNER", "ADMIN")));
 
             List<EffectiveProperty> properties = new ArrayList<>();
             for (Definition d : repository.definitions()) {
@@ -430,16 +384,12 @@ public class TenantConfigurationServiceV1 {
         });
     }
 
-    private boolean isMember(UUID project, String roles) {
-        return repository.db().sql("select count(*) from membership where org_id = :p and user_id = :u" + (roles == null ? "" : " and role in " + roles))
-                .param("p", project).param("u", Auth.userId()).query(Integer.class).single() > 0;
+    private boolean isMember(UUID project, List<String> roles) {
+        return repository.isMember(project, Auth.userId(), roles);
     }
 
     private boolean isTenantOwner(UUID tenant) {
-        return repository.db().sql("""
-                select count(*) from membership m join organization o on o.id = m.org_id
-                where o.tenant_id = :t and m.user_id = :u and m.role = 'OWNER'""")
-                .param("t", tenant).param("u", Auth.userId()).query(Integer.class).single() > 0;
+        return repository.isTenantOwner(tenant, Auth.userId());
     }
 
     /** Sets (or with reset, removes) a property value in the tenant scope (project == null) or a project scope. */

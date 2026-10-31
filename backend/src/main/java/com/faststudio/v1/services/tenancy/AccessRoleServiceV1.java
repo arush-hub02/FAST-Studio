@@ -6,10 +6,12 @@ import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
+import com.faststudio.v1.repositories.auth.UserAccountRepository;
+import com.faststudio.v1.repositories.tenancy.AccessRoleRepository;
+import com.faststudio.v1.repositories.tenancy.AccessRoleRepository.Row;
 
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,9 +37,6 @@ public class AccessRoleServiceV1 {
                        boolean enabled,
                        Integer expectedRevision) {}
 
-    /** Stored custom role; {@code permissions} is comma-separated. */
-    public record Row(String key, String name, String kind, String baseRole, String permissions, boolean enabled, int revision) {}
-
     /** A role a member can be given in one organization (built-in or custom), as shown on the Team screen. */
     public record Assignable(String key, String name, String description, String kind, String baseRole, String permissions, boolean builtIn) {}
 
@@ -52,17 +51,19 @@ public class AccessRoleServiceV1 {
             Tenant.Role.PARTNER_ADMIN, new String[]{"Partner admin", "Accept sharings, manage API clients and people"},
             Tenant.Role.PARTNER_VIEWER, new String[]{"Partner viewer", "See what customers share, change nothing"});
 
-    private final JdbcClient db;
+    private final AccessRoleRepository repository;
+    private final UserAccountRepository users;
     private final Audit audit;
     private final Tokens tokens;
 
-    public AccessRoleServiceV1(JdbcClient db, Audit audit, Tokens tokens) {
-        this.db = db;
+    public AccessRoleServiceV1(AccessRoleRepository repository, UserAccountRepository users, Audit audit, Tokens tokens) {
+        this.repository = repository;
+        this.users = users;
         this.audit = audit;
         this.tokens = tokens;
     }
 
-    public List<Row> roles() { return db.sql("select * from access_role order by kind, name").query(Row.class).list(); }
+    public List<Row> roles() { return repository.roles(); }
 
     public List<String> catalog() { return Arrays.stream(Tenant.Perm.values()).map(Enum::name).toList(); }
 
@@ -82,32 +83,10 @@ public class AccessRoleServiceV1 {
         return result;
     }
 
-    /**
-     * Effective permissions of a member. Static so the request interceptors and token minting can call it without a bean.
-     * A disabled or mismatched custom role falls back to VIEW only (fail closed), never to the full ceiling.
-     */
-    public static Set<Tenant.Perm> permissions(JdbcClient db, UUID org, UUID user, Tenant.Role base) {
-        return db.sql("""
-                select r.permissions from membership m join access_role r on r.key = m.custom_role_key
-                join organization o on o.id = m.org_id
-                where m.org_id = :o and m.user_id = :u and r.kind = o.kind and r.base_role = m.role and r.enabled""")
-                .param("o", org).param("u", user).query(String.class).optional()
-                .map(csv -> {
-                    Set<Tenant.Perm> granted = new HashSet<>();
-                    for (Tenant.Perm p : base.perms) if (Times.codes(csv).contains(p.name())) granted.add(p);
-                    return Set.copyOf(granted);
-                })
-                .orElseGet(() -> {
-                    boolean hasCustom = db.sql("select count(*) from membership where org_id = :o and user_id = :u and custom_role_key is not null")
-                            .param("o", org).param("u", user).query(Integer.class).single() > 0;
-                    return hasCustom ? Set.of(Tenant.Perm.VIEW) : Set.copyOf(base.perms);
-                });
-    }
-
     /** Platform admins create or update a custom role. Kind and ceiling are fixed once created. */
     @Transactional
     public void save(Role role) {
-        if (!db.sql("select platform_admin from app_user where id = :u").param("u", Auth.userId()).query(Boolean.class).single())
+        if (!users.user(Auth.userId()).platformAdmin())
             throw new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Platform administrators only.");
         Tenant.Role base;
         try { base = Tenant.Role.valueOf(role.baseRole()); } catch (Exception e) { throw ApiException.bad("Unknown role ceiling."); }
@@ -124,16 +103,11 @@ public class AccessRoleServiceV1 {
 
         String permissions = String.join(",", role.permissions());
         if (old == null) {
-            db.sql("insert into access_role(key, name, kind, base_role, permissions, enabled) values (:k, :n, :kind, :b, :p, :e)")
-                    .param("k", role.key()).param("n", role.name()).param("kind", role.kind()).param("b", role.baseRole())
-                    .param("p", permissions).param("e", role.enabled()).update();
+            repository.insert(role.key(), role.name(), role.kind(), role.baseRole(), permissions, role.enabled());
         } else {
-            int n = db.sql("update access_role set name = :n, permissions = :p, enabled = :e, revision = revision + 1 where key = :k and revision = :v")
-                    .param("n", role.name()).param("p", permissions).param("e", role.enabled()).param("k", role.key())
-                    .param("v", role.expectedRevision() == null ? -1 : role.expectedRevision()).update();
-            if (n == 0) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the role before saving.");
+            if (!repository.update(role.key(), role.name(), permissions, role.enabled(), role.expectedRevision() == null ? -1 : role.expectedRevision())) throw ApiException.conflict("STALE_CONFIGURATION", "Reload the role before saving.");
             // Members holding this role get fresh tokens so changed permissions apply at once.
-            tokens.bump(db.sql("select distinct user_id from membership where custom_role_key = :k").param("k", role.key()).query(UUID.class).list());
+            tokens.bump(repository.holders(role.key()));
         }
         audit.platform(Auth.userId(), "role.definition.save", "role", null, role.key());
     }

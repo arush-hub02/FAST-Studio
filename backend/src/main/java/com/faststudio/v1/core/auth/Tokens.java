@@ -2,7 +2,6 @@ package com.faststudio.v1.core.auth;
 
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.tenant.Tenant;
-import com.faststudio.v1.services.tenancy.AccessRoleServiceV1;
 
 
 import jakarta.servlet.http.Cookie;
@@ -51,6 +50,7 @@ public class Tokens {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final JdbcClient db;
+    private final Permissions permissions;
     private final TokenKeys keys;
     private final JwtEncoder encoder;
     private final String issuer;
@@ -58,9 +58,10 @@ public class Tokens {
     // ponytail: per-instance cache; with several servers, bump() must also reach the others (or shorten the 30 s)
     private final Map<UUID, long[]> versions = new ConcurrentHashMap<>();   // user -> {version, fetched at ms}
 
-    public Tokens(JdbcClient db, TokenKeys keys, @Value("${faststudio.app-url}") String appUrl,
+    public Tokens(JdbcClient db, Permissions permissions, TokenKeys keys, @Value("${faststudio.app-url}") String appUrl,
                   @Value("${server.servlet.session.cookie.secure:false}") boolean secureCookies, @Value("${faststudio.auth.mode:jwt}") String mode) {
         this.db = db;
+        this.permissions = permissions;
         this.keys = keys;
         this.encoder = keys.encoder();
         this.issuer = appUrl.replaceAll("/+$", "");
@@ -107,7 +108,7 @@ public class Tokens {
                 .claim("ver", u.tokenVersion());
         if (active != null) {
             c.claim("org", claim(active)).claim("perms", active.role().equals("PLATFORM_ADMIN")?List.of():
-                    AccessRoleServiceV1.permissions(db,active.id(),userId,Tenant.Role.valueOf(active.role())).stream().map(Enum::name).sorted().toList());
+                    permissions.of(active.id(),userId,Tenant.Role.valueOf(active.role())).stream().map(Enum::name).sorted().toList());
             if (active.tenantId() != null) c.claim("tid", active.tenantId().toString());
         }
         else c.claim("perms", List.of());

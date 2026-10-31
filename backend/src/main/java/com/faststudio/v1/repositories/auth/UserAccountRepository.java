@@ -14,7 +14,6 @@ public class UserAccountRepository {
 
     public UserAccountRepository(JdbcClient db) { this.db = db; }
 
-    public JdbcClient db() { return db; }
 
     public record UserRow(UUID id, String name, String email, boolean platformAdmin, boolean mustChangePassword) {}
 
