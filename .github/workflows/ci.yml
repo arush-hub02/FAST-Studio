@@ -91,7 +91,9 @@ jobs:
 
   e2e:
     name: Browser smoke test
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.55 cannot install Chromium's system libraries on Ubuntu 26.04 (ubuntu-latest since Oct 2026).
+    # Move to ubuntu-latest when Playwright is upgraded to a version that supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
