@@ -37,6 +37,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class PartnerInterceptor implements HandlerInterceptor {
     public static final String ATTR = "fs.partner";
+
+    /** The partner context the interceptor attached to this request (sharing, scope and channel already checked). */
+    public static Ctx current(jakarta.servlet.http.HttpServletRequest req) {
+        return (Ctx) req.getAttribute(ATTR);
+    }
     private final JdbcClient db;
     private final Audit audit;
     private final int perMinute;
