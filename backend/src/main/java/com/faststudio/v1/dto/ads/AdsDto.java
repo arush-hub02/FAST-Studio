@@ -13,6 +13,14 @@ import java.util.UUID;
 public final class AdsDto {
     private AdsDto() {}
 
+    /** A campaign as the ad decision sees it: schedule, targeting and its creative's delivery state. */
+    public record Candidate(UUID id, String name, String advertiser, String status, OffsetDateTime startsAt, OffsetDateTime endsAt,
+                            String territories, int priority, BigDecimal cpm, String creativeStatus, String mediaKey, long durationMs,
+                            String audiences, int frequencyCap) {}
+
+    /** Our conditioned copy of an external ad server's creative (id null when it could not be accepted). */
+    public record Creative(UUID id, String status, String mediaKey, long durationMs) {}
+
     /** A campaign with its creative and delivery counts; a completion only counts when its start was also recorded. */
     public record Campaign(UUID id, String name, String advertiser, String status, OffsetDateTime startsAt, OffsetDateTime endsAt,
                            String territories, int priority, BigDecimal cpm, UUID creativeAssetId, String creativeTitle,

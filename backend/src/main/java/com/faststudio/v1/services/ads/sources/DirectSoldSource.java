@@ -1,7 +1,8 @@
 package com.faststudio.v1.services.ads.sources;
 
-import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
+import com.faststudio.v1.dto.ads.AdsDto.Candidate;
+import com.faststudio.v1.repositories.ads.CampaignRepository;
 import com.faststudio.v1.services.ads.AdDecisionServiceV1;
 
 import org.springframework.stereotype.Component;
@@ -13,27 +14,19 @@ import java.util.*;
 /** Ad connector for our own direct-sold campaigns: picks eligible campaigns and explains every exclusion. */
 @Component
 public class DirectSoldSource implements IAdSource {
-    private final Data data;
+    private final CampaignRepository campaigns;
 
-    public DirectSoldSource(Data data) {
-        this.data = data;
+    public DirectSoldSource(CampaignRepository campaigns) {
+        this.campaigns = campaigns;
     }
 
     @Override
     public String kind() { return "DIRECT"; }
 
-    record Candidate(UUID id, String name, String advertiser, String status, OffsetDateTime startsAt, OffsetDateTime endsAt,
-                     String territories, int priority, BigDecimal cpm, String creativeStatus, String mediaKey, long durationMs,
-                     String audiences, int frequencyCap) {}
-
     @Override
     public Fill fill(Config source, Request req) {
         List<AdDecisionServiceV1.Excluded> excluded = new ArrayList<>();
-        List<Candidate> all = data.db.sql("""
-                select c.id, c.name, c.advertiser, c.status, c.starts_at, c.ends_at, c.territories, c.priority, c.cpm,
-                       a.status as creative_status, a.media_key, a.duration_ms,c.audiences,c.frequency_cap
-                from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
-                where c.org_id = :o""").param("o", req.org()).query(Candidate.class).list();
+        List<Candidate> all = campaigns.candidates(req.org());
         List<Candidate> eligible = new ArrayList<>();
         for (Candidate c : all) {
             List<String> terr = Times.codes(c.territories());
@@ -68,11 +61,6 @@ public class DirectSoldSource implements IAdSource {
 
     private long reserved(Request req, UUID campaign) {
         if(req.sessionId()==null) return 0;
-        return data.db.sql("""
-            select count(*) from ad_decision d join playback_session s on s.org_id=d.org_id and s.id=d.session_id
-            where d.org_id=:o and d.created_at>now()-interval '1 hour'
-              and ((cast(:key as text) is not null and s.viewer_key=:key) or (cast(:key as text) is null and s.id=:sid))
-              and exists (select 1 from jsonb_array_elements(d.decision::jsonb->'slots') x where x->>'campaignId'=:camp)""")
-                .param("o",req.org()).param("key",req.viewer().key()).param("sid",req.sessionId()).param("camp",campaign.toString()).query(Long.class).single();
+        return campaigns.servedLastHour(req.org(), req.viewer().key(), req.sessionId(), campaign);
     }
 }

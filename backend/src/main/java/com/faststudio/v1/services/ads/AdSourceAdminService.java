@@ -2,8 +2,8 @@ package com.faststudio.v1.services.ads;
 
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
-import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.PublicUrl;
+import com.faststudio.v1.repositories.ads.AdSourceRepository;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import com.faststudio.v1.services.ads.sources.VastSource;
 
@@ -20,13 +20,13 @@ import java.util.*;
  */
 @Service
 public class AdSourceAdminService {
-    private final Data data;
+    private final AdSourceRepository repository;
     private final Audit audit;
     private final AdDecisionServiceV1 decisions;
     private final VastSource vast;
 
-    public AdSourceAdminService(Data data, Audit audit, AdDecisionServiceV1 decisions, VastSource vast) {
-        this.data = data;
+    public AdSourceAdminService(AdSourceRepository repository, Audit audit, AdDecisionServiceV1 decisions, VastSource vast) {
+        this.repository = repository;
         this.audit = audit;
         this.decisions = decisions;
         this.vast = vast;
@@ -53,13 +53,9 @@ public class AdSourceAdminService {
         String tag = checkTag(r);
         if ("TENANT".equals(managedBy) && !"VAST".equals(r.kind())) throw ApiException.bad("Companies can only add VAST ad tags.");
         materializeDefault(org);
-        if ("DIRECT".equals(r.kind()) && data.db.sql("select count(*) from ad_source where org_id = :o and kind = 'DIRECT'").param("o", org).query(Integer.class).single() > 0)
+        if ("DIRECT".equals(r.kind()) && repository.hasDirect(org))
             throw ApiException.conflict("DIRECT_EXISTS", "Direct-sold campaigns are already in the waterfall.");
-        UUID id = data.db.sql("""
-                insert into ad_source(org_id, name, kind, tag_url, timeout_ms, position, enabled, managed_by)
-                values (:o, :n, :k, :u, :ms, (select coalesce(max(position), -1) + 1 from ad_source where org_id = :o), :en, :by) returning id""")
-                .param("o", org).param("n", r.name().trim()).param("k", r.kind()).param("u", tag).param("ms", r.timeoutMs())
-                .param("en", r.enabled()).param("by", managedBy).query(UUID.class).single();
+        UUID id = repository.insert(org, r.name().trim(), r.kind(), tag, r.timeoutMs(), r.enabled(), managedBy);
         audit.log(org, actor, "ad-source.create", "ad_source", id, r.name() + " (" + managedBy.toLowerCase() + ")");
         return id;
     }
@@ -67,23 +63,15 @@ public class AdSourceAdminService {
     /** Blank write-only credentials preserve the stored URL; ownership is checked before reading it. */
     public void update(UUID org, UUID actor, UUID id, AdSourceRequest r, String onlyManagedBy) {
         String tag = "VAST".equals(r.kind()) && (r.tagUrl() == null || r.tagUrl().isBlank())
-                ? data.db.sql("select tag_url from ad_source where org_id=:o and id=:id and kind='VAST'"
-                        + (onlyManagedBy == null ? "" : " and managed_by=:by"))
-                    .param("o", org).param("id", id).params(by(onlyManagedBy)).query(String.class).optional()
-                    .orElseThrow(() -> ApiException.notFound("Ad source"))
+                ? repository.vastTagUrl(org, id, onlyManagedBy).orElseThrow(() -> ApiException.notFound("Ad source"))
                 : checkTag(r);
-        int n = data.db.sql("update ad_source set name = :n, tag_url = :u, timeout_ms = :ms, enabled = :en where org_id = :o and id = :id and kind = :k"
-                        + (onlyManagedBy == null ? "" : " and managed_by = :by"))
-                .param("n", r.name().trim()).param("u", tag).param("ms", r.timeoutMs()).param("en", r.enabled())
-                .param("o", org).param("id", id).param("k", r.kind()).params(by(onlyManagedBy)).update();
-        if (n == 0) throw ApiException.notFound("Ad source");
+        if (!repository.update(org, id, r.kind(), r.name().trim(), tag, r.timeoutMs(), r.enabled(), onlyManagedBy))
+            throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.update", "ad_source", id, r.name());
     }
 
     public void delete(UUID org, UUID actor, UUID id, String onlyManagedBy) {
-        int n = data.db.sql("delete from ad_source where org_id = :o and id = :id" + (onlyManagedBy == null ? "" : " and managed_by = :by"))
-                .param("o", org).param("id", id).params(by(onlyManagedBy)).update();
-        if (n == 0) throw ApiException.notFound("Ad source");
+        if (!repository.delete(org, id, onlyManagedBy)) throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.delete", "ad_source", id, "");
     }
 
@@ -91,7 +79,7 @@ public class AdSourceAdminService {
     public List<IAdSource.Config> order(UUID org, UUID actor, List<UUID> ids) {
         materializeDefault(org);
         for (int i = 0; i < ids.size(); i++)
-            data.db.sql("update ad_source set position = :p where org_id = :o and id = :id").param("p", i).param("o", org).param("id", ids.get(i)).update();
+            repository.setPosition(org, ids.get(i), i);
         audit.log(org, actor, "ad-source.reorder", "ad_source", null, "");
         return list(org, true);
     }
@@ -112,8 +100,7 @@ public class AdSourceAdminService {
             long ms = (System.nanoTime() - start) / 1_000_000L;
             List<TestAd> out = new ArrayList<>();
             for (VastSource.Ad a : ads) {
-                var c = r.prepare() ? vast.creative(org, src, a) : data.db.sql("select id, status, media_key, duration_ms from asset where org_id = :o and source_ref = :r")
-                        .param("o", org).param("r", a.ref()).query(VastSource.Creative.class).optional().orElse(null);
+                var c = r.prepare() ? vast.creative(org, src, a) : repository.creative(org, a.ref()).orElse(null);
                 String status = c == null ? (r.prepare() ? "Queued for conditioning" : "New: will be conditioned when first served (or tick 'prepare')")
                         : "READY".equals(c.status()) ? "Ready (conditioned to " + c.durationMs() / 1000 + " s)" : c.status().charAt(0) + c.status().substring(1).toLowerCase();
                 out.add(new TestAd(a.title(), a.advertiser(), a.durationMs(), null, a.tracking().values().stream().mapToInt(List::size).sum(), status));
@@ -133,14 +120,8 @@ public class AdSourceAdminService {
         return r.tagUrl().trim();
     }
 
-    private static Map<String, Object> by(String managedBy) {
-        return managedBy == null ? Map.of() : Map.of("by", managedBy);
-    }
-
     /** The implicit default (direct-sold only) becomes a real row before the waterfall is edited. */
     private void materializeDefault(UUID org) {
-        if (data.db.sql("select count(*) from ad_source where org_id = :o").param("o", org).query(Integer.class).single() == 0)
-            data.db.sql("insert into ad_source(org_id, name, kind, timeout_ms, position) values (:o, :n, 'DIRECT', 1000, 0)")
-                    .param("o", org).param("n", AdDecisionServiceV1.DEFAULT_DIRECT.name()).update();
+        if (repository.count(org) == 0) repository.insertDirect(org, AdDecisionServiceV1.DEFAULT_DIRECT.name());
     }
 }

@@ -1,6 +1,7 @@
 package com.faststudio.v1.repositories.ads;
 
 import com.faststudio.v1.dto.ads.AdsDto.Campaign;
+import com.faststudio.v1.dto.ads.AdsDto.Candidate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -51,6 +52,25 @@ public class CampaignRepository {
                 .param("n", f.name()).param("a", f.advertiser()).param("cr", f.creativeAssetId()).param("s", f.startsAt()).param("e", f.endsAt())
                 .param("terr", f.territories()).param("p", f.priority()).param("cpm", f.cpm()).param("aud", f.audiences())
                 .param("cap", f.frequencyCap()).param("o", org).param("id", id).update() > 0;
+    }
+
+    /** Every campaign of the project with its creative, for the ad decision to filter. */
+    public List<Candidate> candidates(UUID org) {
+        return db.sql("""
+                select c.id, c.name, c.advertiser, c.status, c.starts_at, c.ends_at, c.territories, c.priority, c.cpm,
+                       a.status as creative_status, a.media_key, a.duration_ms,c.audiences,c.frequency_cap
+                from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
+                where c.org_id = :o""").param("o", org).query(Candidate.class).list();
+    }
+
+    /** Breaks in the last hour where this viewer (or, without a viewer key, this session) was given the campaign; drives frequency caps. */
+    public long servedLastHour(UUID org, String viewerKey, UUID session, UUID campaign) {
+        return db.sql("""
+            select count(*) from ad_decision d join playback_session s on s.org_id=d.org_id and s.id=d.session_id
+            where d.org_id=:o and d.created_at>now()-interval '1 hour'
+              and ((cast(:key as text) is not null and s.viewer_key=:key) or (cast(:key as text) is null and s.id=:sid))
+              and exists (select 1 from jsonb_array_elements(d.decision::jsonb->'slots') x where x->>'campaignId'=:camp)""")
+                .param("o", org).param("key", viewerKey).param("sid", session).param("camp", campaign.toString()).query(Long.class).single();
     }
 
     public boolean setStatus(UUID org, UUID id, String status) {

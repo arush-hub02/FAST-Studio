@@ -1,8 +1,9 @@
 package com.faststudio.v1.services.ads.sources;
 
 import com.faststudio.v1.core.common.ApiException;
-import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.PublicUrl;
+import com.faststudio.v1.dto.ads.AdsDto.Creative;
+import com.faststudio.v1.repositories.ads.AdSourceRepository;
 import com.faststudio.v1.services.ads.AdDecisionServiceV1;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
@@ -40,13 +41,13 @@ public class VastSource implements IAdSource {
     static final Map<String, String> EVENTS = Map.of("start", "IMPRESSION", "firstQuartile", "FIRST_QUARTILE",
             "midpoint", "MIDPOINT", "thirdQuartile", "THIRD_QUARTILE", "complete", "COMPLETE");
 
-    private final Data data;
+    private final AdSourceRepository repository;
     private final MediaServiceV1 media;
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(2)).build();
 
-    public VastSource(Data data, MediaServiceV1 media) {
-        this.data = data;
+    public VastSource(AdSourceRepository repository, MediaServiceV1 media) {
+        this.repository = repository;
         this.media = media;
     }
 
@@ -56,8 +57,6 @@ public class VastSource implements IAdSource {
     /** One linear ad from a VAST response; tracking = our event -> URLs to call when it happens. */
     /** One linear ad. ref = its stable identity (creative URLs are often signed per request, so they can't be). */
     public record Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking) {}
-
-    public record Creative(UUID id, String status, String mediaKey, long durationMs) {}
 
     @Override
     public Fill fill(Config src, Request req) {
@@ -95,8 +94,7 @@ public class VastSource implements IAdSource {
 
     /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen. */
     public Creative creative(UUID org, Config src, Ad ad) {
-        Optional<Creative> found = data.db.sql("select id, status, media_key, duration_ms from asset where org_id = :o and source_ref = :r")
-                .param("o", org).param("r", ad.ref()).query(Creative.class).optional();
+        Optional<Creative> found = repository.creative(org, ad.ref());
         if (found.isPresent()) return found.get();
         try {
             PublicUrl.check(ad.mediaUrl());
@@ -104,12 +102,8 @@ public class VastSource implements IAdSource {
             log.warn("Ignoring creative from {}: {}", src.name(), e.getMessage());
             return new Creative(null, "FAILED", null, 0);
         }
-        data.db.sql("""
-                insert into asset(org_id, title, description, kind, genre, duration_ms, status, status_detail, color, source_url, source_ref)
-                values (:o, :t, :d, 'AD', 'Advertising', :ms, 'PROCESSING', 'Conditioning ad creative into 5-second segments', '#64748b', :u, :r)
-                on conflict (org_id, source_ref) where source_ref is not null do nothing returning id""")
-                .param("o", org).param("t", trim(ad.title(), 120)).param("d", "Creative from " + src.name() + (ad.advertiser().isEmpty() ? "" : " (" + ad.advertiser() + ")"))
-                .param("ms", ad.durationMs()).param("u", ad.mediaUrl()).param("r", ad.ref()).query(UUID.class).optional().ifPresent(media::enqueueCreative);
+        repository.insertCreative(org, trim(ad.title(), 120), "Creative from " + src.name() + (ad.advertiser().isEmpty() ? "" : " (" + ad.advertiser() + ")"),
+                ad.durationMs(), ad.mediaUrl(), ad.ref()).ifPresent(media::enqueueCreative);
         return null;
     }
 

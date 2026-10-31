@@ -2,6 +2,7 @@ package com.faststudio.v1.services.ads;
 
 import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
+import com.faststudio.v1.repositories.ads.AdSourceRepository;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import com.faststudio.v1.services.rights.Rights;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
@@ -29,15 +30,17 @@ public class AdDecisionServiceV1 {
     static final IAdSource.Config DEFAULT_DIRECT = new IAdSource.Config(null, "Direct-sold campaigns", "DIRECT", null, 0, 0, true, "PLATFORM");
 
     private final Data data;
+    private final AdSourceRepository repository;
     private final Map<String, IAdSource> sources;
     private final TransactionTemplate transactions;
     private final JsonMapper json;
     private final EdgePublisher publisher;
     private final TenantConfigurationServiceV1 configuration;
 
-    public AdDecisionServiceV1(Data data, List<IAdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher,
+    public AdDecisionServiceV1(Data data, AdSourceRepository repository, List<IAdSource> sources, PlatformTransactionManager manager, JsonMapper json, EdgePublisher publisher,
                               TenantConfigurationServiceV1 configuration) {
         this.data = data;
+        this.repository = repository;
         this.transactions = new TransactionTemplate(manager);
         this.json = json;
         this.publisher = publisher;
@@ -65,21 +68,18 @@ public class AdDecisionServiceV1 {
         return transactions.execute(tx -> {
             // Serialize reservations across sessions of the same permitted viewer, including other server instances.
             String key = org + ":" + (viewer.key() == null ? sessionId : viewer.key());
-            data.db.sql("select pg_advisory_xact_lock(hashtextextended(:key,0))").param("key",key).query((rs,n)->true).single();
-            Optional<String> prior = data.db.sql("select decision from ad_decision where org_id=:o and session_id=:s and break_id=:b")
-                    .param("o",org).param("s",sessionId).param("b",breakId).query(String.class).optional();
+            repository.lockDecisions(key);
+            Optional<String> prior = repository.decision(org, sessionId, breakId);
             if(prior.isPresent()) return json.readValue(prior.get(),Decision.class);
             Decision result = compute(org,sessionId,breakId,breakStart,breakMs,programmeAssetId,country,viewer);
-            data.db.sql("insert into ad_decision(org_id,session_id,break_id,decision) values (:o,:s,:b,:d)")
-                    .param("o",org).param("s",sessionId).param("b",breakId).param("d",json.writeValueAsString(result)).update();
+            repository.saveDecision(org, sessionId, breakId, json.writeValueAsString(result));
             return result;
         });
     }
 
     /** The tenant's waterfall in order; without configuration, direct-sold campaigns only. */
     public List<IAdSource.Config> waterfall(UUID org) {
-        List<IAdSource.Config> rows = data.db.sql("select id, name, kind, tag_url, timeout_ms, position, enabled, managed_by from ad_source where org_id = :o order by position, created_at")
-                .param("o", org).query(IAdSource.Config.class).list();
+        List<IAdSource.Config> rows = repository.waterfall(org);
         return rows.isEmpty() ? List.of(DEFAULT_DIRECT) : rows;
     }
 
@@ -91,10 +91,7 @@ public class AdDecisionServiceV1 {
                 return new Decision(breakId, breakMs, List.of(), 0, List.of(), "No ads: the programme's licence doesn't allow advertising.");
             genre = data.asset(org, programmeAssetId).genre();
         }
-        String channel = data.db.sql("""
-                select c.slug from schedule_entry e join schedule_version v on v.org_id = e.org_id and v.id = e.version_id
-                join channel c on c.org_id = v.org_id and c.id = v.channel_id where e.org_id = :o and e.id = :b""")
-                .param("o", org).param("b", breakId).query(String.class).optional().orElse("");
+        String channel = repository.channelSlugOfBreak(org, breakId);
         List<Slot> slots = new ArrayList<>();
         List<Excluded> excluded = new ArrayList<>();
         Set<String> advertisers = new HashSet<>();
