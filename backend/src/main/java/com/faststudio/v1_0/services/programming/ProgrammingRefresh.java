@@ -1,33 +1,45 @@
 package com.faststudio.v1_0.services.programming;
 
-import com.faststudio.v1_0.controllers.studio.programming.ProgrammingControllerV1_0;
 import com.faststudio.v1_0.core.common.Data;
 import com.faststudio.v1_0.core.tenant.Tenant;
 import com.faststudio.v1_0.core.tenant.TenantScope;
-
+import com.faststudio.v1_0.dto.programming.ProgrammingDto.GenerateRequest;
+import com.faststudio.v1_0.repositories.programming.ProgrammingRuleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import java.util.*;
 
-/** Extend drafts only; publishing remains an explicit operator action. */
+/**
+ * Every 10 minutes, extends each channel's draft with the next 14 days of smart-programming placements.
+ * Drafts only: publishing remains an explicit operator action. A channel whose draft is being edited is skipped
+ * (STALE) and retried on the next run.
+ */
 @Component
 public class ProgrammingRefresh {
-    private static final Logger log=LoggerFactory.getLogger(ProgrammingRefresh.class);
+    private static final Logger log = LoggerFactory.getLogger(ProgrammingRefresh.class);
     private final Data data;
-    private final ProgrammingControllerV1_0 controller;
-    public ProgrammingRefresh(Data data,ProgrammingControllerV1_0 controller) { this.data=data; this.controller=controller; }
-    record Channel(UUID orgId,String slug,String name,UUID channelId) {}
-    @Scheduled(initialDelay=60_000,fixedDelay=600_000)
+    private final ProgrammingRuleRepository repository;
+    private final ProgrammingRuleServiceV1_0 rules;
+
+    public ProgrammingRefresh(Data data, ProgrammingRuleRepository repository, ProgrammingRuleServiceV1_0 rules) {
+        this.data = data;
+        this.repository = repository;
+        this.rules = rules;
+    }
+
+    @Scheduled(initialDelay = 60_000, fixedDelay = 600_000)
     public void tick() {
-        var rows=TenantScope.bypass(()->data.db.sql("""
-            select distinct o.id as org_id,o.slug,o.name,c.id as channel_id from programming_rule r
-            join channel c on c.org_id=r.org_id and c.id=r.channel_id join organization o on o.id=c.org_id
-            where r.enabled and r.end_date>=current_date and c.status<>'ARCHIVED' and o.status='ACTIVE'""").query(Channel.class).list());
-        for(var row:rows) try {
-            TenantScope.as(row.orgId(),()->controller.generate(new Tenant(row.orgId(),row.slug(),row.name(),null,Tenant.Role.CHANNEL_OPERATOR,"CUSTOMER"),
-                    row.channelId(),new ProgrammingControllerV1_0.GenerateRequest(data.draft(row.orgId(),row.channelId()).revision(),14)));
-        } catch(RuntimeException e) { log.debug("Draft refresh for {} deferred: {}",row.channelId(),e.getMessage()); }
+        var rows = TenantScope.bypass(repository::channelsWithActiveRules);
+        for (var row : rows) {
+            try {
+                // A system actor with channel-operator rights, scoped to that project.
+                var actor = new Tenant(row.orgId(), row.slug(), row.name(), null, Tenant.Role.CHANNEL_OPERATOR, "CUSTOMER");
+                TenantScope.as(row.orgId(), () -> rules.generate(actor, row.channelId(),
+                        new GenerateRequest(data.draft(row.orgId(), row.channelId()).revision(), 14)));
+            } catch (RuntimeException e) {
+                log.debug("Draft refresh for {} deferred: {}", row.channelId(), e.getMessage());
+            }
+        }
     }
 }

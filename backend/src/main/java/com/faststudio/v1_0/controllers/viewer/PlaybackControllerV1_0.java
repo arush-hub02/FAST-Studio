@@ -1,9 +1,11 @@
 package com.faststudio.v1_0.controllers.viewer;
 
+import com.faststudio.v1_0.dto.programming.ScheduleDto.Programme;
+import com.faststudio.v1_0.services.programming.EpgServiceV1_0;
+
 import com.faststudio.v1_0.core.common.Data.Channel;
 import com.faststudio.v1_0.core.common.Data.Entry;
 
-import com.faststudio.v1_0.controllers.studio.programming.ScheduleControllerV1_0;
 import com.faststudio.v1_0.core.common.ApiException;
 import com.faststudio.v1_0.core.common.Data;
 import com.faststudio.v1_0.core.tenant.TenantScope;
@@ -37,6 +39,7 @@ import java.util.*;
 @RequestMapping("/play")
 public class PlaybackControllerV1_0 {
     private final Data data;
+    private final EpgServiceV1_0 epg;
     private final PlayoutServiceV1_0 playout;
     private final EdgeClient edge;
     private final EdgePublisher publisher;
@@ -44,7 +47,8 @@ public class PlaybackControllerV1_0 {
     private final VastSource vast;
     private final ViewerContextService viewers;
 
-    public PlaybackControllerV1_0(Data data, PlayoutServiceV1_0 playout, EdgeClient edge, EdgePublisher publisher, JsonMapper json, VastSource vast, ViewerContextService viewers) {
+    public PlaybackControllerV1_0(Data data, PlayoutServiceV1_0 playout, EdgeClient edge, EdgePublisher publisher, JsonMapper json, VastSource vast, ViewerContextService viewers, EpgServiceV1_0 epg) {
+        this.epg = epg;
         this.vast = vast;
         this.viewers = viewers;
         this.data = data;
@@ -159,7 +163,7 @@ public class PlaybackControllerV1_0 {
     public record EventRow(String event, String campaign, int seconds, java.time.OffsetDateTime occurredAt) {}
 
     public record Info(String channel, String channelStatus, String destination, String adMode, String markerFormat, String country,
-                       ScheduleControllerV1_0.Programme now, ScheduleControllerV1_0.Programme next, BreakInfo currentBreak,
+                       Programme now, Programme next, BreakInfo currentBreak,
                        List<BreakInfo> upcomingBreaks, Rights.Decision rightsNow, List<EventRow> events, Instant serverTime) {}
 
     @GetMapping("/{session}/info")
@@ -167,8 +171,8 @@ public class PlaybackControllerV1_0 {
         var s = playout.session(session);
         Channel ch = data.channel(s.orgId(), s.channelId());
         Instant now = Instant.now();
-        var guide = ScheduleControllerV1_0.guide(data, s.orgId(), ch, now.minusSeconds(60), now.plusSeconds(6 * 3600));
-        var cur = guide.stream().filter(ScheduleControllerV1_0.Programme::now).findFirst().orElse(null);
+        var guide = epg.guide(s.orgId(), ch, now.minusSeconds(60), now.plusSeconds(6 * 3600));
+        var cur = guide.stream().filter(Programme::now).findFirst().orElse(null);
         var next = guide.stream().filter(p -> p.start().isAfter(now)).findFirst().orElse(null);
         List<Entry> breaks = ch.publishedVersionId() == null ? List.of()
                 : data.entries(s.orgId(), ch.publishedVersionId(), now, now.plusSeconds(3 * 3600)).stream().filter(Entry::isBreak).toList();

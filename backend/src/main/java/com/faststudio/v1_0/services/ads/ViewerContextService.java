@@ -1,5 +1,7 @@
 package com.faststudio.v1_0.services.ads;
 
+import com.faststudio.v1_0.dto.media.MediaSettingsDto;
+
 import com.faststudio.v1_0.core.common.ApiException;
 import com.faststudio.v1_0.core.common.Secrets;
 import com.faststudio.v1_0.services.media.MediaSettingsServiceV1_0;
@@ -27,7 +29,7 @@ public class ViewerContextService {
     }
     public Verified verify(UUID org, String token) {
         if(token==null || token.isBlank()) return Verified.CONTEXTUAL;
-        MediaSettingsServiceV1_0.Row row=settings.row(org);
+        MediaSettingsDto.Row row=settings.row(org);
         if(row==null || !settings.personalizedAds(org)) return Verified.CONTEXTUAL;   // dynamic property since V15
         try {
             if(token.length()>8192 || row.viewerSecret()==null) throw new IllegalArgumentException();

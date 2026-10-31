@@ -1,6 +1,8 @@
 package com.faststudio.v1_0.controllers.partner;
 
-import com.faststudio.v1_0.controllers.studio.programming.ScheduleControllerV1_0;
+import com.faststudio.v1_0.dto.programming.ScheduleDto.Programme;
+import com.faststudio.v1_0.services.programming.EpgServiceV1_0;
+
 import com.faststudio.v1_0.core.common.ApiException;
 import com.faststudio.v1_0.core.common.Audit;
 import com.faststudio.v1_0.core.common.Data;
@@ -30,11 +32,13 @@ import java.util.*;
 @RequestMapping("/api/partners/{partner}")
 public class PartnerApiControllerV1_0 {
     private final Data data;
+    private final EpgServiceV1_0 epg;
     private final Audit audit;
     private final MediaSigner signer;
     private final String appUrl;
 
-    public PartnerApiControllerV1_0(Data data, Audit audit, MediaSigner signer, @Value("${faststudio.app-url}") String appUrl) {
+    public PartnerApiControllerV1_0(Data data, Audit audit, MediaSigner signer, @Value("${faststudio.app-url}") String appUrl, EpgServiceV1_0 epg) {
+        this.epg = epg;
         this.data = data;
         this.audit = audit;
         this.signer = signer;
@@ -130,7 +134,7 @@ public class PartnerApiControllerV1_0 {
     List<Programme> epg(@PathVariable UUID channelId, @RequestParam(defaultValue = "24") int hours, jakarta.servlet.http.HttpServletRequest req) {
         UUID owner = ctx(req).requireLink().ownerId();
         Instant from = Instant.now().minusSeconds(3600);
-        return ScheduleControllerV1_0.guide(data, owner, data.channel(owner, channelId), from, from.plusSeconds(Math.min(Math.max(hours, 1), 168) * 3600L)).stream()
+        return epg.guide(owner, data.channel(owner, channelId), from, from.plusSeconds(Math.min(Math.max(hours, 1), 168) * 3600L)).stream()
                 .map(p -> new Programme(p.title(), p.description(), p.genre(), p.start(), p.end(), p.now(), p.adBreaks(),
                         p.mediaKey() == null ? null : appUrl + signer.url(p.mediaKey(), "thumb.jpg"))).toList();
     }
@@ -140,7 +144,7 @@ public class PartnerApiControllerV1_0 {
     @Transactional(readOnly = true)
     String xmltv(@PathVariable UUID channelId, jakarta.servlet.http.HttpServletRequest req) {
         var l = ctx(req).requireLink();
-        return ScheduleControllerV1_0.xmltv(data, l.ownerId(), l.ownerSlug(), data.channel(l.ownerId(), channelId));
+        return epg.xmltv(l.ownerId(), l.ownerSlug(), data.channel(l.ownerId(), channelId));
     }
 
     public record Stream(String howTo, String method, String url, Map<String, Object> body, Destination destination) {}
