@@ -3,6 +3,7 @@ import { api, type MediaSettingsView} from '../../shared/api'
 import { useOrg } from '../../app/App'
 import { DAYS, ErrorBox, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEditor'
+import { ProjectCapabilities } from '../../shared/configuration/CapabilityCatalog'
 
 export default function Settings() {
   const org = useOrg()
@@ -15,6 +16,7 @@ export default function Settings() {
     {scope==='project'&&<>
     {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
       <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
+    <ProjectCapabilities base={`/api/orgs/${org.slug}/capabilities`} editable={org.can('TEAM_MANAGE')} />
     </>}
   </div>
 }

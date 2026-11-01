@@ -39,8 +39,11 @@ const SessionCtx = createContext<Session>({ me: null, refresh: async () => {}, l
 export const useSession = () => useContext(SessionCtx)
 const ProjectCtx = createContext<{ details: ProjectDetails; reload: () => void } | null>(null)
 
-/** Current organization from the URL; permissions come from the server-issued membership (UI hint only — the API enforces). */
-export function useOrg(): Membership & { can: (p: string) => boolean; base: string; project: ProjectDetails | null; reloadProject: () => void } {
+/**
+ * Current organization from the URL; permissions and features come from project details (UI hint only — the API
+ * enforces). can(key) and has(key) take identifiers from the features and permissions catalogue, built-in or custom.
+ */
+export function useOrg(): Membership & { can: (p: string) => boolean; has: (f: string) => boolean; base: string; project: ProjectDetails | null; reloadProject: () => void } {
   const { me } = useSession()
   const bootstrap = useContext(ProjectCtx)
   const { org } = useParams()
@@ -48,8 +51,9 @@ export function useOrg(): Membership & { can: (p: string) => boolean; base: stri
   if (!m) throw new Error('No membership')
   const project = bootstrap?.details.project.id === m.orgId ? bootstrap.details : null
   const permissions = project?.access.permissions ?? m.permissions
-  return { ...m, role: project?.access.role ?? m.role, permissions, features: project?.access.features ?? m.features,
-    can: (p: string) => permissions.includes(p), base: '/' + m.slug, project, reloadProject: bootstrap?.reload ?? (() => {}) }
+  const features = project?.access.features ?? m.features
+  return { ...m, role: project?.access.role ?? m.role, permissions, features,
+    can: (p: string) => permissions.includes(p), has: (f: string) => features.includes(f), base: '/' + m.slug, project, reloadProject: bootstrap?.reload ?? (() => {}) }
 }
 
 export default function App() {

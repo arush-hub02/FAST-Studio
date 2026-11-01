@@ -1,5 +1,7 @@
 package com.faststudio.v1.services.tenancy;
 
+import com.faststudio.v1.repositories.tenancy.CapabilityRepository;
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.core.auth.Auth;
 import com.faststudio.v1.core.auth.Tokens;
 import com.faststudio.v1.core.common.ApiException;
@@ -55,8 +57,10 @@ public class AccessRoleServiceV1 {
     private final UserAccountRepository users;
     private final Audit audit;
     private final Tokens tokens;
+    private final CapabilityRepository capabilities;
 
-    public AccessRoleServiceV1(AccessRoleRepository repository, UserAccountRepository users, Audit audit, Tokens tokens) {
+    public AccessRoleServiceV1(AccessRoleRepository repository, UserAccountRepository users, Audit audit, Tokens tokens, CapabilityRepository capabilities) {
+        this.capabilities = capabilities;
         this.repository = repository;
         this.users = users;
         this.audit = audit;
@@ -65,7 +69,12 @@ public class AccessRoleServiceV1 {
 
     public List<Row> roles() { return repository.roles(); }
 
-    public List<String> catalog() { return Arrays.stream(Tenant.Perm.values()).map(Enum::name).toList(); }
+    /** Built-in permissions plus enabled global custom permissions (custom ones gate the frontend; they grant no server access). */
+    public List<String> catalog() {
+        List<String> keys = new ArrayList<>(Arrays.stream(Tenant.Perm.values()).map(Enum::name).toList());
+        keys.addAll(TenantScope.bypass(() -> capabilities.enabledCustom("PERMISSION", null, true)));
+        return keys;
+    }
 
     /** Built-in plus enabled custom roles available in the caller's organization type. */
     public List<Assignable> assignableIn(Tenant tenant) {
@@ -94,6 +103,7 @@ public class AccessRoleServiceV1 {
         if (base == Tenant.Role.OWNER || base.partner() != role.kind().equals("PARTNER"))
             throw ApiException.bad("Choose a compatible role ceiling; owner remains a built-in recovery role.");
         Set<String> allowed = new HashSet<>(base.perms.stream().map(Enum::name).toList());
+        allowed.addAll(TenantScope.bypass(() -> capabilities.enabledCustom("PERMISSION", null, true)));
         if (!allowed.containsAll(role.permissions()) || !role.permissions().contains("VIEW"))
             throw ApiException.bad("Permissions must include VIEW and stay within the role ceiling.");
 

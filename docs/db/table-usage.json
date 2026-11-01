@@ -186,6 +186,13 @@
       "apis": ["GET /api/platform/orgs/{orgId}/connectors/mux", "PUT /api/platform/orgs/{orgId}/connectors/mux", "POST /api/platform/orgs/{orgId}/connectors/mux/check", "GET /api/platform/orgs/{orgId}/connectors/mux/sync", "POST /api/platform/orgs/{orgId}/connectors/mux/sync", "GET /api/orgs/{org}/library", "POST /api/orgs/{org}/library/sync", "POST /hooks/mux/{org}"],
       "watch": ["No row = 409 LIBRARY_NOT_CONNECTED on sync.", "webhook_secret missing = Mux webhooks get 404.", "checked_at null = never checked; check_error says why the last check failed. New credentials clear both.", "sync_cursor set while a sync is unfinished: the next run continues from that page. sync_finished_at null = the last full scan hasn't completed.", "Token columns hold ciphertext only; never copy them anywhere else."]
     },
+    "capability": {
+      "feature": "Tenants & configuration",
+      "purpose": "The features and permissions catalogue: identifiers screens check (org.has / org.can). Built-in rows mirror what the server enforces; platform administrators add global rows (org_id empty), a project's administrators add rows for that project only.",
+      "pages": ["/platform/configuration", "/:org/settings"],
+      "apis": ["GET /api/platform/capabilities", "POST /api/platform/capabilities", "PUT /api/platform/capabilities/{key}", "DELETE /api/platform/capabilities/{key}", "GET /api/orgs/{org}/capabilities", "POST /api/orgs/{org}/capabilities", "PUT /api/orgs/{org}/capabilities/{key}", "DELETE /api/orgs/{org}/capabilities/{key}", "GET /api/orgs/{org}/project-details", "PUT /api/platform/orgs/{orgId}/features"],
+      "watch": ["key is unique across the whole platform (409 KEY_TAKEN).", "built_in rows can't be removed or switched off (409 BUILT_IN).", "A global FEATURE is on for a project only when organization.features lists it; a project's own FEATURE is on while enabled.", "Custom PERMISSION rows go to OWNER/ADMIN and to custom roles listing them; they grant no server access by themselves.", "Rows with org_id are hidden from other projects by row-level security."]
+    },
     "asset_source": {
       "feature": "Media library",
       "purpose": "Which library video each imported video came from (provider + external id) and what the library last said about it (READY, PREPARING, ERRORED, DELETED, MISSING). Separate from our own readiness (asset.status); re-sync updates this row, never the video's own title, episode or rights.",

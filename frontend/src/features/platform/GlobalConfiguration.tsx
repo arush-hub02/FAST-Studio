@@ -3,6 +3,7 @@ import { api } from '../../shared/api'
 import { ErrorBox, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 import { PropertyInput } from '../../shared/configuration/ConfigurationEditor'
 import type { AccessRole, Connector, Plan, Property } from '../../shared/configuration/types'
+import { GlobalCapabilities } from '../../shared/configuration/CapabilityCatalog'
 
 const emptyConnector:Connector={key:'',name:'',category:'MEDIA',driver:'CUSTOM',enabled:true,description:''}
 const emptyPlan:Plan={key:'',name:'',enabled:true,maxProjects:1,maxChannels:10,monthlyPrice:0,currency:'USD',features:[]}
@@ -10,9 +11,9 @@ const emptyProperty:Property={key:'',label:'',valueType:'STRING',connectorKey:nu
 
 export default function GlobalConfiguration() {
   const [tab,setTab]=useState('properties')
-  return <div className="page stack"><PageHead title="Global configuration" subtitle="Define reusable connectors, subscription plans, typed custom properties and organization roles. Tenants and projects inherit these definitions."/>
-    <nav className="row-wrap" aria-label="Configuration sections">{[['properties','Properties'],['connectors','Connector definitions'],['plans','Subscription plans'],['roles','Organization roles']].map(([key,label])=><button key={key} aria-pressed={tab===key} className={'btn '+(tab===key?'primary':'')} onClick={()=>setTab(key)}>{label}</button>)}</nav>
-    {tab==='properties'?<Properties/>:tab==='connectors'?<Connectors/>:tab==='plans'?<Plans/>:<Roles/>}
+  return <div className="page stack"><PageHead title="Global configuration" subtitle="Define reusable connectors, subscription plans, typed custom properties, features and permissions, and organization roles. Tenants and projects inherit these definitions."/>
+    <nav className="row-wrap" aria-label="Configuration sections">{[['properties','Properties'],['capabilities','Features & permissions'],['connectors','Connector definitions'],['plans','Subscription plans'],['roles','Organization roles']].map(([key,label])=><button key={key} aria-pressed={tab===key} className={'btn '+(tab===key?'primary':'')} onClick={()=>setTab(key)}>{label}</button>)}</nav>
+    {tab==='properties'?<Properties/>:tab==='capabilities'?<GlobalCapabilities/>:tab==='connectors'?<Connectors/>:tab==='plans'?<Plans/>:<Roles/>}
   </div>
 }
 

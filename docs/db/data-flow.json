@@ -1695,6 +1695,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -1716,6 +1746,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -1771,6 +1806,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -1848,6 +1888,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "addSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -1869,6 +1939,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -1924,6 +1999,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2001,6 +2081,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "deleteSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -2022,6 +2132,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2077,6 +2192,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2154,6 +2274,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -2175,6 +2325,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2234,6 +2389,11 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
               "method": "plan",
               "layer": "service"
             },
@@ -2287,6 +2447,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "test",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "test",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -2308,6 +2498,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2398,6 +2593,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -5974,6 +6174,338 @@
             {
               "class": "CampaignRepository",
               "method": "setStatus",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/orgs/{org}/capabilities": {
+      "title": "Project features and permissions",
+      "category": "Project, settings and team",
+      "id": "ep-get-api-orgs-org-capabilities",
+      "handler": "ProjectCapabilityControllerV1.view",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "visibleTo",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/capabilities": {
+      "title": "Add a project feature or permission",
+      "category": "Project, settings and team",
+      "id": "ep-post-api-orgs-org-capabilities",
+      "handler": "ProjectCapabilityControllerV1.create",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "createProject",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "createProject",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "insert",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/capabilities/{key}": {
+      "title": "Remove a project feature or permission",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-capabilities-key",
+      "handler": "ProjectCapabilityControllerV1.delete",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "deleteProject",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "deleteProject",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "delete",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/orgs/{org}/capabilities/{key}": {
+      "title": "Change a project feature or permission",
+      "category": "Project, settings and team",
+      "id": "ep-put-api-orgs-org-capabilities-key",
+      "handler": "ProjectCapabilityControllerV1.update",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "updateProject",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectCapabilityControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "updateProject",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "update",
               "layer": "repository"
             }
           ]
@@ -11477,6 +12009,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "requireFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_definition": {
           "mode": "read",
           "chain": [
@@ -11533,6 +12095,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -11798,6 +12365,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -13228,6 +13800,31 @@
       "id": "ep-get-api-orgs-org-project-details",
       "handler": "ProjectDetailsControllerV1.tenant",
       "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
         "ad_source": {
           "mode": "read",
           "chain": [
@@ -13318,6 +13915,31 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -13393,12 +14015,12 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "driverEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "account",
+              "method": "driverEnabled",
               "layer": "repository"
             }
           ]
@@ -13477,18 +14099,13 @@
               "layer": "service"
             },
             {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
               "layer": "service"
             },
             {
-              "class": "TenantConfigurationServiceV1",
-              "method": "settings",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "projects",
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
               "layer": "repository"
             }
           ]
@@ -13507,13 +14124,13 @@
               "layer": "service"
             },
             {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
+              "class": "CapabilityServiceV1",
+              "method": "permissions",
               "layer": "service"
             },
             {
-              "class": "ProjectDetailsRepository",
-              "method": "project",
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
               "layer": "repository"
             }
           ]
@@ -13644,6 +14261,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -15654,6 +16276,26 @@
               "layer": "repository"
             }
           ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AccessRoleControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "catalog",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -15728,6 +16370,26 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AccessRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "membership": {
           "mode": "read",
           "chain": [
@@ -15759,6 +16421,283 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/capabilities": {
+      "title": "Features and permissions catalogue",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-get-api-platform-capabilities",
+      "handler": "CapabilityControllerV1.list",
+      "tables": {
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "global",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "global",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/capabilities": {
+      "title": "Add a global feature or permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-capabilities",
+      "handler": "CapabilityControllerV1.create",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "createGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "createGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "insert",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "createGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/capabilities/{key}": {
+      "title": "Remove a global feature or permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-capabilities-key",
+      "handler": "CapabilityControllerV1.delete",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "deleteGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "deleteGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "delete",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "deleteGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/capabilities/{key}": {
+      "title": "Change a global feature or permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-capabilities-key",
+      "handler": "CapabilityControllerV1.update",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "updateGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "updateGlobal",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "update",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CapabilityControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "CapabilityServiceV1",
+              "method": "updateGlobal",
               "layer": "service"
             },
             {
@@ -17661,6 +18600,26 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "overview",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "overview",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "global",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -17676,7 +18635,7 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -17701,7 +18660,7 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -18574,6 +19533,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "setFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "requirePlanFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -18594,7 +19583,7 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -18644,7 +19633,7 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -18873,6 +19862,36 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectDetailsControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "platform",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -18948,12 +19967,12 @@
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
+              "method": "driverEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "account",
+              "method": "driverEnabled",
               "layer": "repository"
             }
           ]
@@ -19199,6 +20218,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -25448,6 +26472,9 @@
         "POST /api/orgs/{org}/campaigns",
         "PUT /api/orgs/{org}/campaigns/{id}",
         "POST /api/orgs/{org}/campaigns/{id}/status",
+        "POST /api/orgs/{org}/capabilities",
+        "DELETE /api/orgs/{org}/capabilities/{key}",
+        "PUT /api/orgs/{org}/capabilities/{key}",
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{channelId}/distribute/{destinationId}",
         "PATCH /api/orgs/{org}/channels/{id}",
@@ -25483,6 +26510,9 @@
         "POST /api/partners/{partner}/clients/{clientId}/revoke",
         "POST /api/partners/{partner}/links/{linkId}/accept",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/capabilities",
+        "DELETE /api/platform/capabilities/{key}",
+        "PUT /api/platform/capabilities/{key}",
         "PUT /api/platform/connector-definitions",
         "DELETE /api/platform/email/templates/{key}",
         "PUT /api/platform/email/templates/{key}",
@@ -25523,6 +26553,7 @@
         "POST /api/auth/token/refresh",
         "POST /api/auth/token/switch",
         "POST /api/orgs/{org}/alerts/scan",
+        "GET /api/orgs/{org}/capabilities",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
@@ -25569,9 +26600,11 @@
         "POST /api/auth/token",
         "POST /api/auth/token/refresh",
         "POST /api/auth/token/switch",
+        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/members",
         "PATCH /api/orgs/{org}/members/{userId}",
         "GET /api/orgs/{org}/members/roles",
+        "GET /api/orgs/{org}/project-details",
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles"
       ],
@@ -25603,6 +26636,7 @@
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "GET /api/orgs/{org}/audit",
+        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
         "POST /api/orgs/{org}/channels/{id}/programming/preview",
@@ -25629,6 +26663,9 @@
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/partners/{partner}/links",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/capabilities",
+        "DELETE /api/platform/capabilities/{key}",
+        "PUT /api/platform/capabilities/{key}",
         "PUT /api/platform/connector-definitions",
         "GET /api/platform/email/messages",
         "DELETE /api/platform/email/templates/{key}",
@@ -25713,6 +26750,7 @@
         "POST /api/orgs/{org}/ad-sources/test",
         "POST /api/orgs/{org}/ads/simulate",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
@@ -25805,6 +26843,36 @@
         "POST /api/platform/orgs/{orgId}/ad-sources/order"
       ]
     },
+    "capability": {
+      "read": [
+        "GET /api/orgs/{org}/ad-sources",
+        "POST /api/orgs/{org}/ad-sources",
+        "DELETE /api/orgs/{org}/ad-sources/{id}",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/ad-sources/test",
+        "GET /api/orgs/{org}/capabilities",
+        "DELETE /api/orgs/{org}/capabilities/{key}",
+        "PUT /api/orgs/{org}/capabilities/{key}",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/platform/access-roles",
+        "PUT /api/platform/access-roles",
+        "GET /api/platform/capabilities",
+        "DELETE /api/platform/capabilities/{key}",
+        "PUT /api/platform/capabilities/{key}",
+        "GET /api/platform/orgs/{orgId}/connectors",
+        "PUT /api/platform/orgs/{orgId}/features",
+        "GET /api/platform/orgs/{orgId}/project-details"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/capabilities",
+        "DELETE /api/orgs/{org}/capabilities/{key}",
+        "PUT /api/orgs/{org}/capabilities/{key}",
+        "POST /api/platform/capabilities",
+        "DELETE /api/platform/capabilities/{key}",
+        "PUT /api/platform/capabilities/{key}"
+      ]
+    },
     "subscription_plan": {
       "read": [
         "GET /api/orgs/{org}/ad-sources",
@@ -25812,6 +26880,7 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",

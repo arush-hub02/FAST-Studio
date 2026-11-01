@@ -432,6 +432,62 @@
             "limit": "50"
           },
           "description": "Who did what in the project, newest first."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/capabilities",
+          "title": "Project features and permissions",
+          "description": "The catalogue this project can use (global entries plus its own), and the feature and permission identifiers that apply to you now. The same keys are in project details (access.features, access.permissions)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/capabilities",
+          "title": "Add a project feature or permission",
+          "fields": {
+            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
+            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
+            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
+            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
+          },
+          "body": {
+            "key": "AURORA_APPROVE",
+            "kind": "PERMISSION",
+            "name": "Approve premieres",
+            "description": "May approve premieres",
+            "category": "Channels",
+            "enabled": true
+          },
+          "description": "Adds an entry for this project only. A project feature is on while enabled; a project permission goes to owners and administrators and to custom roles that list it. Needs TEAM_MANAGE. 409 KEY_TAKEN if the identifier exists anywhere."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/capabilities/{key}",
+          "title": "Change a project feature or permission",
+          "fields": {
+            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
+            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
+            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
+            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
+          },
+          "body": {
+            "name": "Approve premieres",
+            "description": "May export highlight clips",
+            "category": "Channels",
+            "enabled": true
+          },
+          "params": {
+            "key": "AURORA_APPROVE"
+          },
+          "description": "Changes one of this project's own entries (404 for global entries or another project's). Needs TEAM_MANAGE."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/capabilities/{key}",
+          "title": "Remove a project feature or permission",
+          "params": {
+            "key": "AURORA_APPROVE"
+          },
+          "description": "Removes one of this project's own entries. Needs TEAM_MANAGE."
         }
       ]
     },
@@ -1692,6 +1748,62 @@
           "fields": {
             "kind": "CUSTOMER or PARTNER: where the role can be used."
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/capabilities",
+          "title": "Features and permissions catalogue",
+          "description": "Every global feature and permission: identifier, kind (FEATURE or PERMISSION), name, description, category, whether it is built in (enforced by the server) and whether it is switched on. Platform administrators only."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/capabilities",
+          "title": "Add a global feature or permission",
+          "fields": {
+            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
+            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
+            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
+            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
+          },
+          "body": {
+            "key": "CLIPS_EXPORT",
+            "kind": "PERMISSION",
+            "name": "Export clips",
+            "description": "May export highlight clips",
+            "category": "Media",
+            "enabled": true
+          },
+          "description": "Adds an entry every project can use. A feature is then switched on per project (PUT /api/platform/orgs/{orgId}/features); a permission goes to owners and administrators and to custom roles that list it. Added entries are identifiers for screens; they grant no server access by themselves. 409 KEY_TAKEN if the identifier exists anywhere."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/capabilities/{key}",
+          "title": "Change a global feature or permission",
+          "fields": {
+            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
+            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
+            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
+            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
+          },
+          "body": {
+            "name": "Export clips",
+            "description": "May export highlight clips",
+            "category": "Media",
+            "enabled": true
+          },
+          "params": {
+            "key": "CLIPS_EXPORT"
+          },
+          "description": "Renames, re-describes or switches an entry on or off. The identifier and kind never change. Built-in entries can be renamed but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/capabilities/{key}",
+          "title": "Remove a global feature or permission",
+          "params": {
+            "key": "CLIPS_EXPORT"
+          },
+          "description": "Removes an added entry. Built-in entries can't be removed (409 BUILT_IN). Projects that had the feature switched on simply stop seeing it."
         }
       ]
     },

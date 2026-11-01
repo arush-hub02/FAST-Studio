@@ -4,14 +4,14 @@
     "body": {
       "access_token": "<hidden>",
       "token_type": "<hidden>",
-      "expires_in": 600,
+      "expires_in": 599,
       "refresh_token": "<hidden>",
       "refresh_expires_in": 43200,
       "org": {
+        "role": "OWNER",
         "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
         "slug": "aurora",
-        "kind": "CUSTOMER",
-        "role": "OWNER"
+        "kind": "CUSTOMER"
       }
     }
   },
@@ -30,8 +30,8 @@
           "status": "ACTIVE",
           "role": "OWNER",
           "permissions": [
-            "ASSETS_EDIT",
-            "ADS_EDIT",
+            "CHANNELS_EDIT",
+            "SCHEDULE_PUBLISH",
             "… 8 more"
           ],
           "kind": "CUSTOMER",
@@ -221,19 +221,19 @@
           {
             "definition": {
               "key": "<hidden>",
-              "label": "API requests per minute (per project, per server)",
+              "label": "API requests per minute (per project, per server; stops runaway scripts)",
               "valueType": "NUMBER",
               "connectorKey": null,
               "secret": false,
               "projectOverride": true,
               "enabled": true,
               "options": [],
-              "defaultValue": 600,
+              "defaultValue": 6000,
               "defaultConfigured": true,
               "revision": 0,
               "system": true
             },
-            "value": 600,
+            "value": 6000,
             "configured": true,
             "source": "GLOBAL",
             "overridden": false
@@ -302,9 +302,9 @@
         "videos": 14,
         "processing": 0,
         "activeCampaigns": 5,
-        "openAlerts": 3,
+        "openAlerts": 0,
         "impressions": 65,
-        "viewerSessions": 145
+        "viewerSessions": 147
       },
       "checklist": [
         {
@@ -325,52 +325,26 @@
       ],
       "activity": [
         {
-          "id": 375,
-          "actor": "Sam Lee (Partner TV)",
-          "action": "partner.read",
+          "id": 391,
+          "actor": "System",
+          "action": "schedule.publish",
           "resourceType": "channel",
-          "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-          "detail": "Partner TV (portal) read markers:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/breaks",
-          "createdAt": "2026-11-01T12:27:24.885724Z"
+          "resourceId": "75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+          "detail": "version 7: Demo mode: schedule auto-extended on startup",
+          "createdAt": "2026-11-01T17:31:18.015889Z"
         },
         {
-          "id": 374,
-          "actor": "Sam Lee (Partner TV)",
-          "action": "partner.read",
+          "id": 390,
+          "actor": "System",
+          "action": "schedule.publish",
           "resourceType": "channel",
-          "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-          "detail": "Partner TV (portal) read stream:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/stream",
-          "createdAt": "2026-11-01T12:27:24.879326Z"
+          "resourceId": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+          "detail": "version 7: Demo mode: schedule auto-extended on startup",
+          "createdAt": "2026-11-01T17:31:18.015889Z"
         },
         "… 6 more"
       ],
-      "alerts": [
-        {
-          "id": "049854e4-e946-4dca-98a1-add10ca15ac2",
-          "severity": "WARNING",
-          "title": "Classic Cinema: schedule runs out soon",
-          "detail": "The published schedule ends Sun 22:56.",
-          "suggestion": "Auto-fill more hours and publish.",
-          "link": "/schedule?channel=bc645565-299e-45e9-ba20-f6b7d19c227a",
-          "status": "OPEN",
-          "resolution": "",
-          "createdAt": "2026-11-01T11:26:37.006486Z",
-          "updatedAt": "2026-11-01T12:27:24.791999Z"
-        },
-        {
-          "id": "4d3af738-ff52-45a0-ae24-fa0348129900",
-          "severity": "WARNING",
-          "title": "Family Entertainment: schedule runs out soon",
-          "detail": "The published schedule ends Sun 22:53.",
-          "suggestion": "Auto-fill more hours and publish.",
-          "link": "/schedule?channel=75aec3ca-f2ef-4d24-86da-f493fc3ed607",
-          "status": "OPEN",
-          "resolution": "",
-          "createdAt": "2026-11-01T11:23:36.751707Z",
-          "updatedAt": "2026-11-01T12:27:24.792207Z"
-        },
-        "… 1 more"
-      ]
+      "alerts": []
     }
   },
   "GET /api/orgs/{org}/settings": {
@@ -458,19 +432,19 @@
         {
           "definition": {
             "key": "<hidden>",
-            "label": "API requests per minute (per project, per server)",
+            "label": "API requests per minute (per project, per server; stops runaway scripts)",
             "valueType": "NUMBER",
             "connectorKey": null,
             "secret": false,
             "projectOverride": true,
             "enabled": true,
             "options": [],
-            "defaultValue": 600,
+            "defaultValue": 6000,
             "defaultConfigured": true,
             "revision": 0,
             "system": true
           },
-          "value": 600,
+          "value": 6000,
           "configured": true,
           "source": "GLOBAL",
           "overridden": false
@@ -572,19 +546,19 @@
         {
           "definition": {
             "key": "<hidden>",
-            "label": "API requests per minute (per project, per server)",
+            "label": "API requests per minute (per project, per server; stops runaway scripts)",
             "valueType": "NUMBER",
             "connectorKey": null,
             "secret": false,
             "projectOverride": true,
             "enabled": true,
             "options": [],
-            "defaultValue": 600,
+            "defaultValue": 6000,
             "defaultConfigured": true,
             "revision": 0,
             "system": true
           },
-          "value": 600,
+          "value": 6000,
           "configured": true,
           "source": "GLOBAL",
           "overridden": false
@@ -693,22 +667,22 @@
     "status": 200,
     "body": [
       {
-        "id": 375,
-        "actor": "Sam Lee (Partner TV)",
-        "action": "partner.read",
+        "id": 391,
+        "actor": "System",
+        "action": "schedule.publish",
         "resourceType": "channel",
-        "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-        "detail": "Partner TV (portal) read markers:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/breaks",
-        "createdAt": "2026-11-01T12:27:24.885724Z"
+        "resourceId": "75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+        "detail": "version 7: Demo mode: schedule auto-extended on startup",
+        "createdAt": "2026-11-01T17:31:18.015889Z"
       },
       {
-        "id": 374,
-        "actor": "Sam Lee (Partner TV)",
-        "action": "partner.read",
+        "id": 390,
+        "actor": "System",
+        "action": "schedule.publish",
         "resourceType": "channel",
-        "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-        "detail": "Partner TV (portal) read stream:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/stream",
-        "createdAt": "2026-11-01T12:27:24.879326Z"
+        "resourceId": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+        "detail": "version 7: Demo mode: schedule auto-extended on startup",
+        "createdAt": "2026-11-01T17:31:18.015889Z"
       },
       "… 48 more"
     ]
@@ -809,6 +783,30 @@
       "channels": []
     }
   },
+  "GET /api/orgs/{org}/assets/{id}/jobs": {
+    "status": 200,
+    "body": []
+  },
+  "GET /api/orgs/{org}/library": {
+    "status": 200,
+    "body": {
+      "connected": false,
+      "healthy": null,
+      "checkedAt": null,
+      "capabilities": [],
+      "sync": {
+        "state": "NEVER",
+        "videos": 0,
+        "added": 0,
+        "pages": 0,
+        "complete": false,
+        "startedAt": null,
+        "finishedAt": null,
+        "lastError": null,
+        "nextRunAt": null
+      }
+    }
+  },
   "POST /api/orgs/{org}/rights/check": {
     "status": 200,
     "body": {
@@ -825,8 +823,8 @@
       },
       "asset": "Earth",
       "channel": null,
-      "from": "2026-11-01T12:27:35.344553300Z",
-      "to": "2026-11-01T13:27:35.344553300Z",
+      "from": "2026-11-01T17:32:11.931517400Z",
+      "to": "2026-11-01T18:32:11.931517400Z",
       "simulated": true
     }
   },
@@ -849,21 +847,21 @@
           "adSecondsPerHour": 480,
           "breakSeconds": 90,
           "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-          "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "publishedVersionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
           "createdAt": "2026-10-20T08:38:25.654894Z",
           "updatedAt": "2026-10-20T08:38:25.654894Z"
         },
         "now": {
-          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-          "title": "Steel Horizon",
-          "description": "Two rival pilots must land a damaged cargo plane together.",
-          "genre": "Action",
+          "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+          "title": "Moonlit Avenue",
+          "description": "A jazz pianist and a detective share one long night.",
+          "genre": "Classic",
           "kind": "MOVIE",
-          "color": "#f97316",
-          "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-          "start": "2026-11-01T12:27:30Z",
-          "end": "2026-11-01T12:32:30Z",
-          "adBreaks": 0,
+          "color": "#64748b",
+          "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+          "start": "2026-11-01T17:30:20Z",
+          "end": "2026-11-01T17:36:50Z",
+          "adBreaks": 1,
           "now": true,
           "thumbUrl": null,
           "series": null,
@@ -871,24 +869,24 @@
           "episode": null
         },
         "next": {
-          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
-          "title": "Neon Pursuit",
-          "description": "A courier races across a rain-soaked city before midnight.",
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "title": "Steel Horizon",
+          "description": "Two rival pilots must land a damaged cargo plane together.",
           "genre": "Action",
           "kind": "MOVIE",
-          "color": "#ef4444",
-          "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
-          "start": "2026-11-01T12:32:30Z",
-          "end": "2026-11-01T12:38:30Z",
-          "adBreaks": 0,
+          "color": "#f97316",
+          "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+          "start": "2026-11-01T17:38:20Z",
+          "end": "2026-11-01T17:44:50Z",
+          "adBreaks": 1,
           "now": false,
           "thumbUrl": null,
           "series": null,
           "season": null,
           "episode": null
         },
-        "scheduledUntil": "2026-11-01T17:21:00Z",
-        "publishedVersion": 6,
+        "scheduledUntil": "2026-11-02T23:30:50Z",
+        "publishedVersion": 7,
         "readiness": [],
         "fallbackTitle": "Aurora Channel Ident"
       },
@@ -908,28 +906,11 @@
           "adSecondsPerHour": 480,
           "breakSeconds": 90,
           "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-          "publishedVersionId": "37b65a17-daea-409f-8717-a11a4eb82bca",
+          "publishedVersionId": "07a8c2a1-21f9-4b2e-a7a5-60fcf35c41bd",
           "createdAt": "2026-10-20T08:38:25.654894Z",
           "updatedAt": "2026-10-20T08:38:25.654894Z"
         },
         "now": {
-          "assetId": "b733b3fe-2135-4dcd-be84-d6bf68532586",
-          "title": "The Velvet Clock",
-          "description": "A watchmaker's apprentice uncovers a 1950s mystery.",
-          "genre": "Classic",
-          "kind": "MOVIE",
-          "color": "#a16207",
-          "mediaKey": "aurora/b733b3fe-2135-4dcd-be84-d6bf68532586.1793295315",
-          "start": "2026-11-01T12:24:30Z",
-          "end": "2026-11-01T12:30:30Z",
-          "adBreaks": 0,
-          "now": true,
-          "thumbUrl": null,
-          "series": null,
-          "season": null,
-          "episode": null
-        },
-        "next": {
           "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
           "title": "Moonlit Avenue",
           "description": "A jazz pianist and a detective share one long night.",
@@ -937,8 +918,25 @@
           "kind": "MOVIE",
           "color": "#64748b",
           "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
-          "start": "2026-11-01T12:30:30Z",
-          "end": "2026-11-01T12:35:30Z",
+          "start": "2026-11-01T17:30:20Z",
+          "end": "2026-11-01T17:36:50Z",
+          "adBreaks": 1,
+          "now": true,
+          "thumbUrl": null,
+          "series": null,
+          "season": null,
+          "episode": null
+        },
+        "next": {
+          "assetId": "b733b3fe-2135-4dcd-be84-d6bf68532586",
+          "title": "The Velvet Clock",
+          "description": "A watchmaker's apprentice uncovers a 1950s mystery.",
+          "genre": "Classic",
+          "kind": "MOVIE",
+          "color": "#a16207",
+          "mediaKey": "aurora/b733b3fe-2135-4dcd-be84-d6bf68532586.1793295315",
+          "start": "2026-11-01T17:38:20Z",
+          "end": "2026-11-01T17:44:20Z",
           "adBreaks": 0,
           "now": false,
           "thumbUrl": null,
@@ -946,8 +944,8 @@
           "season": null,
           "episode": null
         },
-        "scheduledUntil": "2026-11-01T17:26:00Z",
-        "publishedVersion": 6,
+        "scheduledUntil": "2026-11-02T23:35:50Z",
+        "publishedVersion": 7,
         "readiness": [],
         "fallbackTitle": "Aurora Channel Ident"
       },
@@ -972,21 +970,21 @@
         "adSecondsPerHour": 480,
         "breakSeconds": 90,
         "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-        "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "publishedVersionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
         "createdAt": "2026-10-20T08:38:25.654894Z",
         "updatedAt": "2026-10-20T08:38:25.654894Z"
       },
       "now": {
-        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-        "title": "Steel Horizon",
-        "description": "Two rival pilots must land a damaged cargo plane together.",
-        "genre": "Action",
+        "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
         "kind": "MOVIE",
-        "color": "#f97316",
-        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-        "start": "2026-11-01T12:27:30Z",
-        "end": "2026-11-01T12:32:30Z",
-        "adBreaks": 0,
+        "color": "#64748b",
+        "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+        "start": "2026-11-01T17:30:20Z",
+        "end": "2026-11-01T17:36:50Z",
+        "adBreaks": 1,
         "now": true,
         "thumbUrl": null,
         "series": null,
@@ -994,24 +992,24 @@
         "episode": null
       },
       "next": {
-        "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
-        "title": "Neon Pursuit",
-        "description": "A courier races across a rain-soaked city before midnight.",
+        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
         "genre": "Action",
         "kind": "MOVIE",
-        "color": "#ef4444",
-        "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
-        "start": "2026-11-01T12:32:30Z",
-        "end": "2026-11-01T12:38:30Z",
-        "adBreaks": 0,
+        "color": "#f97316",
+        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+        "start": "2026-11-01T17:38:20Z",
+        "end": "2026-11-01T17:44:50Z",
+        "adBreaks": 1,
         "now": false,
         "thumbUrl": null,
         "series": null,
         "season": null,
         "episode": null
       },
-      "scheduledUntil": "2026-11-01T17:21:00Z",
-      "publishedVersion": 6,
+      "scheduledUntil": "2026-11-02T23:30:50Z",
+      "publishedVersion": 7,
       "readiness": [],
       "fallbackTitle": "Aurora Channel Ident"
     }
@@ -1034,7 +1032,7 @@
         "adSecondsPerHour": 480,
         "breakSeconds": 90,
         "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-        "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "publishedVersionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
         "createdAt": "2026-10-20T08:38:25.654894Z",
         "updatedAt": "2026-10-20T08:38:25.654894Z"
       },
@@ -1051,108 +1049,108 @@
       },
       "draftEntries": [
         {
-          "id": "03eca86b-9fa6-4d66-9e44-1ff769f8c1d0",
+          "id": "9a243fbd-20b8-4a76-b4a9-c3d42bc255e8",
           "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
           "kind": "PROGRAM",
-          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
           "assetOffsetMs": 0,
-          "startAt": "2026-11-01T10:25:30Z",
-          "endAt": "2026-11-01T10:28:30Z",
+          "startAt": "2026-11-01T15:30:00Z",
+          "endAt": "2026-11-01T15:32:30Z",
           "ownership": null,
           "break": false
         },
         {
-          "id": "cc1d931f-ff36-4073-af1d-c333949f844c",
+          "id": "8ddd1a96-5b57-4ce5-9238-4fd2c2eff2fa",
           "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
           "kind": "PROGRAM",
-          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
-          "assetOffsetMs": 180000,
-          "startAt": "2026-11-01T10:28:30Z",
-          "endAt": "2026-11-01T10:31:30Z",
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "assetOffsetMs": 150000,
+          "startAt": "2026-11-01T15:32:30Z",
+          "endAt": "2026-11-01T15:35:00Z",
           "ownership": null,
           "break": false
         },
-        "… 169 more"
+        "… 591 more"
       ],
       "published": {
-        "id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "id": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
         "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-        "number": 6,
+        "number": 7,
         "status": "PUBLISHED",
         "revision": 0,
         "note": "Demo mode: schedule auto-extended on startup",
         "createdBy": null,
-        "createdAt": "2026-10-31T11:21:27.978568Z",
-        "publishedAt": "2026-10-31T11:21:27.978568Z"
+        "createdAt": "2026-11-01T17:31:18.015889Z",
+        "publishedAt": "2026-11-01T17:31:18.015889Z"
       },
       "publishedEntries": [
         {
-          "id": "ba3b4a56-f6c4-465f-829a-cf50bbca8214",
-          "versionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "id": "72488bcb-765a-4f28-8ef7-92fbae0599e2",
+          "versionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
           "kind": "PROGRAM",
-          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
           "assetOffsetMs": 0,
-          "startAt": "2026-11-01T10:25:30Z",
-          "endAt": "2026-11-01T10:28:30Z",
+          "startAt": "2026-11-01T15:30:00Z",
+          "endAt": "2026-11-01T15:32:30Z",
           "ownership": null,
           "break": false
         },
         {
-          "id": "891ff3cd-9762-42da-9ea0-bc8e2c693bc5",
-          "versionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "id": "d2947820-eef9-4c0b-8e61-9c5a25016e82",
+          "versionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
           "kind": "PROGRAM",
-          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
-          "assetOffsetMs": 180000,
-          "startAt": "2026-11-01T10:28:30Z",
-          "endAt": "2026-11-01T10:31:30Z",
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "assetOffsetMs": 150000,
+          "startAt": "2026-11-01T15:32:30Z",
+          "endAt": "2026-11-01T15:35:00Z",
           "ownership": null,
           "break": false
         },
-        "… 169 more"
+        "… 591 more"
       ],
       "issues": [
         {
           "severity": "WARNING",
           "code": "BLACKOUT",
-          "message": "\"Steel Horizon\" at Sun 17:57 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
-          "entryId": "d4d29d94-9125-4366-833e-32b5b934c40d",
+          "message": "\"Steel Horizon\" at Sun 23:08 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "3daced6c-8b78-47f5-879e-5897c01c4480",
           "hint": "Acceptable if intended; otherwise extend the licence.",
-          "at": "2026-11-01T12:27:30Z"
+          "at": "2026-11-01T17:38:20Z"
         },
         {
           "severity": "WARNING",
           "code": "BLACKOUT",
-          "message": "\"Steel Horizon\" at Sun 18:00 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
-          "entryId": "f4efe933-9dad-4a1c-a8d0-ab18364de34d",
+          "message": "\"Steel Horizon\" at Sun 23:12 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "9e615300-b47c-4331-b6c0-7bb67f112312",
           "hint": "Acceptable if intended; otherwise extend the licence.",
-          "at": "2026-11-01T12:30:00Z"
+          "at": "2026-11-01T17:42:20Z"
         },
-        "… 31 more"
+        "… 194 more"
       ],
       "versions": [
+        {
+          "id": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
+          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "number": 7,
+          "status": "PUBLISHED",
+          "revision": 0,
+          "note": "Demo mode: schedule auto-extended on startup",
+          "createdBy": null,
+          "createdAt": "2026-11-01T17:31:18.015889Z",
+          "publishedAt": "2026-11-01T17:31:18.015889Z"
+        },
         {
           "id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
           "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
           "number": 6,
-          "status": "PUBLISHED",
+          "status": "SUPERSEDED",
           "revision": 0,
           "note": "Demo mode: schedule auto-extended on startup",
           "createdBy": null,
           "createdAt": "2026-10-31T11:21:27.978568Z",
           "publishedAt": "2026-10-31T11:21:27.978568Z"
         },
-        {
-          "id": "39c79227-0234-4ceb-ba42-9b2e4c7439de",
-          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-          "number": 5,
-          "status": "SUPERSEDED",
-          "revision": 0,
-          "note": "Demo mode: schedule auto-extended on startup",
-          "createdBy": null,
-          "createdAt": "2026-10-29T17:35:11.478127Z",
-          "publishedAt": "2026-10-29T17:35:11.478127Z"
-        },
-        "… 4 more"
+        "… 5 more"
       ],
       "assets": {
         "412d4dd8-db9a-448d-8671-d1d4a7219286": {
@@ -1355,14 +1353,31 @@
         }
       },
       "unpublishedChanges": false,
-      "now": "2026-11-01T12:27:35.479295100Z",
-      "from": "2026-11-01T10:27:35.479295100Z",
-      "to": "2026-11-02T10:27:35.479295100Z"
+      "now": "2026-11-01T17:32:12.435243200Z",
+      "from": "2026-11-01T15:32:12.435243200Z",
+      "to": "2026-11-02T15:32:12.435243200Z"
     }
   },
   "GET /api/orgs/{org}/channels/{id}/epg": {
     "status": 200,
     "body": [
+      {
+        "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+        "title": "Neon Pursuit",
+        "description": "A courier races across a rain-soaked city before midnight.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#ef4444",
+        "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
+        "start": "2026-11-01T16:30:30Z",
+        "end": "2026-11-01T16:36:30Z",
+        "adBreaks": 0,
+        "now": false,
+        "thumbUrl": "<signed media link>",
+        "series": null,
+        "season": null,
+        "episode": null
+      },
       {
         "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
         "title": "Moonlit Avenue",
@@ -1371,8 +1386,8 @@
         "kind": "MOVIE",
         "color": "#64748b",
         "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
-        "start": "2026-11-01T11:27:00Z",
-        "end": "2026-11-01T11:32:00Z",
+        "start": "2026-11-01T16:36:30Z",
+        "end": "2026-11-01T16:41:30Z",
         "adBreaks": 0,
         "now": false,
         "thumbUrl": "<signed media link>",
@@ -1380,55 +1395,16 @@
         "season": null,
         "episode": null
       },
-      {
-        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-        "title": "Steel Horizon",
-        "description": "Two rival pilots must land a damaged cargo plane together.",
-        "genre": "Action",
-        "kind": "MOVIE",
-        "color": "#f97316",
-        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-        "start": "2026-11-01T11:32:00Z",
-        "end": "2026-11-01T11:37:00Z",
-        "adBreaks": 0,
-        "now": false,
-        "thumbUrl": "<signed media link>",
-        "series": null,
-        "season": null,
-        "episode": null
-      },
-      "… 56 more"
+      "… 232 more"
     ]
   },
   "GET /api/orgs/{org}/channels/{id}/epg.xml": {
     "status": 200,
-    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101112700 +0000\" stop=\"20261101113200 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <category lang=\"en\">Classic</category>\n  </programme>\n  <programme start=\"20261101113200 +0000\" stop=\"20261101113700 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Steel Horizon</title>\n    <desc lang=\"en\">Two rival pilots must land a damaged cargo plane together.</desc>\n    <ca\n…"
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101163030 +0000\" stop=\"20261101163630 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Neon Pursuit</title>\n    <desc lang=\"en\">A courier races across a rain-soaked city before midnight.</desc>\n    <category lang=\"en\">Action</category>\n  </programme>\n  <programme start=\"20261101163630 +0000\" stop=\"20261101164130 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <cate\n…"
   },
   "GET /api/orgs/{org}/channels/{id}/avails": {
     "status": 200,
-    "body": [
-      {
-        "markers": "CUE_OUT",
-        "destination": "Partner TV (simulated)",
-        "breakId": "389ead53-1544-449b-81ec-0cde27488324",
-        "breakStart": "2026-11-01T12:18:00Z",
-        "breakEnd": "2026-11-01T12:19:30Z",
-        "passed": true,
-        "problems": [],
-        "checkedAt": "2026-11-01T12:19:45.654328900Z"
-      },
-      {
-        "markers": "INTERSTITIAL",
-        "destination": "Aurora web player (SGAI beta)",
-        "breakId": "389ead53-1544-449b-81ec-0cde27488324",
-        "breakStart": "2026-11-01T12:18:00Z",
-        "breakEnd": "2026-11-01T12:19:30Z",
-        "passed": true,
-        "problems": [],
-        "checkedAt": "2026-11-01T12:19:45.654328900Z"
-      },
-      "… 1 more"
-    ]
+    "body": []
   },
   "GET /api/orgs/{org}/channels/{id}/programming": {
     "status": 200,
@@ -1438,71 +1414,9 @@
     "status": 200,
     "body": {
       "revision": 3,
-      "placements": [
-        {
-          "ruleId": null,
-          "date": "2026-11-02",
-          "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-          "title": "Slow Roads: Coastlines of Kerala",
-          "season": 1,
-          "episode": 1,
-          "encore": false,
-          "start": "2026-11-02T14:30:00Z",
-          "end": "2026-11-02T14:36:30Z",
-          "items": [
-            {
-              "kind": "PROGRAM",
-              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-              "offsetMs": 0,
-              "start": "2026-11-02T14:30:00Z",
-              "end": "2026-11-02T14:32:30Z",
-              "ownership": null
-            },
-            {
-              "kind": "AD_BREAK",
-              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-              "offsetMs": 0,
-              "start": "2026-11-02T14:32:30Z",
-              "end": "2026-11-02T14:34:00Z",
-              "ownership": "PROVIDER"
-            },
-            "… 1 more"
-          ]
-        },
-        {
-          "ruleId": null,
-          "date": "2026-11-02",
-          "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-          "title": "Slow Roads: Coastlines of Kerala",
-          "season": 1,
-          "episode": 1,
-          "encore": true,
-          "start": "2026-11-02T17:30:00Z",
-          "end": "2026-11-02T17:36:30Z",
-          "items": [
-            {
-              "kind": "PROGRAM",
-              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-              "offsetMs": 0,
-              "start": "2026-11-02T17:30:00Z",
-              "end": "2026-11-02T17:32:30Z",
-              "ownership": null
-            },
-            {
-              "kind": "AD_BREAK",
-              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-              "offsetMs": 0,
-              "start": "2026-11-02T17:32:30Z",
-              "end": "2026-11-02T17:34:00Z",
-              "ownership": "PROVIDER"
-            },
-            "… 1 more"
-          ]
-        },
-        "… 2 more"
-      ],
+      "placements": [],
       "notices": [
-        "Slow Roads on 2026-11-06: waiting for the next episode (S1 E3). Later occurrences are held."
+        "Slow Roads on 2026-11-02: conflicts with an existing placement. Nothing is moved or replaced."
       ]
     }
   },
@@ -1559,12 +1473,12 @@
   "POST /api/orgs/{org}/ads/simulate": {
     "status": 200,
     "body": {
-      "breakStart": "2026-11-01T13:02:00Z",
+      "breakStart": "2026-11-01T17:32:50Z",
       "breakSeconds": 90,
       "ownership": "PROVIDER",
-      "programme": "Inside \"Steel Horizon\"",
+      "programme": "Inside \"Moonlit Avenue\"",
       "decision": {
-        "breakId": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
+        "breakId": "b3f76a49-66a6-480e-aad2-84a3cb99c361",
         "breakMs": 90000,
         "slots": [
           {
@@ -1606,6 +1520,7 @@
   "GET /api/orgs/{org}/destinations": {
     "status": 200,
     "body": {
+      "publications": [],
       "destinations": [
         {
           "id": "05d1af75-107c-4435-a6ca-4c6bc5d9e32f",
@@ -1628,8 +1543,7 @@
           "createdAt": "2026-10-20T08:38:25.654894Z"
         },
         "… 2 more"
-      ],
-      "publications": []
+      ]
     }
   },
   "GET /api/orgs/{org}/partners": {
@@ -1663,8 +1577,8 @@
         "acceptedAt": "2026-10-20T12:21:46.820574Z",
         "revokedAt": null,
         "expiresAt": null,
-        "readsLast7Days": 36,
-        "lastReadAt": "2026-11-01T12:27:24.885724Z"
+        "readsLast7Days": 42,
+        "lastReadAt": "2026-11-01T12:27:36.217147Z"
       }
     ]
   },
@@ -1693,33 +1607,7 @@
   },
   "GET /api/orgs/{org}/alerts": {
     "status": 200,
-    "body": [
-      {
-        "id": "049854e4-e946-4dca-98a1-add10ca15ac2",
-        "severity": "WARNING",
-        "title": "Classic Cinema: schedule runs out soon",
-        "detail": "The published schedule ends Sun 22:56.",
-        "suggestion": "Auto-fill more hours and publish.",
-        "link": "/schedule?channel=bc645565-299e-45e9-ba20-f6b7d19c227a",
-        "status": "OPEN",
-        "resolution": "",
-        "createdAt": "2026-11-01T11:26:37.006486Z",
-        "updatedAt": "2026-11-01T12:27:24.791999Z"
-      },
-      {
-        "id": "4d3af738-ff52-45a0-ae24-fa0348129900",
-        "severity": "WARNING",
-        "title": "Family Entertainment: schedule runs out soon",
-        "detail": "The published schedule ends Sun 22:53.",
-        "suggestion": "Auto-fill more hours and publish.",
-        "link": "/schedule?channel=75aec3ca-f2ef-4d24-86da-f493fc3ed607",
-        "status": "OPEN",
-        "resolution": "",
-        "createdAt": "2026-11-01T11:23:36.751707Z",
-        "updatedAt": "2026-11-01T12:27:24.792207Z"
-      },
-      "… 1 more"
-    ]
+    "body": []
   },
   "GET /api/orgs/{org}/analytics": {
     "status": 200,
@@ -1730,7 +1618,7 @@
         {
           "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
           "channel": "Aurora Action",
-          "sessions": 111,
+          "sessions": 113,
           "impressions": 53,
           "completes": 48,
           "adSeconds": 950,
@@ -1884,31 +1772,31 @@
     "status": 200,
     "body": [
       {
-        "title": "Moonlit Avenue",
-        "description": "A jazz pianist and a detective share one long night.",
-        "genre": "Classic",
-        "start": "2026-11-01T11:27:00Z",
-        "end": "2026-11-01T11:32:00Z",
+        "title": "Neon Pursuit",
+        "description": "A courier races across a rain-soaked city before midnight.",
+        "genre": "Action",
+        "start": "2026-11-01T16:30:30Z",
+        "end": "2026-11-01T16:36:30Z",
         "onNow": false,
         "adBreaks": 0,
         "image": "<signed media link>"
       },
       {
-        "title": "Steel Horizon",
-        "description": "Two rival pilots must land a damaged cargo plane together.",
-        "genre": "Action",
-        "start": "2026-11-01T11:32:00Z",
-        "end": "2026-11-01T11:37:00Z",
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
+        "start": "2026-11-01T16:36:30Z",
+        "end": "2026-11-01T16:41:30Z",
         "onNow": false,
         "adBreaks": 0,
         "image": "<signed media link>"
       },
-      "… 56 more"
+      "… 232 more"
     ]
   },
   "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml": {
     "status": 200,
-    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101112700 +0000\" stop=\"20261101113200 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <category lang=\"en\">Classic</category>\n  </programme>\n  <programme start=\"20261101113200 +0000\" stop=\"20261101113700 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Steel Horizon</title>\n    <desc lang=\"en\">Two rival pilots must land a damaged cargo plane together.</desc>\n    <ca\n…"
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101163030 +0000\" stop=\"20261101163630 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Neon Pursuit</title>\n    <desc lang=\"en\">A courier races across a rain-soaked city before midnight.</desc>\n    <category lang=\"en\">Action</category>\n  </programme>\n  <programme start=\"20261101163630 +0000\" stop=\"20261101164130 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <cate\n…"
   },
   "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/stream": {
     "status": 200,
@@ -1934,24 +1822,24 @@
     "status": 200,
     "body": [
       {
-        "id": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
-        "start": "2026-11-01T13:02:00Z",
-        "end": "2026-11-01T13:03:30Z",
+        "id": "b3f76a49-66a6-480e-aad2-84a3cb99c361",
+        "start": "2026-11-01T17:32:50Z",
+        "end": "2026-11-01T17:34:20Z",
         "durationMs": 90000,
         "ownership": "PROVIDER",
-        "scte35Out": "0xFC302E00000000000000FFF00506FF283A60800018021643554549C10D0FB37FFF00007B98A0000034000000009BCCEA0C",
-        "scte35In": "0xFC302700000000000000FFF00506FF28B5F9200011020F43554549C10D0FB37FBF0000350000C1347196"
+        "scte35Out": "0xFC302E00000000000000FFF00506FF7F665B200018021643554549B3F76A497FFF00007B98A0000034000000003276B9A3",
+        "scte35In": "0xFC302700000000000000FFF00506FF7FE1F3C00011020F43554549B3F76A497FBF000035000096577278"
       },
       {
-        "id": "7bc10039-a0c1-4814-bd84-d2451c8c83d2",
-        "start": "2026-11-01T13:06:00Z",
-        "end": "2026-11-01T13:07:30Z",
+        "id": "65d395f1-7a90-44fa-bdc2-0f575a7fa165",
+        "start": "2026-11-01T17:36:50Z",
+        "end": "2026-11-01T17:38:20Z",
         "durationMs": 90000,
         "ownership": "DISTRIBUTOR",
-        "scte35Out": "0xFC302E00000000000000FFF00506FF2983F78000180216435545497BC100397FFF00007B98A00000360000000033201039",
-        "scte35In": "0xFC302700000000000000FFF00506FF29FF90200011020F435545497BC100397FBF00003700006E04E9F7"
+        "scte35Out": "0xFC302E00000000000000FFF00506FF80AFF220001802164355454965D395F17FFF00007B98A0000036000000000116E14A",
+        "scte35In": "0xFC302700000000000000FFF00506FF812B8AC00011020F4355454965D395F17FBF0000370000D94F46AE"
       },
-      "… 23 more"
+      "… 33 more"
     ]
   },
   "GET /api/partners/{partner}/clients": {
@@ -1973,7 +1861,7 @@
   "POST /play/sessions": {
     "status": 200,
     "body": {
-      "sessionId": "3d28fc09-6979-4bed-acf0-33a0e1e3fb97",
+      "sessionId": "53d887ed-e518-4e4c-85d1-fc7d43d348ca",
       "playlistUrl": "http://127.0.0.1:8787/live/<signed session token>/master.m3u8",
       "adMode": "SSAI",
       "markerFormat": "DATERANGE",
@@ -1992,7 +1880,7 @@
           {
             "label": "Licence lists where it may play",
             "passed": true,
-            "detail": "IN"
+            "detail": "IN, GB, US"
           },
           "… 4 more"
         ]
@@ -2009,16 +1897,16 @@
       "markerFormat": "DATERANGE",
       "country": "IN",
       "now": {
-        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-        "title": "Steel Horizon",
-        "description": "Two rival pilots must land a damaged cargo plane together.",
-        "genre": "Action",
+        "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
         "kind": "MOVIE",
-        "color": "#f97316",
-        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-        "start": "2026-11-01T12:27:30Z",
-        "end": "2026-11-01T12:32:30Z",
-        "adBreaks": 0,
+        "color": "#64748b",
+        "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+        "start": "2026-11-01T17:30:20Z",
+        "end": "2026-11-01T17:36:50Z",
+        "adBreaks": 1,
         "now": true,
         "thumbUrl": null,
         "series": null,
@@ -2026,16 +1914,16 @@
         "episode": null
       },
       "next": {
-        "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
-        "title": "Neon Pursuit",
-        "description": "A courier races across a rain-soaked city before midnight.",
+        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
         "genre": "Action",
         "kind": "MOVIE",
-        "color": "#ef4444",
-        "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
-        "start": "2026-11-01T12:32:30Z",
-        "end": "2026-11-01T12:38:30Z",
-        "adBreaks": 0,
+        "color": "#f97316",
+        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+        "start": "2026-11-01T17:38:20Z",
+        "end": "2026-11-01T17:44:50Z",
+        "adBreaks": 1,
         "now": false,
         "thumbUrl": null,
         "series": null,
@@ -2045,21 +1933,21 @@
       "currentBreak": null,
       "upcomingBreaks": [
         {
-          "id": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
-          "start": "2026-11-01T13:02:00Z",
-          "end": "2026-11-01T13:03:30Z",
+          "id": "b3f76a49-66a6-480e-aad2-84a3cb99c361",
+          "start": "2026-11-01T17:32:50Z",
+          "end": "2026-11-01T17:34:20Z",
           "ownership": "PROVIDER",
           "filledByUs": true,
-          "scteOut": "0xFC302E00000000000000FFF00506FF283A60800018021643554549C10D0FB37FFF00007B98A0000034000000009BCCEA0C",
+          "scteOut": "0xFC302E00000000000000FFF00506FF7F665B200018021643554549B3F76A497FFF00007B98A0000034000000003276B9A3",
           "decision": null
         },
         {
-          "id": "7bc10039-a0c1-4814-bd84-d2451c8c83d2",
-          "start": "2026-11-01T13:06:00Z",
-          "end": "2026-11-01T13:07:30Z",
+          "id": "65d395f1-7a90-44fa-bdc2-0f575a7fa165",
+          "start": "2026-11-01T17:36:50Z",
+          "end": "2026-11-01T17:38:20Z",
           "ownership": "DISTRIBUTOR",
           "filledByUs": true,
-          "scteOut": "0xFC302E00000000000000FFF00506FF2983F78000180216435545497BC100397FFF00007B98A00000360000000033201039",
+          "scteOut": "0xFC302E00000000000000FFF00506FF80AFF220001802164355454965D395F17FFF00007B98A0000036000000000116E14A",
           "decision": null
         },
         "… 1 more"
@@ -2076,20 +1964,18 @@
           {
             "label": "Licence lists where it may play",
             "passed": true,
-            "detail": "IN"
+            "detail": "IN, GB, US"
           },
           "… 4 more"
         ]
       },
       "events": [],
-      "serverTime": "2026-11-01T12:27:36.239813300Z"
+      "serverTime": "2026-11-01T17:32:15.978020200Z"
     }
   },
   "GET /api/tools/scte35/example": {
     "status": 200,
     "body": {
-      "hex": "0xFC302E00000000000000FFF00506FF1D28439C0018021643554549000004D27FFF00007B98A000003400000000F141E9FA",
-      "base64": "/DAuAAAAAAAAAP/wBQb/HShDnAAYAhZDVUVJAAAE0n//AAB7mKAAADQAAAAA8UHp+g==",
       "decoded": {
         "table_id": "0xFC",
         "sap_type": 3,
@@ -2100,8 +1986,8 @@
         "tier": "0xFFF",
         "splice_command_type": "0x06",
         "splice_command_name": "time_signal",
-        "pts_time": 4784145308,
-        "pts_seconds": 53157.17008888889,
+        "pts_time": 6429324338,
+        "pts_seconds": 71436.9370888889,
         "descriptors": [
           {
             "tag": "0x02",
@@ -2117,9 +2003,11 @@
             "segments_expected": 0
           }
         ],
-        "crc_32": "0xF141E9FA",
+        "crc_32": "0x6A7E1A36",
         "crc_valid": true
-      }
+      },
+      "hex": "0xFC302E00000000000000FFF00506FF7F37B4320018021643554549000004D27FFF00007B98A0000034000000006A7E1A36",
+      "base64": "/DAuAAAAAAAAAP/wBQb/fze0MgAYAhZDVUVJAAAE0n//AAB7mKAAADQAAAAAan4aNg=="
     }
   },
   "POST /api/tools/scte35/decode": {
@@ -2229,19 +2117,19 @@
         {
           "definition": {
             "key": "<hidden>",
-            "label": "API requests per minute (per project, per server)",
+            "label": "API requests per minute (per project, per server; stops runaway scripts)",
             "valueType": "NUMBER",
             "connectorKey": null,
             "secret": false,
             "projectOverride": true,
             "enabled": true,
             "options": [],
-            "defaultValue": 600,
+            "defaultValue": 6000,
             "defaultConfigured": true,
             "revision": 0,
             "system": true
           },
-          "value": 600,
+          "value": 6000,
           "configured": true,
           "source": "GLOBAL",
           "overridden": false
@@ -2350,19 +2238,19 @@
         {
           "definition": {
             "key": "<hidden>",
-            "label": "API requests per minute (per project, per server)",
+            "label": "API requests per minute (per project, per server; stops runaway scripts)",
             "valueType": "NUMBER",
             "connectorKey": null,
             "secret": false,
             "projectOverride": true,
             "enabled": true,
             "options": [],
-            "defaultValue": 600,
+            "defaultValue": 6000,
             "defaultConfigured": true,
             "revision": 0,
             "system": true
           },
-          "value": 600,
+          "value": 6000,
           "configured": true,
           "source": "GLOBAL",
           "overridden": false
@@ -2424,7 +2312,7 @@
   "GET /api/platform/tenants/{tenant}/export": {
     "status": 200,
     "body": {
-      "exportedAt": "2026-11-01T12:27:36.473766900Z",
+      "exportedAt": "2026-11-01T17:32:16.878074600Z",
       "tenant": {
         "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
         "slug": "aurora",
@@ -2622,7 +2510,7 @@
             "created_at": "2026-10-20T08:38:25.654Z",
             "via_org_id": null
           },
-          "… 151 more"
+          "… 160 more"
         ],
         "campaign": [
           {
@@ -2675,7 +2563,7 @@
             "ad_seconds_per_hour": 480,
             "break_seconds": 90,
             "fallback_asset_id": null,
-            "published_version_id": "5efb8095-958d-4c30-90e9-87f4d411b2df",
+            "published_version_id": "0b4535d3-18c0-4a06-a9e9-48a2e88fd075",
             "created_at": "2026-10-20T08:38:25.654Z",
             "updated_at": "2026-10-20T13:17:44.747Z"
           },
@@ -2694,7 +2582,7 @@
             "ad_seconds_per_hour": 480,
             "break_seconds": 90,
             "fallback_asset_id": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-            "published_version_id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+            "published_version_id": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
             "created_at": "2026-10-20T08:38:25.654Z",
             "updated_at": "2026-10-20T08:38:25.654Z"
           },
@@ -2856,7 +2744,7 @@
             "audiences": "",
             "personalized_until": null
           },
-          "… 144 more"
+          "… 146 more"
         ],
         "rights_policy": [
           {
@@ -2912,7 +2800,7 @@
             "rule_id": null,
             "rule_date": null
           },
-          "… 37732 more"
+          "… 50402 more"
         ],
         "schedule_version": [
           {
@@ -2939,7 +2827,7 @@
             "created_at": "2026-10-20T08:38:25.654Z",
             "published_at": "2026-10-20T08:38:25.654Z"
           },
-          "… 20 more"
+          "… 23 more"
         ],
         "tenant_connector": [
           {
@@ -2986,14 +2874,14 @@
     "body": [
       {
         "key": "<hidden>",
-        "label": "API requests per minute (per project, per server)",
+        "label": "API requests per minute (per project, per server; stops runaway scripts)",
         "valueType": "NUMBER",
         "connectorKey": null,
         "secret": false,
         "projectOverride": true,
         "enabled": true,
         "options": [],
-        "defaultValue": 600,
+        "defaultValue": 6000,
         "defaultConfigured": true,
         "revision": 0,
         "system": true
@@ -3040,12 +2928,12 @@
   "GET /api/platform/access-roles": {
     "status": 200,
     "body": {
-      "roles": [],
       "permissions": [
         "VIEW",
         "ASSETS_EDIT",
         "… 9 more"
-      ]
+      ],
+      "roles": []
     }
   },
   "GET /api/platform/orgs": {
@@ -3064,7 +2952,7 @@
         "channels": 4,
         "liveChannels": 3,
         "videos": 22,
-        "sessions": 146,
+        "sessions": 148,
         "createdAt": "2026-10-20T08:38:25.654894Z",
         "kind": "CUSTOMER",
         "partnerLinks": 1
@@ -3219,19 +3107,19 @@
           {
             "definition": {
               "key": "<hidden>",
-              "label": "API requests per minute (per project, per server)",
+              "label": "API requests per minute (per project, per server; stops runaway scripts)",
               "valueType": "NUMBER",
               "connectorKey": null,
               "secret": false,
               "projectOverride": true,
               "enabled": true,
               "options": [],
-              "defaultValue": 600,
+              "defaultValue": 6000,
               "defaultConfigured": true,
               "revision": 0,
               "system": true
             },
-            "value": 600,
+            "value": 6000,
             "configured": true,
             "source": "GLOBAL",
             "overridden": false
@@ -3336,7 +3224,24 @@
       "environment": null,
       "passthroughTag": null,
       "webhookSecretSet": false,
-      "webhookUrl": "http://localhost:8080/hooks/mux/6f19186a-248c-42e9-8184-428a9908f2fc"
+      "webhookUrl": "http://localhost:8080/hooks/mux/6f19186a-248c-42e9-8184-428a9908f2fc",
+      "checkedAt": null,
+      "checkError": null,
+      "healthy": null
+    }
+  },
+  "GET /api/platform/orgs/{orgId}/connectors/mux/sync": {
+    "status": 200,
+    "body": {
+      "state": "NEVER",
+      "videos": 0,
+      "added": 0,
+      "pages": 0,
+      "complete": false,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastError": null,
+      "nextRunAt": null
     }
   },
   "GET /api/platform/orgs/{orgId}/ad-sources": {

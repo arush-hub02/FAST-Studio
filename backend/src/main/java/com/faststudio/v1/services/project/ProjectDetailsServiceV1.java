@@ -7,6 +7,7 @@ import com.faststudio.v1.dto.project.ProjectDetails;
 import com.faststudio.v1.repositories.project.ProjectDetailsRepository;
 import com.faststudio.v1.repositories.tenancy.TenantConfigurationRepository;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
+import com.faststudio.v1.services.tenancy.CapabilityServiceV1;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
 import com.faststudio.v1.util.cloudflare.EdgeClient;
 
@@ -28,9 +29,11 @@ public class ProjectDetailsServiceV1 {
     private final EdgeClient edge;
     private final TenantConfigurationServiceV1 configuration;
     private final TenantConfigurationRepository tenancy;
+    private final CapabilityServiceV1 capabilities;
 
     public ProjectDetailsServiceV1(ProjectDetailsRepository repository, MediaSettingsServiceV1 settings, EdgeClient edge,
-                                     TenantConfigurationServiceV1 configuration, TenantConfigurationRepository tenancy) {
+                                     TenantConfigurationServiceV1 configuration, TenantConfigurationRepository tenancy, CapabilityServiceV1 capabilities) {
+        this.capabilities = capabilities;
         this.repository = repository;
         this.settings = settings;
         this.edge = edge;
@@ -43,7 +46,7 @@ public class ProjectDetailsServiceV1 {
     public ProjectDetails tenant(Tenant tenant) {
         tenant.require(Tenant.Perm.VIEW);
         return details(tenant.orgId(), tenant.role().name(),
-                tenant.permissions().stream().map(Enum::name).sorted().toList(), false);
+                capabilities.permissions(tenant), false);
     }
 
     /** Called only behind the platform-admin interceptor; does not grant tenant membership. */

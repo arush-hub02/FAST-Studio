@@ -168,6 +168,10 @@ public class TenantConfigurationRepository {
                 .param("p", project).param("d", driver).query(Integer.class).single() > 0;
     }
 
+    public String projectFeatures(UUID project) {
+        return db.sql("select features from organization where id = :p").param("p", project).query(String.class).optional().orElse("");
+    }
+
     public boolean connectorEnabled(UUID project, String key) {
         return db.sql("""
                 select count(*) from organization o join customer_tenant t on t.id = o.tenant_id

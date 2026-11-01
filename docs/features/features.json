@@ -873,6 +873,249 @@
       "screenshots": []
     },
     {
+      "id": "features-permissions-catalogue",
+      "title": "Features and permissions catalogue",
+      "area": "Multi-tenancy",
+      "status": "Built",
+      "completed": "2026-11-01",
+      "summary": "One list of every feature and permission, each with a fixed identifier such as CLIPS or SCHEDULE_PUBLISH. Platform administrators add global ones; a project can add its own. After sign-in the app receives the identifiers that apply to the person in that project, and screens show or hide things by them.",
+      "who": [
+        "Platform administrators: the global catalogue (Global configuration → Features & permissions) and which features each project has (Connectors page)",
+        "Project owners and administrators (TEAM_MANAGE): their project's own features and permissions (Settings)",
+        "Everyone: sees which features and permissions apply to them (Settings)"
+      ],
+      "flow": {
+        "title": "From a new identifier to a button on screen",
+        "intro": "The boxes are the parts involved; the pill is one identifier on its way to a screen. Pick a situation.",
+        "nodes": [
+          {
+            "id": "platform",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Platform admin",
+            "sub": "Global configuration"
+          },
+          {
+            "id": "catalogue",
+            "col": 2,
+            "row": 1,
+            "icon": "📚",
+            "label": "Catalogue",
+            "sub": "Every feature and permission, by identifier"
+          },
+          {
+            "id": "project",
+            "col": 3,
+            "row": 1,
+            "icon": "🏢",
+            "label": "Project",
+            "sub": "Which features are switched on"
+          },
+          {
+            "id": "owner",
+            "col": 4,
+            "row": 1,
+            "icon": "👤",
+            "label": "Project admin",
+            "sub": "Settings: own entries"
+          },
+          {
+            "id": "role",
+            "col": 1,
+            "row": 2,
+            "icon": "🎭",
+            "label": "Role",
+            "sub": "Owner, admin or a custom role"
+          },
+          {
+            "id": "login",
+            "col": 2,
+            "row": 2,
+            "icon": "🔑",
+            "label": "Sign-in",
+            "sub": "Project details answer"
+          },
+          {
+            "id": "screen",
+            "col": 3,
+            "row": 2,
+            "icon": "🖥️",
+            "label": "Screen",
+            "sub": "org.has(…) / org.can(…)"
+          },
+          {
+            "id": "server",
+            "col": 4,
+            "row": 2,
+            "icon": "🛡️",
+            "label": "Server",
+            "sub": "Enforces built-in permissions"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Global feature",
+            "steps": [
+              {
+                "at": "platform",
+                "state": "CLIPS",
+                "say": "A platform admin adds the feature CLIPS to the catalogue.",
+                "tech": "`POST /api/platform/capabilities` with kind FEATURE."
+              },
+              {
+                "at": "catalogue",
+                "state": "CLIPS · on",
+                "say": "It is now available to every project, but no project has it yet."
+              },
+              {
+                "at": "project",
+                "state": "switched on",
+                "say": "On the Connectors page the admin switches CLIPS on for one project.",
+                "tech": "Stored in the project's feature list; built-in features also need the tenant's plan."
+              },
+              {
+                "at": "login",
+                "state": "features: CLIPS",
+                "say": "When someone opens that project, the answer after sign-in lists CLIPS."
+              },
+              {
+                "at": "screen",
+                "state": "shown",
+                "say": "The screen checks the identifier and shows the clips tools. Other projects never see them.",
+                "tech": "`org.has('CLIPS')`"
+              }
+            ]
+          },
+          {
+            "name": "Custom permission",
+            "steps": [
+              {
+                "at": "platform",
+                "state": "CLIPS_EXPORT",
+                "say": "The admin adds a permission, CLIPS_EXPORT."
+              },
+              {
+                "at": "role",
+                "state": "granted",
+                "say": "Owners and administrators have it automatically; a custom role can list it for others."
+              },
+              {
+                "at": "login",
+                "state": "permissions: …",
+                "say": "Each person's list of permissions comes with the project details."
+              },
+              {
+                "at": "screen",
+                "state": "button shown",
+                "say": "The Export button appears only for people who have it.",
+                "tech": "`org.can('CLIPS_EXPORT')`"
+              }
+            ]
+          },
+          {
+            "name": "Project's own entry",
+            "steps": [
+              {
+                "at": "owner",
+                "state": "AURORA_BETA",
+                "say": "A project admin adds a feature just for their project in Settings."
+              },
+              {
+                "at": "catalogue",
+                "state": "project only",
+                "say": "It belongs to that project; other projects can't see or change it.",
+                "tech": "Row-level security on `capability.org_id`."
+              },
+              {
+                "at": "login",
+                "state": "features: AURORA_BETA",
+                "say": "It is on while enabled and appears after sign-in."
+              },
+              {
+                "at": "screen",
+                "state": "shown",
+                "say": "Screens in that project can use it."
+              }
+            ]
+          },
+          {
+            "name": "Built-in entries",
+            "steps": [
+              {
+                "at": "catalogue",
+                "state": "SCHEDULE_PUBLISH",
+                "say": "Built-in permissions and features are in the same list."
+              },
+              {
+                "at": "platform",
+                "state": "switch off?",
+                "say": "An admin tries to switch one off or remove it."
+              },
+              {
+                "at": "catalogue",
+                "state": "refused: 409",
+                "say": "Refused: the server enforces these, so they always stay. They can be renamed."
+              },
+              {
+                "at": "server",
+                "state": "enforced",
+                "say": "The server checks built-in permissions on every request; screens only follow its lead."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform: Global configuration → Features & permissions. Add an identifier (capitals and underscores), choose Feature or Permission, give it a name and category.",
+        "Switch a global feature on for a project on the Connectors page (\"What … can see\").",
+        "Give a custom permission to people through organization roles; owners and administrators have every custom permission.",
+        "Project: Settings → \"This project's own features and permissions\" to add entries just for that project (needs Manage team and settings).",
+        "Settings → \"Features and permissions that apply to you\" shows the identifiers that are active for you.",
+        "In screens, check them with org.has('FEATURE_KEY') and org.can('PERMISSION_KEY')."
+      ],
+      "howItWorks": [
+        "All entries are rows of one catalogue table with a unique identifier, a kind (FEATURE or PERMISSION), a name, a category, an owner (global or one project) and a switch.",
+        "The 3 built-in features and 11 built-in permissions are seeded as built-in rows; the server keeps enforcing them as before.",
+        "A project's features are: switched-on global features (built-in ones only if the tenant's plan includes them), plus its own enabled features.",
+        "A person's permissions are: their role's built-in permissions, plus custom permissions — all of them for owners and administrators, the listed ones for a custom role, none for other built-in roles.",
+        "The project details answer after sign-in carries both lists, so the app reads them once; GET /api/orgs/{org}/capabilities shows them with the catalogue."
+      ],
+      "optimizations": [
+        "Two small indexed queries per project details request; the catalogue is tiny.",
+        "Identifiers are plain strings, so screens check them without another request."
+      ],
+      "scale": [
+        "Adding a feature or permission needs no code or deployment, only a catalogue row.",
+        "Known limit: added permissions control what screens show; to protect a new endpoint, its code must check the identifier.",
+        "Not measured: catalogues with thousands of entries."
+      ],
+      "rules": [
+        "Identifiers are unique across the platform and never change.",
+        "Built-in entries can be renamed but not switched off or removed.",
+        "A project can only change its own entries; it sees global ones read-only.",
+        "Project entries need the Manage team and settings permission; global entries need a platform administrator."
+      ],
+      "api": [
+        "GET /api/platform/capabilities",
+        "POST /api/platform/capabilities",
+        "PUT /api/platform/capabilities/{key}",
+        "DELETE /api/platform/capabilities/{key}",
+        "GET /api/orgs/{org}/capabilities",
+        "POST /api/orgs/{org}/capabilities",
+        "PUT /api/orgs/{org}/capabilities/{key}",
+        "DELETE /api/orgs/{org}/capabilities/{key}"
+      ],
+      "tests": [
+        "CapabilityTest (3: global catalogue and built-in protection, global feature per project and permissions per role, project entries and isolation)"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md",
+        "migration V24__capability_catalogue.sql"
+      ],
+      "screenshots": []
+    },
+    {
       "id": "durable-media-jobs",
       "title": "Durable media processing",
       "area": "Media library",
@@ -1552,7 +1795,27 @@
         "docs/MEDIA_INGESTION_PLAN.md (Tenant Mux catalogue sync)",
         "migration V23__media_connection_and_sources.sql"
       ],
-      "screenshots": []
+      "screenshots": [
+        {
+          "id": "connectors-mux",
+          "account": "platform",
+          "path": "/platform/connectors",
+          "steps": [
+            {
+              "waitFor": {
+                "text": "Mux video library"
+              }
+            },
+            {
+              "eval": "document.evaluate(\"//b[text()='Mux video library']\",document,null,9,null).singleNodeValue.scrollIntoView({block:'center'})"
+            },
+            {
+              "wait": 400
+            }
+          ],
+          "caption": "Platform administration → Connectors for one project: the Mux video library card. Connect it with the access token, then Check connection; once connected, the card shows the last check and the library sync (videos seen, added as drafts, pages, when it finished or retries) next to Check connection and Sync library now. The demo has no Mux account, so it shows the connect form."
+        }
+      ]
     },
     {
       "id": "project-limits",

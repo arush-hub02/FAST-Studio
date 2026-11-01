@@ -13,6 +13,7 @@ import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.tenancy.TenantConfigurationRepository;
+import com.faststudio.v1.repositories.tenancy.CapabilityRepository;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
 
 import org.springframework.http.HttpStatus;
@@ -60,6 +61,7 @@ public class TenantConfigurationServiceV1 {
     }
 
     private final TenantConfigurationRepository repository;
+    private final CapabilityRepository capabilities;
     private final JsonMapper json;
     private final Secrets secrets;
     private final Audit audit;
@@ -71,9 +73,10 @@ public class TenantConfigurationServiceV1 {
     private record CachedFlag(boolean value, long at) {}
     private final Map<String, CachedFlag> driverCache = new ConcurrentHashMap<>();
 
-    public TenantConfigurationServiceV1(TenantConfigurationRepository repository, JsonMapper json, Secrets secrets,
+    public TenantConfigurationServiceV1(TenantConfigurationRepository repository, CapabilityRepository capabilities, JsonMapper json, Secrets secrets,
                                           Audit audit, Tokens tokens) {
         this.repository = repository;
+        this.capabilities = capabilities;
         this.json = json;
         this.secrets = secrets;
         this.audit = audit;
@@ -251,15 +254,31 @@ public class TenantConfigurationServiceV1 {
 
     // ------------------------------------------------------------------ plan features and limits
 
-    /** The subset of requested feature keys the project's plan allows. */
+    /**
+     * The features on for a project: the switched-on keys the platform may grant it (built-in ones only when the
+     * tenant's plan includes them; enabled global custom ones always), plus the project's own enabled custom features.
+     */
     public List<String> effectiveFeatures(UUID project, String requested) {
+        List<String> on = new ArrayList<>(grantableFeatures(project, requested));
+        TenantScope.as(project, () -> capabilities.enabledCustom("FEATURE", project, false)).stream().filter(f -> !on.contains(f)).forEach(on::add);
+        return on;
+    }
+
+    /** The project's switched-on feature keys as stored (organization.features). */
+    public String projectFeatures(UUID project) {
+        return TenantScope.bypass(() -> repository.projectFeatures(project));
+    }
+
+    /** Requested keys the platform may switch on for a project: built-in ones in the tenant's plan, or enabled global custom ones. */
+    public List<String> grantableFeatures(UUID project, String requested) {
         Plan p = plan(repository.account(repository.tenant(project)).planKey());
-        return Times.codes(requested).stream().filter(p.features()::contains).toList();
+        List<String> global = TenantScope.bypass(() -> capabilities.enabledCustom("FEATURE", null, true));
+        return Times.codes(requested).stream().filter(f -> p.features().contains(f) || global.contains(f)).toList();
     }
 
     /** Like {@link #effectiveFeatures} but rejects keys outside the plan instead of silently dropping them. */
     public List<String> requirePlanFeatures(UUID project, List<String> requested) {
-        List<String> allowed = effectiveFeatures(project, String.join(",", requested));
+        List<String> allowed = grantableFeatures(project, String.join(",", requested));
         List<String> rejected = requested.stream().filter(f -> !allowed.contains(f)).distinct().toList();
         if (!rejected.isEmpty())
             throw ApiException.bad("Not included in this tenant's plan: " + String.join(", ", rejected) + ". Change the plan first.");
