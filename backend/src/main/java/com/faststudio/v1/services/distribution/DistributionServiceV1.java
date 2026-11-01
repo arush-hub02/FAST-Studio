@@ -59,7 +59,7 @@ public class DistributionServiceV1 {
         String msg = !ok ? "Not delivered: " + checks.stream().filter(c -> !c.passed()).map(Check::label).reduce((a, b) -> a + "; " + b).orElse("")
                 : simulated ? "SIMULATED: feed passed our checks. No real partner was contacted — partner acceptance needs a contract and certification."
                 : "Live in the web player (real prototype playout).";
-        Integer version = ch.publishedVersionId() == null ? null : schedules.versionNumber(ch.publishedVersionId());
+        Integer version = ch.publishedVersionId() == null ? null : schedules.versionNumber(t.orgId(), ch.publishedVersionId());
         UUID pid = repository.insertPublication(t.orgId(), ch.id(), d.id(), version, ok, msg, simulated);
         if (!ok) repository.raiseWarning(t.orgId(), "publish-failed:" + ch.id() + ":" + d.id(), "Delivery to " + d.name() + " failed",
                 ch.name() + ": " + msg, "Fix the failed checks, then publish again.", "/distribution");

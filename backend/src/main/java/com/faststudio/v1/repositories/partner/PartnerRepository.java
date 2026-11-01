@@ -52,8 +52,8 @@ public class PartnerRepository {
                 where x.link_id = :l order by c.name""").param("l", link).query(Named.class).list();
     }
 
-    public Set<UUID> linkChannelIds(UUID link) {
-        return new HashSet<>(db.sql("select channel_id from partner_link_channel where link_id = :l").param("l", link).query(UUID.class).list());
+    public Set<UUID> linkChannelIds(UUID owner, UUID link) {
+        return new HashSet<>(db.sql("select channel_id from partner_link_channel where org_id = :o and link_id = :l").param("o", owner).param("l", link).query(UUID.class).list());
     }
 
     public Optional<Destination> destination(UUID owner, UUID destination) {
@@ -121,6 +121,6 @@ public class PartnerRepository {
     }
 
     public void touchClient(UUID client) {
-        db.sql("update api_client set last_used_at = now() where id = :id").param("id", client).update();
+        db.sql("update api_client set last_used_at = now() where id = :id /* all tenants: client authentication, before any tenant is known */").param("id", client).update();
     }
 }

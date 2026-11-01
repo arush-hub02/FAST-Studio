@@ -109,7 +109,7 @@ public class PartnerSharingServiceV1 {
 
     /** Emails every partner admin that something was shared and where to accept it. */
     private void notifyPartner(Tenant t, UUID partnerOrg, String partnerName, String partnerSlug, UUID link, String scopes) {
-        String channels = String.join(", ", channels(t, link, repository.sharesAllChannels(link)).stream().map(Named::name).toList());
+        String channels = String.join(", ", channels(t, link, repository.sharesAllChannels(t.orgId(), link)).stream().map(Named::name).toList());
         for (var a : repository.partnerAdmins(partnerOrg))
             mail.send(partnerOrg, "partner_shared", a.email(), Map.of("name", a.name(), "ownerName", t.orgName(), "partnerName", partnerName,
                     "channels", channels, "scopes", String.join(", ", PartnerScopes.parse(scopes).stream().map(PartnerScopes.ALL::get).toList()),

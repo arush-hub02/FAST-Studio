@@ -71,7 +71,7 @@ public class ChannelServiceV1 {
                 cur = new Programme(activeBreak.id(), "Commercial Ad Break", "Programmatic SSAI commercial break",
                         "Commercial", "AD", "#f59e0b", null, activeBreak.start(), activeBreak.end(), 1, true, null, null, null, null);
         }
-        Integer version = c.publishedVersionId() == null ? null : schedules.versionNumber(c.publishedVersionId());
+        Integer version = c.publishedVersionId() == null ? null : schedules.versionNumber(t.orgId(), c.publishedVersionId());
         String fallback = c.fallbackAssetId() == null ? null : data.asset(t.orgId(), c.fallbackAssetId()).title();
         return new ChannelView(c, cur, next, data.coverageEnd(t.orgId(), c.publishedVersionId()), version, readiness(t, c), fallback);
     }

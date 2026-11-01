@@ -40,6 +40,17 @@ public class Secrets {
         this.key = new SecretKeySpec(k, "AES");
     }
 
+    /** A stable secret for one purpose (e.g. a database login password): the same on every server sharing this key. */
+    public String derive(String purpose) {
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(key.getEncoded(), "HmacSHA256"));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(mac.doFinal(purpose.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("key derivation failed", e);
+        }
+    }
+
     /** base64(iv || ciphertext+tag); null stays null. */
     public String seal(String plain) {
         if (plain == null) return null;

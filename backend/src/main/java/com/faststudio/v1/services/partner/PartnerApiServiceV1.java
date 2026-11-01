@@ -74,7 +74,7 @@ public class PartnerApiServiceV1 {
     }
 
     public List<PartnerChannel> channels(PartnerInterceptor.Link l) {
-        Set<UUID> shared = l.allChannels() ? null : repository.linkChannelIds(l.id());
+        Set<UUID> shared = l.allChannels() ? null : repository.linkChannelIds(l.ownerId(), l.id());
         return data.channels(l.ownerId()).stream().filter(c -> shared == null || shared.contains(c.id())).map(PartnerApiServiceV1::channel).toList();
     }
 

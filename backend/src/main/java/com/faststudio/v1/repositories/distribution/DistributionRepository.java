@@ -136,8 +136,8 @@ public class DistributionRepository {
         return db.sql("select count(*) from destination where org_id = :o and id = :d").param("o", org).param("d", destination).query(Integer.class).single() > 0;
     }
 
-    public boolean sharesAllChannels(UUID link) {
-        return db.sql("select all_channels from partner_link where id = :l").param("l", link).query(Boolean.class).single();
+    public boolean sharesAllChannels(UUID owner, UUID link) {
+        return db.sql("select all_channels from partner_link where owner_org_id = :o and id = :l").param("o", owner).param("l", link).query(Boolean.class).single();
     }
 
     public record Admin(String email, String name) {}

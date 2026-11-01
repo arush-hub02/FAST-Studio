@@ -39,6 +39,8 @@ jobs:
             echo "::error::Controllers and services must not run SQL; add a repository method (docs/BACKEND_ARCHITECTURE.md)."
             exit 1
           fi
+      - name: Every tenant query filters by organization
+        run: node tools/check-tenant-filters.mjs
       # Clean build: never trust compiled classes from a previous run. Embedded PostgreSQL starts inside the tests.
       - run: sh ./mvnw -B -ntp clean test
         working-directory: backend

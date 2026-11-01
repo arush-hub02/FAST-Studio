@@ -128,7 +128,7 @@ public class TenantConfigurationRepository {
 
     /** All stored values of one property, across every tenant and project (used to revalidate on definition changes). */
     public List<String> allValues(String key) {
-        return db.sql("select value from tenant_property_value where property_key = :k "
+        return db.sql("select value from tenant_property_value where property_key = :k /* all tenants: platform revalidation */ "
                         + "union all select value from project_property_value where property_key = :k")
                 .param("k", key).query(String.class).list();
     }

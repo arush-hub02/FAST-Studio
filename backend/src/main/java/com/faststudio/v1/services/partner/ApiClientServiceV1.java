@@ -1,5 +1,6 @@
 package com.faststudio.v1.services.partner;
 
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.core.auth.Tokens;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
@@ -93,7 +94,8 @@ public class ApiClientServiceV1 {
         }
         UUID clientId;
         try { clientId = UUID.fromString(String.valueOf(id)); } catch (IllegalArgumentException e) { return invalidClient(); }
-        var s = repository.activeClient(clientId).orElse(null);
+        // client authentication happens before any tenant is known: system lookup by the client id
+        var s = TenantScope.bypass(() -> repository.activeClient(clientId)).orElse(null);
         // Constant-time comparison of the stored hash.
         if (s == null || secret == null || !MessageDigest.isEqual(sha256(secret).getBytes(StandardCharsets.UTF_8), s.secretHash().getBytes(StandardCharsets.UTF_8)))
             return invalidClient();
@@ -104,7 +106,7 @@ public class ApiClientServiceV1 {
             return TokenResponse.error(HttpStatus.BAD_REQUEST, "invalid_scope", "This client may only ask for: " + String.join(" ", allowed));
         String granted = String.join(" ", asked);
         Tokens.Access a = tokens.mintService(s.id(), s.name(), s.orgId(), granted);
-        repository.touchClient(s.id());
+        TenantScope.bypass(() -> { repository.touchClient(s.id()); return null; });
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("access_token", a.token());
         out.put("token_type", "Bearer");

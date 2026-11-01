@@ -199,7 +199,7 @@ public class MediaServiceV1 {
         int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
         if (full == 0) { deleteDir(out); fail(assetId, "The video is shorter than " + Times.SEG_S + " seconds."); return; }
         thumbnail(out, full);
-        TenantScope.as(j.orgId(), () -> assets.markReady(assetId,
+        TenantScope.as(j.orgId(), () -> assets.markReady(j.orgId(), assetId,
                 "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
                 full * Times.SEG_MS, key));
         // ponytail: the previous revision's copy on R2 is left behind; add an R2 lifecycle rule when storage matters

@@ -230,7 +230,7 @@ public class ScheduleServiceV1 {
         List<Planner.Issue> errors = issues.stream().filter(i -> i.severity().equals("ERROR")).toList();
         if (!errors.isEmpty())
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "SCHEDULE_INVALID", "Fix " + errors.size() + " problem(s) before publishing.", errors);
-        int next = repository.nextVersionNumber(id);
+        int next = repository.nextVersionNumber(t.orgId(), id);
         UUID vid = repository.insertPublishedVersion(t.orgId(), id, next, r.note() == null ? "" : r.note(), t.userId());
         repository.copyEntries(t.orgId(), draft.id(), vid);
         repository.makeCurrent(t.orgId(), id, vid);

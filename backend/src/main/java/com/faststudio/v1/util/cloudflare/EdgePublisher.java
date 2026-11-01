@@ -83,7 +83,7 @@ public class EdgePublisher {
 
     void syncMedia() throws IOException, InterruptedException {
         List<String> keys = new ArrayList<>(List.of(MediaServiceV1.STANDBY, MediaServiceV1.GEO));
-        keys.addAll(TenantScope.bypass(() -> data.db.sql("select media_key from asset where status = 'READY' and media_key is not null")
+        keys.addAll(TenantScope.bypass(() -> data.db.sql("select media_key from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
                 .query(String.class).list()));
         for (String key : keys) {
             if (stored.contains(key)) continue;

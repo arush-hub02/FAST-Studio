@@ -1,5 +1,6 @@
 package com.faststudio.v1.config;
 
+import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.tenant.TenantAwareDataSource;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -18,11 +19,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Two connection pools to the same database:
- * - the app pool connects as the database owner but immediately switches to the restricted role
- *   (default faststudio_app, created by migration V2) and is wrapped in {@link TenantAwareDataSource},
- *   so every query runs under PostgreSQL row-level security;
- * - a small migration pool keeps owner rights so Flyway can create tables, roles and policies.
+ * Three connection pools to the same database, behind one {@link TenantAwareDataSource}:
+ * - the app pool logs in as faststudio_app_login (member of faststudio_app only): every request query runs under
+ *   PostgreSQL row-level security for the organization stamped on the connection, and cannot switch role;
+ * - the system pool logs in as faststudio_system_login (member of faststudio_system): used only inside
+ *   TenantScope.bypass for cross-tenant system work, which the row policies allow for that login (migration V18);
+ * - a small migration pool keeps the configured owner credentials so Flyway can create tables, roles and policies,
+ *   and so {@link DatabaseLogins} can maintain the two login roles. Requests never use it.
  * spring.datasource.url=embedded (default) starts a real PostgreSQL in-process with data in data/pg.
  */
 @Configuration
@@ -50,19 +53,18 @@ public class DatabaseConfig {
 
     @Bean
     @Primary
-    DataSource dataSource(Target t, @Value("${faststudio.db.app-role:faststudio_app}") String appRole) {
-        HikariDataSource ds = pool(t, "app", 10);
-        if (!appRole.isBlank()) {
-            if (!appRole.matches("[a-z_][a-z0-9_]*")) throw new IllegalArgumentException("Invalid faststudio.db.app-role");
-            ds.setConnectionInitSql("SET ROLE " + appRole);
-        }
-        return new TenantAwareDataSource(ds);
+    DataSource dataSource(Target t, Secrets secrets) {
+        return new TenantAwareDataSource(pool(DatabaseLogins.login(t, DatabaseLogins.APP, secrets), "app", 10),
+                pool(DatabaseLogins.login(t, DatabaseLogins.SYSTEM, secrets), "system", 4));
     }
+
+    @Bean
+    DatabaseLogins databaseLogins(Secrets secrets) { return new DatabaseLogins(secrets); }
 
     @Bean
     @FlywayDataSource
     DataSource migrationDataSource(Target t) {
-        HikariDataSource ds = pool(t, "migrations", 2);
+        HikariDataSource ds = pool(t, "migrations", 3);
         ds.setMinimumIdle(0);
         return ds;
     }

@@ -152,7 +152,7 @@ public class PartnerInterceptor implements HandlerInterceptor {
         return link.allChannels()
                 ? TenantScope.bypass(() -> db.sql("select count(*) from channel where org_id = :o and id = :c and status <> 'ARCHIVED'")
                         .param("o", link.ownerId()).param("c", ch).query(Integer.class).single()) > 0
-                : db.sql("select count(*) from partner_link_channel where link_id = :l and channel_id = :c").param("l", link.id()).param("c", ch)
+                : db.sql("select count(*) from partner_link_channel where org_id = :o and link_id = :l and channel_id = :c").param("o", link.ownerId()).param("l", link.id()).param("c", ch)
                         .query(Integer.class).single() > 0;
     }
 

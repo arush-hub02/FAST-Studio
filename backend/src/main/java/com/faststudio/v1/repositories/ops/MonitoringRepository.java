@@ -173,8 +173,8 @@ public class MonitoringRepository {
         return db.sql("select id, dedup_key from alert where org_id = :o and status <> 'RESOLVED'").param("o", org).query(OpenAlert.class).list();
     }
 
-    public void autoResolve(UUID alert) {
-        db.sql("update alert set status = 'RESOLVED', resolution = 'Cleared automatically: re-check found the problem fixed.', updated_at = now() where id = :id")
-                .param("id", alert).update();
+    public void autoResolve(UUID org, UUID alert) {
+        db.sql("update alert set status = 'RESOLVED', resolution = 'Cleared automatically: re-check found the problem fixed.', updated_at = now() where org_id = :o and id = :id")
+                .param("o", org).param("id", alert).update();
     }
 }

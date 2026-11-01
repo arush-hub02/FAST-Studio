@@ -89,7 +89,7 @@ public class AlertScanner {
             String k = row.dedupKey();
             boolean scannerOwned = k.startsWith("off-air:") || k.startsWith("coverage:") || k.startsWith("failed:") || k.startsWith("expiring:") || k.startsWith("avails:");
             if (scannerOwned && !keys.contains(k))
-                repository.autoResolve(row.id());
+                repository.autoResolve(org, row.id());
         }
     }
 }

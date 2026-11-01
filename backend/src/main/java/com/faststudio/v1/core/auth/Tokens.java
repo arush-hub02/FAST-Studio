@@ -1,5 +1,6 @@
 package com.faststudio.v1.core.auth;
 
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.tenant.Tenant;
 
@@ -149,7 +150,8 @@ public class Tokens {
         long now = System.currentTimeMillis();
         long[] v = clients.get(client);
         if (v != null && now - v[1] < VERSION_CACHE.toMillis()) return v[0] == 1;
-        boolean active = db.sql("select count(*) from api_client where id = :c and revoked_at is null").param("c", client).query(Integer.class).single() > 0;
+        boolean active = TenantScope.bypass(() -> db.sql("select count(*) from api_client where id = :c and revoked_at is null /* all tenants: token validation */")
+                .param("c", client).query(Integer.class).single()) > 0;
         clients.put(client, new long[]{active ? 1 : 0, now});
         return active;
     }

@@ -35,9 +35,9 @@ faststudio:
     # Port of the built-in (embedded) PostgreSQL database; used only when spring.datasource.url is "embedded".
     # 0 = any free port (tests). The pilot profile uses 54339, so demo and pilot databases never mix.
     port: 54329
-    # The restricted database role the app works as. It has no right to bypass row-level security, so the
-    # database itself keeps companies apart (migration V2). Change only if your DBA names it differently.
-    app-role: faststudio_app
+    # The app itself logs in as two restricted roles it maintains at start-up (faststudio_app_login for requests,
+    # faststudio_system_login for cross-tenant system work); the configured datasource user only migrates and must
+    # be allowed to create roles. Their passwords are derived from the secrets key (see DatabaseLogins).
 
   # Video pieces are served from signed, expiring addresses (/media/s/...). This is the signing key: at least
   # 32 random characters, and stable across restarts. Blank = a new random key on every start (fine for the demo,

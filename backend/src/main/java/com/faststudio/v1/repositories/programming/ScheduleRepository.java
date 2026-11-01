@@ -31,8 +31,8 @@ public class ScheduleRepository {
                 .param("o", org).param("v", version).param("r", expected).update() > 0;
     }
 
-    public int versionNumber(UUID version) {
-        return db.sql("select number from schedule_version where id = :v").param("v", version).query(Integer.class).single();
+    public int versionNumber(UUID org, UUID version) {
+        return db.sql("select number from schedule_version where org_id = :o and id = :v").param("o", org).param("v", version).query(Integer.class).single();
     }
 
     /** Serializes publications per channel. */
@@ -40,8 +40,8 @@ public class ScheduleRepository {
         db.sql("select id from channel where org_id = :o and id = :id for update").param("o", org).param("id", channel).query(UUID.class).single();
     }
 
-    public int nextVersionNumber(UUID channel) {
-        return db.sql("select coalesce(max(number), 0) + 1 from schedule_version where channel_id = :c").param("c", channel).query(Integer.class).single();
+    public int nextVersionNumber(UUID org, UUID channel) {
+        return db.sql("select coalesce(max(number), 0) + 1 from schedule_version where org_id = :o and channel_id = :c").param("o", org).param("c", channel).query(Integer.class).single();
     }
 
     public UUID insertPublishedVersion(UUID org, UUID channel, int number, String note, UUID createdBy) {
