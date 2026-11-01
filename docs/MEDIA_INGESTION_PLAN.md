@@ -209,6 +209,8 @@ Use the durable media_job rows as the transactional dispatch outbox instead of i
 
 Short transactions claim a stage and lease; provider calls and file transfer happen outside the transaction. Heartbeats renew database leases. Completed or superseded jobs are no-ops on redelivery. Fencing prevents an expired worker from publishing a stale revision. Reconciliation republishes stranded due jobs; failed items become retryable with a visible reason.
 
+Detailed Stage 2 semantics for agreement: [MEDIA_JOBS_DESIGN.md](MEDIA_JOBS_DESIGN.md).
+
 For jobs too long for a queue lease, acknowledge only after a durable execution handoff, and use database leases/reconciliation for recovery, or split the job into bounded resumable stages. Finalize the chosen semantics before implementing consumers. Do not hold database locks or Cloudflare request handlers for a full movie transcode.
 
 Production uses Cloudflare Queues with pull consumers from our Java workers. Local dispatch still uses durable database state; no production fallback to an in-memory executor. [Pull-consumer documentation](https://developers.cloudflare.com/queues/configuration/pull-consumers/)
