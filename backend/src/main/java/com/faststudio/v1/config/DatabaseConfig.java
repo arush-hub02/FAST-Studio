@@ -55,7 +55,7 @@ public class DatabaseConfig {
     @Primary
     DataSource dataSource(Target t, Secrets secrets) {
         return new TenantAwareDataSource(pool(DatabaseLogins.login(t, DatabaseLogins.APP, secrets), "app", 10),
-                pool(DatabaseLogins.login(t, DatabaseLogins.SYSTEM, secrets), "system", 4));
+                pool(DatabaseLogins.login(t, DatabaseLogins.SYSTEM, secrets), "system", 10));   // also serves viewer session lookups and platform admin requests
     }
 
     @Bean

@@ -280,7 +280,7 @@
       "optimizations": [
         "The organization is stamped once per connection checkout with one tiny statement; no per-query overhead in the application.",
         "Policies are simple equality checks on org_id, which the tenant-first indexes serve directly, so row-level security adds no extra table reads.",
-        "System work and requests use separate, small connection pools (10 and 4 per server), so a burst of background work can't take every request connection."
+        "System work and requests use separate connection pools (10 each per server; the system pool also serves viewer session lookups and platform administration), so a burst of background work can't take every request connection."
       ],
       "scale": [
         "All projects share one database, so adding a customer costs one row, not a database. Isolation does not weaken with more customers: every query is filtered by organization in the database itself.",
@@ -318,7 +318,7 @@
       ],
       "steps": [
         "Platform administration → Tenants → Manage <tenant>: under Custom properties, set \"API requests per minute\", \"Stored media hours\" or \"Videos converting at the same time\". Configuration scope \"Tenant defaults\" applies to all its projects; choose a project to override it for that project only.",
-        "Leave a value at the global default (600 requests, 500 hours, 20 conversions), or use 0 for unlimited.",
+        "Leave a value at the global default (6000 requests, 500 hours, 20 conversions), or use 0 for unlimited.",
         "A project over a limit gets a clear message: \"made more than N requests in a minute\", \"already stores its limit of N hours\", or \"N videos are already converting\"."
       ],
       "howItWorks": [
@@ -376,7 +376,7 @@
               "wait": 400
             }
           ],
-          "caption": "A tenant’s settings: the limits sit with its other properties (API requests per minute shown; stored media hours and conversions further down). \"global\" means the global default is in effect; Save override sets it for this tenant, or for one project when a project scope is chosen."
+          "caption": "A tenant’s settings: the limits sit with its other properties (API requests per minute shown at its old default of 600, now 6000; stored media hours and conversions further down). \"global\" means the global default is in effect; Save override sets it for this tenant, or for one project when a project scope is chosen."
         }
       ]
     },

@@ -94,7 +94,7 @@ Rules (✅):
 
 ## 7. Noisy-neighbour and fairness (partly built, 2026-11-01)
 
-- ✅ **Per-project limits** (V19), ordinary dynamic properties (global default → tenant → project override, set by platform administrators; 0 = unlimited): `limits.api_requests_per_minute` (default 600; 429 `RATE_LIMITED`; counted per server in memory, so N servers allow N × the limit), `limits.media_hours` (default 500; checked before uploads, generated samples, direct uploads and library sync; 409 `MEDIA_LIMIT`), `limits.processing_videos` (default 20 converting at once; 409 `PROCESSING_LIMIT`). Values are cached 60 s per project and server. Test: `TenantLimitsTest`.
+- ✅ **Per-project limits** (V19), ordinary dynamic properties (global default → tenant → project override, set by platform administrators; 0 = unlimited): `limits.api_requests_per_minute` (default 6000, raised by V21 because open Library/Watch screens poll every 3–5 s; 429 `RATE_LIMITED`; counted per server in memory, so N servers allow N × the limit), `limits.media_hours` (default 500; checked before uploads, generated samples, direct uploads and library sync; 409 `MEDIA_LIMIT`), `limits.processing_videos` (default 20 converting at once; 409 `PROCESSING_LIMIT`). Values are cached 60 s per project and server. Test: `TenantLimitsTest`.
 - ✅ **Tenant-first indexes** on the growing event tables (V20): `ad_event`, `playback_session`, `ad_decision` lead with `org_id`.
 - ⏳ Media job queue picks work round-robin per org (Stage 2, [MEDIA_JOBS_DESIGN.md](MEDIA_JOBS_DESIGN.md)).
 - ⏳ Rate limits on playback-session creation; exact global API limits (Cloudflare rate limiting or a shared counter); usage shown to customers (F12).
