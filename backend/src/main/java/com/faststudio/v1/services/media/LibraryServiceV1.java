@@ -111,7 +111,7 @@ public class LibraryServiceV1 {
             if (id.isEmpty() && "ready".equals(x.status()))
                 id = assets.insertLibraryAsset(org, AssetRules.importedTitle(x.title()), x.durationMs(), CONVERTING,
                         AssetRules.defaultCues("MOVIE", x.durationMs()), ref);
-            id.ifPresent(media::enqueue);
+            id.ifPresent(a -> media.enqueue(org, a));
             return id.isPresent();
         });
     }

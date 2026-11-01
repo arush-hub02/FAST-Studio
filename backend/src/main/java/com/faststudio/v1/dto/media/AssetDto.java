@@ -13,7 +13,14 @@ import java.util.UUID;
 public final class AssetDto {
     private AssetDto() {}
 
-    /** What a processing job needs to know about one asset (looked up by id, across tenants). */
+    /**
+     * One background job of an asset (Library status): QUEUED, RUNNING, CANCEL_REQUESTED, SUCCEEDED, FAILED or
+     * CANCELLED; lane AD or PROGRAMME; nextRunAt only while queued (a retry waits for it).
+     */
+    public record JobView(UUID id, String state, String lane, int attempts, int maxAttempts, String lastError,
+                          OffsetDateTime createdAt, OffsetDateTime startedAt, OffsetDateTime finishedAt, OffsetDateTime nextRunAt) {}
+
+    /** What a processing job needs to know about one asset (looked up within its project). */
     public record ProcessingJob(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs,
                                 String mediaKey, String sourceUrl, String sourceRef) {}
 

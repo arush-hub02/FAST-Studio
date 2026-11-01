@@ -1,6 +1,17 @@
 # Stage 2: durable media jobs (design for agreement)
 
-Status: **proposal, not built.** Written 2026-11-01 for user review before any table or worker code. Stage numbers refer to [MEDIA_INGESTION_PLAN.md](MEDIA_INGESTION_PLAN.md).
+Status: **built locally 2026-11-01 (V22), not deployed or production-verified.** The user confirmed the three recommended decisions below (Postgres only, only `media_job`, the proposed defaults). Stage numbers refer to [MEDIA_INGESTION_PLAN.md](MEDIA_INGESTION_PLAN.md).
+
+## As built (differences from the proposal below)
+
+- Code: migration `V22__media_jobs.sql`, `repositories/media/MediaJobRepository` (every state change is one SQL statement that updates job and asset together under the fence), `messaging/v1/media/MediaJobObserverV1` (worker threads, heartbeats, reaper, purge), `MediaServiceV1.pack` (packages into a fresh folder, never touches the asset row), `AssetServiceV1.jobs/cancel`.
+- `org_id` is **not null** and there is no `SYSTEM` lane: slates stay start-up work, so there are no platform jobs yet. Lanes are `AD` and `PROGRAMME`.
+- The per-tenant limit is per **project** (`org_id`): `faststudio.media.jobs-per-project` (2). Other settings: `faststudio.media.programme-workers` (2), `faststudio.media.ad-workers` (1), `faststudio.media.lease-seconds` (120; heartbeat every quarter of it). Attempts: column default 5.
+- Retry classes: a content source throws `MediaServiceV1.Retryable` for transient trouble (Mux master not ready yet, remote video unreachable); unexpected exceptions also retry; every returned reason is permanent.
+- While a job waits for a retry the asset stays `PROCESSING` with "Will retry shortly: …" in its status line.
+- Also built: `POST /api/orgs/{org}/assets/{id}/jobs/cancel` (needed for acceptance tests 5 and 9).
+- Skipped: the in-process nudge. An idle worker picks a new job up within about 2 s. Two servers claiming at the same instant can put a project one job over its share (no advisory lock); marked `ponytail:` in the claim.
+- Tests: `MediaJobTest` (acceptance 1–5, 7–9), `MediaStopTest` (a real ffmpeg is killed; skipped without ffmpeg), `MediaJobMigrationTest` (6: V21 → V22 turns `PROCESSING` assets into queued jobs), `RowLevelSecurityTest` coverage and `CrossTenantMatrixTest` pick the table and routes up automatically.
 
 ## The problem today
 
@@ -135,7 +146,7 @@ create index media_job_leases on media_job(lease_until) where state in ('RUNNING
 9. **Tenant isolation:** tenant B can't see or cancel tenant A's jobs, and the job API respects RLS.
 10. **Existing tests:** the existing suite (including MuxTest webhook replay) passes unchanged.
 
-## Decisions needed from you
+## Decisions (confirmed by the user 2026-11-01: the recommendations)
 
 1. **Cloudflare Queues now, or Postgres only?**
    - The agreed plan says Cloudflare Queues carries job IDs to the Java workers.

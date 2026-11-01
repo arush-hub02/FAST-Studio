@@ -170,7 +170,14 @@
       "purpose": "Every video and ad creative of a project: metadata, cue points, processing status and where its media lives.",
       "pages": ["/:org/library", "/:org/schedule", "/:org/ads", "/:org/rights", "/:org"],
       "apis": ["GET /api/orgs/{org}/assets", "POST /api/orgs/{org}/assets", "PATCH /api/orgs/{org}/assets/{id}", "POST /api/orgs/{org}/assets/{id}/upload", "POST /api/orgs/{org}/library/sync"],
-      "watch": ["status PROCESSING for a long time = check the app log for ffmpeg errors.", "status FAILED: status_detail says why.", "Episodes must have unique series + season + episode (409 DUPLICATE_EPISODE).", "Archive is blocked while the video is used (409 IN_USE)."]
+      "watch": ["status PROCESSING for a long time = look at its media_job rows (state, attempts, last_error) and the app log for ffmpeg errors.", "status FAILED: status_detail says why.", "Episodes must have unique series + season + episode (409 DUPLICATE_EPISODE).", "Archive is blocked while the video is used (409 IN_USE)."]
+    },
+    "media_job": {
+      "feature": "Media library",
+      "purpose": "Background work on a video (packaging into 5-second segments). Written together with the change that needs it; workers on any server take one row each, keep a lease alive and publish only while their fence still matches.",
+      "pages": ["/:org/library"],
+      "apis": ["GET /api/orgs/{org}/assets/{id}/jobs", "POST /api/orgs/{org}/assets/{id}/jobs/cancel", "POST /api/orgs/{org}/assets", "POST /api/orgs/{org}/assets/{id}/upload", "POST /api/orgs/{org}/assets/{id}/retry", "POST /api/orgs/{org}/library/sync"],
+      "watch": ["Only one QUEUED/RUNNING/CANCEL_REQUESTED row per video (media_job_one_active); a second enqueue does nothing.", "RUNNING with lease_until in the past = its server stopped; the reaper re-queues it within a minute.", "QUEUED with next_run_at in the future = waiting for a retry (1, 5, 25, 125 minutes); FAILED after max_attempts.", "A project runs at most 2 programme jobs at once (faststudio.media.jobs-per-project); the rest wait.", "Finished rows are deleted after 30 days."]
     },
     "mux_account": {
       "feature": "Media library",

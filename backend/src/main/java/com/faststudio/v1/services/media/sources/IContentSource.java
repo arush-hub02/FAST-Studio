@@ -13,6 +13,9 @@ import java.nio.file.Path;
 public interface IContentSource {
     boolean handles(ProcessingJob job);
 
-    /** Packages the asset into {@code out} via {@link MediaServiceV1#encode}. Returns null on success, else a reason. */
+    /**
+     * Packages the asset into {@code out} via {@link MediaServiceV1#encode}. Returns null on success, else a reason (final);
+     * throws {@link MediaServiceV1.Retryable} when trying again later can help.
+     */
     String ingest(ProcessingJob job, Path out, MediaServiceV1 packager) throws Exception;
 }

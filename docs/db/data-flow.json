@@ -2317,6 +2317,41 @@
             }
           ]
         },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "test",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "test",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "test",
+              "layer": "service"
+            },
+            {
+              "class": "VastSource",
+              "method": "creative",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueueCreative",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
         "organization": {
           "mode": "read",
           "chain": [
@@ -3421,6 +3456,31 @@
             }
           ]
         },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
         "media_type": {
           "mode": "read",
           "chain": [
@@ -4372,6 +4432,197 @@
         }
       }
     },
+    "GET /api/orgs/{org}/assets/{id}/jobs": {
+      "title": "Processing history of a video",
+      "category": "Video library",
+      "id": "ep-get-api-orgs-org-assets-id-jobs",
+      "handler": "AssetControllerV1.jobs",
+      "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "jobs",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "jobs",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "asset",
+              "layer": "core"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "jobs",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "jobs",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "recent",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/assets/{id}/jobs/cancel": {
+      "title": "Cancel processing",
+      "category": "Video library",
+      "id": "ep-post-api-orgs-org-assets-id-jobs-cancel",
+      "handler": "AssetControllerV1.cancel",
+      "tables": {
+        "asset": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "asset",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "cancel",
+              "layer": "repository"
+            }
+          ]
+        },
+        "rights_policy": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "policy",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/orgs/{org}/assets/{id}/retry": {
       "title": "Retry a failed conversion",
       "category": "Video library",
@@ -4419,6 +4670,31 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
               "layer": "repository"
             }
           ]
@@ -4800,6 +5076,31 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
               "layer": "repository"
             }
           ]
@@ -10780,6 +11081,41 @@
             }
           ]
         },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "importLibrary",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "apply",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
         "media_type": {
           "mode": "read",
           "chain": [
@@ -16726,6 +17062,41 @@
             }
           ]
         },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "test",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "testTag",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "test",
+              "layer": "service"
+            },
+            {
+              "class": "VastSource",
+              "method": "creative",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueueCreative",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
         "organization": {
           "mode": "read",
           "chain": [
@@ -17179,6 +17550,41 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "platformSync",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "importLibrary",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "apply",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
               "layer": "repository"
             }
           ]
@@ -21970,7 +22376,7 @@
       "handler": "MuxWebhookControllerV1.webhook",
       "tables": {
         "asset": {
-          "mode": "read+write",
+          "mode": "write",
           "chain": [
             {
               "class": "MuxWebhookControllerV1",
@@ -21990,6 +22396,36 @@
             {
               "class": "AssetRepository",
               "method": "markLibraryFailed",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "apply",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
               "layer": "repository"
             }
           ]
@@ -22015,46 +22451,6 @@
             {
               "class": "MuxAccountRepository",
               "method": "find",
-              "layer": "repository"
-            }
-          ]
-        },
-        "organization": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "MuxWebhookControllerV1",
-              "method": "webhook",
-              "layer": "controller"
-            },
-            {
-              "class": "MediaWebhookServiceV1",
-              "method": "mux",
-              "layer": "service"
-            },
-            {
-              "class": "LibraryServiceV1",
-              "method": "apply",
-              "layer": "service"
-            },
-            {
-              "class": "MediaServiceV1",
-              "method": "enqueue",
-              "layer": "service"
-            },
-            {
-              "class": "MediaServiceV1",
-              "method": "submit",
-              "layer": "service"
-            },
-            {
-              "class": "MediaServiceV1",
-              "method": "process",
-              "layer": "service"
-            },
-            {
-              "class": "AssetRepository",
-              "method": "job",
               "layer": "repository"
             }
           ]
@@ -24428,6 +24824,7 @@
         "POST /api/orgs/{org}/assets",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
@@ -24650,7 +25047,6 @@
         "GET /api/platform/tenants/{tenant}/settings",
         "POST /api/platform/tenants/{tenant}/status",
         "PUT /api/platform/tenants/{tenant}/subscription",
-        "POST /hooks/mux/{org}",
         "POST /oauth/token",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
@@ -24830,6 +25226,8 @@
         "GET /api/orgs/{org}/assets/{id}",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "GET /api/orgs/{org}/assets/{id}/jobs",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",
@@ -24865,7 +25263,6 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/tenants/{tenant}/delete",
-        "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
         "GET /play/{session}/info"
@@ -24875,9 +25272,26 @@
         "POST /api/orgs/{org}/assets",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "POST /api/orgs/{org}/library/sync",
+        "POST /api/platform/orgs/{orgId}/ad-sources/test",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /hooks/mux/{org}"
+      ]
+    },
+    "media_job": {
+      "read": [
+        "GET /api/orgs/{org}/assets/{id}/jobs"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/ad-sources/test",
+        "POST /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
@@ -24894,6 +25308,7 @@
         "GET /api/orgs/{org}/assets/{id}",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",
@@ -24960,6 +25375,7 @@
         "GET /api/orgs/{org}/assets/{id}",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",
@@ -25027,6 +25443,7 @@
         "GET /api/orgs/{org}/assets/{id}",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",

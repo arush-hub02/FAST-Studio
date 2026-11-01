@@ -526,6 +526,24 @@
           "description": "Only for videos with status FAILED."
         },
         {
+          "method": "GET",
+          "path": "/api/orgs/{org}/assets/{id}/jobs",
+          "title": "Processing history of a video",
+          "params": {
+            "id": "{{assetId}}"
+          },
+          "description": "The last 10 background jobs of the video, newest first: state (QUEUED, RUNNING, CANCEL_REQUESTED, SUCCEEDED, FAILED, CANCELLED), lane (AD or PROGRAMME), attempt number out of the maximum, the last error in plain words and times. nextRunAt is set while a job waits for its retry."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/assets/{id}/jobs/cancel",
+          "title": "Cancel processing",
+          "params": {
+            "id": "{{assetId}}"
+          },
+          "description": "Stops the video's processing. A queued job is cancelled at once; a running one stops within about 30 seconds. The video goes back to how it was: still READY with its old media (which keeps airing), or DRAFT if it never had media. 409 NOT_PROCESSING when nothing is queued or running."
+        },
+        {
           "method": "POST",
           "path": "/api/orgs/{org}/assets/{id}/archive",
           "title": "Archive a video",

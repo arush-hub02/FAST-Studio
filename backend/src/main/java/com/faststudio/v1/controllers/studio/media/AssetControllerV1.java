@@ -39,6 +39,12 @@ public class AssetControllerV1 {
     @PostMapping("/{id}/retry")
     AssetView retry(Tenant t, @PathVariable UUID id) { return assets.retry(t, id); }
 
+    @GetMapping("/{id}/jobs")
+    List<JobView> jobs(Tenant t, @PathVariable UUID id) { return assets.jobs(t, id); }
+
+    @PostMapping("/{id}/jobs/cancel")
+    AssetView cancel(Tenant t, @PathVariable UUID id) { return assets.cancel(t, id); }
+
     @PatchMapping("/{id}")
     AssetView update(Tenant t, @PathVariable UUID id, @Valid @RequestBody UpdateRequest r) { return assets.update(t, id, r); }
 

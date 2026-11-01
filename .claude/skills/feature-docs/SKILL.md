@@ -1,6 +1,6 @@
 ---
 name: feature-docs
-description: Add or update a feature in docs/html/FEATURES.html (and its endpoints in docs/html/API.html, the API reference with copy-paste curl), the illustrated feature documentation (what it does, who can use it, step-by-step how-to, real screenshots, rules, API, tests). Use whenever a feature is completed or changed, when its screens change (re-take screenshots), or when the user asks for feature documentation, user docs or updated screenshots.
+description: Add or update a feature in docs/html/FEATURES.html (and its endpoints in docs/html/API.html, the API reference with copy-paste curl), the illustrated feature documentation (what it does, who can use it, step-by-step how-to, real screenshots, an animated flow of the tech behind it, rules, API, tests). Use whenever a feature is completed or changed, when its screens change (re-take screenshots), or when the user asks for feature documentation, user docs or updated screenshots.
 ---
 
 # Feature documentation (docs/html/FEATURES.html)
@@ -28,6 +28,9 @@ Every completed feature gets an entry, and its screenshots are re-taken whenever
    - `rules`: limits, permissions, what happens on errors. Say plainly what is **not** built yet; never present planned work as built.
    - `api`, `tests`, `docs`: endpoints, the tests that cover it, longer design docs.
    - `screenshots`: one recipe per picture (see below). Features without screens use `[]`.
+   - `flow`: an **animated flow** that shows the work happening behind the screens (see "Animated flows" below).
+     **Required for every feature** (the build fails without it). For a simple screen, a short flow (person → screen →
+     API → table, plus one refusal) is enough; features with background work or several moving parts show each failure case.
 2. Make sure the demo runs the new build (`start.bat`, demo mode on http://localhost:8080).
 3. Take the screenshots: `cd frontend && npm run docs:shots` (`DOCS_BASE_URL` for another address).
 4. Build the page: `node tools/build-feature-docs.mjs`. It fails on missing fields and lists screenshots not taken yet.
@@ -78,6 +81,38 @@ When only the UI changed: steps 3–5 and 7 (and fix recipes whose buttons or la
 - Prefer roles and visible labels over CSS classes, so recipes survive restyling.
 - **Mask** anything secret or one-time (tokens, passwords, keys): it is painted over in the PNG.
 - Data a recipe creates must be cleaned up: name it with a `Docs:` prefix and give the feature a `cleanup` script (runs in the page after each shot).
+
+## Animated flows
+
+A flow shows the parts of the system as boxes and walks a token (one request, job or video) through them, one step at a
+time, with a plain caption and an optional "Tech" line. Readers pick a situation (normal run, failure, retry, cancel…);
+it plays by itself when scrolled into view and has Back / Play / Next. Example: `durable-media-jobs` in features.json.
+
+```json
+"flow": {
+  "title": "Watch a job move through the system",
+  "intro": "One sentence on what the boxes and the moving pill are.",
+  "nodes": [
+    { "id": "db", "col": 2, "row": 1, "icon": "🗄️", "label": "Job table", "sub": "What this part does, in a few words" }
+  ],
+  "scenarios": [
+    { "name": "Normal run", "steps": [
+      { "at": "db", "state": "QUEUED", "say": "What happens, in plain words.", "tech": "The mechanism (`SQL`, header, rule).", "down": ["a"] }
+    ]}
+  ]
+}
+```
+
+- `nodes`: 4–8 boxes on a grid (`col`, `row`; at most 4 columns; phones show 2). One box per real part: the person,
+  the screen or API, each service, the database table, the worker, the provider, the edge.
+- `scenarios`: always the normal run first, then each failure or edge case the design handles (crash, retry, cancel,
+  duplicate, limit reached, another tenant). 3–7 steps each. Only show behaviour that is built and tested.
+- Step: `at` (box the token moves to), `state` (short text on the token; SUCCEEDED/CANCELLED turn it green,
+  FAILED/"refused" amber), `say` (one or two plain sentences), optional `tech` (the mechanism, backticks for code),
+  optional `down` (boxes greyed out with "✕ off" in this step: a stopped server, blocked data, a killed process).
+- Every feature on the page has a flow (the build requires it). Keep the content true to the code: quote status codes and limits the tests check.
+- The build fails when a step names an unknown box. After building, open the page: play every scenario, check the
+  phone width (no sideways scroll), and check the console has no errors.
 
 ## Rules for the content
 

@@ -20,27 +20,13 @@ public class AssetRepository {
 
     private record Usage(UUID assetId, String channel) {}
 
-    // --- processing (called by the media workers; callers choose the tenant scope) ---
+    // --- processing (called by the media job workers inside the job's project; MediaJobRepository writes the results) ---
 
-    /** Assets left half-processed, e.g. by a restart. */
-    public List<UUID> processingIds() {
-        return db.sql("select id from asset where status = 'PROCESSING' /* all tenants: restart recovery */").query(UUID.class).list();
-    }
-
-    public ProcessingJob job(UUID id) {
+    public ProcessingJob job(UUID org, UUID id) {
         return db.sql("""
                 select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
-                from asset a join organization o on o.id = a.org_id where a.id = :id""")
-                .param("id", id).query(ProcessingJob.class).single();
-    }
-
-    public boolean markReady(UUID org, UUID id, String detail, long durationMs, String mediaKey) {
-        return db.sql("update asset set status='READY', status_detail=:d, duration_ms=:ms, media_key=:k, updated_at=now() where org_id=:o and id=:id")
-                .param("o", org).param("d", detail).param("ms", durationMs).param("k", mediaKey).param("id", id).update() > 0;
-    }
-
-    public boolean markFailed(UUID id, String why) {
-        return db.sql("update asset set status='FAILED', status_detail=:d, updated_at=now() where id=:id /* all tenants: processing worker */").param("d", why).param("id", id).update() > 0;
+                from asset a join organization o on o.id = a.org_id where a.org_id = :o and a.id = :id""")
+                .param("o", org).param("id", id).query(ProcessingJob.class).single();
     }
 
     /** Channels that air each asset in their published schedule from now on. */

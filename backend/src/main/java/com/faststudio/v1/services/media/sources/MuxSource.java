@@ -45,7 +45,7 @@ public class MuxSource implements IContentSource {
         } catch (ApiException e) {
             return e.getMessage();
         }
-        if (url == null) return "The library couldn't provide this video's original file. Try again later, or upload the file again.";
+        if (url == null) throw new MediaServiceV1.Retryable("The library couldn't provide this video's original file yet. It will be tried again; or upload the file again.");
         String err = RemoteSource.encodeUrl(url, out, packager);
         if (err == null) return null;
         log.warn("Packaging {} from Mux failed: {}", j.id(), err);

@@ -8,6 +8,7 @@ import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.dto.media.AssetDto.*;
 import com.faststudio.v1.repositories.media.AssetRepository;
+import com.faststudio.v1.repositories.media.MediaJobRepository;
 import com.faststudio.v1.services.rights.Rights;
 import com.faststudio.v1.services.tenancy.TenantLimitsService;
 import org.springframework.http.HttpStatus;
@@ -39,16 +40,18 @@ public class AssetServiceV1 {
 
     private final Data data;
     private final AssetRepository repository;
+    private final MediaJobRepository jobs;
     private final MediaServiceV1 media;
     private final MediaSigner signer;
     private final AssetRules rules;
     private final TenantLimitsService limits;
     private final Audit audit;
 
-    public AssetServiceV1(Data data, AssetRepository repository, MediaServiceV1 media, MediaSigner signer,
+    public AssetServiceV1(Data data, AssetRepository repository, MediaJobRepository jobs, MediaServiceV1 media, MediaSigner signer,
                             AssetRules rules, TenantLimitsService limits, Audit audit) {
         this.data = data;
         this.repository = repository;
+        this.jobs = jobs;
         this.media = media;
         this.signer = signer;
         this.rules = rules;
@@ -111,7 +114,7 @@ public class AssetServiceV1 {
                 r.season(), r.episode(), AssetRules.color(r.color()), dur, generator, generator != null ? "PROCESSING" : "DRAFT",
                 AssetRules.defaultCues(r.kind(), dur), type));
         audit.log(t, "asset.create", "asset", id, r.title() + (generator != null ? " (generated sample)" : ""));
-        if (generator != null) media.enqueue(id);
+        if (generator != null) media.enqueue(t.orgId(), id);
         return get(t, id);
     }
 
@@ -133,7 +136,7 @@ public class AssetServiceV1 {
         file.transferTo(dir.resolve("source." + ext));
         repository.markUploaded(t.orgId(), id);
         audit.log(t, "asset.upload", "asset", id, name + " (" + file.getSize() / 1024 + " KB)");
-        media.enqueue(id);
+        media.enqueue(t.orgId(), id);
         return get(t, id);
     }
 
@@ -143,7 +146,23 @@ public class AssetServiceV1 {
         if (!a.status().equals("FAILED")) throw ApiException.conflict("NOT_FAILED", "Only failed videos can be retried.");
         limits.requireProcessingSlot(t.orgId());
         repository.markProcessing(t.orgId(), id, "Retrying");
-        media.enqueue(id);
+        media.enqueue(t.orgId(), id);
+        return get(t, id);
+    }
+
+    /** The asset's last 10 background jobs, newest first. */
+    public List<JobView> jobs(Tenant t, UUID id) {
+        data.asset(t.orgId(), id);   // 404 outside the project
+        return jobs.recent(t.orgId(), id);
+    }
+
+    /** Cancels the asset's processing: a queued job at once, a running one within a heartbeat (its old media keeps airing). */
+    public AssetView cancel(Tenant t, UUID id) {
+        t.require(Tenant.Perm.ASSETS_EDIT);
+        Asset a = data.asset(t.orgId(), id);
+        String state = jobs.cancel(t.orgId(), id)
+                .orElseThrow(() -> ApiException.conflict("NOT_PROCESSING", "This video has no processing to cancel."));
+        audit.log(t, "asset.cancel", "asset", id, a.title() + (state.equals("CANCELLED") ? "" : " (stopping)"));
         return get(t, id);
     }
 
