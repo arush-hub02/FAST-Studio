@@ -4,13 +4,14 @@
 //   validation and only the permission stopped it, so nothing changes. A 400 means the example body is wrong.
 // - A few side-effect-free POSTs (checks, previews, decoders, sign-in) run for real.
 // - Platform and partner writes are not run (they would change data); their bodies are checked by the build only.
-// Usage: node tools/check-api-docs.mjs [baseUrl]   (default http://localhost:8080, demo password demo1234)
+// Usage: node tools/check-api-docs.mjs [baseUrl] [--save]  (--save: keep the answers as response examples)
+//   (default http://localhost:8080, demo password demo1234)
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const base = process.argv[2] || 'http://localhost:8080'
+const base = process.argv.slice(2).find(a => !a.startsWith('--')) || 'http://localhost:8080'
 const data = JSON.parse(fs.readFileSync(path.join(root, 'docs/api/api.json'), 'utf8'))
 const SAFE_POSTS = new Set(['/api/auth/token', '/api/orgs/{org}/rights/check', '/api/orgs/{org}/ads/simulate', '/api/orgs/{org}/channels/{id}/programming/preview',
   '/api/tools/scte35/decode', '/api/platform/email/templates/{key}/preview', '/play/sessions'])
@@ -61,6 +62,20 @@ const PATH = { org: '{{org}}', orgId: '{{orgId}}', tenant: '{{tenant}}', project
   channelId: '{{channelId}}', destinationId: '{{destinationId}}', linkId: '{{linkId}}', userId: '{{userId}}', session: '{{sessionId}}' }
 const tokenFor = c => c.startsWith('platform') ? platform.access_token : c === 'partner-api' ? partner.access_token : owner.access_token
 
+// --save keeps each real answer as the page's response example: lists cut to 2 items, long text cut, and anything
+// secret or signed replaced (tokens, keys, signatures, signed media and playback links), never committed as is.
+const responses = {}
+const SECRET_KEYS = /token|secret|password|signature|^sig$|^key$|^x$|^y$|^d$|hash/i
+function clean(s) {
+  return String(s).replace(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g, '<token>').replace(/fsp_[\w-]+/g, 'fsp_<token>')
+    .replace(/(https?:\/\/[^\s"']*)?\/media\/s\/[^\s"']*/g, '<signed media link>').replace(/\/live\/[^\s"'/…]+/g, '/live/<signed session token>').replace(/([?&](token|sig|signature|t)=)[^&\s"']+/g, '$1<signed>')
+}
+function shorten(v, depth = 0) {
+  if (Array.isArray(v)) return v.length > 2 ? [...v.slice(0, 2).map(x => shorten(x, depth + 1)), `… ${v.length - 2} more`] : v.map(x => shorten(x, depth + 1))
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, SECRET_KEYS.test(k) && typeof x === 'string' ? '<hidden>' : shorten(x, depth + 1)]))
+  if (typeof v === 'string') { const c = clean(v); return c.length > 160 ? c.slice(0, 160) + '…' : c }
+  return v
+}
 const rows = []
 let failed = 0
 for (const c of data.categories)
@@ -83,7 +98,7 @@ for (const c of data.categories)
     else if (/{(tenant|orgId|id|project)}/.test(e.path) && url.startsWith(base + '/api/platform/')) {
       // an ID that does not exist: a 400 means the example body is wrong, a 404 means it passed and nothing changed
       mode = 'validate'
-      const missing = e.path.replace(/{(tenant|orgId|id|project)}/g, '00000000-0000-0000-0000-000000000000').replace(/{(w+)}/g, (m, k) => (e.params && e.params[k]) || m)
+      const missing = e.path.replace(/{(tenant|orgId|id|project)}/g, '00000000-0000-0000-0000-000000000000').replace(/\{(\w+)\}/g, (m, k) => (e.params && e.params[k]) || PATH[k] || m)
       r = await call(e.method, fill(base + missing), platform.access_token, body)
       if (r.status === 404) r.status = 403   // counted like the analyst check: validated, refused, unchanged
     }
@@ -91,7 +106,13 @@ for (const c of data.categories)
     const ok = (mode === 'run' ? r.status < 300 : r.status === 403 || r.status < 300) || (e.checkAccepts || []).includes(r.status)
     if (!ok) failed++
     rows.push([ok ? mode + ' ✓' : mode + ' ✗', e, r.status + (ok ? '' : ' ' + r.text.slice(0, 160))])
+    if (mode === 'run' && r.status < 300 && e.path !== '/api/auth/csrf')
+      responses[e.method + ' ' + e.path] = { status: r.status, body: r.json != null ? shorten(r.json) : clean(r.text.slice(0, 700) + (r.text.length > 700 ? '\n…' : '')) }
   }
+if (process.argv.includes('--save')) {
+  fs.writeFileSync(path.join(root, 'docs/api/responses.json'), JSON.stringify(responses, null, 2) + '\n')
+  console.log(`docs/api/responses.json: ${Object.keys(responses).length} example answers (trimmed; tokens, keys and signed links replaced)`)
+}
 for (const [m, e, note] of rows) console.log(`${m.padEnd(11)} ${e.method.padEnd(6)} ${e.path}  ${note}`)
 const count = k => rows.filter(r => r[0].startsWith(k)).length
 console.log(`\n${count('run')} run, ${count('validate')} validated (nothing changed), ${count('skip')} skipped, ${failed} failed`)

@@ -1,0 +1,3480 @@
+{
+  "POST /api/auth/token": {
+    "status": 200,
+    "body": {
+      "access_token": "<hidden>",
+      "token_type": "<hidden>",
+      "expires_in": 600,
+      "refresh_token": "<hidden>",
+      "refresh_expires_in": 43200,
+      "org": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "kind": "CUSTOMER",
+        "role": "OWNER"
+      }
+    }
+  },
+  "GET /api/auth/me": {
+    "status": 200,
+    "body": {
+      "id": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+      "name": "Asha Rao",
+      "email": "owner@aurora.test",
+      "platformAdmin": false,
+      "memberships": [
+        {
+          "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "role": "OWNER",
+          "permissions": [
+            "ASSETS_EDIT",
+            "ADS_EDIT",
+            "… 8 more"
+          ],
+          "kind": "CUSTOMER",
+          "features": [],
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantName": "Aurora Media Network"
+        },
+        {
+          "orgId": "95d5e1e0-ab3c-469b-89d6-10e6a1adac2c",
+          "slug": "northwind",
+          "name": "Northwind Sports",
+          "status": "ACTIVE",
+          "role": "ANALYST",
+          "permissions": [
+            "VIEW"
+          ],
+          "kind": "CUSTOMER",
+          "features": [],
+          "tenantId": "95d5e1e0-ab3c-469b-89d6-10e6a1adac2c",
+          "tenantName": "Northwind Sports"
+        }
+      ],
+      "demoMode": true,
+      "mustChangePassword": false
+    }
+  },
+  "GET /api/auth/options": {
+    "status": 200,
+    "body": {
+      "demo": true,
+      "tokens": true,
+      "passwordResetByEmail": false
+    }
+  },
+  "GET /api/auth/demo-accounts": {
+    "status": 200,
+    "body": {
+      "password": "<hidden>",
+      "accounts": [
+        {
+          "email": "owner@aurora.test",
+          "name": "Asha Rao",
+          "role": "Organization owner",
+          "description": "Sees everything at Aurora Media; also a read-only analyst at Northwind"
+        },
+        {
+          "email": "operator@aurora.test",
+          "name": "Ravi Menon",
+          "role": "Channel operator",
+          "description": "Builds schedules, publishes, goes live"
+        },
+        "… 6 more"
+      ],
+      "enabled": true
+    }
+  },
+  "GET /api/auth/personal-tokens": {
+    "status": 200,
+    "body": []
+  },
+  "GET /.well-known/jwks.json": {
+    "status": 200,
+    "body": {
+      "keys": [
+        {
+          "kty": "EC",
+          "use": "sig",
+          "crv": "P-256",
+          "kid": "fs-22a602ee",
+          "x": "<hidden>",
+          "y": "<hidden>",
+          "alg": "ES256",
+          "iat": 1792497165
+        }
+      ]
+    }
+  },
+  "GET /api/orgs/{org}/project-details": {
+    "status": 200,
+    "body": {
+      "schemaVersion": 2,
+      "project": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "kind": "CUSTOMER",
+        "status": "ACTIVE"
+      },
+      "access": {
+        "role": "OWNER",
+        "permissions": [
+          "ADS_EDIT",
+          "ALERTS_EDIT",
+          "… 8 more"
+        ],
+        "features": []
+      },
+      "media": {
+        "types": [
+          {
+            "key": "<hidden>",
+            "label": "Advertisement",
+            "kind": "AD"
+          },
+          {
+            "key": "<hidden>",
+            "label": "Episode",
+            "kind": "EPISODE"
+          },
+          "… 3 more"
+        ],
+        "enabledTypes": [
+          "AD",
+          "EPISODE",
+          "… 3 more"
+        ],
+        "defaultType": "MOVIE",
+        "premiereTime": "20:00",
+        "weekdays": [
+          1,
+          2,
+          "… 5 more"
+        ],
+        "personalizedAds": false,
+        "viewerIntegrationConfigured": false,
+        "revision": 0
+      },
+      "connectors": {
+        "media": [],
+        "advertising": [],
+        "delivery": {
+          "origin": "R2",
+          "cdn": "CLOUDFLARE",
+          "configured": true
+        }
+      },
+      "summary": {
+        "assets": 22,
+        "readyAssets": 22,
+        "channels": 4
+      },
+      "configuration": {
+        "tenant": {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "planKey": "pilot",
+          "subscriptionStatus": "TRIAL",
+          "revision": 0,
+          "projects": 1,
+          "channels": 4
+        },
+        "project": {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        },
+        "plan": {
+          "key": "<hidden>",
+          "name": "Pilot",
+          "enabled": true,
+          "maxProjects": 10,
+          "maxChannels": 100,
+          "monthlyPrice": 0,
+          "currency": "USD",
+          "features": [
+            "LIBRARY_SYNC",
+            "AD_WATERFALL_VIEW",
+            "… 1 more"
+          ]
+        },
+        "projects": [
+          {
+            "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "slug": "aurora",
+            "name": "Aurora Media Network",
+            "status": "ACTIVE",
+            "members": 5
+          }
+        ],
+        "properties": [
+          {
+            "definition": {
+              "key": "<hidden>",
+              "label": "API requests per minute (per project, per server)",
+              "valueType": "NUMBER",
+              "connectorKey": null,
+              "secret": false,
+              "projectOverride": true,
+              "enabled": true,
+              "options": [],
+              "defaultValue": 600,
+              "defaultConfigured": true,
+              "revision": 0,
+              "system": true
+            },
+            "value": 600,
+            "configured": true,
+            "source": "GLOBAL",
+            "overridden": false
+          },
+          {
+            "definition": {
+              "key": "<hidden>",
+              "label": "Default premiere time (HH:MM, five-second boundary)",
+              "valueType": "STRING",
+              "connectorKey": null,
+              "secret": false,
+              "projectOverride": true,
+              "enabled": true,
+              "options": [],
+              "defaultValue": "20:00",
+              "defaultConfigured": true,
+              "revision": 0,
+              "system": true
+            },
+            "value": "20:00",
+            "configured": true,
+            "source": "GLOBAL",
+            "overridden": false
+          },
+          "… 4 more"
+        ],
+        "connectors": [
+          {
+            "definition": {
+              "key": "<hidden>",
+              "name": "VAST ad servers",
+              "category": "ADS",
+              "driver": "VAST",
+              "enabled": true,
+              "description": "Project ad demand waterfall"
+            },
+            "allowed": true,
+            "enabled": true,
+            "overridden": false
+          },
+          {
+            "definition": {
+              "key": "<hidden>",
+              "name": "Mux",
+              "category": "MEDIA",
+              "driver": "MUX",
+              "enabled": true,
+              "description": "Video library, uploads and encoding"
+            },
+            "allowed": true,
+            "enabled": true,
+            "overridden": false
+          },
+          "… 1 more"
+        ],
+        "editable": true
+      }
+    }
+  },
+  "GET /api/orgs/{org}/dashboard": {
+    "status": 200,
+    "body": {
+      "counts": {
+        "channels": 4,
+        "liveChannels": 3,
+        "videos": 14,
+        "processing": 0,
+        "activeCampaigns": 5,
+        "openAlerts": 3,
+        "impressions": 65,
+        "viewerSessions": 145
+      },
+      "checklist": [
+        {
+          "key": "<hidden>",
+          "title": "Add a video",
+          "description": "Upload a file or generate a sample programme.",
+          "done": true,
+          "link": "/library"
+        },
+        {
+          "key": "<hidden>",
+          "title": "Set where it may play",
+          "description": "A licence says which countries and dates are allowed.",
+          "done": true,
+          "link": "/rights"
+        },
+        "… 5 more"
+      ],
+      "activity": [
+        {
+          "id": 375,
+          "actor": "Sam Lee (Partner TV)",
+          "action": "partner.read",
+          "resourceType": "channel",
+          "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "detail": "Partner TV (portal) read markers:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/breaks",
+          "createdAt": "2026-11-01T12:27:24.885724Z"
+        },
+        {
+          "id": 374,
+          "actor": "Sam Lee (Partner TV)",
+          "action": "partner.read",
+          "resourceType": "channel",
+          "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "detail": "Partner TV (portal) read stream:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/stream",
+          "createdAt": "2026-11-01T12:27:24.879326Z"
+        },
+        "… 6 more"
+      ],
+      "alerts": [
+        {
+          "id": "049854e4-e946-4dca-98a1-add10ca15ac2",
+          "severity": "WARNING",
+          "title": "Classic Cinema: schedule runs out soon",
+          "detail": "The published schedule ends Sun 22:56.",
+          "suggestion": "Auto-fill more hours and publish.",
+          "link": "/schedule?channel=bc645565-299e-45e9-ba20-f6b7d19c227a",
+          "status": "OPEN",
+          "resolution": "",
+          "createdAt": "2026-11-01T11:26:37.006486Z",
+          "updatedAt": "2026-11-01T12:27:24.791999Z"
+        },
+        {
+          "id": "4d3af738-ff52-45a0-ae24-fa0348129900",
+          "severity": "WARNING",
+          "title": "Family Entertainment: schedule runs out soon",
+          "detail": "The published schedule ends Sun 22:53.",
+          "suggestion": "Auto-fill more hours and publish.",
+          "link": "/schedule?channel=75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+          "status": "OPEN",
+          "resolution": "",
+          "createdAt": "2026-11-01T11:23:36.751707Z",
+          "updatedAt": "2026-11-01T12:27:24.792207Z"
+        },
+        "… 1 more"
+      ]
+    }
+  },
+  "GET /api/orgs/{org}/settings": {
+    "status": 200,
+    "body": {
+      "types": [
+        {
+          "key": "<hidden>",
+          "label": "Advertisement",
+          "kind": "AD",
+          "enabled": true
+        },
+        {
+          "key": "<hidden>",
+          "label": "Episode",
+          "kind": "EPISODE",
+          "enabled": true
+        },
+        "… 3 more"
+      ],
+      "enabledTypes": [
+        "AD",
+        "EPISODE",
+        "… 3 more"
+      ],
+      "defaultType": "MOVIE",
+      "premiereTime": "20:00",
+      "weekdays": [
+        1,
+        2,
+        "… 5 more"
+      ],
+      "personalizedAds": false,
+      "viewerKeySet": false,
+      "revision": 0
+    }
+  },
+  "GET /api/orgs/{org}/configuration": {
+    "status": 200,
+    "body": {
+      "tenant": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 4
+      },
+      "project": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "members": 5
+      },
+      "plan": {
+        "key": "<hidden>",
+        "name": "Pilot",
+        "enabled": true,
+        "maxProjects": 10,
+        "maxChannels": 100,
+        "monthlyPrice": 0,
+        "currency": "USD",
+        "features": [
+          "LIBRARY_SYNC",
+          "AD_WATERFALL_VIEW",
+          "… 1 more"
+        ]
+      },
+      "projects": [
+        {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        }
+      ],
+      "properties": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "API requests per minute (per project, per server)",
+            "valueType": "NUMBER",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": 600,
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": 600,
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "Default premiere time (HH:MM, five-second boundary)",
+            "valueType": "STRING",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": "20:00",
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": "20:00",
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        "… 4 more"
+      ],
+      "connectors": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "VAST ad servers",
+            "category": "ADS",
+            "driver": "VAST",
+            "enabled": true,
+            "description": "Project ad demand waterfall"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "Mux",
+            "category": "MEDIA",
+            "driver": "MUX",
+            "enabled": true,
+            "description": "Video library, uploads and encoding"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        "… 1 more"
+      ],
+      "editable": true
+    }
+  },
+  "GET /api/orgs/{org}/tenant-settings": {
+    "status": 200,
+    "body": {
+      "tenant": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 4
+      },
+      "project": null,
+      "plan": {
+        "key": "<hidden>",
+        "name": "Pilot",
+        "enabled": true,
+        "maxProjects": 10,
+        "maxChannels": 100,
+        "monthlyPrice": 0,
+        "currency": "USD",
+        "features": [
+          "LIBRARY_SYNC",
+          "AD_WATERFALL_VIEW",
+          "… 1 more"
+        ]
+      },
+      "projects": [
+        {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        }
+      ],
+      "properties": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "API requests per minute (per project, per server)",
+            "valueType": "NUMBER",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": 600,
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": 600,
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "Default premiere time (HH:MM, five-second boundary)",
+            "valueType": "STRING",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": "20:00",
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": "20:00",
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        "… 4 more"
+      ],
+      "connectors": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "VAST ad servers",
+            "category": "ADS",
+            "driver": "VAST",
+            "enabled": true,
+            "description": "Project ad demand waterfall"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "Mux",
+            "category": "MEDIA",
+            "driver": "MUX",
+            "enabled": true,
+            "description": "Video library, uploads and encoding"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        "… 1 more"
+      ],
+      "editable": true
+    }
+  },
+  "GET /api/orgs/{org}/members": {
+    "status": 200,
+    "body": [
+      {
+        "userId": "71f96876-27d2-4260-9a63-352199da7589",
+        "name": "Dev Kapoor",
+        "email": "ads@aurora.test",
+        "role": "AD_OPS",
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "customRoleKey": null
+      },
+      {
+        "userId": "073d1d7f-a3ca-4e61-8984-77da06d1e8eb",
+        "name": "Lena Fischer",
+        "email": "analyst@aurora.test",
+        "role": "ANALYST",
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "customRoleKey": null
+      },
+      "… 3 more"
+    ]
+  },
+  "GET /api/orgs/{org}/members/roles": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "name": "Owner",
+        "description": "Everything, including managing other owners",
+        "kind": "CUSTOMER",
+        "baseRole": "OWNER",
+        "permissions": "ADS_EDIT,ALERTS_EDIT,ASSETS_EDIT,CHANNELS_EDIT,DISTRIBUTION_EDIT,RIGHTS_EDIT,SCHEDULE_EDIT,SCHEDULE_PUBLISH,TEAM_MANAGE,VIEW",
+        "builtIn": true
+      },
+      {
+        "key": "<hidden>",
+        "name": "Admin",
+        "description": "Everything except managing owners",
+        "kind": "CUSTOMER",
+        "baseRole": "ADMIN",
+        "permissions": "ADS_EDIT,ALERTS_EDIT,ASSETS_EDIT,CHANNELS_EDIT,DISTRIBUTION_EDIT,RIGHTS_EDIT,SCHEDULE_EDIT,SCHEDULE_PUBLISH,TEAM_MANAGE,VIEW",
+        "builtIn": true
+      },
+      "… 4 more"
+    ]
+  },
+  "GET /api/orgs/{org}/audit": {
+    "status": 200,
+    "body": [
+      {
+        "id": 375,
+        "actor": "Sam Lee (Partner TV)",
+        "action": "partner.read",
+        "resourceType": "channel",
+        "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "detail": "Partner TV (portal) read markers:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/breaks",
+        "createdAt": "2026-11-01T12:27:24.885724Z"
+      },
+      {
+        "id": 374,
+        "actor": "Sam Lee (Partner TV)",
+        "action": "partner.read",
+        "resourceType": "channel",
+        "resourceId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "detail": "Partner TV (portal) read stream:read — /channels/b6776493-c6d2-4fcd-a874-7de5e2b5e355/stream",
+        "createdAt": "2026-11-01T12:27:24.879326Z"
+      },
+      "… 48 more"
+    ]
+  },
+  "GET /api/orgs/{org}/assets": {
+    "status": 200,
+    "body": [
+      {
+        "asset": {
+          "id": "2b8efa53-7b36-4f56-90c0-eca70bfeb793",
+          "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "title": "External - Single Inline Linear",
+          "description": "Creative from Tag tester (GDFP)",
+          "kind": "AD",
+          "genre": "Advertising",
+          "language": "en",
+          "series": null,
+          "season": null,
+          "episode": null,
+          "durationMs": 10000,
+          "cuePoints": "",
+          "status": "READY",
+          "statusDetail": "Processed: 2 segments of 5 s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+          "mediaKey": "aurora/2b8efa53-7b36-4f56-90c0-eca70bfeb793.1793296386",
+          "color": "#64748b",
+          "createdAt": "2026-10-29T17:53:06.073597Z",
+          "updatedAt": "2026-10-29T17:53:17.360085Z",
+          "mediaType": "AD"
+        },
+        "thumbUrl": "<signed media link>",
+        "previewUrl": "<signed media link>",
+        "rights": null,
+        "rightsStatus": "N/A",
+        "upcomingAirings": 0,
+        "channels": []
+      },
+      {
+        "asset": {
+          "id": "53ce2987-f272-4a07-afb1-10640ab36ca5",
+          "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "title": "External - Single Inline Linear",
+          "description": "Creative from Tag tester (GDFP)",
+          "kind": "AD",
+          "genre": "Advertising",
+          "language": "en",
+          "series": null,
+          "season": null,
+          "episode": null,
+          "durationMs": 10000,
+          "cuePoints": "",
+          "status": "READY",
+          "statusDetail": "Processed: 2 segments of 5 s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+          "mediaKey": "aurora/53ce2987-f272-4a07-afb1-10640ab36ca5.1793297021",
+          "color": "#64748b",
+          "createdAt": "2026-10-29T17:47:22.434448Z",
+          "updatedAt": "2026-10-29T18:03:50.824445Z",
+          "mediaType": "AD"
+        },
+        "thumbUrl": "<signed media link>",
+        "previewUrl": "<signed media link>",
+        "rights": null,
+        "rightsStatus": "N/A",
+        "upcomingAirings": 0,
+        "channels": []
+      },
+      "… 20 more"
+    ]
+  },
+  "GET /api/orgs/{org}/assets/{id}": {
+    "status": 200,
+    "body": {
+      "asset": {
+        "id": "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a",
+        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "title": "Earth",
+        "description": "",
+        "kind": "SHORT",
+        "genre": "Action, Sci-Fi, Fantasy",
+        "language": "en",
+        "series": null,
+        "season": null,
+        "episode": null,
+        "durationMs": 30000,
+        "cuePoints": "5000,15000,20000",
+        "status": "READY",
+        "statusDetail": "Processed: 6 segments of 5 s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+        "mediaKey": "aurora/f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a.1793293810",
+        "color": "#6366f1",
+        "createdAt": "2026-10-20T17:44:16.712271Z",
+        "updatedAt": "2026-10-29T17:10:29.943997Z",
+        "mediaType": "SHORT"
+      },
+      "thumbUrl": "<signed media link>",
+      "previewUrl": "<signed media link>",
+      "rights": null,
+      "rightsStatus": "MISSING",
+      "upcomingAirings": 0,
+      "channels": []
+    }
+  },
+  "POST /api/orgs/{org}/rights/check": {
+    "status": 200,
+    "body": {
+      "decision": {
+        "allowed": false,
+        "summary": "Blocked: No rights policy has been entered for this video, so it is blocked everywhere (default deny).",
+        "checks": [
+          {
+            "label": "A licence (rights policy) exists",
+            "passed": false,
+            "detail": "No rights policy has been entered for this video, so it is blocked everywhere (default deny)."
+          }
+        ]
+      },
+      "asset": "Earth",
+      "channel": null,
+      "from": "2026-11-01T12:27:35.344553300Z",
+      "to": "2026-11-01T13:27:35.344553300Z",
+      "simulated": true
+    }
+  },
+  "GET /api/orgs/{org}/channels": {
+    "status": 200,
+    "body": [
+      {
+        "channel": {
+          "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora-action",
+          "name": "Aurora Action",
+          "description": "Non-stop chases, heists and high-altitude thrills.",
+          "genre": "Action",
+          "language": "en",
+          "timezone": "Asia/Kolkata",
+          "color": "#ef4444",
+          "territories": "IN,GB,US",
+          "status": "LIVE",
+          "adSecondsPerHour": 480,
+          "breakSeconds": 90,
+          "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+          "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "createdAt": "2026-10-20T08:38:25.654894Z",
+          "updatedAt": "2026-10-20T08:38:25.654894Z"
+        },
+        "now": {
+          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "title": "Steel Horizon",
+          "description": "Two rival pilots must land a damaged cargo plane together.",
+          "genre": "Action",
+          "kind": "MOVIE",
+          "color": "#f97316",
+          "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+          "start": "2026-11-01T12:27:30Z",
+          "end": "2026-11-01T12:32:30Z",
+          "adBreaks": 0,
+          "now": true,
+          "thumbUrl": null,
+          "series": null,
+          "season": null,
+          "episode": null
+        },
+        "next": {
+          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "title": "Neon Pursuit",
+          "description": "A courier races across a rain-soaked city before midnight.",
+          "genre": "Action",
+          "kind": "MOVIE",
+          "color": "#ef4444",
+          "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
+          "start": "2026-11-01T12:32:30Z",
+          "end": "2026-11-01T12:38:30Z",
+          "adBreaks": 0,
+          "now": false,
+          "thumbUrl": null,
+          "series": null,
+          "season": null,
+          "episode": null
+        },
+        "scheduledUntil": "2026-11-01T17:21:00Z",
+        "publishedVersion": 6,
+        "readiness": [],
+        "fallbackTitle": "Aurora Channel Ident"
+      },
+      {
+        "channel": {
+          "id": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+          "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "classic-cinema",
+          "name": "Classic Cinema",
+          "description": "Golden-age mysteries and romances, uninterrupted.",
+          "genre": "Classic",
+          "language": "en",
+          "timezone": "Asia/Kolkata",
+          "color": "#a16207",
+          "territories": "IN,GB",
+          "status": "LIVE",
+          "adSecondsPerHour": 480,
+          "breakSeconds": 90,
+          "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+          "publishedVersionId": "37b65a17-daea-409f-8717-a11a4eb82bca",
+          "createdAt": "2026-10-20T08:38:25.654894Z",
+          "updatedAt": "2026-10-20T08:38:25.654894Z"
+        },
+        "now": {
+          "assetId": "b733b3fe-2135-4dcd-be84-d6bf68532586",
+          "title": "The Velvet Clock",
+          "description": "A watchmaker's apprentice uncovers a 1950s mystery.",
+          "genre": "Classic",
+          "kind": "MOVIE",
+          "color": "#a16207",
+          "mediaKey": "aurora/b733b3fe-2135-4dcd-be84-d6bf68532586.1793295315",
+          "start": "2026-11-01T12:24:30Z",
+          "end": "2026-11-01T12:30:30Z",
+          "adBreaks": 0,
+          "now": true,
+          "thumbUrl": null,
+          "series": null,
+          "season": null,
+          "episode": null
+        },
+        "next": {
+          "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+          "title": "Moonlit Avenue",
+          "description": "A jazz pianist and a detective share one long night.",
+          "genre": "Classic",
+          "kind": "MOVIE",
+          "color": "#64748b",
+          "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+          "start": "2026-11-01T12:30:30Z",
+          "end": "2026-11-01T12:35:30Z",
+          "adBreaks": 0,
+          "now": false,
+          "thumbUrl": null,
+          "series": null,
+          "season": null,
+          "episode": null
+        },
+        "scheduledUntil": "2026-11-01T17:26:00Z",
+        "publishedVersion": 6,
+        "readiness": [],
+        "fallbackTitle": "Aurora Channel Ident"
+      },
+      "… 2 more"
+    ]
+  },
+  "GET /api/orgs/{org}/channels/{id}": {
+    "status": 200,
+    "body": {
+      "channel": {
+        "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora-action",
+        "name": "Aurora Action",
+        "description": "Non-stop chases, heists and high-altitude thrills.",
+        "genre": "Action",
+        "language": "en",
+        "timezone": "Asia/Kolkata",
+        "color": "#ef4444",
+        "territories": "IN,GB,US",
+        "status": "LIVE",
+        "adSecondsPerHour": 480,
+        "breakSeconds": 90,
+        "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+        "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "updatedAt": "2026-10-20T08:38:25.654894Z"
+      },
+      "now": {
+        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#f97316",
+        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+        "start": "2026-11-01T12:27:30Z",
+        "end": "2026-11-01T12:32:30Z",
+        "adBreaks": 0,
+        "now": true,
+        "thumbUrl": null,
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      "next": {
+        "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+        "title": "Neon Pursuit",
+        "description": "A courier races across a rain-soaked city before midnight.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#ef4444",
+        "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
+        "start": "2026-11-01T12:32:30Z",
+        "end": "2026-11-01T12:38:30Z",
+        "adBreaks": 0,
+        "now": false,
+        "thumbUrl": null,
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      "scheduledUntil": "2026-11-01T17:21:00Z",
+      "publishedVersion": 6,
+      "readiness": [],
+      "fallbackTitle": "Aurora Channel Ident"
+    }
+  },
+  "GET /api/orgs/{org}/channels/{id}/schedule": {
+    "status": 200,
+    "body": {
+      "channel": {
+        "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora-action",
+        "name": "Aurora Action",
+        "description": "Non-stop chases, heists and high-altitude thrills.",
+        "genre": "Action",
+        "language": "en",
+        "timezone": "Asia/Kolkata",
+        "color": "#ef4444",
+        "territories": "IN,GB,US",
+        "status": "LIVE",
+        "adSecondsPerHour": 480,
+        "breakSeconds": 90,
+        "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+        "publishedVersionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "updatedAt": "2026-10-20T08:38:25.654894Z"
+      },
+      "draft": {
+        "id": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
+        "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "number": 0,
+        "status": "DRAFT",
+        "revision": 3,
+        "note": "",
+        "createdBy": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "publishedAt": null
+      },
+      "draftEntries": [
+        {
+          "id": "03eca86b-9fa6-4d66-9e44-1ff769f8c1d0",
+          "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
+          "kind": "PROGRAM",
+          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetOffsetMs": 0,
+          "startAt": "2026-11-01T10:25:30Z",
+          "endAt": "2026-11-01T10:28:30Z",
+          "ownership": null,
+          "break": false
+        },
+        {
+          "id": "cc1d931f-ff36-4073-af1d-c333949f844c",
+          "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
+          "kind": "PROGRAM",
+          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetOffsetMs": 180000,
+          "startAt": "2026-11-01T10:28:30Z",
+          "endAt": "2026-11-01T10:31:30Z",
+          "ownership": null,
+          "break": false
+        },
+        "… 169 more"
+      ],
+      "published": {
+        "id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+        "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "number": 6,
+        "status": "PUBLISHED",
+        "revision": 0,
+        "note": "Demo mode: schedule auto-extended on startup",
+        "createdBy": null,
+        "createdAt": "2026-10-31T11:21:27.978568Z",
+        "publishedAt": "2026-10-31T11:21:27.978568Z"
+      },
+      "publishedEntries": [
+        {
+          "id": "ba3b4a56-f6c4-465f-829a-cf50bbca8214",
+          "versionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "kind": "PROGRAM",
+          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetOffsetMs": 0,
+          "startAt": "2026-11-01T10:25:30Z",
+          "endAt": "2026-11-01T10:28:30Z",
+          "ownership": null,
+          "break": false
+        },
+        {
+          "id": "891ff3cd-9762-42da-9ea0-bc8e2c693bc5",
+          "versionId": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "kind": "PROGRAM",
+          "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "assetOffsetMs": 180000,
+          "startAt": "2026-11-01T10:28:30Z",
+          "endAt": "2026-11-01T10:31:30Z",
+          "ownership": null,
+          "break": false
+        },
+        "… 169 more"
+      ],
+      "issues": [
+        {
+          "severity": "WARNING",
+          "code": "BLACKOUT",
+          "message": "\"Steel Horizon\" at Sun 17:57 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "d4d29d94-9125-4366-833e-32b5b934c40d",
+          "hint": "Acceptable if intended; otherwise extend the licence.",
+          "at": "2026-11-01T12:27:30Z"
+        },
+        {
+          "severity": "WARNING",
+          "code": "BLACKOUT",
+          "message": "\"Steel Horizon\" at Sun 18:00 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "f4efe933-9dad-4a1c-a8d0-ab18364de34d",
+          "hint": "Acceptable if intended; otherwise extend the licence.",
+          "at": "2026-11-01T12:30:00Z"
+        },
+        "… 31 more"
+      ],
+      "versions": [
+        {
+          "id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "number": 6,
+          "status": "PUBLISHED",
+          "revision": 0,
+          "note": "Demo mode: schedule auto-extended on startup",
+          "createdBy": null,
+          "createdAt": "2026-10-31T11:21:27.978568Z",
+          "publishedAt": "2026-10-31T11:21:27.978568Z"
+        },
+        {
+          "id": "39c79227-0234-4ceb-ba42-9b2e4c7439de",
+          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "number": 5,
+          "status": "SUPERSEDED",
+          "revision": 0,
+          "note": "Demo mode: schedule auto-extended on startup",
+          "createdBy": null,
+          "createdAt": "2026-10-29T17:35:11.478127Z",
+          "publishedAt": "2026-10-29T17:35:11.478127Z"
+        },
+        "… 4 more"
+      ],
+      "assets": {
+        "412d4dd8-db9a-448d-8671-d1d4a7219286": {
+          "id": "412d4dd8-db9a-448d-8671-d1d4a7219286",
+          "title": "Bluebird Air",
+          "kind": "AD",
+          "color": "#0891b2",
+          "mediaKey": "aurora/412d4dd8-db9a-448d-8671-d1d4a7219286.1793295016",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "c95821f4-1057-42db-a401-11f1b69d562c": {
+          "id": "c95821f4-1057-42db-a401-11f1b69d562c",
+          "title": "Slow Roads: Desert Light",
+          "kind": "EPISODE",
+          "color": "#ca8a04",
+          "mediaKey": "aurora/c95821f4-1057-42db-a401-11f1b69d562c.1793295745",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "acff26c4-0cad-46c7-9b0a-edfe15aecfe9": {
+          "id": "acff26c4-0cad-46c7-9b0a-edfe15aecfe9",
+          "title": "Nova Bank",
+          "kind": "AD",
+          "color": "#16a34a",
+          "mediaKey": "aurora/acff26c4-0cad-46c7-9b0a-edfe15aecfe9.1793295067",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17": {
+          "id": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+          "title": "Slow Roads: Coastlines of Kerala",
+          "kind": "EPISODE",
+          "color": "#059669",
+          "mediaKey": "aurora/9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17.1793296370",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "3a32efde-9be4-40b4-9694-5167711470fd": {
+          "id": "3a32efde-9be4-40b4-9694-5167711470fd",
+          "title": "Aurora Promo",
+          "kind": "AD",
+          "color": "#7c3aed",
+          "mediaKey": "aurora/3a32efde-9be4-40b4-9694-5167711470fd.1793295054",
+          "durationMs": 15000,
+          "status": "READY"
+        },
+        "a7bca6a5-54ea-49ac-a129-7a0323e03a52": {
+          "id": "a7bca6a5-54ea-49ac-a129-7a0323e03a52",
+          "title": "Robot Garden",
+          "kind": "SHORT",
+          "color": "#22c55e",
+          "mediaKey": "aurora/a7bca6a5-54ea-49ac-a129-7a0323e03a52.1793296813",
+          "durationMs": 180000,
+          "status": "READY"
+        },
+        "b85e0cc7-b853-433b-a770-68062ea8ce87": {
+          "id": "b85e0cc7-b853-433b-a770-68062ea8ce87",
+          "title": "Big Buck Bunny",
+          "kind": "MOVIE",
+          "color": "#6366f1",
+          "mediaKey": "aurora/b85e0cc7-b853-433b-a770-68062ea8ce87.1793293777",
+          "durationMs": 5000,
+          "status": "READY"
+        },
+        "31a2e51f-4198-452e-972e-fdd21c4d7d90": {
+          "id": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+          "title": "Aurora Channel Ident",
+          "kind": "SHORT",
+          "color": "#6366f1",
+          "mediaKey": "aurora/31a2e51f-4198-452e-972e-fdd21c4d7d90.1793294941",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "df55a5f6-0521-429e-8e9f-3d66369412fa": {
+          "id": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+          "title": "Moonlit Avenue",
+          "kind": "MOVIE",
+          "color": "#64748b",
+          "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "cd5a4b10-291b-469d-8542-b79ac1eee451": {
+          "id": "cd5a4b10-291b-469d-8542-b79ac1eee451",
+          "title": "Zenith Phones",
+          "kind": "AD",
+          "color": "#2563eb",
+          "mediaKey": "aurora/cd5a4b10-291b-469d-8542-b79ac1eee451.1793294990",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "c4297efd-c4cb-42f5-9443-db0806e84227": {
+          "id": "c4297efd-c4cb-42f5-9443-db0806e84227",
+          "title": "Neon Pursuit",
+          "kind": "MOVIE",
+          "color": "#ef4444",
+          "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
+          "durationMs": 360000,
+          "status": "READY"
+        },
+        "1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c": {
+          "id": "1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c",
+          "title": "Pip & the Paper Moon",
+          "kind": "SHORT",
+          "color": "#ec4899",
+          "mediaKey": "aurora/1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c.1793296691",
+          "durationMs": 180000,
+          "status": "READY"
+        },
+        "8774d469-c451-4f8a-926a-a34475a547fc": {
+          "id": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "title": "Steel Horizon",
+          "kind": "MOVIE",
+          "color": "#f97316",
+          "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "1241aea9-0f9f-4c94-8b5d-80d3b8408bdf": {
+          "id": "1241aea9-0f9f-4c94-8b5d-80d3b8408bdf",
+          "title": "Crunchy Oats",
+          "kind": "AD",
+          "color": "#d97706",
+          "mediaKey": "aurora/1241aea9-0f9f-4c94-8b5d-80d3b8408bdf.1793295040",
+          "durationMs": 15000,
+          "status": "READY"
+        },
+        "2139f2cc-7b8e-405e-9ce3-67c827737a2e": {
+          "id": "2139f2cc-7b8e-405e-9ce3-67c827737a2e",
+          "title": "Last Signal",
+          "kind": "MOVIE",
+          "color": "#8b5cf6",
+          "mediaKey": "aurora/2139f2cc-7b8e-405e-9ce3-67c827737a2e.1793293829",
+          "durationMs": 240000,
+          "status": "READY"
+        },
+        "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a": {
+          "id": "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a",
+          "title": "Earth",
+          "kind": "SHORT",
+          "color": "#6366f1",
+          "mediaKey": "aurora/f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a.1793293810",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "2b8efa53-7b36-4f56-90c0-eca70bfeb793": {
+          "id": "2b8efa53-7b36-4f56-90c0-eca70bfeb793",
+          "title": "External - Single Inline Linear",
+          "kind": "AD",
+          "color": "#64748b",
+          "mediaKey": "aurora/2b8efa53-7b36-4f56-90c0-eca70bfeb793.1793296386",
+          "durationMs": 10000,
+          "status": "READY"
+        },
+        "dde083a6-0b3b-4e09-9c60-22d64225fb9f": {
+          "id": "dde083a6-0b3b-4e09-9c60-22d64225fb9f",
+          "title": "Mountain Markets",
+          "kind": "EPISODE",
+          "color": "#0d9488",
+          "mediaKey": "aurora/dde083a6-0b3b-4e09-9c60-22d64225fb9f.1793296370",
+          "durationMs": 240000,
+          "status": "READY"
+        },
+        "27e8f8e9-f1f7-4e40-8844-c57177c2fa9b": {
+          "id": "27e8f8e9-f1f7-4e40-8844-c57177c2fa9b",
+          "title": "Harbor Lights",
+          "kind": "MOVIE",
+          "color": "#0e7490",
+          "mediaKey": "aurora/27e8f8e9-f1f7-4e40-8844-c57177c2fa9b.1793295690",
+          "durationMs": 270000,
+          "status": "READY"
+        },
+        "b733b3fe-2135-4dcd-be84-d6bf68532586": {
+          "id": "b733b3fe-2135-4dcd-be84-d6bf68532586",
+          "title": "The Velvet Clock",
+          "kind": "MOVIE",
+          "color": "#a16207",
+          "mediaKey": "aurora/b733b3fe-2135-4dcd-be84-d6bf68532586.1793295315",
+          "durationMs": 360000,
+          "status": "READY"
+        },
+        "4b777af5-4748-4df5-96db-24a710a8c7d4": {
+          "id": "4b777af5-4748-4df5-96db-24a710a8c7d4",
+          "title": "Glow Cola",
+          "kind": "AD",
+          "color": "#e11d48",
+          "mediaKey": "aurora/4b777af5-4748-4df5-96db-24a710a8c7d4.1793294979",
+          "durationMs": 15000,
+          "status": "READY"
+        },
+        "53ce2987-f272-4a07-afb1-10640ab36ca5": {
+          "id": "53ce2987-f272-4a07-afb1-10640ab36ca5",
+          "title": "External - Single Inline Linear",
+          "kind": "AD",
+          "color": "#64748b",
+          "mediaKey": "aurora/53ce2987-f272-4a07-afb1-10640ab36ca5.1793297021",
+          "durationMs": 10000,
+          "status": "READY"
+        }
+      },
+      "unpublishedChanges": false,
+      "now": "2026-11-01T12:27:35.479295100Z",
+      "from": "2026-11-01T10:27:35.479295100Z",
+      "to": "2026-11-02T10:27:35.479295100Z"
+    }
+  },
+  "GET /api/orgs/{org}/channels/{id}/epg": {
+    "status": 200,
+    "body": [
+      {
+        "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
+        "kind": "MOVIE",
+        "color": "#64748b",
+        "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+        "start": "2026-11-01T11:27:00Z",
+        "end": "2026-11-01T11:32:00Z",
+        "adBreaks": 0,
+        "now": false,
+        "thumbUrl": "<signed media link>",
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      {
+        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#f97316",
+        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+        "start": "2026-11-01T11:32:00Z",
+        "end": "2026-11-01T11:37:00Z",
+        "adBreaks": 0,
+        "now": false,
+        "thumbUrl": "<signed media link>",
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      "… 56 more"
+    ]
+  },
+  "GET /api/orgs/{org}/channels/{id}/epg.xml": {
+    "status": 200,
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101112700 +0000\" stop=\"20261101113200 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <category lang=\"en\">Classic</category>\n  </programme>\n  <programme start=\"20261101113200 +0000\" stop=\"20261101113700 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Steel Horizon</title>\n    <desc lang=\"en\">Two rival pilots must land a damaged cargo plane together.</desc>\n    <ca\n…"
+  },
+  "GET /api/orgs/{org}/channels/{id}/avails": {
+    "status": 200,
+    "body": [
+      {
+        "markers": "CUE_OUT",
+        "destination": "Partner TV (simulated)",
+        "breakId": "389ead53-1544-449b-81ec-0cde27488324",
+        "breakStart": "2026-11-01T12:18:00Z",
+        "breakEnd": "2026-11-01T12:19:30Z",
+        "passed": true,
+        "problems": [],
+        "checkedAt": "2026-11-01T12:19:45.654328900Z"
+      },
+      {
+        "markers": "INTERSTITIAL",
+        "destination": "Aurora web player (SGAI beta)",
+        "breakId": "389ead53-1544-449b-81ec-0cde27488324",
+        "breakStart": "2026-11-01T12:18:00Z",
+        "breakEnd": "2026-11-01T12:19:30Z",
+        "passed": true,
+        "problems": [],
+        "checkedAt": "2026-11-01T12:19:45.654328900Z"
+      },
+      "… 1 more"
+    ]
+  },
+  "GET /api/orgs/{org}/channels/{id}/programming": {
+    "status": 200,
+    "body": []
+  },
+  "POST /api/orgs/{org}/channels/{id}/programming/preview": {
+    "status": 200,
+    "body": {
+      "revision": 3,
+      "placements": [
+        {
+          "ruleId": null,
+          "date": "2026-11-02",
+          "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+          "title": "Slow Roads: Coastlines of Kerala",
+          "season": 1,
+          "episode": 1,
+          "encore": false,
+          "start": "2026-11-02T14:30:00Z",
+          "end": "2026-11-02T14:36:30Z",
+          "items": [
+            {
+              "kind": "PROGRAM",
+              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+              "offsetMs": 0,
+              "start": "2026-11-02T14:30:00Z",
+              "end": "2026-11-02T14:32:30Z",
+              "ownership": null
+            },
+            {
+              "kind": "AD_BREAK",
+              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+              "offsetMs": 0,
+              "start": "2026-11-02T14:32:30Z",
+              "end": "2026-11-02T14:34:00Z",
+              "ownership": "PROVIDER"
+            },
+            "… 1 more"
+          ]
+        },
+        {
+          "ruleId": null,
+          "date": "2026-11-02",
+          "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+          "title": "Slow Roads: Coastlines of Kerala",
+          "season": 1,
+          "episode": 1,
+          "encore": true,
+          "start": "2026-11-02T17:30:00Z",
+          "end": "2026-11-02T17:36:30Z",
+          "items": [
+            {
+              "kind": "PROGRAM",
+              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+              "offsetMs": 0,
+              "start": "2026-11-02T17:30:00Z",
+              "end": "2026-11-02T17:32:30Z",
+              "ownership": null
+            },
+            {
+              "kind": "AD_BREAK",
+              "assetId": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
+              "offsetMs": 0,
+              "start": "2026-11-02T17:32:30Z",
+              "end": "2026-11-02T17:34:00Z",
+              "ownership": "PROVIDER"
+            },
+            "… 1 more"
+          ]
+        },
+        "… 2 more"
+      ],
+      "notices": [
+        "Slow Roads on 2026-11-06: waiting for the next episode (S1 E3). Later occurrences are held."
+      ]
+    }
+  },
+  "GET /api/orgs/{org}/campaigns": {
+    "status": 200,
+    "body": [
+      {
+        "id": "da6160c3-6b71-463b-9379-3f3aaab58251",
+        "name": "Glow Cola — Summer Sparkle",
+        "advertiser": "Glow Beverages (fictional)",
+        "status": "ACTIVE",
+        "startsAt": "2026-10-13T08:38:25.36944Z",
+        "endsAt": "2027-01-18T08:38:25.36944Z",
+        "territories": "WW",
+        "priority": 8,
+        "cpm": 12,
+        "creativeAssetId": "4b777af5-4748-4df5-96db-24a710a8c7d4",
+        "creativeTitle": "Glow Cola",
+        "creativeStatus": "READY",
+        "creativeDurationMs": 15000,
+        "creativeColor": "#e11d48",
+        "mediaKey": "aurora/4b777af5-4748-4df5-96db-24a710a8c7d4.1793294979",
+        "impressions": 12,
+        "completes": 11,
+        "thumbUrl": "<signed media link>",
+        "audiences": "",
+        "frequencyCap": 0
+      },
+      {
+        "id": "86e375b9-df23-4a86-828f-eb1f7e255cb6",
+        "name": "Zenith X launch",
+        "advertiser": "Zenith Electronics (fictional)",
+        "status": "ACTIVE",
+        "startsAt": "2026-10-13T08:38:25.36944Z",
+        "endsAt": "2027-01-18T08:38:25.36944Z",
+        "territories": "IN,GB",
+        "priority": 7,
+        "cpm": 18,
+        "creativeAssetId": "cd5a4b10-291b-469d-8542-b79ac1eee451",
+        "creativeTitle": "Zenith Phones",
+        "creativeStatus": "READY",
+        "creativeDurationMs": 30000,
+        "creativeColor": "#2563eb",
+        "mediaKey": "aurora/cd5a4b10-291b-469d-8542-b79ac1eee451.1793294990",
+        "impressions": 15,
+        "completes": 13,
+        "thumbUrl": "<signed media link>",
+        "audiences": "",
+        "frequencyCap": 0
+      },
+      "… 4 more"
+    ]
+  },
+  "POST /api/orgs/{org}/ads/simulate": {
+    "status": 200,
+    "body": {
+      "breakStart": "2026-11-01T13:02:00Z",
+      "breakSeconds": 90,
+      "ownership": "PROVIDER",
+      "programme": "Inside \"Steel Horizon\"",
+      "decision": {
+        "breakId": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
+        "breakMs": 90000,
+        "slots": [
+          {
+            "campaignId": "da6160c3-6b71-463b-9379-3f3aaab58251",
+            "campaign": "Glow Cola — Summer Sparkle",
+            "advertiser": "Glow Beverages (fictional)",
+            "mediaKey": "aurora/4b777af5-4748-4df5-96db-24a710a8c7d4.1793294979",
+            "durationMs": 15000,
+            "cpm": 12,
+            "source": "Direct-sold campaigns"
+          },
+          {
+            "campaignId": "86e375b9-df23-4a86-828f-eb1f7e255cb6",
+            "campaign": "Zenith X launch",
+            "advertiser": "Zenith Electronics (fictional)",
+            "mediaKey": "aurora/cd5a4b10-291b-469d-8542-b79ac1eee451.1793294990",
+            "durationMs": 30000,
+            "cpm": 18,
+            "source": "Direct-sold campaigns"
+          },
+          "… 2 more"
+        ],
+        "filledMs": 75000,
+        "excluded": [
+          {
+            "campaign": "Bluebird — Fly Further",
+            "reason": "Not targeting IN (targets GB, US)"
+          },
+          {
+            "campaign": "Nova Bank brand",
+            "reason": "Campaign is paused"
+          }
+        ],
+        "summary": "Filled 75 of 90 s with 4 ad(s); slate covers the last 15 s."
+      },
+      "simulated": true
+    }
+  },
+  "GET /api/orgs/{org}/destinations": {
+    "status": 200,
+    "body": {
+      "destinations": [
+        {
+          "id": "05d1af75-107c-4435-a6ca-4c6bc5d9e32f",
+          "name": "Aurora web player (SGAI beta)",
+          "kind": "OWNED_WEB",
+          "adMode": "SGAI",
+          "markerFormat": "DATERANGE",
+          "maxAdSecondsPerHour": 720,
+          "notes": "Same app using HLS Interstitials: the player fetches the ads itself.",
+          "createdAt": "2026-10-20T08:38:25.654894Z"
+        },
+        {
+          "id": "df8922b3-287a-4a0e-a856-890426a03303",
+          "name": "Aurora web player (SSAI)",
+          "kind": "OWNED_WEB",
+          "adMode": "SSAI",
+          "markerFormat": "DATERANGE",
+          "maxAdSecondsPerHour": 720,
+          "notes": "Our own web app. Ads are stitched into the stream on the server.",
+          "createdAt": "2026-10-20T08:38:25.654894Z"
+        },
+        "… 2 more"
+      ],
+      "publications": []
+    }
+  },
+  "GET /api/orgs/{org}/partners": {
+    "status": 200,
+    "body": [
+      {
+        "id": "ba124f57-4799-493a-826e-c79aa5b7e104",
+        "partnerId": "fe47bd6e-8535-4b7f-b5ca-87606e929708",
+        "partnerName": "Partner TV",
+        "status": "ACTIVE",
+        "scopes": [
+          "channels:read",
+          "epg:read",
+          "… 2 more"
+        ],
+        "allChannels": false,
+        "channels": [
+          {
+            "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "name": "Aurora Action"
+          },
+          {
+            "id": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+            "name": "Classic Cinema"
+          }
+        ],
+        "destinationId": "ffc2070c-1487-43ec-a9ca-736debf41e59",
+        "destinationName": "Partner TV (simulated)",
+        "note": "Pilot agreement: two channels in the Partner TV app.",
+        "createdAt": "2026-10-20T12:21:46.820574Z",
+        "acceptedAt": "2026-10-20T12:21:46.820574Z",
+        "revokedAt": null,
+        "expiresAt": null,
+        "readsLast7Days": 36,
+        "lastReadAt": "2026-11-01T12:27:24.885724Z"
+      }
+    ]
+  },
+  "GET /api/orgs/{org}/partners/directory": {
+    "status": 200,
+    "body": {
+      "partners": [
+        {
+          "id": "fe47bd6e-8535-4b7f-b5ca-87606e929708",
+          "name": "Partner TV",
+          "country": "US"
+        }
+      ],
+      "scopes": [
+        {
+          "key": "<hidden>",
+          "meaning": "Channel details: name, description, genre, countries"
+        },
+        {
+          "key": "<hidden>",
+          "meaning": "Programme guide (EPG and XMLTV)"
+        },
+        "… 3 more"
+      ]
+    }
+  },
+  "GET /api/orgs/{org}/alerts": {
+    "status": 200,
+    "body": [
+      {
+        "id": "049854e4-e946-4dca-98a1-add10ca15ac2",
+        "severity": "WARNING",
+        "title": "Classic Cinema: schedule runs out soon",
+        "detail": "The published schedule ends Sun 22:56.",
+        "suggestion": "Auto-fill more hours and publish.",
+        "link": "/schedule?channel=bc645565-299e-45e9-ba20-f6b7d19c227a",
+        "status": "OPEN",
+        "resolution": "",
+        "createdAt": "2026-11-01T11:26:37.006486Z",
+        "updatedAt": "2026-11-01T12:27:24.791999Z"
+      },
+      {
+        "id": "4d3af738-ff52-45a0-ae24-fa0348129900",
+        "severity": "WARNING",
+        "title": "Family Entertainment: schedule runs out soon",
+        "detail": "The published schedule ends Sun 22:53.",
+        "suggestion": "Auto-fill more hours and publish.",
+        "link": "/schedule?channel=75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+        "status": "OPEN",
+        "resolution": "",
+        "createdAt": "2026-11-01T11:23:36.751707Z",
+        "updatedAt": "2026-11-01T12:27:24.792207Z"
+      },
+      "… 1 more"
+    ]
+  },
+  "GET /api/orgs/{org}/analytics": {
+    "status": 200,
+    "body": {
+      "provenance": "PROTOTYPE_OBSERVED",
+      "formula": "Counted from ad segments actually delivered by this prototype's playout (SSAI) or player beacons (SGAI). Estimated revenue = impressions × campaign CPM ÷ 1000, …",
+      "channels": [
+        {
+          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+          "channel": "Aurora Action",
+          "sessions": 111,
+          "impressions": 53,
+          "completes": 48,
+          "adSeconds": 950,
+          "slateSeconds": 720,
+          "fillRate": 0.5689,
+          "completionRate": 0.9057,
+          "estimatedRevenue": 0.46
+        },
+        {
+          "channelId": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+          "channel": "Classic Cinema",
+          "sessions": 7,
+          "impressions": 5,
+          "completes": 5,
+          "adSeconds": 90,
+          "slateSeconds": 45,
+          "fillRate": 0.6667,
+          "completionRate": 1,
+          "estimatedRevenue": 0.04
+        },
+        "… 2 more"
+      ],
+      "campaigns": [
+        {
+          "campaign": "House: Stay tuned",
+          "advertiser": "Aurora Media Network",
+          "impressions": 19,
+          "completes": 18,
+          "cpm": 0,
+          "estimatedRevenue": 0
+        },
+        {
+          "campaign": "Crunchy Oats breakfast",
+          "advertiser": "Crunchy Foods (fictional)",
+          "impressions": 17,
+          "completes": 15,
+          "cpm": 9,
+          "estimatedRevenue": 0.15
+        },
+        "… 4 more"
+      ],
+      "days": [
+        {
+          "day": "2026-10-26",
+          "impressions": 4,
+          "sessions": 2
+        },
+        {
+          "day": "2026-10-27",
+          "impressions": 0,
+          "sessions": 0
+        },
+        "… 5 more"
+      ]
+    }
+  },
+  "GET /api/partners/{partner}/links": {
+    "status": 200,
+    "body": [
+      {
+        "id": "ba124f57-4799-493a-826e-c79aa5b7e104",
+        "ownerId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "ownerSlug": "aurora",
+        "ownerName": "Aurora Media Network",
+        "status": "ACTIVE",
+        "scopes": [
+          "channels:read",
+          "epg:read",
+          "… 2 more"
+        ],
+        "allChannels": false,
+        "channels": [
+          {
+            "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "name": "Aurora Action"
+          },
+          {
+            "id": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+            "name": "Classic Cinema"
+          }
+        ],
+        "destination": {
+          "name": "Partner TV (simulated)",
+          "adMode": "PASSTHROUGH",
+          "markerFormat": "CUE_OUT",
+          "maxAdSecondsPerHour": 600
+        },
+        "note": "Pilot agreement: two channels in the Partner TV app.",
+        "createdAt": "2026-10-20T12:21:46.820574Z",
+        "acceptedAt": "2026-10-20T12:21:46.820574Z",
+        "expiresAt": null
+      }
+    ]
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels": {
+    "status": 200,
+    "body": [
+      {
+        "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "slug": "aurora-action",
+        "name": "Aurora Action",
+        "description": "Non-stop chases, heists and high-altitude thrills.",
+        "genre": "Action",
+        "language": "en",
+        "timezone": "Asia/Kolkata",
+        "color": "#ef4444",
+        "countries": [
+          "IN",
+          "GB",
+          "… 1 more"
+        ],
+        "live": true
+      },
+      {
+        "id": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+        "slug": "classic-cinema",
+        "name": "Classic Cinema",
+        "description": "Golden-age mysteries and romances, uninterrupted.",
+        "genre": "Classic",
+        "language": "en",
+        "timezone": "Asia/Kolkata",
+        "color": "#a16207",
+        "countries": [
+          "IN",
+          "GB"
+        ],
+        "live": true
+      }
+    ]
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}": {
+    "status": 200,
+    "body": {
+      "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+      "slug": "aurora-action",
+      "name": "Aurora Action",
+      "description": "Non-stop chases, heists and high-altitude thrills.",
+      "genre": "Action",
+      "language": "en",
+      "timezone": "Asia/Kolkata",
+      "color": "#ef4444",
+      "countries": [
+        "IN",
+        "GB",
+        "… 1 more"
+      ],
+      "live": true
+    }
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg": {
+    "status": 200,
+    "body": [
+      {
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
+        "start": "2026-11-01T11:27:00Z",
+        "end": "2026-11-01T11:32:00Z",
+        "onNow": false,
+        "adBreaks": 0,
+        "image": "<signed media link>"
+      },
+      {
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
+        "genre": "Action",
+        "start": "2026-11-01T11:32:00Z",
+        "end": "2026-11-01T11:37:00Z",
+        "onNow": false,
+        "adBreaks": 0,
+        "image": "<signed media link>"
+      },
+      "… 56 more"
+    ]
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml": {
+    "status": 200,
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<tv generator-info-name=\"FAST Studio prototype\">\n  <channel id=\"aurora-action.aurora\"><display-name>Aurora Action</display-name></channel>\n  <programme start=\"20261101112700 +0000\" stop=\"20261101113200 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Moonlit Avenue</title>\n    <desc lang=\"en\">A jazz pianist and a detective share one long night.</desc>\n    <category lang=\"en\">Classic</category>\n  </programme>\n  <programme start=\"20261101113200 +0000\" stop=\"20261101113700 +0000\" channel=\"aurora-action.aurora\">\n    <title lang=\"en\">Steel Horizon</title>\n    <desc lang=\"en\">Two rival pilots must land a damaged cargo plane together.</desc>\n    <ca\n…"
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/stream": {
+    "status": 200,
+    "body": {
+      "howTo": "Start one session per viewer: POST this body; the answer's playlistUrl is the HLS stream to play.",
+      "method": "POST",
+      "url": "http://localhost:8080/play/sessions",
+      "body": {
+        "org": "aurora",
+        "channel": "aurora-action",
+        "destinationId": "ffc2070c-1487-43ec-a9ca-736debf41e59",
+        "country": "<the viewer's 2-letter country code>"
+      },
+      "destination": {
+        "name": "Partner TV (simulated)",
+        "adMode": "PASSTHROUGH",
+        "markerFormat": "CUE_OUT",
+        "maxAdSecondsPerHour": 600
+      }
+    }
+  },
+  "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/breaks": {
+    "status": 200,
+    "body": [
+      {
+        "id": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
+        "start": "2026-11-01T13:02:00Z",
+        "end": "2026-11-01T13:03:30Z",
+        "durationMs": 90000,
+        "ownership": "PROVIDER",
+        "scte35Out": "0xFC302E00000000000000FFF00506FF283A60800018021643554549C10D0FB37FFF00007B98A0000034000000009BCCEA0C",
+        "scte35In": "0xFC302700000000000000FFF00506FF28B5F9200011020F43554549C10D0FB37FBF0000350000C1347196"
+      },
+      {
+        "id": "7bc10039-a0c1-4814-bd84-d2451c8c83d2",
+        "start": "2026-11-01T13:06:00Z",
+        "end": "2026-11-01T13:07:30Z",
+        "durationMs": 90000,
+        "ownership": "DISTRIBUTOR",
+        "scte35Out": "0xFC302E00000000000000FFF00506FF2983F78000180216435545497BC100397FFF00007B98A00000360000000033201039",
+        "scte35In": "0xFC302700000000000000FFF00506FF29FF90200011020F435545497BC100397FBF00003700006E04E9F7"
+      },
+      "… 23 more"
+    ]
+  },
+  "GET /api/partners/{partner}/clients": {
+    "status": 200,
+    "body": [
+      {
+        "id": "0553f9b3-93c3-4058-9453-522f604b6d76",
+        "name": "Guide importer",
+        "scopes": [
+          "channels:read",
+          "epg:read"
+        ],
+        "createdAt": "2026-10-20T12:22:29.687311Z",
+        "lastUsedAt": null,
+        "revokedAt": null
+      }
+    ]
+  },
+  "POST /play/sessions": {
+    "status": 200,
+    "body": {
+      "sessionId": "3d28fc09-6979-4bed-acf0-33a0e1e3fb97",
+      "playlistUrl": "http://127.0.0.1:8787/live/<signed session token>/master.m3u8",
+      "adMode": "SSAI",
+      "markerFormat": "DATERANGE",
+      "destination": "Aurora web player (SSAI)",
+      "country": "IN",
+      "simulatedLocation": true,
+      "rightsNow": {
+        "allowed": true,
+        "summary": "Allowed: every rule passed.",
+        "checks": [
+          {
+            "label": "A licence (rights policy) exists",
+            "passed": true,
+            "detail": "Policy found"
+          },
+          {
+            "label": "Licence lists where it may play",
+            "passed": true,
+            "detail": "IN"
+          },
+          "… 4 more"
+        ]
+      }
+    }
+  },
+  "GET /play/{session}/info": {
+    "status": 200,
+    "body": {
+      "channel": "Aurora Action",
+      "channelStatus": "LIVE",
+      "destination": "Aurora web player (SSAI)",
+      "adMode": "SSAI",
+      "markerFormat": "DATERANGE",
+      "country": "IN",
+      "now": {
+        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+        "title": "Steel Horizon",
+        "description": "Two rival pilots must land a damaged cargo plane together.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#f97316",
+        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
+        "start": "2026-11-01T12:27:30Z",
+        "end": "2026-11-01T12:32:30Z",
+        "adBreaks": 0,
+        "now": true,
+        "thumbUrl": null,
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      "next": {
+        "assetId": "c4297efd-c4cb-42f5-9443-db0806e84227",
+        "title": "Neon Pursuit",
+        "description": "A courier races across a rain-soaked city before midnight.",
+        "genre": "Action",
+        "kind": "MOVIE",
+        "color": "#ef4444",
+        "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
+        "start": "2026-11-01T12:32:30Z",
+        "end": "2026-11-01T12:38:30Z",
+        "adBreaks": 0,
+        "now": false,
+        "thumbUrl": null,
+        "series": null,
+        "season": null,
+        "episode": null
+      },
+      "currentBreak": null,
+      "upcomingBreaks": [
+        {
+          "id": "c10d0fb3-3cc6-4a7d-b101-1cd606509377",
+          "start": "2026-11-01T13:02:00Z",
+          "end": "2026-11-01T13:03:30Z",
+          "ownership": "PROVIDER",
+          "filledByUs": true,
+          "scteOut": "0xFC302E00000000000000FFF00506FF283A60800018021643554549C10D0FB37FFF00007B98A0000034000000009BCCEA0C",
+          "decision": null
+        },
+        {
+          "id": "7bc10039-a0c1-4814-bd84-d2451c8c83d2",
+          "start": "2026-11-01T13:06:00Z",
+          "end": "2026-11-01T13:07:30Z",
+          "ownership": "DISTRIBUTOR",
+          "filledByUs": true,
+          "scteOut": "0xFC302E00000000000000FFF00506FF2983F78000180216435545497BC100397FFF00007B98A00000360000000033201039",
+          "decision": null
+        },
+        "… 1 more"
+      ],
+      "rightsNow": {
+        "allowed": true,
+        "summary": "Allowed: every rule passed.",
+        "checks": [
+          {
+            "label": "A licence (rights policy) exists",
+            "passed": true,
+            "detail": "Policy found"
+          },
+          {
+            "label": "Licence lists where it may play",
+            "passed": true,
+            "detail": "IN"
+          },
+          "… 4 more"
+        ]
+      },
+      "events": [],
+      "serverTime": "2026-11-01T12:27:36.239813300Z"
+    }
+  },
+  "GET /api/tools/scte35/example": {
+    "status": 200,
+    "body": {
+      "hex": "0xFC302E00000000000000FFF00506FF1D28439C0018021643554549000004D27FFF00007B98A000003400000000F141E9FA",
+      "base64": "/DAuAAAAAAAAAP/wBQb/HShDnAAYAhZDVUVJAAAE0n//AAB7mKAAADQAAAAA8UHp+g==",
+      "decoded": {
+        "table_id": "0xFC",
+        "sap_type": 3,
+        "section_length": 46,
+        "protocol_version": 0,
+        "encrypted": false,
+        "pts_adjustment": 0,
+        "tier": "0xFFF",
+        "splice_command_type": "0x06",
+        "splice_command_name": "time_signal",
+        "pts_time": 4784145308,
+        "pts_seconds": 53157.17008888889,
+        "descriptors": [
+          {
+            "tag": "0x02",
+            "identifier": "CUEI",
+            "segmentation_event_id": 1234,
+            "delivery_not_restricted": true,
+            "segmentation_duration_ticks": 8100000,
+            "segmentation_duration_seconds": 90,
+            "upid_type": "0x00",
+            "segmentation_type_id": "0x34",
+            "segmentation_type": "Provider Placement Opportunity Start",
+            "segment_num": 0,
+            "segments_expected": 0
+          }
+        ],
+        "crc_32": "0xF141E9FA",
+        "crc_valid": true
+      }
+    }
+  },
+  "POST /api/tools/scte35/decode": {
+    "status": 200,
+    "body": {
+      "table_id": "0xFC",
+      "sap_type": 3,
+      "section_length": 37,
+      "protocol_version": 0,
+      "encrypted": false,
+      "pts_adjustment": 0,
+      "tier": "0xFFF",
+      "splice_command_type": "0x05",
+      "splice_command_name": "splice_insert",
+      "splice_event_id": 1,
+      "out_of_network_indicator": true,
+      "pts_time": 0,
+      "pts_seconds": 0,
+      "auto_return": false,
+      "break_duration_ticks": 2700000,
+      "break_duration_seconds": 30,
+      "unique_program_id": 1,
+      "avail_num": 0,
+      "avails_expected": 0,
+      "descriptors": [],
+      "crc_32": "0x8C340328",
+      "crc_valid": false
+    }
+  },
+  "GET /api/platform/tenants": {
+    "status": 200,
+    "body": [
+      {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 4
+      },
+      {
+        "id": "95d5e1e0-ab3c-469b-89d6-10e6a1adac2c",
+        "slug": "northwind",
+        "name": "Northwind Sports",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 1
+      }
+    ]
+  },
+  "GET /api/platform/tenants/{tenant}/owners": {
+    "status": 200,
+    "body": [
+      {
+        "id": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+        "name": "Asha Rao",
+        "email": "owner@aurora.test"
+      }
+    ]
+  },
+  "GET /api/platform/tenants/{tenant}/settings": {
+    "status": 200,
+    "body": {
+      "tenant": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 4
+      },
+      "project": null,
+      "plan": {
+        "key": "<hidden>",
+        "name": "Pilot",
+        "enabled": true,
+        "maxProjects": 10,
+        "maxChannels": 100,
+        "monthlyPrice": 0,
+        "currency": "USD",
+        "features": [
+          "LIBRARY_SYNC",
+          "AD_WATERFALL_VIEW",
+          "… 1 more"
+        ]
+      },
+      "projects": [
+        {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        }
+      ],
+      "properties": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "API requests per minute (per project, per server)",
+            "valueType": "NUMBER",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": 600,
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": 600,
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "Default premiere time (HH:MM, five-second boundary)",
+            "valueType": "STRING",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": "20:00",
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": "20:00",
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        "… 4 more"
+      ],
+      "connectors": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "VAST ad servers",
+            "category": "ADS",
+            "driver": "VAST",
+            "enabled": true,
+            "description": "Project ad demand waterfall"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "Mux",
+            "category": "MEDIA",
+            "driver": "MUX",
+            "enabled": true,
+            "description": "Video library, uploads and encoding"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        "… 1 more"
+      ],
+      "editable": true
+    }
+  },
+  "GET /api/platform/tenants/{tenant}/projects/{project}/settings": {
+    "status": 200,
+    "body": {
+      "tenant": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "planKey": "pilot",
+        "subscriptionStatus": "TRIAL",
+        "revision": 0,
+        "projects": 1,
+        "channels": 4
+      },
+      "project": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "members": 5
+      },
+      "plan": {
+        "key": "<hidden>",
+        "name": "Pilot",
+        "enabled": true,
+        "maxProjects": 10,
+        "maxChannels": 100,
+        "monthlyPrice": 0,
+        "currency": "USD",
+        "features": [
+          "LIBRARY_SYNC",
+          "AD_WATERFALL_VIEW",
+          "… 1 more"
+        ]
+      },
+      "projects": [
+        {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        }
+      ],
+      "properties": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "API requests per minute (per project, per server)",
+            "valueType": "NUMBER",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": 600,
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": 600,
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "label": "Default premiere time (HH:MM, five-second boundary)",
+            "valueType": "STRING",
+            "connectorKey": null,
+            "secret": false,
+            "projectOverride": true,
+            "enabled": true,
+            "options": [],
+            "defaultValue": "20:00",
+            "defaultConfigured": true,
+            "revision": 0,
+            "system": true
+          },
+          "value": "20:00",
+          "configured": true,
+          "source": "GLOBAL",
+          "overridden": false
+        },
+        "… 4 more"
+      ],
+      "connectors": [
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "VAST ad servers",
+            "category": "ADS",
+            "driver": "VAST",
+            "enabled": true,
+            "description": "Project ad demand waterfall"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        {
+          "definition": {
+            "key": "<hidden>",
+            "name": "Mux",
+            "category": "MEDIA",
+            "driver": "MUX",
+            "enabled": true,
+            "description": "Video library, uploads and encoding"
+          },
+          "allowed": true,
+          "enabled": true,
+          "overridden": false
+        },
+        "… 1 more"
+      ],
+      "editable": true
+    }
+  },
+  "GET /api/platform/tenants/{tenant}/export": {
+    "status": 200,
+    "body": {
+      "exportedAt": "2026-11-01T12:27:36.473766900Z",
+      "tenant": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "plan_key": "pilot",
+        "subscription_status": "TRIAL"
+      },
+      "organizations": [
+        {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "kind": "CUSTOMER",
+          "status": "ACTIVE",
+          "country": "IN",
+          "timezone": "Asia/Kolkata"
+        }
+      ],
+      "members": [
+        {
+          "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "user_id": "71f96876-27d2-4260-9a63-352199da7589",
+          "email": "ads@aurora.test",
+          "name": "Dev Kapoor",
+          "role": "AD_OPS"
+        },
+        {
+          "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "user_id": "073d1d7f-a3ca-4e61-8984-77da06d1e8eb",
+          "email": "analyst@aurora.test",
+          "name": "Lena Fischer",
+          "role": "ANALYST"
+        },
+        "… 3 more"
+      ],
+      "tables": {
+        "ad_decision": [
+          {
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "session_id": "e617f5e7-f7ad-4619-8690-428fd4397f95",
+            "break_id": "a6bef117-312e-4658-b0ff-5a224e327fea",
+            "decision": "{\"breakId\":\"a6bef117-312e-4658-b0ff-5a224e327fea\",\"breakMs\":90000,\"slots\":[{\"campaignId\":\"da6160c3-6b71-463b-9379-3f3aaab58251\",\"campaign\":\"Glow Cola — Summer S…",
+            "created_at": "2026-10-31T19:04:33.758Z"
+          },
+          {
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "session_id": "f133fc06-ec4a-4750-86e2-41cca3bc18eb",
+            "break_id": "826ba9b8-ac83-4395-a356-0e0c39476a8b",
+            "decision": "{\"breakId\":\"826ba9b8-ac83-4395-a356-0e0c39476a8b\",\"breakMs\":90000,\"slots\":[{\"campaignId\":\"da6160c3-6b71-463b-9379-3f3aaab58251\",\"campaign\":\"Glow Cola — Summer S…",
+            "created_at": "2026-10-31T19:08:06.060Z"
+          },
+          "… 6 more"
+        ],
+        "ad_event": [
+          {
+            "id": 1,
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "session_id": "70412526-98e5-4595-b647-ec431a08fa67",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "break_id": "e2a93b6c-2002-4c41-b668-6b2eb98e6ccc",
+            "campaign_id": null,
+            "event": "SLATE",
+            "seconds": 15,
+            "occurred_at": "2026-10-20T09:05:02.332Z"
+          },
+          {
+            "id": 2,
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "session_id": "70412526-98e5-4595-b647-ec431a08fa67",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "break_id": "e2a93b6c-2002-4c41-b668-6b2eb98e6ccc",
+            "campaign_id": "da6160c3-6b71-463b-9379-3f3aaab58251",
+            "event": "IMPRESSION",
+            "seconds": 15,
+            "occurred_at": "2026-10-20T09:05:03.743Z"
+          },
+          "… 343 more"
+        ],
+        "ad_source": [
+          {
+            "id": "fb42a916-ba2b-4566-aa83-3a8792dd23f7",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "Direct-sold campaigns",
+            "kind": "DIRECT",
+            "timeout_ms": 1000,
+            "position": 0,
+            "enabled": true,
+            "created_at": "2026-10-29T17:53:04.203Z",
+            "managed_by": "PLATFORM"
+          }
+        ],
+        "alert": [
+          {
+            "id": "9ce29441-3ef1-4b1a-9708-5f2f2f840a18",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "dedup_key": "coverage:bc645565-299e-45e9-ba20-f6b7d19c227a",
+            "severity": "WARNING",
+            "title": "Classic Cinema: schedule runs out soon",
+            "detail": "The published schedule ends Tue 17:17.",
+            "suggestion": "Auto-fill more hours and publish.",
+            "link": "/schedule?channel=bc645565-299e-45e9-ba20-f6b7d19c227a",
+            "status": "RESOLVED",
+            "resolution": "Cleared automatically: re-check found the problem fixed.",
+            "created_at": "2026-10-27T05:48:24.706Z",
+            "updated_at": "2026-10-27T11:47:52.782Z"
+          },
+          {
+            "id": "4ff21eac-4797-4c71-b20e-ee5843ceab5c",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "dedup_key": "coverage:75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+            "severity": "WARNING",
+            "title": "Family Entertainment: schedule runs out soon",
+            "detail": "The published schedule ends Wed 18:50.",
+            "suggestion": "Auto-fill more hours and publish.",
+            "link": "/schedule?channel=75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+            "status": "RESOLVED",
+            "resolution": "Cleared automatically: re-check found the problem fixed.",
+            "created_at": "2026-10-21T07:21:11.971Z",
+            "updated_at": "2026-10-21T13:33:40.213Z"
+          },
+          "… 14 more"
+        ],
+        "asset": [
+          {
+            "id": "b85e0cc7-b853-433b-a770-68062ea8ce87",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "title": "Big Buck Bunny",
+            "description": "",
+            "kind": "MOVIE",
+            "genre": "Action",
+            "language": "en",
+            "series": null,
+            "season": null,
+            "episode": null,
+            "duration_ms": 5000,
+            "cue_points": "",
+            "status": "READY",
+            "status_detail": "Processed: 1 segments of 5 s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+            "media_key": "aurora/b85e0cc7-b853-433b-a770-68062ea8ce87.1793293777",
+            "color": "#6366f1",
+            "generator": null,
+            "created_at": "2026-10-20T16:16:38.269Z",
+            "updated_at": "2026-10-29T17:09:44.993Z",
+            "source_url": null,
+            "source_ref": null,
+            "media_type": "MOVIE"
+          },
+          {
+            "id": "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "title": "Earth",
+            "description": "",
+            "kind": "SHORT",
+            "genre": "Action, Sci-Fi, Fantasy",
+            "language": "en",
+            "series": null,
+            "season": null,
+            "episode": null,
+            "duration_ms": 30000,
+            "cue_points": "5000,15000,20000",
+            "status": "READY",
+            "status_detail": "Processed: 6 segments of 5 s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
+            "media_key": "aurora/f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a.1793293810",
+            "color": "#6366f1",
+            "generator": null,
+            "created_at": "2026-10-20T17:44:16.712Z",
+            "updated_at": "2026-10-29T17:10:29.943Z",
+            "source_url": null,
+            "source_ref": null,
+            "media_type": "SHORT"
+          },
+          "… 20 more"
+        ],
+        "audit_event": [
+          {
+            "id": 1,
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "actor_id": "9a2adb62-39d0-4619-a5de-50483fe15f3f",
+            "action": "schedule.publish",
+            "resource_type": "channel",
+            "resource_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "detail": "version 1: Initial lineup",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "via_org_id": null
+          },
+          {
+            "id": 2,
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "actor_id": "9a2adb62-39d0-4619-a5de-50483fe15f3f",
+            "action": "schedule.publish",
+            "resource_type": "channel",
+            "resource_id": "bc645565-299e-45e9-ba20-f6b7d19c227a",
+            "detail": "version 1: Initial lineup",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "via_org_id": null
+          },
+          "… 151 more"
+        ],
+        "campaign": [
+          {
+            "id": "4cda0c39-97b8-4dcb-9d02-e0bd892ef86b",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "Nova Bank brand",
+            "advertiser": "Nova Bank (fictional)",
+            "status": "PAUSED",
+            "starts_at": "2026-10-13T08:38:25.369Z",
+            "ends_at": "2027-01-18T08:38:25.369Z",
+            "territories": "IN",
+            "priority": 7,
+            "cpm": 25,
+            "creative_asset_id": "acff26c4-0cad-46c7-9b0a-edfe15aecfe9",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "audiences": "",
+            "frequency_cap": 0
+          },
+          {
+            "id": "6751fe2b-7d62-4038-8473-42b09ed74d9b",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "Crunchy Oats breakfast",
+            "advertiser": "Crunchy Foods (fictional)",
+            "status": "ACTIVE",
+            "starts_at": "2026-10-13T08:38:25.369Z",
+            "ends_at": "2027-01-18T08:38:25.369Z",
+            "territories": "WW",
+            "priority": 5,
+            "cpm": 9,
+            "creative_asset_id": "1241aea9-0f9f-4c94-8b5d-80d3b8408bdf",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "audiences": "",
+            "frequency_cap": 0
+          },
+          "… 4 more"
+        ],
+        "channel": [
+          {
+            "id": "75aec3ca-f2ef-4d24-86da-f493fc3ed607",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "slug": "family-entertainment",
+            "name": "Family Entertainment",
+            "description": "Gentle stories for younger viewers.",
+            "genre": "Family",
+            "language": "en",
+            "timezone": "Asia/Kolkata",
+            "color": "#ec4899",
+            "territories": "IN",
+            "status": "LIVE",
+            "ad_seconds_per_hour": 480,
+            "break_seconds": 90,
+            "fallback_asset_id": null,
+            "published_version_id": "5efb8095-958d-4c30-90e9-87f4d411b2df",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "updated_at": "2026-10-20T13:17:44.747Z"
+          },
+          {
+            "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "slug": "aurora-action",
+            "name": "Aurora Action",
+            "description": "Non-stop chases, heists and high-altitude thrills.",
+            "genre": "Action",
+            "language": "en",
+            "timezone": "Asia/Kolkata",
+            "color": "#ef4444",
+            "territories": "IN,GB,US",
+            "status": "LIVE",
+            "ad_seconds_per_hour": 480,
+            "break_seconds": 90,
+            "fallback_asset_id": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
+            "published_version_id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "updated_at": "2026-10-20T08:38:25.654Z"
+          },
+          "… 2 more"
+        ],
+        "destination": [
+          {
+            "id": "df8922b3-287a-4a0e-a856-890426a03303",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "Aurora web player (SSAI)",
+            "kind": "OWNED_WEB",
+            "ad_mode": "SSAI",
+            "marker_format": "DATERANGE",
+            "max_ad_seconds_per_hour": 720,
+            "notes": "Our own web app. Ads are stitched into the stream on the server.",
+            "created_at": "2026-10-20T08:38:25.654Z"
+          },
+          {
+            "id": "05d1af75-107c-4435-a6ca-4c6bc5d9e32f",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "Aurora web player (SGAI beta)",
+            "kind": "OWNED_WEB",
+            "ad_mode": "SGAI",
+            "marker_format": "DATERANGE",
+            "max_ad_seconds_per_hour": 720,
+            "notes": "Same app using HLS Interstitials: the player fetches the ads itself.",
+            "created_at": "2026-10-20T08:38:25.654Z"
+          },
+          "… 2 more"
+        ],
+        "email_message": [
+          {
+            "id": "54f5a0dd-f11b-4637-b80a-4649db65d77f",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "template": "invite_new_user",
+            "to_email": "neha.33091@aurora.test",
+            "subject": "Asha Rao invited you to Aurora Media Network on FAST Studio",
+            "body_text": "Hello Neha Kapoor,\n\nAsha Rao has invited you to join Aurora Media Network on FAST Studio as Analyst.\n\nSign in with:\nEmail: neha.33091@aurora.test\nOne-time passw…",
+            "body_html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"></head>\n<body style=\"margin:0;background:#f4f6fb;font-family…",
+            "status": "SAVED",
+            "detail": "D:\\Fast Product\\data\\mail-outbox\\54f5a0dd-f11b-4637-b80a-4649db65d77f.eml",
+            "attempts": 1,
+            "created_at": "2026-10-20T11:15:33.946Z",
+            "sent_at": "2026-10-20T11:15:34.372Z"
+          },
+          {
+            "id": "084e9f29-8544-430a-adc9-876629c043ca",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "template": "invite_new_user",
+            "to_email": "neha.9154@aurora.test",
+            "subject": "Asha Rao invited you to Aurora Media Network on FAST Studio",
+            "body_text": "Hello Neha Kapoor,\n\nAsha Rao has invited you to join Aurora Media Network on FAST Studio as Analyst.\n\nSign in with:\nEmail: neha.9154@aurora.test\nOne-time passwo…",
+            "body_html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"></head>\n<body style=\"margin:0;background:#f4f6fb;font-family…",
+            "status": "SAVED",
+            "detail": "D:\\Fast Product\\data\\mail-outbox\\084e9f29-8544-430a-adc9-876629c043ca.eml",
+            "attempts": 1,
+            "created_at": "2026-10-20T11:16:49.945Z",
+            "sent_at": "2026-10-20T11:16:50.400Z"
+          },
+          "… 30 more"
+        ],
+        "membership": [
+          {
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "user_id": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+            "role": "OWNER",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "custom_role_key": null
+          },
+          {
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "user_id": "9a2adb62-39d0-4619-a5de-50483fe15f3f",
+            "role": "CHANNEL_OPERATOR",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "custom_role_key": null
+          },
+          "… 3 more"
+        ],
+        "partner_link": [
+          {
+            "id": "ba124f57-4799-493a-826e-c79aa5b7e104",
+            "owner_org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "partner_org_id": "fe47bd6e-8535-4b7f-b5ca-87606e929708",
+            "all_channels": false,
+            "scopes": "channels:read epg:read stream:read markers:read",
+            "destination_id": "ffc2070c-1487-43ec-a9ca-736debf41e59",
+            "status": "ACTIVE",
+            "note": "Pilot agreement: two channels in the Partner TV app.",
+            "created_by": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+            "created_at": "2026-10-20T12:21:46.820Z",
+            "accepted_by": "eef1e4b0-7394-4e94-8457-f45d2cb60865",
+            "accepted_at": "2026-10-20T12:21:46.820Z",
+            "revoked_by": null,
+            "revoked_at": null,
+            "expires_at": null
+          }
+        ],
+        "partner_link_channel": [
+          {
+            "link_id": "ba124f57-4799-493a-826e-c79aa5b7e104",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355"
+          },
+          {
+            "link_id": "ba124f57-4799-493a-826e-c79aa5b7e104",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "bc645565-299e-45e9-ba20-f6b7d19c227a"
+          }
+        ],
+        "personal_access_token": [
+          {
+            "id": "00217843-8209-4c5d-bf08-12826c224bd4",
+            "user_id": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "e2e check",
+            "token_hint": "<hidden>",
+            "role_key": "ANALYST",
+            "created_at": "2026-10-31T20:41:27.891Z",
+            "expires_at": null,
+            "last_used_at": "2026-10-31T20:41:27.960Z",
+            "revoked_at": "2026-10-31T20:41:28.213Z"
+          },
+          {
+            "id": "e0300483-09f6-4f34-a640-5dcdc89e1fb0",
+            "user_id": "9a2adb62-39d0-4619-a5de-50483fe15f3f",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "name": "e2e check",
+            "token_hint": "<hidden>",
+            "role_key": "ANALYST",
+            "created_at": "2026-10-31T20:41:29.435Z",
+            "expires_at": null,
+            "last_used_at": "2026-10-31T20:41:29.493Z",
+            "revoked_at": "2026-10-31T20:41:29.659Z"
+          },
+          "… 22 more"
+        ],
+        "playback_session": [
+          {
+            "id": "f38d524d-03d2-4536-9031-82d16218b4c7",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "destination_id": "df8922b3-287a-4a0e-a856-890426a03303",
+            "country": "IN",
+            "ad_mode": "SSAI",
+            "created_at": "2026-10-20T09:04:49.486Z",
+            "viewer_key": null,
+            "audiences": "",
+            "personalized_until": null
+          },
+          {
+            "id": "ad6f3864-9731-4ab6-9db3-29322a64f28c",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "destination_id": "df8922b3-287a-4a0e-a856-890426a03303",
+            "country": "DE",
+            "ad_mode": "SSAI",
+            "created_at": "2026-10-20T09:04:50.562Z",
+            "viewer_key": null,
+            "audiences": "",
+            "personalized_until": null
+          },
+          "… 144 more"
+        ],
+        "rights_policy": [
+          {
+            "id": "acde4ca8-2f17-4593-b526-65eeac22abf6",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "asset_id": "c4297efd-c4cb-42f5-9443-db0806e84227",
+            "allowed_countries": "IN,GB,US",
+            "blocked_countries": "",
+            "valid_from": "2026-09-20T08:38:25.369Z",
+            "valid_until": "2027-10-20T08:38:25.369Z",
+            "ads_allowed": true,
+            "notes": "Fictional licence: India, UK and US for 12 months.",
+            "updated_at": "2026-10-20T08:38:25.654Z"
+          },
+          {
+            "id": "74ab2f4d-4059-423c-88b0-bb8cfe44c233",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "asset_id": "8774d469-c451-4f8a-926a-a34475a547fc",
+            "allowed_countries": "IN",
+            "blocked_countries": "",
+            "valid_from": "2026-09-20T08:38:25.369Z",
+            "valid_until": "2027-10-20T08:38:25.369Z",
+            "ads_allowed": true,
+            "notes": "India only — viewers elsewhere see a regional block screen.",
+            "updated_at": "2026-10-20T08:38:25.654Z"
+          },
+          "… 10 more"
+        ],
+        "schedule_entry": [
+          {
+            "id": "aeb367b4-ee94-4bea-a05f-d87df6571250",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "version_id": "c809d7db-c279-4992-95dc-55967c6c489c",
+            "kind": "PROGRAM",
+            "asset_id": "c4297efd-c4cb-42f5-9443-db0806e84227",
+            "asset_offset_ms": 0,
+            "start_at": "2026-10-20T08:18:25.000Z",
+            "end_at": "2026-10-20T08:21:25.000Z",
+            "ownership": null,
+            "rule_id": null,
+            "rule_date": null
+          },
+          {
+            "id": "e7e31745-837a-41d6-8e10-a4ae37355428",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "version_id": "c809d7db-c279-4992-95dc-55967c6c489c",
+            "kind": "AD_BREAK",
+            "asset_id": "c4297efd-c4cb-42f5-9443-db0806e84227",
+            "asset_offset_ms": 0,
+            "start_at": "2026-10-20T08:21:25.000Z",
+            "end_at": "2026-10-20T08:22:55.000Z",
+            "ownership": "PROVIDER",
+            "rule_id": null,
+            "rule_date": null
+          },
+          "… 37732 more"
+        ],
+        "schedule_version": [
+          {
+            "id": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "number": 0,
+            "status": "DRAFT",
+            "revision": 3,
+            "note": "",
+            "created_by": "ca0e73ee-639c-4a8e-a678-166204f57d82",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "published_at": null
+          },
+          {
+            "id": "1795e19c-0074-4409-92b6-11cab7a55806",
+            "org_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "channel_id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+            "number": 1,
+            "status": "SUPERSEDED",
+            "revision": 0,
+            "note": "Initial lineup",
+            "created_by": "9a2adb62-39d0-4619-a5de-50483fe15f3f",
+            "created_at": "2026-10-20T08:38:25.654Z",
+            "published_at": "2026-10-20T08:38:25.654Z"
+          },
+          "… 20 more"
+        ],
+        "tenant_connector": [
+          {
+            "tenant_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "connector_key": "mux",
+            "enabled": true
+          },
+          {
+            "tenant_id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "connector_key": "vast",
+            "enabled": true
+          },
+          "… 1 more"
+        ]
+      },
+      "notIncluded": [
+        "video files (download them from the library or the edge storage)",
+        "credentials and secret settings",
+        "… 1 more"
+      ]
+    }
+  },
+  "GET /api/platform/plans": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "name": "Pilot",
+        "enabled": true,
+        "maxProjects": 10,
+        "maxChannels": 100,
+        "monthlyPrice": 0,
+        "currency": "USD",
+        "features": [
+          "LIBRARY_SYNC",
+          "AD_WATERFALL_VIEW",
+          "… 1 more"
+        ]
+      }
+    ]
+  },
+  "GET /api/platform/property-definitions": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "label": "API requests per minute (per project, per server)",
+        "valueType": "NUMBER",
+        "connectorKey": null,
+        "secret": false,
+        "projectOverride": true,
+        "enabled": true,
+        "options": [],
+        "defaultValue": 600,
+        "defaultConfigured": true,
+        "revision": 0,
+        "system": true
+      },
+      {
+        "key": "<hidden>",
+        "label": "Default premiere time (HH:MM, five-second boundary)",
+        "valueType": "STRING",
+        "connectorKey": null,
+        "secret": false,
+        "projectOverride": true,
+        "enabled": true,
+        "options": [],
+        "defaultValue": "20:00",
+        "defaultConfigured": true,
+        "revision": 0,
+        "system": true
+      },
+      "… 4 more"
+    ]
+  },
+  "GET /api/platform/connector-definitions": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "name": "VAST ad servers",
+        "category": "ADS",
+        "driver": "VAST",
+        "enabled": true,
+        "description": "Project ad demand waterfall"
+      },
+      {
+        "key": "<hidden>",
+        "name": "Mux",
+        "category": "MEDIA",
+        "driver": "MUX",
+        "enabled": true,
+        "description": "Video library, uploads and encoding"
+      },
+      "… 1 more"
+    ]
+  },
+  "GET /api/platform/access-roles": {
+    "status": 200,
+    "body": {
+      "roles": [],
+      "permissions": [
+        "VIEW",
+        "ASSETS_EDIT",
+        "… 9 more"
+      ]
+    }
+  },
+  "GET /api/platform/orgs": {
+    "status": 200,
+    "body": [
+      {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "status": "ACTIVE",
+        "country": "IN",
+        "timezone": "Asia/Kolkata",
+        "plan": "Pilot",
+        "maxChannels": 10,
+        "members": 5,
+        "channels": 4,
+        "liveChannels": 3,
+        "videos": 22,
+        "sessions": 146,
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "kind": "CUSTOMER",
+        "partnerLinks": 1
+      },
+      {
+        "id": "95d5e1e0-ab3c-469b-89d6-10e6a1adac2c",
+        "slug": "northwind",
+        "name": "Northwind Sports",
+        "status": "ACTIVE",
+        "country": "GB",
+        "timezone": "Europe/London",
+        "plan": "Pilot",
+        "maxChannels": 10,
+        "members": 2,
+        "channels": 1,
+        "liveChannels": 1,
+        "videos": 3,
+        "sessions": 7,
+        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "kind": "CUSTOMER",
+        "partnerLinks": 0
+      },
+      "… 1 more"
+    ]
+  },
+  "GET /api/platform/orgs/{orgId}/project-details": {
+    "status": 200,
+    "body": {
+      "schemaVersion": 2,
+      "project": {
+        "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "slug": "aurora",
+        "name": "Aurora Media Network",
+        "kind": "CUSTOMER",
+        "status": "ACTIVE"
+      },
+      "access": {
+        "role": "PLATFORM_ADMIN",
+        "permissions": [
+          "PROJECT_VIEW",
+          "CONNECTORS_MANAGE"
+        ],
+        "features": []
+      },
+      "media": {
+        "types": [
+          {
+            "key": "<hidden>",
+            "label": "Advertisement",
+            "kind": "AD"
+          },
+          {
+            "key": "<hidden>",
+            "label": "Episode",
+            "kind": "EPISODE"
+          },
+          "… 3 more"
+        ],
+        "enabledTypes": [
+          "AD",
+          "EPISODE",
+          "… 3 more"
+        ],
+        "defaultType": "MOVIE",
+        "premiereTime": "20:00",
+        "weekdays": [
+          1,
+          2,
+          "… 5 more"
+        ],
+        "personalizedAds": false,
+        "viewerIntegrationConfigured": false,
+        "revision": 0
+      },
+      "connectors": {
+        "media": [
+          {
+            "provider": "MUX",
+            "state": "NOT_CONFIGURED",
+            "environment": "",
+            "credentialsConfigured": false,
+            "webhookConfigured": false,
+            "capabilities": []
+          }
+        ],
+        "advertising": [
+          {
+            "id": "fb42a916-ba2b-4566-aa83-3a8792dd23f7",
+            "name": "Direct-sold campaigns",
+            "kind": "DIRECT",
+            "enabled": true,
+            "managedBy": "PLATFORM",
+            "configured": true
+          }
+        ],
+        "delivery": {
+          "origin": "R2",
+          "cdn": "CLOUDFLARE",
+          "configured": true
+        }
+      },
+      "summary": {
+        "assets": 22,
+        "readyAssets": 22,
+        "channels": 4
+      },
+      "configuration": {
+        "tenant": {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "planKey": "pilot",
+          "subscriptionStatus": "TRIAL",
+          "revision": 0,
+          "projects": 1,
+          "channels": 4
+        },
+        "project": {
+          "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+          "slug": "aurora",
+          "name": "Aurora Media Network",
+          "status": "ACTIVE",
+          "members": 5
+        },
+        "plan": {
+          "key": "<hidden>",
+          "name": "Pilot",
+          "enabled": true,
+          "maxProjects": 10,
+          "maxChannels": 100,
+          "monthlyPrice": 0,
+          "currency": "USD",
+          "features": [
+            "LIBRARY_SYNC",
+            "AD_WATERFALL_VIEW",
+            "… 1 more"
+          ]
+        },
+        "projects": [
+          {
+            "id": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "tenantId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+            "slug": "aurora",
+            "name": "Aurora Media Network",
+            "status": "ACTIVE",
+            "members": 5
+          }
+        ],
+        "properties": [
+          {
+            "definition": {
+              "key": "<hidden>",
+              "label": "API requests per minute (per project, per server)",
+              "valueType": "NUMBER",
+              "connectorKey": null,
+              "secret": false,
+              "projectOverride": true,
+              "enabled": true,
+              "options": [],
+              "defaultValue": 600,
+              "defaultConfigured": true,
+              "revision": 0,
+              "system": true
+            },
+            "value": 600,
+            "configured": true,
+            "source": "GLOBAL",
+            "overridden": false
+          },
+          {
+            "definition": {
+              "key": "<hidden>",
+              "label": "Default premiere time (HH:MM, five-second boundary)",
+              "valueType": "STRING",
+              "connectorKey": null,
+              "secret": false,
+              "projectOverride": true,
+              "enabled": true,
+              "options": [],
+              "defaultValue": "20:00",
+              "defaultConfigured": true,
+              "revision": 0,
+              "system": true
+            },
+            "value": "20:00",
+            "configured": true,
+            "source": "GLOBAL",
+            "overridden": false
+          },
+          "… 4 more"
+        ],
+        "connectors": [
+          {
+            "definition": {
+              "key": "<hidden>",
+              "name": "VAST ad servers",
+              "category": "ADS",
+              "driver": "VAST",
+              "enabled": true,
+              "description": "Project ad demand waterfall"
+            },
+            "allowed": true,
+            "enabled": true,
+            "overridden": false
+          },
+          {
+            "definition": {
+              "key": "<hidden>",
+              "name": "Mux",
+              "category": "MEDIA",
+              "driver": "MUX",
+              "enabled": true,
+              "description": "Video library, uploads and encoding"
+            },
+            "allowed": true,
+            "enabled": true,
+            "overridden": false
+          },
+          "… 1 more"
+        ],
+        "editable": true
+      }
+    }
+  },
+  "GET /api/platform/orgs/{orgId}/connectors": {
+    "status": 200,
+    "body": {
+      "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+      "orgName": "Aurora Media Network",
+      "features": [],
+      "featureCatalog": [
+        {
+          "key": "<hidden>",
+          "label": "Company may sync its connected video library itself (otherwise only the platform syncs it)"
+        },
+        {
+          "key": "<hidden>",
+          "label": "Company sees its ad demand waterfall (names and order only, no tag URLs)"
+        },
+        "… 1 more"
+      ],
+      "adSources": [
+        {
+          "id": "fb42a916-ba2b-4566-aa83-3a8792dd23f7",
+          "name": "Direct-sold campaigns",
+          "kind": "DIRECT",
+          "timeoutMs": 1000,
+          "position": 0,
+          "enabled": true,
+          "managedBy": "PLATFORM"
+        }
+      ],
+      "storage": {
+        "provider": "Cloudflare R2 (via the edge Worker)",
+        "configured": true,
+        "publicUrl": "http://127.0.0.1:8787",
+        "videosReady": 22,
+        "videosOnEdge": 22
+      }
+    }
+  },
+  "GET /api/platform/orgs/{orgId}/connectors/mux": {
+    "status": 200,
+    "body": {
+      "connected": false,
+      "tokenId": null,
+      "environment": null,
+      "passthroughTag": null,
+      "webhookSecretSet": false,
+      "webhookUrl": "http://localhost:8080/hooks/mux/6f19186a-248c-42e9-8184-428a9908f2fc"
+    }
+  },
+  "GET /api/platform/orgs/{orgId}/ad-sources": {
+    "status": 200,
+    "body": [
+      {
+        "id": "fb42a916-ba2b-4566-aa83-3a8792dd23f7",
+        "name": "Direct-sold campaigns",
+        "kind": "DIRECT",
+        "timeoutMs": 1000,
+        "position": 0,
+        "enabled": true,
+        "managedBy": "PLATFORM"
+      }
+    ]
+  },
+  "GET /api/platform/media-types": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "label": "Advertisement",
+        "kind": "AD",
+        "enabled": true
+      },
+      {
+        "key": "<hidden>",
+        "label": "Episode",
+        "kind": "EPISODE",
+        "enabled": true
+      },
+      "… 3 more"
+    ]
+  },
+  "GET /api/platform/orgs/{orgId}/media-types": {
+    "status": 200,
+    "body": [
+      "MOVIE",
+      "EPISODE",
+      "… 3 more"
+    ]
+  },
+  "GET /api/platform/email/status": {
+    "status": 200,
+    "body": {
+      "mode": "OUTBOX",
+      "from": "FAST Studio <no-reply@faststudio.local>",
+      "server": null,
+      "mailerInstalled": true,
+      "outbox": "D:\\Fast Product\\data\\mail-outbox",
+      "appUrl": "http://localhost:8080"
+    }
+  },
+  "GET /api/platform/email/messages": {
+    "status": 200,
+    "body": [
+      {
+        "id": "1ece500a-cab6-4b28-9be4-40957112fb65",
+        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "orgName": "Aurora Media Network",
+        "template": "alert_raised",
+        "toEmail": "operator@aurora.test",
+        "subject": "[Warning] Classic Cinema: schedule runs out soon",
+        "status": "SAVED",
+        "detail": "D:\\Fast Product\\data\\mail-outbox\\1ece500a-cab6-4b28-9be4-40957112fb65.eml",
+        "attempts": 1,
+        "createdAt": "2026-11-01T11:26:37.017322Z",
+        "sentAt": "2026-11-01T11:26:37.613254Z",
+        "canRetry": false
+      },
+      {
+        "id": "560e86e9-598e-405c-a694-acbde0f7fa00",
+        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "orgName": "Aurora Media Network",
+        "template": "alert_raised",
+        "toEmail": "owner@aurora.test",
+        "subject": "[Warning] Classic Cinema: schedule runs out soon",
+        "status": "SAVED",
+        "detail": "D:\\Fast Product\\data\\mail-outbox\\560e86e9-598e-405c-a694-acbde0f7fa00.eml",
+        "attempts": 1,
+        "createdAt": "2026-11-01T11:26:37.013448Z",
+        "sentAt": "2026-11-01T11:26:37.304607Z",
+        "canRetry": false
+      },
+      "… 39 more"
+    ]
+  },
+  "GET /api/platform/email/templates": {
+    "status": 200,
+    "body": [
+      {
+        "key": "<hidden>",
+        "name": "Invitation — new person",
+        "description": "Sent when someone without an account is invited to an organization. Contains their one-time password.",
+        "variables": [
+          "name",
+          "email",
+          "… 6 more"
+        ],
+        "required": [
+          "temporaryPassword"
+        ],
+        "subject": "{{inviterName}} invited you to {{orgName}} on FAST Studio",
+        "body": "Hello {{name}},\n\n{{inviterName}} has invited you to join {{orgName}} on FAST Studio as {{role}}.\n\nSign in with:\nEmail: {{email}}\nOne-time password: {{temporaryP…",
+        "customized": false,
+        "updatedAt": null,
+        "defaultSubject": "{{inviterName}} invited you to {{orgName}} on FAST Studio",
+        "defaultBody": "Hello {{name}},\n\n{{inviterName}} has invited you to join {{orgName}} on FAST Studio as {{role}}.\n\nSign in with:\nEmail: {{email}}\nOne-time password: {{temporaryP…"
+      },
+      {
+        "key": "<hidden>",
+        "name": "Added to an organization",
+        "description": "Sent when someone who already has an account is added to another organization, or made owner of a new one.",
+        "variables": [
+          "name",
+          "orgName",
+          "… 4 more"
+        ],
+        "required": [],
+        "subject": "You now have access to {{orgName}}",
+        "body": "Hello {{name}},\n\n{{inviterName}} added you to {{orgName}} on FAST Studio as {{role}}. Sign in with your usual password and choose {{orgName}} in the organizatio…",
+        "customized": false,
+        "updatedAt": null,
+        "defaultSubject": "You now have access to {{orgName}}",
+        "defaultBody": "Hello {{name}},\n\n{{inviterName}} added you to {{orgName}} on FAST Studio as {{role}}. Sign in with your usual password and choose {{orgName}} in the organizatio…"
+      },
+      "… 7 more"
+    ]
+  },
+  "POST /api/platform/email/templates/{key}/preview": {
+    "status": 200,
+    "body": {
+      "subject": "Welcome to Aurora Media, Asha Rao",
+      "text": "Hello Asha Rao\n\n--\nSent by FAST Studio · http://localhost:8080\nThis is an automatic message, so replies are not read.",
+      "html": "<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"></head>\n<body style=\"margin:0;background:#f4f6fb;font-family…",
+      "problems": [
+        "Keep {{temporaryPassword}} — without it this email is useless to the person who gets it."
+      ]
+    }
+  }
+}

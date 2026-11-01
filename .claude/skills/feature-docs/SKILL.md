@@ -35,10 +35,13 @@ Every completed feature gets an entry, and its screenshots are re-taken whenever
 6. **API reference**: if the feature added or changed endpoints, add or update them in `docs/api/api.json` under the right
    category: `title`, a plain `description` (what it does, who may call it, what errors mean), an example `body` for every
    request body, `query` and `params` values. Use `{{variable}}` placeholders from `variables` (org, channelId, assetId…)
-   so the page and the Postman collection fill them in. Then:
+   so the page and the Postman collection fill them in. Request body fields (type, required, rules) are read from the Java
+   records automatically; give every new field name a plain explanation in `docs/api/glossary.json` (`fields`; path and
+   query parameters under `params`), or per endpoint with `"fields": {name: text}`. Then:
    - `node tools/build-api-docs.mjs` → `docs/html/API.html`. It fails if any route has no entry, or an entry has no route
      (CI runs it too).
-   - `node tools/check-api-docs.mjs` against the running demo: every GET and safe POST runs for real, project writes are sent
+   - `node tools/check-api-docs.mjs --save` against the running demo (`--save` records the real answers as the page's
+     response examples in `docs/api/responses.json`, shortened, with tokens, keys and signed links replaced; check the diff): every GET and safe POST runs for real, project writes are sent
      as the read-only analyst (403 = body valid, nothing changed), platform writes against a missing ID. 0 failures required;
      a documented exception gets `"checkAccepts": [status]` and a description that says why.
    - Open `docs/html/API.html`, copy one curl, and run it.
