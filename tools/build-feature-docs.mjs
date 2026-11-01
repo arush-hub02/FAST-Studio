@@ -1,4 +1,4 @@
-// Builds docs/FEATURES.html from docs/features/features.json and the screenshots in docs/features/img/.
+// Builds docs/html/FEATURES.html from docs/features/features.json and the screenshots in docs/features/img/.
 // Usage: node tools/build-feature-docs.mjs   (after `npm run docs:shots` in frontend/ when screens changed)
 // Fails when a feature is missing required fields; reports screenshots that haven't been taken yet.
 import fs from 'node:fs'
@@ -20,7 +20,7 @@ for (const f of data.features) {
   ids.add(f.id)
   for (const s of f.screenshots) {
     const file = `${f.id}--${s.id}.png`
-    s.src = `features/img/${file}`
+    s.src = `../features/img/${file}`
     s.exists = fs.existsSync(path.join(dir, 'img', file))
     if (!s.exists) missing.push(file)
     delete s.steps; delete s.mask; delete s.target           // recipes are for the screenshot runner, not the page
@@ -32,6 +32,7 @@ data.generatedAt = new Date().toISOString().slice(0, 10)
 const template = fs.readFileSync(path.join(dir, 'features.template.html'), 'utf8')
 if (!template.includes('/*__FEATURES__*/null')) throw new Error('Template placeholder missing')
 const html = template.replace('/*__FEATURES__*/null', () => JSON.stringify(data).replaceAll('</', '<\\/'))
-fs.writeFileSync(path.join(root, 'docs', 'FEATURES.html'), html)
-console.log(`docs/FEATURES.html: ${data.features.length} features`)
+fs.mkdirSync(path.join(root, 'docs', 'html'), { recursive: true })
+fs.writeFileSync(path.join(root, 'docs', 'html', 'FEATURES.html'), html)
+console.log(`docs/html/FEATURES.html: ${data.features.length} features`)
 if (missing.length) console.log(`Screenshots not taken yet (run npm run docs:shots in frontend/): ${missing.join(', ')}`)

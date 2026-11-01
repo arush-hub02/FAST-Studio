@@ -41,6 +41,8 @@ jobs:
           fi
       - name: Every tenant query filters by organization
         run: node tools/check-tenant-filters.mjs
+      - name: Every API route is documented (docs/api/api.json)
+        run: node tools/build-api-docs.mjs
       # Clean build: never trust compiled classes from a previous run. Embedded PostgreSQL starts inside the tests.
       - run: sh ./mvnw -B -ntp clean test
         working-directory: backend

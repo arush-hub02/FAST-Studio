@@ -1,4 +1,4 @@
-// Takes the screenshots for docs/FEATURES.html from the running demo, following the recipes in docs/features/features.json.
+// Takes the screenshots for docs/html/FEATURES.html from the running demo, following the recipes in docs/features/features.json.
 // Run: npm run docs:shots   (demo mode; DOCS_BASE_URL changes the address). Then: node ../tools/build-feature-docs.mjs
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync, readFileSync } from 'node:fs'

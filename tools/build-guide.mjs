@@ -1,5 +1,5 @@
 import path from 'node:path'
-// Builds docs/FAST_Studio_Product_Guide.html (self-contained, images embedded) and .pdf from docs/PRODUCT_GUIDE.md
+// Builds docs/html/FAST_Studio_Product_Guide.html (self-contained, images embedded) and .pdf from docs/PRODUCT_GUIDE.md
 import fs from 'node:fs'
 import { marked } from 'marked'
 import puppeteer from 'puppeteer-core'
@@ -52,7 +52,8 @@ const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
 </section>
 ${html}
 </body></html>`
-fs.writeFileSync(`${DOCS}/FAST_Studio_Product_Guide.html`, page)
+fs.mkdirSync(`${DOCS}/html`, { recursive: true })
+fs.writeFileSync(`${DOCS}/html/FAST_Studio_Product_Guide.html`, page)
 console.log('html', (page.length / 1e6).toFixed(1), 'MB')
 
 const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true })

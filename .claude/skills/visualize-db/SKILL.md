@@ -1,9 +1,9 @@
 ---
 name: visualize-db
-description: Regenerate and maintain docs/visualizeDB.html, the visual database guide (every table, its feature/pages/APIs/code, relations, CREATE/ALTER/auto-increment and diagnose queries, and a 500-error decoder). Use after ANY Flyway migration, new/renamed/dropped table or column, new screen or API that uses a table, or when the user asks to update/explain the database guide or debug a database-caused 500 error.
+description: Regenerate and maintain docs/html/visualizeDB.html, the visual database guide (every table, its feature/pages/APIs/code, relations, CREATE/ALTER/auto-increment and diagnose queries, and a 500-error decoder). Use after ANY Flyway migration, new/renamed/dropped table or column, new screen or API that uses a table, or when the user asks to update/explain the database guide or debug a database-caused 500 error.
 ---
 
-# Visual database guide (docs/visualizeDB.html)
+# Visual database guide (docs/html/visualizeDB.html)
 
 The guide is **generated**, never hand-edited. It combines two sources:
 
@@ -36,10 +36,10 @@ The generator **fails** when a table has no entry in `table-usage.json`, or an e
 
 ## Verify
 
-1. Open `docs/visualizeDB.html` in a browser (it is self-contained; no server needed).
+1. Open `docs/html/visualizeDB.html` in a browser (it is self-contained; no server needed).
 2. Check the map shows the new/changed table in the right feature group, its page lists the right screens/APIs/code, and the Diagnose tab has queries for its foreign keys, unique keys and checks.
 3. Paste a constraint name from a recent error into the search box: the right table must appear.
-4. Commit `docs/visualizeDB.html` together with the migration and `table-usage.json` changes.
+4. Commit `docs/html/visualizeDB.html` together with the migration and `table-usage.json` changes.
 
 ## Rules for the content
 

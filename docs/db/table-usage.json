@@ -1,5 +1,5 @@
 {
-  "_readme": "Plain-language usage of every database table, merged into docs/visualizeDB.html by SchemaCatalogExportTest. Every table in the schema MUST have an entry here (the generator fails otherwise). Columns, constraints, indexes, RLS and code references are read automatically; only describe purpose, feature, pages, APIs and what to check. Keep sentences short and non-technical.",
+  "_readme": "Plain-language usage of every database table, merged into docs/html/visualizeDB.html by SchemaCatalogExportTest. Every table in the schema MUST have an entry here (the generator fails otherwise). Columns, constraints, indexes, RLS and code references are read automatically; only describe purpose, feature, pages, APIs and what to check. Keep sentences short and non-technical.",
   "features": {
     "Accounts & sign-in": "People, their passwords and sign-in sessions.",
     "Tenants & configuration": "Customer tenants, their projects, subscription plans, connectors, dynamic properties and roles.",

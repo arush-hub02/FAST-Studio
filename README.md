@@ -3,6 +3,8 @@
 Turn a video library into 24/7 TV channels with ads: upload, licence, schedule, play live with **real SSAI and SGAI ad breaks** and **real SCTE-35 markers**, then send to (simulated) partner platforms. Built so non-technical people can follow it end to end.
 
 > **Full illustrated walkthrough:** [docs/PRODUCT_GUIDE.md](docs/PRODUCT_GUIDE.md) (also `docs/FAST_Studio_Product_Guide.pdf`).
+>
+> **All HTML documentation** (open in a browser, no server needed): [docs/html/index.html](docs/html/index.html): API reference with copy-paste curl and a Postman collection, features, database guide, product guide.
 
 > Demo environment: companies, people, ads and money are fictional. Simulated parts are labelled in the UI.
 
@@ -194,7 +196,7 @@ frontend/  React 19 + TypeScript + Vite, hls.js — the web app
 worker/    Cloudflare Worker: live playlists, ad stitching, R2 media (everything a viewer touches)
 mailer/    send.mjs — sends one email with nodemailer (called by the server)
 tools/     smoke-test.mjs (end-to-end checks against a running server), backup.ps1 (backup/restore), launcher scripts, guide screenshots/build
-docs/      product, architecture, multitenancy, and HOW_FAST_WORKS (SSAI/SGAI/SCTE-35 primer)
+docs/      product, architecture, multitenancy, and HOW_FAST_WORKS (SSAI/SGAI/SCTE-35 primer); docs/html/ holds every generated HTML page
 data/      created at runtime: embedded database + generated media (git-ignore it)
 data-pilot/ the same for pilot mode, plus pilot.env (secret) and FIRST-SIGN-IN.txt
 backups/   copies made by tools/backup.ps1

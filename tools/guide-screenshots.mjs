@@ -5,7 +5,7 @@
 //   node guide-screenshots.mjs 12-pilot    -> pilot-mode screens: needs a running PILOT (start.bat -Pilot) and the
 //                                             admin's current FASTSTUDIO_ADMIN_EMAIL / FASTSTUDIO_ADMIN_PASSWORD in env
 //                                             (creates a test company, so use a throw-away data-pilot folder)
-// Then: node build-guide.mjs  -> docs/FAST_Studio_Product_Guide.html + .pdf
+// Then: node build-guide.mjs  -> docs/html/FAST_Studio_Product_Guide.html + .pdf
 
 // Drives FAST Studio in a real browser and saves annotated product-guide screenshots.
 import puppeteer from 'puppeteer-core'

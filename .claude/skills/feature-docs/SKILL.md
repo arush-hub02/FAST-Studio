@@ -1,19 +1,19 @@
 ---
 name: feature-docs
-description: Add or update a feature in docs/FEATURES.html, the illustrated feature documentation (what it does, who can use it, step-by-step how-to, real screenshots, rules, API, tests). Use whenever a feature is completed or changed, when its screens change (re-take screenshots), or when the user asks for feature documentation, user docs or updated screenshots.
+description: Add or update a feature in docs/html/FEATURES.html (and its endpoints in docs/html/API.html, the API reference with copy-paste curl), the illustrated feature documentation (what it does, who can use it, step-by-step how-to, real screenshots, rules, API, tests). Use whenever a feature is completed or changed, when its screens change (re-take screenshots), or when the user asks for feature documentation, user docs or updated screenshots.
 ---
 
-# Feature documentation (docs/FEATURES.html)
+# Feature documentation (docs/html/FEATURES.html)
 
 Every completed feature gets an entry, and its screenshots are re-taken whenever its screens change. The page is
-**generated**; never edit `docs/FEATURES.html` by hand.
+**generated**; never edit `docs/html/FEATURES.html` by hand.
 
 | File | Role | Edited |
 | --- | --- | --- |
 | `docs/features/features.json` | Content per feature (text, roles, steps, rules, API, tests) and a **screenshot recipe** per picture | by hand, for each feature |
 | `frontend/docs-shots/feature-docs.spec.ts` | Plays every recipe against the running demo and saves `docs/features/img/<feature>--<shot>.png` | rarely (new step types) |
 | `docs/features/features.template.html` | Page layout, search, zoom | rarely |
-| `tools/build-feature-docs.mjs` | Checks the JSON and builds `docs/FEATURES.html` | rarely |
+| `tools/build-feature-docs.mjs` | Checks the JSON and builds `docs/html/FEATURES.html` | rarely |
 
 ## When a feature is finished (part of the definition of done)
 
@@ -32,9 +32,21 @@ Every completed feature gets an entry, and its screenshots are re-taken whenever
 3. Take the screenshots: `cd frontend && npm run docs:shots` (`DOCS_BASE_URL` for another address).
 4. Build the page: `node tools/build-feature-docs.mjs`. It fails on missing fields and lists screenshots not taken yet.
 5. Look at every new picture (open the PNGs) and at the page in a browser. Check that nothing secret is visible.
-6. Commit `features.json`, the PNGs and `docs/FEATURES.html` with the feature.
+6. **API reference**: if the feature added or changed endpoints, add or update them in `docs/api/api.json` under the right
+   category: `title`, a plain `description` (what it does, who may call it, what errors mean), an example `body` for every
+   request body, `query` and `params` values. Use `{{variable}}` placeholders from `variables` (org, channelId, assetId…)
+   so the page and the Postman collection fill them in. Then:
+   - `node tools/build-api-docs.mjs` → `docs/html/API.html`. It fails if any route has no entry, or an entry has no route
+     (CI runs it too).
+   - `node tools/check-api-docs.mjs` against the running demo: every GET and safe POST runs for real, project writes are sent
+     as the read-only analyst (403 = body valid, nothing changed), platform writes against a missing ID. 0 failures required;
+     a documented exception gets `"checkAccepts": [status]` and a description that says why.
+   - Open `docs/html/API.html`, copy one curl, and run it.
+7. Commit `features.json`, the PNGs, `api.json` and the regenerated pages in `docs/html/` with the feature.
 
-When only the UI changed: steps 3–6 (and fix recipes whose buttons or labels changed).
+All generated HTML lives in `docs/html/` (index.html links them). Never edit those files by hand.
+
+When only the UI changed: steps 3–5 and 7 (and fix recipes whose buttons or labels changed).
 
 ## Screenshot recipes
 

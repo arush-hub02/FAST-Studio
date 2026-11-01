@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Generates docs/visualizeDB.html — the visual database guide — from the REAL schema.
+ * Generates docs/html/visualizeDB.html — the visual database guide — from the REAL schema.
  *
  * <p>Boots an empty embedded database, applies every Flyway migration, reads the PostgreSQL catalog (tables, columns,
  * defaults, constraints, indexes, row-level security, triggers), scans the backend source for the SQL that touches each
@@ -51,7 +51,7 @@ class SchemaCatalogExportTest {
 
     @Test
     void exportVisualDatabaseGuide() throws Exception {
-        assumeTrue(Boolean.getBoolean("dbdocs"), "Run with -Ddbdocs=true to regenerate docs/visualizeDB.html");
+        assumeTrue(Boolean.getBoolean("dbdocs"), "Run with -Ddbdocs=true to regenerate docs/html/visualizeDB.html");
 
         List<Map<String, Object>> tables = db.sql("""
                 select c.relname as name, c.relrowsecurity as rls, c.relforcerowsecurity as force_rls,
@@ -119,7 +119,8 @@ class SchemaCatalogExportTest {
         String html = template
                 .replace("/*__CATALOG__*/null", safeScript(json.writeValueAsString(catalog)))
                 .replace("/*__USAGE__*/null", safeScript(json.writeValueAsString(usage)));
-        Files.writeString(DOCS.resolve("visualizeDB.html"), html, StandardCharsets.UTF_8);
+        Files.createDirectories(DOCS.resolve("html"));
+        Files.writeString(DOCS.resolve("html/visualizeDB.html"), html, StandardCharsets.UTF_8);
         assertFalse(html.contains("/*__CATALOG__*/"), "Catalog was not injected");
     }
 
