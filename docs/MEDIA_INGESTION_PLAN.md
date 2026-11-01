@@ -147,7 +147,7 @@ backend/src/main/java/com/faststudio/
     MediaPreparationService.java
   v1/services/webhook/
     MediaWebhookServiceV1.java
-    parsers/IWebhookParser.java, MuxWebhookParser.java, WebhookParserFactory.java
+    parsers/…   (only when a second provider sends webhooks; Mux parsing lives in util/mux today)
   v1/repositories/media/
     AssetRepository.java
     MediaConnectionRepository.java
@@ -240,7 +240,7 @@ Keep existing asset status/API values compatible during the first refactor. Read
 
 | Stage | Work | Evidence before moving on |
 | --- | --- | --- |
-| 1. Safe structural refactor | Extract services/repositories from asset and Mux controllers, centralize validation, retain route compatibility | Existing endpoint behavior and cross-tenant tests pass; no changed production workflow |
+| 1. Safe structural refactor (done 2026-11-01) | Extract services/repositories from asset and Mux controllers, centralize validation, retain route compatibility | Existing endpoint behavior and cross-tenant tests pass; no changed production workflow |
 | 2. Durable ingestion foundation | Batch/item/source/upload/job records, registry, outbox dispatcher, leases and status APIs | Duplicate dispatch, restart, cancellation and tenant-isolation tests pass |
 | 3. Existing Mux library | Tested tenant connection, paginated browse/sync, normalized asset creation, checkpoints, safe refresh and catalogue-only mode | Re-sync creates no duplicates; partial scan resumes; manual edits and paid preparation choice are retained |
 | 4. CSV and library picker | Template downloads, row parser/preview, metadata validation/mapping, source matching and results | Good/bad/quoted CSV cases, duplicate episodes, tenant types/rights and deterministic retry pass |

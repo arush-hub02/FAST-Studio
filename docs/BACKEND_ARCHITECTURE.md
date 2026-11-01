@@ -134,6 +134,7 @@ Old package → new location (all under `com.faststudio.v1`). API paths did not 
 | `ads/AdSource`, `DirectSoldSource`, `VastSource` | `services/ads/sources/IAdSource`, `DirectSoldSource`, `VastSource` |
 | `catalog/MediaSettings`, `media/MediaService`, `MediaSigner`, `MediaStore` | `services/media/MediaSettingsServiceV1`, `MediaServiceV1`, `MediaSigner`, `MediaStore` |
 | `media/ContentSource`, `GeneratedSource`, `RemoteSource`, `UploadSource`, `MuxSource` | `services/media/sources/IContentSource`, … |
+| Mux connector split (ingestion Stage 1, 2026-11-01) | HTTP client `util/mux/MuxClientService`; credentials `services/media/MuxConnectionService`; sync/upload `services/media/LibraryServiceV1`; webhooks `services/webhook/MediaWebhookServiceV1`; packaging `services/media/sources/MuxSource`; metadata/rights validation shared by edits and imports `services/media/AssetRules` |
 | `schedule/ProgrammingService`, `Planner`, `ProgrammingRefresh` | `services/programming/ProgrammingServiceV1`, `Planner`, `ProgrammingRefresh` |
 | `playout/PlayoutService`, `Scte35` | `services/playout/PlayoutServiceV1`, `Scte35` |
 | `rights/Rights` | `services/rights/Rights` |

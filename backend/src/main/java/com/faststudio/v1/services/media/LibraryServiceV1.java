@@ -8,96 +8,57 @@ import com.faststudio.v1.core.common.Feature;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantScope;
-import com.faststudio.v1.dto.media.LibraryDto.*;
+import com.faststudio.v1.dto.media.LibraryDto.SyncResult;
 import com.faststudio.v1.repositories.media.AssetRepository;
-import com.faststudio.v1.repositories.media.MediaSettingsRepository;
 import com.faststudio.v1.services.media.sources.MuxSource;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
-import com.faststudio.v1.util.mux.MuxWebhookVerifier;
+import com.faststudio.v1.util.mux.MuxClientService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 
-import java.security.GeneralSecurityException;
-import java.time.Instant;
 import java.util.*;
 
 /**
- * The video library connector (Mux). Platform administrators set each project's Mux account; projects sync their
- * library and get one-time direct-upload URLs without seeing the provider or its credentials; Mux webhooks
- * (signed with that project's secret) move uploads from Processing to Ready.
+ * The video library (Mux) use cases a project sees under provider-neutral names: catalogue sync and one-time
+ * direct-upload URLs. The account itself is {@link MuxConnectionService}; signed webhooks arrive through
+ * MuxWebhookServiceV1 and end in {@link #apply}, the same path a sync takes.
  */
 @Service
 public class LibraryServiceV1 {
-    static final Set<String> EVENTS = Set.of("video.asset.created", "video.asset.ready", "video.asset.errored");
     static final String CONVERTING = "Received from the library; converting into " + Times.SEG_S + "-second segments";
 
-    /** Outcome of a webhook delivery, mapped to an HTTP status by the controller. */
-    public enum WebhookResult { UNKNOWN_PROJECT, BAD_SIGNATURE, ACCEPTED }
-
     private final Data data;
-    private final MuxSource mux;
+    private final MuxClientService mux;
+    private final MuxConnectionService connections;
     private final MediaServiceV1 media;
-    private final MediaSettingsServiceV1 settings;
+    private final AssetRules rules;
     private final TenantConfigurationServiceV1 configuration;
     private final AssetRepository assets;
-    private final MediaSettingsRepository projects;
     private final Audit audit;
-    private final JsonMapper json;
     private final String appUrl;
 
-    public LibraryServiceV1(Data data, MuxSource mux, MediaServiceV1 media, MediaSettingsServiceV1 settings,
-                              TenantConfigurationServiceV1 configuration, AssetRepository assets, MediaSettingsRepository projects,
-                              Audit audit, JsonMapper json, @Value("${faststudio.app-url}") String appUrl) {
+    public LibraryServiceV1(Data data, MuxClientService mux, MuxConnectionService connections, MediaServiceV1 media, AssetRules rules,
+                            TenantConfigurationServiceV1 configuration, AssetRepository assets, Audit audit,
+                            @Value("${faststudio.app-url}") String appUrl) {
         this.data = data;
         this.mux = mux;
+        this.connections = connections;
         this.media = media;
-        this.settings = settings;
+        this.rules = rules;
         this.configuration = configuration;
         this.assets = assets;
-        this.projects = projects;
         this.audit = audit;
-        this.json = json;
         this.appUrl = appUrl.replaceAll("/+$", "");
     }
 
-    // ------------------------------------------------------------------ platform administration
-
-    public AccountView account(UUID org) {
-        requireCustomer(org);
-        MuxSource.Account a = mux.account(org);
-        String hook = appUrl + "/hooks/mux/" + org;
-        return a == null ? new AccountView(false, null, null, null, false, hook)
-                : new AccountView(true, null, a.environment(), a.tag(), a.webhookSecret() != null, hook);
-    }
-
-    public AccountView saveAccount(UUID org, AccountRequest r) {
-        requireCustomer(org);
-        String token = blankToNull(r.tokenId()), secret = blankToNull(r.tokenSecret());
-        String env = Objects.toString(r.environment(), "").trim(), tag = Objects.toString(r.passthroughTag(), "").trim();
-        if ((token == null || secret == null) && mux.account(org) == null)
-            throw ApiException.bad("The access token ID and secret are required to connect a library.");
-        mux.save(org, token, secret, blankToNull(r.webhookSecret()), env, tag);
-        audit.platform(Auth.userId(), "platform.mux.update", "organization", org, "environment '" + env + "', passthrough tag '" + tag + "'");
-        return account(org);
-    }
-
+    /** Platform administrators sync any customer project from the Connectors page. */
     public SyncResult platformSync(UUID org) throws InterruptedException {
-        requireCustomer(org);
+        connections.requireCustomer(org);
         SyncResult r = importLibrary(org);
         audit.platform(Auth.userId(), "platform.mux.sync", "organization", org, r.videos() + " videos in Mux, " + r.added() + " added");
         return r;
     }
-
-    private void requireCustomer(UUID org) {
-        if (!projects.isCustomerOrganization(org)) throw ApiException.notFound("Organization");
-    }
-
-    private static String blankToNull(String s) { return s == null || s.isBlank() ? null : s.trim(); }
-
-    // ------------------------------------------------------------------ project routes (provider-neutral "library")
 
     /** Projects sync themselves only with the LIBRARY_SYNC feature; otherwise the platform syncs from its Connectors page. */
     public SyncResult sync(Tenant t) throws InterruptedException {
@@ -114,7 +75,7 @@ public class LibraryServiceV1 {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Data.Asset a = data.asset(t.orgId(), id);
         if (a.status().equals("PROCESSING")) throw ApiException.conflict("BUSY", "This video is already being processed.");
-        MuxSource.Upload u = mux.upload(connected(t.orgId()), appUrl, a.title());
+        MuxClientService.Upload u = mux.upload(connections.connected(t.orgId()), appUrl, a.title());
         assets.setUploadReference(t.orgId(), id, MuxSource.UPLOAD_REF + u.id());
         audit.log(t, "asset.upload", "asset", id, a.title() + " (direct upload)");
         return Map.of("url", u.url());
@@ -122,25 +83,17 @@ public class LibraryServiceV1 {
 
     /** Imports every ready library video not imported yet (each is packaged into our segments once). */
     private SyncResult importLibrary(UUID org) throws InterruptedException {
-        settings.require(org, "MOVIE");
-        List<MuxSource.Asset> all = mux.assets(connected(org));
+        rules.kindOf(org, "MOVIE");   // library videos arrive as movies; fails clearly if the project has that type switched off
+        List<MuxClientService.Asset> all = mux.assets(connections.connected(org));
         return new SyncResult(all.size(), (int) all.stream().filter(x -> apply(org, x)).count());
-    }
-
-    /** The project's Mux account, if the connector is enabled for the project and an account is configured. */
-    private MuxSource.Account connected(UUID org) {
-        if (!configuration.driverEnabled(org, "MUX"))
-            throw new ApiException(HttpStatus.FORBIDDEN, "CONNECTOR_DISABLED", "The video library connector is disabled for this project.");
-        MuxSource.Account a = mux.account(org);
-        if (a == null) throw ApiException.conflict("LIBRARY_NOT_CONNECTED", MuxSource.NOT_CONNECTED);
-        return a;
     }
 
     /**
      * Brings one Mux asset into the project's library: a direct upload of ours is linked to the row made when its URL
      * was minted; any other ready asset becomes a new row. Packaging is queued once per row; true when it was.
+     * Idempotent, so webhook redelivery and re-sync never duplicate rows.
      */
-    private boolean apply(UUID org, MuxSource.Asset x) {
+    public boolean apply(UUID org, MuxClientService.Asset x) {
         return TenantScope.as(org, () -> {
             String ref = MuxSource.REF + x.id(), upload = x.uploadId() == null ? ref : MuxSource.UPLOAD_REF + x.uploadId();
             if ("errored".equals(x.status())) {
@@ -149,21 +102,10 @@ public class LibraryServiceV1 {
             }
             Optional<UUID> id = x.uploadId() == null ? Optional.empty() : assets.linkUploadedAsset(org, upload, ref, CONVERTING);
             if (id.isEmpty() && "ready".equals(x.status()))
-                id = assets.insertLibraryAsset(org, x.title(), x.durationMs(), CONVERTING, AssetServiceV1.defaultCues("MOVIE", x.durationMs()), ref);
+                id = assets.insertLibraryAsset(org, AssetRules.importedTitle(x.title()), x.durationMs(), CONVERTING,
+                        AssetRules.defaultCues("MOVIE", x.durationMs()), ref);
             id.ifPresent(media::enqueue);
             return id.isPresent();
         });
-    }
-
-    // ------------------------------------------------------------------ webhooks (configured per project in Mux)
-
-    public WebhookResult webhook(UUID org, String signature, byte[] body) throws GeneralSecurityException {
-        MuxSource.Account a = mux.account(org);
-        if (a == null || a.webhookSecret() == null) return WebhookResult.UNKNOWN_PROJECT;
-        if (!MuxWebhookVerifier.signed(a.webhookSecret(), signature, body, Instant.now())) return WebhookResult.BAD_SIGNATURE;
-        JsonNode event = json.readTree(body);
-        MuxSource.Asset x = EVENTS.contains(event.path("type").asString("")) ? MuxSource.Asset.of(event.path("data")) : null;
-        if (x != null && a.includes(x)) apply(org, x);
-        return WebhookResult.ACCEPTED;
     }
 }

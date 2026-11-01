@@ -22,11 +22,11 @@ import java.util.*;
 
 /**
  * The media library: create (optionally a generated demo sample), upload, retry, edit metadata/cue points,
- * archive (never hard-delete), and per-asset rights. Processing itself runs in {@link MediaServiceV1}.
+ * archive (never hard-delete), and per-asset rights. Validation shared with imports is in {@link AssetRules};
+ * processing itself runs in {@link MediaServiceV1}.
  */
 @Service
 public class AssetServiceV1 {
-    static final Set<String> KINDS = Set.of("MOVIE", "EPISODE", "SHORT", "AD");
     static final Set<String> UPLOAD_EXT = Set.of("mp4", "mov", "mkv", "webm", "m4v", "avi", "ts");
     /** ffmpeg sources for generated demo videos; one is picked from the title so samples look different. */
     static final List<String> SAMPLE_LOOKS = List.of(
@@ -40,16 +40,16 @@ public class AssetServiceV1 {
     private final AssetRepository repository;
     private final MediaServiceV1 media;
     private final MediaSigner signer;
-    private final MediaSettingsServiceV1 settings;
+    private final AssetRules rules;
     private final Audit audit;
 
     public AssetServiceV1(Data data, AssetRepository repository, MediaServiceV1 media, MediaSigner signer,
-                            MediaSettingsServiceV1 settings, Audit audit) {
+                            AssetRules rules, Audit audit) {
         this.data = data;
         this.repository = repository;
         this.media = media;
         this.signer = signer;
-        this.settings = settings;
+        this.rules = rules;
         this.audit = audit;
     }
 
@@ -90,36 +90,24 @@ public class AssetServiceV1 {
     @Transactional
     public AssetView create(Tenant t, CreateRequest r) {
         t.require(Tenant.Perm.ASSETS_EDIT);
-        if (!KINDS.contains(r.kind())) throw ApiException.bad("Type must be one of " + KINDS);
-        String type = r.mediaType() == null ? r.kind() : r.mediaType();
-        if (!settings.require(t.orgId(), type).kind().equals(r.kind())) throw ApiException.bad("Media type does not match its scheduling behavior.");
-        episodeMetadata(t.orgId(), r.kind(), r.series(), r.season(), r.episode(), null);
+        String type = rules.newAssetType(t.orgId(), r.kind(), r.mediaType());
+        rules.episode(t.orgId(), r.kind(), r.series(), r.season(), r.episode(), null);
         String generator = null;
         long dur = 0;
         if (r.sampleSeconds() != null) {
             if (!media.ffmpegAvailable()) throw ApiException.conflict("NO_FFMPEG", "Sample generation needs ffmpeg on the server.");
             int secs = Math.max(15, Math.min(r.sampleSeconds(), 1800));
             dur = Times.snapMs(secs * 1000L);
-            generator = r.kind().equals("AD") ? "ad:" + color(r.color()).replace("#", "0x") + "|" + Objects.toString(r.sampleTagline(), "")
+            generator = r.kind().equals("AD") ? "ad:" + AssetRules.color(r.color()).replace("#", "0x") + "|" + Objects.toString(r.sampleTagline(), "")
                     : SAMPLE_LOOKS.get(Math.floorMod(r.title().hashCode(), SAMPLE_LOOKS.size()));
         }
         UUID id = repository.insert(t.orgId(), new AssetRepository.NewAsset(r.title().trim(), Objects.toString(r.description(), ""), r.kind(),
                 Objects.toString(r.genre(), ""), Objects.toString(r.language(), "en"), r.series() == null ? null : r.series().trim(),
-                r.season(), r.episode(), color(r.color()), dur, generator, generator != null ? "PROCESSING" : "DRAFT",
-                defaultCues(r.kind(), dur), type));
+                r.season(), r.episode(), AssetRules.color(r.color()), dur, generator, generator != null ? "PROCESSING" : "DRAFT",
+                AssetRules.defaultCues(r.kind(), dur), type));
         audit.log(t, "asset.create", "asset", id, r.title() + (generator != null ? " (generated sample)" : ""));
         if (generator != null) media.enqueue(id);
         return get(t, id);
-    }
-
-    /** One mid-roll cue point in the middle of longer programmes, snapped to a segment boundary. */
-    public static String defaultCues(String kind, long dur) {
-        if (kind.equals("AD") || dur < 120_000) return "";
-        return String.valueOf(Times.snapMs(dur / 2));
-    }
-
-    static String color(String c) {
-        return c != null && c.matches("#[0-9a-fA-F]{6}") ? c : "#6366f1";
     }
 
     /** Stores the file under a server-chosen name (no path traversal from the client filename) and queues processing. */
@@ -156,19 +144,14 @@ public class AssetServiceV1 {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Asset a = data.asset(t.orgId(), id);
         String type = r.mediaType() == null ? a.mediaType() : r.mediaType();
-        String kind = r.mediaType() == null ? a.kind() : settings.require(t.orgId(), type).kind();
+        String kind = r.mediaType() == null ? a.kind() : rules.kindOf(t.orgId(), type);
         if (a.kind().equals("AD") != kind.equals("AD"))
             throw ApiException.bad("Advertisements and programmes cannot be interchanged. Create a separate asset.");
         String series = r.series() == null ? a.series() : r.series().trim();
         Integer season = r.season() == null ? a.season() : r.season(), episode = r.episode() == null ? a.episode() : r.episode();
         if (!kind.equals(a.kind()) || r.series() != null || r.season() != null || r.episode() != null)
-            episodeMetadata(t.orgId(), kind, series, season, episode, id);
-        String cues = a.cuePoints();
-        if (r.cuePoints() != null) {
-            List<Long> snapped = r.cuePoints().stream().map(Times::snapMs).filter(c -> c > 0 && (a.durationMs() == 0 || c < a.durationMs()))
-                    .distinct().sorted().toList();
-            cues = String.join(",", snapped.stream().map(String::valueOf).toList());
-        }
+            rules.episode(t.orgId(), kind, series, season, episode, id);
+        String cues = r.cuePoints() == null ? a.cuePoints() : AssetRules.cues(r.cuePoints(), a.durationMs());
         if (r.title() != null && r.title().isBlank()) throw ApiException.bad("Title can't be empty");
         repository.updateMetadata(t.orgId(), id, new AssetRepository.Metadata(
                 r.title() == null ? a.title() : r.title().trim(), r.description() == null ? a.description() : r.description(),
@@ -176,16 +159,6 @@ public class AssetServiceV1 {
                 cues, series, season, episode, type, kind));
         audit.log(t, "asset.update", "asset", id, r.cuePoints() != null ? "cue points: " + cues : "metadata");
         return get(t, id);
-    }
-
-    /** Episodes need series/season/episode, unique within the project (checked under a project lock). */
-    private void episodeMetadata(UUID org, String kind, String series, Integer season, Integer episode, UUID except) {
-        if (!"EPISODE".equals(kind)) return;
-        if (series == null || series.isBlank() || series.trim().length() > 120 || season == null || season < 1 || episode == null || episode < 1)
-            throw ApiException.bad("Episodes need a series name, a positive season number and a positive episode number.");
-        repository.lockProject(org);
-        if (repository.episodeTaken(org, series.trim(), season, episode, except))
-            throw ApiException.conflict("DUPLICATE_EPISODE", "This series already has that season and episode number.");
     }
 
     /**
@@ -212,10 +185,7 @@ public class AssetServiceV1 {
     public AssetView putRights(Tenant t, UUID id, RightsRequest r) {
         t.require(Tenant.Perm.RIGHTS_EDIT);
         Asset a = data.asset(t.orgId(), id);
-        if (r.validFrom() != null && r.validUntil() != null && !r.validUntil().isAfter(r.validFrom()))
-            throw ApiException.bad("The licence end must be after its start.");
-        for (String c : Times.codes(Times.csv(r.allowedCountries())))
-            if (!c.matches("[A-Z]{2}")) throw ApiException.bad("Use 2-letter country codes (or WW for worldwide): " + c);
+        AssetRules.rights(r.allowedCountries(), r.validFrom(), r.validUntil());
         repository.upsertRights(t.orgId(), id, Times.csv(r.allowedCountries()), Times.csv(r.blockedCountries()),
                 r.validFrom(), r.validUntil(), r.adsAllowed(), Objects.toString(r.notes(), ""));
         audit.log(t, "rights.update", "asset", id, a.title() + ": allowed=" + Times.csv(r.allowedCountries()) + " blocked=" + Times.csv(r.blockedCountries())
