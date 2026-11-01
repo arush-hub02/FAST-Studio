@@ -23,7 +23,8 @@ public class MediaJobRepository {
 
     public MediaJobRepository(JdbcClient db) { this.db = db; }
 
-    public record Claim(UUID id, UUID orgId, UUID assetId, String lane, long fence, int attempts) {}
+    /** A claimed job. kind PACKAGE (one asset) or SYNC (the project's library; assetId null). */
+    public record Claim(UUID id, UUID orgId, UUID assetId, String kind, String lane, long fence, int attempts) {}
 
     /** Queues packaging unless the asset already has an active job; true when a job was added. */
     public boolean enqueue(UUID org, UUID asset, String lane) {
@@ -42,7 +43,7 @@ public class MediaJobRepository {
                               and (:l = 'AD' or org_id not in (select org_id from media_job where lane = 'PROGRAMME' and state in ('RUNNING','CANCEL_REQUESTED')
                                                                group by org_id having count(*) >= :max))
                             order by next_run_at, created_at for update skip locked limit 1)
-                returning id, org_id, asset_id, lane, fence, attempts /* all tenants: worker claim */""")
+                returning id, org_id, asset_id, kind, lane, fence, attempts /* all tenants: worker claim */""")
                 .param("w", worker).param("lease", leaseSeconds).param("l", lane).param("max", perProject).query(Claim.class).optional();
     }
 
@@ -135,5 +136,20 @@ public class MediaJobRepository {
                        case when state = 'QUEUED' then next_run_at end as next_run_at
                 from media_job where org_id = :o and asset_id = :a order by created_at desc limit 10""")
                 .param("o", org).param("a", asset).query(JobView.class).list();
+    }
+
+    /** Queues a library sync unless one is already queued or running; true when it was added. */
+    public boolean enqueueSync(UUID org) {
+        return db.sql("insert into media_job(org_id, kind, lane) values (:o, 'SYNC', 'PROGRAMME') on conflict (org_id) where kind = 'SYNC' and state in "
+                + ACTIVE + " do nothing").param("o", org).update() > 0;
+    }
+
+    /** The project's latest library sync job, if it ever had one. */
+    public Optional<JobView> latestSync(UUID org) {
+        return db.sql("""
+                select id, state, lane, attempts, max_attempts, last_error, created_at, started_at, finished_at,
+                       case when state = 'QUEUED' then next_run_at end as next_run_at
+                from media_job where org_id = :o and kind = 'SYNC' order by created_at desc limit 1""")
+                .param("o", org).query(JobView.class).optional();
     }
 }

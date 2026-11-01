@@ -1239,6 +1239,322 @@
       "screenshots": []
     },
     {
+      "id": "connected-library",
+      "title": "Connected video library: sync and prepare",
+      "area": "Media library",
+      "status": "Built",
+      "completed": "2026-11-01",
+      "summary": "A project's existing video library (Mux today) is read into FAST Studio as a catalogue: every ready video appears as a Draft with its title and length, without fetching or converting anything. You then pick the videos you want on air and prepare only those. Syncs run in the background, continue where they stopped after an outage, never import a video twice and never overwrite what you edited here.",
+      "who": [
+        "Platform administrators: connect the library, check the connection, start a sync (Connectors page)",
+        "Owners and content managers with the library-sync feature: start a sync and prepare videos (API; Library screen to follow)",
+        "Everyone in the project: see the library status"
+      ],
+      "flow": {
+        "title": "Follow a library video from sync to air",
+        "intro": "The boxes are the parts involved; the pill is one sync or one video. Pick a situation.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Platform admin",
+            "sub": "Connects and checks the library"
+          },
+          {
+            "id": "conn",
+            "col": 2,
+            "row": 1,
+            "icon": "🔐",
+            "label": "Connection",
+            "sub": "Encrypted keys, last check, sync checkpoint"
+          },
+          {
+            "id": "worker",
+            "col": 3,
+            "row": 1,
+            "icon": "⚙️",
+            "label": "Sync job",
+            "sub": "Reads one page at a time"
+          },
+          {
+            "id": "library",
+            "col": 4,
+            "row": 1,
+            "icon": "☁️",
+            "label": "Video library",
+            "sub": "The project's own Mux account"
+          },
+          {
+            "id": "you",
+            "col": 1,
+            "row": 2,
+            "icon": "👤",
+            "label": "Project user",
+            "sub": "Starts a sync, picks videos"
+          },
+          {
+            "id": "catalogue",
+            "col": 2,
+            "row": 2,
+            "icon": "🗂️",
+            "label": "Catalogue",
+            "sub": "Draft videos + where each came from"
+          },
+          {
+            "id": "prepare",
+            "col": 3,
+            "row": 2,
+            "icon": "🎞️",
+            "label": "Preparation job",
+            "sub": "Fetches the file, makes 5-second segments"
+          },
+          {
+            "id": "air",
+            "col": 4,
+            "row": 2,
+            "icon": "📺",
+            "label": "Ready to air",
+            "sub": "Can be scheduled"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Connect and check",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "keys saved",
+                "say": "A platform admin enters the library's access keys for a project."
+              },
+              {
+                "at": "conn",
+                "state": "not checked",
+                "say": "They are stored encrypted. Saved keys alone don't count as a working connection.",
+                "tech": "AES-GCM ciphertext in `media_connection`; never returned by any API."
+              },
+              {
+                "at": "library",
+                "state": "checking",
+                "say": "\"Check connection\" reads the library with those keys."
+              },
+              {
+                "at": "conn",
+                "state": "healthy",
+                "say": "The result and time are recorded, with the reason in plain words if it failed. New keys clear the old result."
+              }
+            ]
+          },
+          {
+            "name": "Catalogue sync",
+            "steps": [
+              {
+                "at": "you",
+                "state": "sync",
+                "say": "Someone starts a sync. It runs in the background; a second click just shows the running one.",
+                "tech": "A SYNC row in `media_job`, at most one active per project."
+              },
+              {
+                "at": "worker",
+                "state": "page 1",
+                "say": "A worker reads the first page of the library."
+              },
+              {
+                "at": "library",
+                "state": "page 1",
+                "say": "The library answers with up to 100 videos."
+              },
+              {
+                "at": "catalogue",
+                "state": "+ drafts",
+                "say": "Each ready video that is new becomes a Draft with its title and length. Videos still processing in the library wait for a later sync.",
+                "tech": "Unique on project + source, so nothing is imported twice."
+              },
+              {
+                "at": "conn",
+                "state": "checkpoint",
+                "say": "Before asking for the next page, the worker saves what it did and where to continue."
+              },
+              {
+                "at": "catalogue",
+                "state": "SUCCEEDED",
+                "say": "After the last page the sync is complete. Nothing was downloaded or converted."
+              }
+            ]
+          },
+          {
+            "name": "Library goes down mid-sync",
+            "steps": [
+              {
+                "at": "worker",
+                "state": "page 2",
+                "say": "Page 1 is done and saved; the worker asks for page 2."
+              },
+              {
+                "at": "library",
+                "state": "unreachable",
+                "down": [
+                  "library"
+                ],
+                "say": "The library doesn't answer."
+              },
+              {
+                "at": "conn",
+                "state": "QUEUED · retry",
+                "down": [
+                  "library"
+                ],
+                "say": "The sync waits and tries again later (after 1, 5, 25 minutes…). Page 1 stays imported.",
+                "tech": "The job fails as retryable; the checkpoint still points at page 2."
+              },
+              {
+                "at": "worker",
+                "state": "page 2",
+                "say": "Next time it continues at page 2, without reading page 1 again."
+              },
+              {
+                "at": "catalogue",
+                "state": "SUCCEEDED",
+                "say": "The sync completes as if nothing happened."
+              }
+            ]
+          },
+          {
+            "name": "Prepare selected",
+            "steps": [
+              {
+                "at": "you",
+                "state": "5 picked",
+                "say": "You pick the Draft videos you want to air.",
+                "tech": "`POST /api/orgs/{org}/library/prepare` with up to 100 ids."
+              },
+              {
+                "at": "catalogue",
+                "state": "checking each",
+                "say": "Each video is checked on its own: from the library, still Draft, ready in the library, within the project's conversion limit."
+              },
+              {
+                "at": "prepare",
+                "state": "4 queued",
+                "say": "Eligible videos are queued; the rest are listed with a reason (already ready, not ready in the library, limit reached…)."
+              },
+              {
+                "at": "library",
+                "state": "original file",
+                "say": "The preparation job fetches the video's original file from the library."
+              },
+              {
+                "at": "air",
+                "state": "SUCCEEDED",
+                "say": "Converted into 5-second segments, the video is ready to schedule."
+              }
+            ]
+          },
+          {
+            "name": "Edited here, renamed there",
+            "steps": [
+              {
+                "at": "you",
+                "state": "edit title",
+                "say": "You give a synced video your own title and episode numbers."
+              },
+              {
+                "at": "library",
+                "state": "renamed",
+                "say": "Later, someone renames it in the library."
+              },
+              {
+                "at": "worker",
+                "state": "re-sync",
+                "say": "The next sync sees the new name."
+              },
+              {
+                "at": "catalogue",
+                "state": "kept",
+                "say": "Your title stays. What the library says is recorded next to it, not over it.",
+                "tech": "`asset_source` holds the library's title and status; the asset row is never touched by a re-sync."
+              }
+            ]
+          },
+          {
+            "name": "Video removed from library",
+            "steps": [
+              {
+                "at": "library",
+                "state": "deleted",
+                "down": [
+                  "library"
+                ],
+                "say": "A video is deleted in the library."
+              },
+              {
+                "at": "catalogue",
+                "state": "DELETED",
+                "say": "A webhook flags it as deleted. If no webhook comes, the next complete sync flags it as missing."
+              },
+              {
+                "at": "air",
+                "state": "still airs",
+                "say": "The video and any media already prepared stay, so nothing scheduled breaks. Removing it is a separate, deliberate step."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Connectors → a project → Mux video library: enter the access token ID and secret (and the webhook signing secret), then Check connection.",
+        "Sync library now: the page shows progress (videos seen, added as drafts, pages) and, after an outage, when it retries.",
+        "Projects with the library-sync feature can start the same sync with POST /api/orgs/{organization}/library/sync and watch it with GET /api/orgs/{organization}/library.",
+        "Prepare the videos you want to air: POST /api/orgs/{organization}/library/prepare with their ids. The answer lists anything that wasn't queued and why.",
+        "Your own direct uploads to the library still prepare automatically, because you uploaded them to air."
+      ],
+      "howItWorks": [
+        "The connection (media_connection) stores the provider, encrypted keys, the last check and the sync checkpoint. Library code talks to the platform only through a provider adapter (IMediaProvider) that declares what the platform can do: CATALOGUE, DIRECT_UPLOAD, SOURCE_FILE, WEBHOOKS. Actions a platform can't do are refused with 409 NOT_SUPPORTED.",
+        "A sync is a durable SYNC job. The worker reads one page, imports it, then saves the next page's position under the job's fence; a crash, restart or outage continues from there. No database transaction or web request stays open while the library is called.",
+        "Importing a video is idempotent: a new ready video becomes a Draft asset bound by source_ref; a known one only updates its asset_source row (the library's title, length, status and when it was last seen).",
+        "When a full scan reaches its last page, videos of that library not seen since the scan started are flagged MISSING, in the same statement that completes the job.",
+        "Prepare marks each eligible video Processing and queues an ordinary packaging job, which fetches the original file and converts it.",
+        "Mux webhooks (created, ready, errored, deleted) take the same import path; a direct upload of ours is linked to its row and prepared at once."
+      ],
+      "optimizations": [
+        "Pages of 100; one small insert or update per video and one checkpoint update per page.",
+        "Nothing is downloaded or converted during sync, so a large library costs only listing calls.",
+        "The connector switch is cached for 30 seconds, like the other connector checks."
+      ],
+      "scale": [
+        "A sync runs on any server's media workers and counts as one of the project's 2 running jobs, so a huge library can't take every worker.",
+        "Only one sync per project can be queued or running; repeated clicks are free.",
+        "Known limits: one connection per project; if a server dies between importing a page and saving its checkpoint, that page is read again (nothing is duplicated, only the \"videos seen\" count goes up twice); the media-hours limit is checked once when a sync starts.",
+        "Not measured: libraries with tens of thousands of videos."
+      ],
+      "rules": [
+        "Library videos arrive as movies (Draft). Nothing is prepared unless someone picks it, or it was our own direct upload.",
+        "Titles, episodes and rights edited in FAST Studio are never overwritten by a sync.",
+        "A video deleted or missing in the library is only flagged; its local copy and prepared media stay.",
+        "Prepare takes 1 to 100 videos and needs asset editing; starting a sync also needs the library-sync feature (platform administrators can always).",
+        "Project users never see the provider's name; credentials are write-only.",
+        "Not built yet: cancelling a running sync from the screen, choosing the media type per video at import, scheduled automatic syncs, the Library screen for picking videos."
+      ],
+      "api": [
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/sync",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
+      ],
+      "tests": [
+        "LibrarySyncTest (4: a catalogue-only fake platform, resume after an outage, edits kept and missing flagged, prepare selected)",
+        "MuxTest (connection check, catalogue-only sync, re-sync, white-label, signed webhooks incl. deleted)"
+      ],
+      "docs": [
+        "docs/MEDIA_INGESTION_PLAN.md (Tenant Mux catalogue sync)",
+        "migration V23__media_connection_and_sources.sql"
+      ],
+      "screenshots": []
+    },
+    {
       "id": "project-limits",
       "title": "Per-project limits",
       "area": "Multi-tenancy",

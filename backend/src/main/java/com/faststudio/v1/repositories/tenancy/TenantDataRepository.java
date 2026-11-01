@@ -25,7 +25,11 @@ public class TenantDataRepository {
     /** A tenant table and the columns that tie its rows to an organization or the tenant. */
     public record Table(String name, List<String> ownerColumns, List<String> columns) {}
 
-    /** A foreign key between two tables: child.column → parent; nullable says whether it can be cleared first. */
+    /**
+     * A foreign key between two tables: child.column → parent; nullable says whether it can be cleared first.
+     * Cascading keys are never cleared (deleting the parent removes the child; a check such as "only SYNC jobs have
+     * no asset" may forbid null), so they only order the deletion.
+     */
     public record ForeignKey(String child, String column, String parent, boolean nullable) {}
 
     public List<Table> tables() {
@@ -45,7 +49,7 @@ public class TenantDataRepository {
 
     public List<ForeignKey> foreignKeys() {
         return db.sql("""
-                select ch.relname as child, a.attname as "column", pa.relname as parent, not a.attnotnull as nullable
+                select ch.relname as child, a.attname as "column", pa.relname as parent, not a.attnotnull and k.confdeltype <> 'c' as nullable
                 from pg_constraint k join pg_class ch on ch.oid = k.conrelid join pg_class pa on pa.oid = k.confrelid
                 join pg_namespace n on n.oid = ch.relnamespace
                 join pg_attribute a on a.attrelid = k.conrelid and a.attnum = any(k.conkey)

@@ -553,10 +553,27 @@
           "description": "Hides it from the library (never a hard delete). Refused while it airs, is in a draft, is a channel's fallback or an active campaign's creative; the answer lists where."
         },
         {
+          "method": "GET",
+          "path": "/api/orgs/{org}/library",
+          "title": "Connected library status",
+          "description": "Whether a video library is connected and its last check worked, what it can do (CATALOGUE: sync, DIRECT_UPLOAD: upload URLs, SOURCE_FILE: prepare for broadcast, WEBHOOKS: automatic updates) and the sync: state (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen, videos added, pages read, whether the last full scan completed, the last error and when a waiting sync retries. Never names the provider."
+        },
+        {
           "method": "POST",
           "path": "/api/orgs/{org}/library/sync",
-          "title": "Sync from the connected library",
-          "description": "Imports every ready video of the connected library not imported yet; re-running adds nothing twice. Needs the library-sync feature for your project."
+          "title": "Start a library sync",
+          "description": "Starts reading the connected library in the background, page by page, and adds every ready video not imported yet as a Draft (catalogue only: nothing is prepared or paid for). If the library is unreachable the sync waits and continues from the last saved page. A second call while one runs just reports it. The answer is the sync status (see GET …/library). Needs asset editing and the library-sync feature."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/library/prepare",
+          "title": "Prepare library videos for broadcast",
+          "description": "Queues the chosen library videos (1 to 100) for conversion into 5-second segments, which fetches their original files from the library. Each video is checked on its own; the answer says how many were queued and, for the others, why not: NOT_FOUND, NOT_FROM_LIBRARY, ALREADY_READY, ALREADY_PROCESSING, NOT_READY_IN_LIBRARY (the library reports it errored, deleted or missing) or PROCESSING_LIMIT. 409 NOT_SUPPORTED when the connected library can't hand over files. Needs asset editing.",
+          "body": {
+            "assetIds": [
+              "{{assetId}}"
+            ]
+          }
         }
       ]
     },
@@ -1747,7 +1764,7 @@
           "method": "GET",
           "path": "/api/platform/orgs/{orgId}/connectors/mux",
           "title": "Video library account (Mux)",
-          "description": "Whether it is connected, its environment and tag, and the webhook address to enter in Mux. Never the credentials."
+          "description": "Whether it is connected, its environment and tag, the webhook address to enter in Mux, and the last connection check (healthy null = never checked). Never the credentials."
         },
         {
           "method": "PUT",
@@ -1764,9 +1781,21 @@
         },
         {
           "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connectors/mux/check",
+          "title": "Check the video library connection",
+          "description": "Reads the library with the stored credentials and records the result: healthy true, or false with checkError in plain words. Saving credentials alone never marks a connection as working; new credentials clear the last result."
+        },
+        {
+          "method": "GET",
           "path": "/api/platform/orgs/{orgId}/connectors/mux/sync",
-          "title": "Sync a project's video library",
-          "description": "Imports the ready videos not imported yet; the answer says how many videos were found and added."
+          "title": "A project's library sync status",
+          "description": "State of the latest sync (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen and added, pages read, whether the full scan completed, the last error and when a waiting sync retries."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connectors/mux/sync",
+          "title": "Start a project's library sync",
+          "description": "Starts the same background sync as the project's own sync button: new ready videos are added as Drafts, nothing is prepared. The answer is the sync status."
         },
         {
           "method": "GET",

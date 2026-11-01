@@ -168,6 +168,16 @@ public class TenantConfigurationRepository {
                 .param("p", project).param("d", driver).query(Integer.class).single() > 0;
     }
 
+    public boolean connectorEnabled(UUID project, String key) {
+        return db.sql("""
+                select count(*) from organization o join customer_tenant t on t.id = o.tenant_id
+                join tenant_connector tc on tc.tenant_id = t.id and tc.enabled
+                join connector_definition c on c.key = tc.connector_key and c.enabled and c.key = :k
+                left join project_connector pc on pc.org_id = o.id and pc.connector_key = c.key
+                where o.id = :p and coalesce(pc.enabled, true)""")
+                .param("p", project).param("k", key).query(Integer.class).single() > 0;
+    }
+
     // --- access checks ---
 
     public boolean platformAdmin(UUID user) {

@@ -179,12 +179,19 @@
       "apis": ["GET /api/orgs/{org}/assets/{id}/jobs", "POST /api/orgs/{org}/assets/{id}/jobs/cancel", "POST /api/orgs/{org}/assets", "POST /api/orgs/{org}/assets/{id}/upload", "POST /api/orgs/{org}/assets/{id}/retry", "POST /api/orgs/{org}/library/sync"],
       "watch": ["Only one QUEUED/RUNNING/CANCEL_REQUESTED row per video (media_job_one_active); a second enqueue does nothing.", "RUNNING with lease_until in the past = its server stopped; the reaper re-queues it within a minute.", "QUEUED with next_run_at in the future = waiting for a retry (1, 5, 25, 125 minutes); FAILED after max_attempts.", "A project runs at most 2 programme jobs at once (faststudio.media.jobs-per-project); the rest wait.", "Finished rows are deleted after 30 days."]
     },
-    "mux_account": {
+    "media_connection": {
       "feature": "Media library",
-      "purpose": "A project's video library (Mux) connection. Token values are encrypted and never returned to the browser.",
+      "purpose": "A project's video platform connection (provider 'mux' today; was mux_account until V23): encrypted credentials, the last connection check, and where the library sync stands (checkpoint, counts, start and finish of the last full scan).",
       "pages": ["/platform/connectors", "/:org/library"],
-      "apis": ["GET /api/platform/orgs/{orgId}/connectors/mux", "PUT /api/platform/orgs/{orgId}/connectors/mux", "POST /hooks/mux/{org}"],
-      "watch": ["No row = 409 LIBRARY_NOT_CONNECTED on sync.", "webhook_secret missing = Mux webhooks get 404."]
+      "apis": ["GET /api/platform/orgs/{orgId}/connectors/mux", "PUT /api/platform/orgs/{orgId}/connectors/mux", "POST /api/platform/orgs/{orgId}/connectors/mux/check", "GET /api/platform/orgs/{orgId}/connectors/mux/sync", "POST /api/platform/orgs/{orgId}/connectors/mux/sync", "GET /api/orgs/{org}/library", "POST /api/orgs/{org}/library/sync", "POST /hooks/mux/{org}"],
+      "watch": ["No row = 409 LIBRARY_NOT_CONNECTED on sync.", "webhook_secret missing = Mux webhooks get 404.", "checked_at null = never checked; check_error says why the last check failed. New credentials clear both.", "sync_cursor set while a sync is unfinished: the next run continues from that page. sync_finished_at null = the last full scan hasn't completed.", "Token columns hold ciphertext only; never copy them anywhere else."]
+    },
+    "asset_source": {
+      "feature": "Media library",
+      "purpose": "Which library video each imported video came from (provider + external id) and what the library last said about it (READY, PREPARING, ERRORED, DELETED, MISSING). Separate from our own readiness (asset.status); re-sync updates this row, never the video's own title, episode or rights.",
+      "pages": ["/:org/library"],
+      "apis": ["POST /api/orgs/{org}/library/sync", "POST /api/orgs/{org}/library/prepare", "POST /api/platform/orgs/{orgId}/connectors/mux/sync", "POST /hooks/mux/{org}", "POST /api/orgs/{org}/assets/{id}/upload"],
+      "watch": ["One row per (project, provider, external id): a library video is never imported twice.", "MISSING = not seen by the last complete full scan; DELETED = the library's webhook said so. The local video and its prepared media stay.", "A local file upload replaces the library source and removes this row.", "Prepare refuses videos whose row isn't READY (NOT_READY_IN_LIBRARY)."]
     },
     "rights_policy": {
       "feature": "Rights",

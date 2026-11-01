@@ -4,8 +4,9 @@ import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.services.media.MediaServiceV1;
-import com.faststudio.v1.services.media.MuxConnectionService;
+import com.faststudio.v1.services.media.MediaConnectionService;
 import com.faststudio.v1.util.mux.MuxClientService;
+import com.faststudio.v1.util.mux.MuxProvider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,18 +17,18 @@ import java.nio.file.Path;
 /**
  * Content connector for a tenant's Mux library. Mux holds the tenant's catalogue; we pull each asset's original
  * (master) file once and package it into our own 5 s segments on R2, so viewers are never served, or billed per
- * minute, by Mux. HTTP is {@link MuxClientService}; credentials are {@link MuxConnectionService}.
+ * minute, by Mux. HTTP is {@link MuxClientService}; credentials are {@link MediaConnectionService}.
  */
 @Component
 public class MuxSource implements IContentSource {
     private static final Logger log = LoggerFactory.getLogger(MuxSource.class);
-    /** asset.source_ref prefixes: an imported Mux asset, and a direct upload still waiting to become one. */
-    public static final String REF = "mux:", UPLOAD_REF = "mux-upload:";
+    /** asset.source_ref prefix of an imported Mux video (a direct upload still in flight is "mux-upload:{upload id}"). */
+    public static final String REF = MuxProvider.KEY + ":";
 
     private final MuxClientService mux;
-    private final MuxConnectionService connections;
+    private final MediaConnectionService connections;
 
-    public MuxSource(MuxClientService mux, MuxConnectionService connections) {
+    public MuxSource(MuxClientService mux, MediaConnectionService connections) {
         this.mux = mux;
         this.connections = connections;
     }
@@ -38,7 +39,7 @@ public class MuxSource implements IContentSource {
     @Override
     public String ingest(ProcessingJob j, Path out, MediaServiceV1 packager) throws Exception {
         MuxClientService.Account a = connections.account(j.orgId());
-        if (a == null) return MuxConnectionService.NOT_CONNECTED;
+        if (a == null) return MediaConnectionService.NOT_CONNECTED;
         String url;
         try {
             url = mux.masterUrl(a, j.sourceRef().substring(REF.length()));

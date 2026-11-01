@@ -27,7 +27,7 @@ public class ProjectDetailsRepository {
     public LibraryState library(UUID org) {
         return db.sql("""
                 select environment, (token_id is not null and token_secret is not null) as credentials_configured,
-                (webhook_secret is not null) as webhook_configured from mux_account where org_id=:o""")
+                (webhook_secret is not null) as webhook_configured from media_connection where org_id=:o""")
                 .param("o", org).query(LibraryState.class).optional().orElse(new LibraryState("", false, false));
     }
 

@@ -59,8 +59,8 @@ class ProjectDetailsTest {
         TenantScope.bypass(() -> {
             UUID org = org("aurora");
             db.sql("update organization set status='ACTIVE', features='LIBRARY_SYNC,AD_WATERFALL_VIEW,AD_OWN_TAGS' where slug in ('aurora','northwind')").update();
-            db.sql("delete from mux_account where org_id=:o").param("o",org).update();
-            db.sql("insert into mux_account(org_id,token_id,token_secret,webhook_secret,environment) values (:o,:i,:s,:w,'Production')")
+            db.sql("delete from media_connection where org_id=:o").param("o",org).update();
+            db.sql("insert into media_connection(org_id,token_id,token_secret,webhook_secret,environment) values (:o,:i,:s,:w,'Production')")
                     .param("o",org).param("i",secrets.seal(TOKEN)).param("s",secrets.seal(SECRET)).param("w",secrets.seal(WEBHOOK)).update();
             db.sql("delete from tenant_settings where org_id=:o").param("o",org).update();
             db.sql("insert into tenant_settings(org_id,enabled_types,default_type,personalized_ads,viewer_secret) values (:o,'MOVIE,EPISODE,SHORT,AD,PROMO','MOVIE',true,:s)")

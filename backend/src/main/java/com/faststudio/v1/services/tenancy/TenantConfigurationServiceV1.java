@@ -238,6 +238,17 @@ public class TenantConfigurationServiceV1 {
         return value;
     }
 
+    /** Whether a project may use one connector, by its key (e.g. "mux"; a media connection's provider key). Cached like drivers. */
+    public boolean connectorEnabled(UUID project, String key) {
+        String cacheKey = project + ":key:" + key;
+        long now = System.currentTimeMillis();
+        CachedFlag hit = driverCache.get(cacheKey);
+        if (hit != null && now - hit.at() < DRIVER_CACHE_MS) return hit.value();
+        boolean value = TenantScope.bypass(() -> repository.connectorEnabled(project, key));
+        driverCache.put(cacheKey, new CachedFlag(value, now));
+        return value;
+    }
+
     // ------------------------------------------------------------------ plan features and limits
 
     /** The subset of requested feature keys the project's plan allows. */

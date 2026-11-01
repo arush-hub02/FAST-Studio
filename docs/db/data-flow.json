@@ -5035,6 +5035,26 @@
             }
           ]
         },
+        "asset_source": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "markUploaded",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -5357,18 +5377,18 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -5387,23 +5407,23 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
         },
-        "mux_account": {
+        "media_connection": {
           "mode": "read",
           "chain": [
             {
@@ -5417,17 +5437,17 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
-              "method": "account",
+              "class": "MediaConnectionService",
+              "method": "connection",
               "layer": "service"
             },
             {
-              "class": "MuxAccountRepository",
+              "class": "MediaConnectionRepository",
               "method": "find",
               "layer": "repository"
             }
@@ -5447,18 +5467,18 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -5477,18 +5497,18 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -5577,18 +5597,18 @@
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -10965,14 +10985,450 @@
         }
       }
     },
+    "GET /api/orgs/{org}/library": {
+      "title": "Connected library status",
+      "category": "Video library",
+      "id": "ep-get-api-orgs-org-library",
+      "handler": "LibraryControllerV1.library",
+      "tables": {
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "find",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "latestSync",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/library/prepare": {
+      "title": "Prepare library videos for broadcast",
+      "category": "Video library",
+      "id": "ep-post-api-orgs-org-library-prepare",
+      "handler": "LibraryControllerV1.prepare",
+      "tables": {
+        "asset": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "AssetSourceRepository",
+              "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_source": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "AssetSourceRepository",
+              "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "find",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "value",
+              "layer": "repository"
+            }
+          ]
+        },
+        "property_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "definition",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "value",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/orgs/{org}/library/sync": {
-      "title": "Sync from the connected library",
+      "title": "Start a library sync",
       "category": "Video library",
       "id": "ep-post-api-orgs-org-library-sync",
       "handler": "LibraryControllerV1.sync",
       "tables": {
         "asset": {
-          "mode": "read+write",
+          "mode": "read",
           "chain": [
             {
               "class": "LibraryControllerV1",
@@ -10980,13 +11436,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -11010,7 +11466,7 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
@@ -11030,28 +11486,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -11065,8 +11521,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "requireFeature",
               "layer": "service"
             },
             {
@@ -11081,8 +11542,8 @@
             }
           ]
         },
-        "media_job": {
-          "mode": "write",
+        "media_connection": {
+          "mode": "read+write",
           "chain": [
             {
               "class": "LibraryControllerV1",
@@ -11090,28 +11551,43 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "apply",
+              "class": "MediaConnectionRepository",
+              "method": "startSync",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
               "layer": "service"
             },
             {
-              "class": "MediaServiceV1",
-              "method": "enqueue",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
               "class": "MediaJobRepository",
-              "method": "enqueue",
+              "method": "enqueueSync",
               "layer": "repository"
             }
           ]
@@ -11125,13 +11601,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -11161,41 +11637,6 @@
             }
           ]
         },
-        "mux_account": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "LibraryControllerV1",
-              "method": "sync",
-              "layer": "controller"
-            },
-            {
-              "class": "LibraryServiceV1",
-              "method": "sync",
-              "layer": "service"
-            },
-            {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
-              "layer": "service"
-            },
-            {
-              "class": "MuxConnectionService",
-              "method": "connected",
-              "layer": "service"
-            },
-            {
-              "class": "MuxConnectionService",
-              "method": "account",
-              "layer": "service"
-            },
-            {
-              "class": "MuxAccountRepository",
-              "method": "find",
-              "layer": "repository"
-            }
-          ]
-        },
         "organization": {
           "mode": "read",
           "chain": [
@@ -11205,8 +11646,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "requireFeature",
               "layer": "service"
             },
             {
@@ -11225,28 +11671,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -11260,13 +11706,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -11300,13 +11746,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -11340,8 +11786,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "requireFeature",
               "layer": "service"
             },
             {
@@ -11375,28 +11826,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -11410,13 +11861,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -11450,13 +11901,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "sync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -12952,6 +13403,31 @@
             }
           ]
         },
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
         "media_type": {
           "mode": "read",
           "chain": [
@@ -13013,31 +13489,6 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "projects",
-              "layer": "repository"
-            }
-          ]
-        },
-        "mux_account": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectDetailsControllerV1",
-              "method": "tenant",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "tenant",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "library",
               "layer": "repository"
             }
           ]
@@ -17293,7 +17744,7 @@
       "id": "ep-get-api-platform-orgs-orgid-connectors-mux",
       "handler": "MuxControllerV1.account",
       "tables": {
-        "mux_account": {
+        "media_connection": {
           "mode": "read",
           "chain": [
             {
@@ -17302,17 +17753,17 @@
               "layer": "controller"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "view",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
-              "method": "account",
+              "class": "MediaConnectionService",
+              "method": "connection",
               "layer": "service"
             },
             {
-              "class": "MuxAccountRepository",
+              "class": "MediaConnectionRepository",
               "method": "find",
               "layer": "repository"
             }
@@ -17327,12 +17778,12 @@
               "layer": "controller"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "view",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "requireCustomer",
               "layer": "service"
             },
@@ -17360,7 +17811,7 @@
               "layer": "controller"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "save",
               "layer": "service"
             },
@@ -17376,7 +17827,7 @@
             }
           ]
         },
-        "mux_account": {
+        "media_connection": {
           "mode": "read+write",
           "chain": [
             {
@@ -17385,12 +17836,12 @@
               "layer": "controller"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "save",
               "layer": "service"
             },
             {
-              "class": "MuxAccountRepository",
+              "class": "MediaConnectionRepository",
               "method": "save",
               "layer": "repository"
             }
@@ -17405,7 +17856,7 @@
               "layer": "controller"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "save",
               "layer": "service"
             },
@@ -17423,14 +17874,175 @@
         }
       }
     },
+    "POST /api/platform/orgs/{orgId}/connectors/mux/check": {
+      "title": "Check the video library connection",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-post-api-platform-orgs-orgid-connectors-mux-check",
+      "handler": "MuxControllerV1.check",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "checked",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/orgs/{orgId}/connectors/mux/sync": {
+      "title": "A project's library sync status",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-orgs-orgid-connectors-mux-sync",
+      "handler": "MuxControllerV1.syncStatus",
+      "tables": {
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "sync",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "latestSync",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/platform/orgs/{orgId}/connectors/mux/sync": {
-      "title": "Sync a project's video library",
+      "title": "Start a project's library sync",
       "category": "Platform: organizations, connectors and media types",
       "id": "ep-post-api-platform-orgs-orgid-connectors-mux-sync",
       "handler": "MuxControllerV1.platformSync",
       "tables": {
         "asset": {
-          "mode": "read+write",
+          "mode": "read",
           "chain": [
             {
               "class": "MuxControllerV1",
@@ -17438,13 +18050,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -17468,7 +18080,7 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
@@ -17493,28 +18105,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -17528,34 +18140,34 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
         },
-        "media_job": {
-          "mode": "write",
+        "media_connection": {
+          "mode": "read+write",
           "chain": [
             {
               "class": "MuxControllerV1",
@@ -17563,28 +18175,43 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "apply",
+              "class": "MediaConnectionRepository",
+              "method": "startSync",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "MediaServiceV1",
-              "method": "enqueue",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
               "class": "MediaJobRepository",
-              "method": "enqueue",
+              "method": "enqueueSync",
               "layer": "repository"
             }
           ]
@@ -17598,13 +18225,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -17634,41 +18261,6 @@
             }
           ]
         },
-        "mux_account": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "MuxControllerV1",
-              "method": "platformSync",
-              "layer": "controller"
-            },
-            {
-              "class": "LibraryServiceV1",
-              "method": "platformSync",
-              "layer": "service"
-            },
-            {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
-              "layer": "service"
-            },
-            {
-              "class": "MuxConnectionService",
-              "method": "connected",
-              "layer": "service"
-            },
-            {
-              "class": "MuxConnectionService",
-              "method": "account",
-              "layer": "service"
-            },
-            {
-              "class": "MuxAccountRepository",
-              "method": "find",
-              "layer": "repository"
-            }
-          ]
-        },
         "organization": {
           "mode": "read",
           "chain": [
@@ -17678,12 +18270,12 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "requireCustomer",
               "layer": "service"
             },
@@ -17703,28 +18295,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -17738,13 +18330,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -17778,13 +18370,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -17818,28 +18410,28 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
-              "class": "MuxConnectionService",
+              "class": "MediaConnectionService",
               "method": "connected",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -17853,13 +18445,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -17893,13 +18485,13 @@
               "layer": "controller"
             },
             {
-              "class": "LibraryServiceV1",
+              "class": "MediaSyncServiceV1",
               "method": "platformSync",
               "layer": "service"
             },
             {
-              "class": "LibraryServiceV1",
-              "method": "importLibrary",
+              "class": "MediaSyncServiceV1",
+              "method": "start",
               "layer": "service"
             },
             {
@@ -18366,6 +18958,31 @@
             }
           ]
         },
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectDetailsControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "platform",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
         "media_type": {
           "mode": "read",
           "chain": [
@@ -18427,31 +19044,6 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "projects",
-              "layer": "repository"
-            }
-          ]
-        },
-        "mux_account": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlatformProjectDetailsControllerV1",
-              "method": "platform",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "platform",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "library",
               "layer": "repository"
             }
           ]
@@ -22376,7 +22968,7 @@
       "handler": "MuxWebhookControllerV1.webhook",
       "tables": {
         "asset": {
-          "mode": "write",
+          "mode": "read+write",
           "chain": [
             {
               "class": "MuxWebhookControllerV1",
@@ -22396,6 +22988,56 @@
             {
               "class": "AssetRepository",
               "method": "markLibraryFailed",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_source": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "apply",
+              "layer": "service"
+            },
+            {
+              "class": "AssetSourceRepository",
+              "method": "deleted",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "account",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "find",
               "layer": "repository"
             }
           ]
@@ -22426,31 +23068,6 @@
             {
               "class": "MediaJobRepository",
               "method": "enqueue",
-              "layer": "repository"
-            }
-          ]
-        },
-        "mux_account": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "MuxWebhookControllerV1",
-              "method": "webhook",
-              "layer": "controller"
-            },
-            {
-              "class": "MediaWebhookServiceV1",
-              "method": "mux",
-              "layer": "service"
-            },
-            {
-              "class": "MuxConnectionService",
-              "method": "account",
-              "layer": "service"
-            },
-            {
-              "class": "MuxAccountRepository",
-              "method": "find",
               "layer": "repository"
             }
           ]
@@ -24850,6 +25467,7 @@
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
         "POST /api/orgs/{org}/destinations",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/orgs/{org}/members",
         "DELETE /api/orgs/{org}/members/{userId}",
@@ -24876,6 +25494,7 @@
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
         "PUT /api/platform/orgs/{orgId}/media-types",
@@ -24993,6 +25612,7 @@
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
         "GET /api/orgs/{org}/dashboard",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/orgs/{org}/members",
         "DELETE /api/orgs/{org}/members/{userId}",
@@ -25025,6 +25645,8 @@
         "GET /api/platform/orgs/{orgId}/connectors",
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/media-types",
@@ -25095,6 +25717,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
@@ -25252,6 +25875,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/stop",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "POST /api/orgs/{org}/rights/check",
@@ -25263,6 +25887,7 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/tenants/{tenant}/delete",
+        "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
         "GET /play/{session}/info"
@@ -25276,15 +25901,18 @@
         "POST /api/orgs/{org}/assets/{id}/retry",
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "POST /api/orgs/{org}/library/sync",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /hooks/mux/{org}"
       ]
     },
     "media_job": {
       "read": [
-        "GET /api/orgs/{org}/assets/{id}/jobs"
+        "GET /api/orgs/{org}/assets/{id}/jobs",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
       ],
       "write": [
         "POST /api/orgs/{org}/ad-sources/test",
@@ -25292,6 +25920,7 @@
         "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
         "POST /api/orgs/{org}/assets/{id}/retry",
         "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
@@ -25510,6 +26139,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
@@ -25537,6 +26167,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
@@ -25569,6 +26200,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
@@ -25706,6 +26338,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
@@ -25751,6 +26384,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
@@ -25791,6 +26425,7 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
@@ -25816,19 +26451,36 @@
       ],
       "write": []
     },
-    "mux_account": {
+    "asset_source": {
+      "read": [
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/library/prepare"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /hooks/mux/{org}"
+      ]
+    },
+    "media_connection": {
       "read": [
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /hooks/mux/{org}"
       ],
       "write": [
-        "PUT /api/platform/orgs/{orgId}/connectors/mux"
+        "POST /api/orgs/{org}/library/sync",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
       ]
     },
     "destination": {

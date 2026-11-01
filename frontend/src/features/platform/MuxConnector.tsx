@@ -1,31 +1,54 @@
 import { useState } from 'react'
 import { api } from '../../shared/api'
-import { ErrorBox, InfoTip, Loading, useAction, useApi } from '../../shared/ui'
+import { ErrorBox, InfoTip, Loading, fmtDayTime, useAction, useApi } from '../../shared/ui'
 
 // Platform administrator's settings for one company's Mux account (Connectors page). Mux is a content source only:
 // each video is imported once and re-cut into our 5-second segments, viewers never stream from Mux. The company
 // never sees this; with the LIBRARY_SYNC feature it gets a provider-neutral "sync library" action.
-type Account = { connected: boolean; tokenId: string | null; environment: string | null; passthroughTag: string | null; webhookSecretSet: boolean; webhookUrl: string }
-type Sync = { videos: number; added: number }
+// Sync runs in the background and resumes after interruptions; it adds videos as Drafts (catalogue only), and the
+// company prepares the ones it wants to air.
+type Account = {
+  connected: boolean; tokenId: string | null; environment: string | null; passthroughTag: string | null; webhookSecretSet: boolean; webhookUrl: string
+  checkedAt: string | null; checkError: string | null; healthy: boolean | null
+}
+type Sync = {
+  state: string; videos: number; added: number; pages: number; complete: boolean
+  startedAt: string | null; finishedAt: string | null; lastError: string | null; nextRunAt: string | null
+}
 
 const BLANK = { tokenId: '', tokenSecret: '', webhookSecret: '', environment: '', passthroughTag: '' }
+const ACTIVE = ['QUEUED', 'RUNNING', 'CANCEL_REQUESTED']
+const STATE: Record<string, string> = {
+  NEVER: 'Never synced', QUEUED: 'Waiting to start', RUNNING: 'Syncing…', CANCEL_REQUESTED: 'Stopping…',
+  SUCCEEDED: 'Finished', FAILED: 'Failed', CANCELLED: 'Cancelled',
+}
 
 export function MuxConnector({ orgId }: { orgId: string }) {
   const base = `/api/platform/orgs/${orgId}/connectors/mux`
   const account = useApi<Account>(base)
+  const [syncing, setSyncing] = useState(false)
+  // polls only while a sync is queued or running
+  const status = useApi<Sync>(`${base}/sync`, [], syncing ? 3000 : undefined)
   const { busy, run } = useAction()
   const [form, setForm] = useState(BLANK)
   const [editing, setEditing] = useState(false)
+  const active = !!status.data && ACTIVE.includes(status.data.state)
+  if (active !== syncing) setSyncing(active)
   if (account.error) return <ErrorBox error={account.error} retry={account.reload} />
   if (!account.data) return <Loading rows={1} />
   const a = account.data
+  const s = status.data
   const set = (k: keyof typeof BLANK) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value })
 
   const save = () =>
     run(() => api<Account>(base, { method: 'PUT', body: form }), a.connected ? 'Saved' : 'Mux connected')
       .then(r => { if (r) { account.setData(r); setForm(BLANK); setEditing(false) } })
+  const check = () =>
+    run(() => api<Account>(`${base}/check`, { method: 'POST' }), r => r.healthy ? 'Connection works' : `Connection failed: ${r.checkError}`)
+      .then(r => { if (r) account.setData(r) })
   const sync = () =>
-    run(() => api<Sync>(`${base}/sync`, { method: 'POST' }), r => `${r.videos} videos in Mux, ${r.added} newly added to the library`)
+    run(() => api<Sync>(`${base}/sync`, { method: 'POST' }), 'Sync started: new videos are added as drafts')
+      .then(r => { if (r) status.setData(r) })
 
   return (
     <div className="stack" style={{ gap: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
@@ -42,11 +65,25 @@ export function MuxConnector({ orgId }: { orgId: string }) {
             <span>Environment</span><span>{a.environment || '-'}</span>
             <span>Passthrough tag</span><span className="mono small">{a.passthroughTag || 'none (imports every asset)'}</span>
             <span>Webhook</span><span>{a.webhookSecretSet ? 'Signing secret saved' : "No signing secret: uploads won't turn Ready on their own"}</span>
+            <span>Connection check</span>
+            <span>
+              {a.healthy == null ? 'Not checked yet' : a.healthy ? `Works · ${fmtDayTime(a.checkedAt)}` : `Failed · ${fmtDayTime(a.checkedAt)}: ${a.checkError}`}
+            </span>
+            <span>Library sync</span>
+            <span>
+              {!s ? '…' : <>
+                {STATE[s.state] ?? s.state}
+                {s.state !== 'NEVER' && ` · ${s.videos} videos seen, ${s.added} added as drafts, ${s.pages} pages`}
+                {s.complete && s.finishedAt && ` · completed ${fmtDayTime(s.finishedAt)}`}
+                {s.lastError && <span className="faint"> · {s.lastError}{s.nextRunAt ? ` (retries ${fmtDayTime(s.nextRunAt)})` : ''}</span>}
+              </>}
+            </span>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn" disabled={busy}
                     onClick={() => { setForm({ ...BLANK, environment: a.environment ?? '', passthroughTag: a.passthroughTag ?? '' }); setEditing(true) }}>Edit</button>
-            <button className="btn primary" disabled={busy} onClick={sync}>Sync library now</button>
+            <button className="btn" disabled={busy} onClick={check}>Check connection</button>
+            <button className="btn primary" disabled={busy || active} onClick={sync}>{active ? 'Sync running…' : 'Sync library now'}</button>
           </div>
         </>
       )}
@@ -77,7 +114,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
       )}
 
       <span className="faint small">
-        In the Mux environment add this webhook URL (events video.asset.created, ready, errored) and paste its signing secret above:{' '}
+        In the Mux environment add this webhook URL (events video.asset.created, ready, errored, deleted) and paste its signing secret above:{' '}
         <span className="mono" style={{ wordBreak: 'break-all' }}>{a.webhookUrl}</span>
       </span>
     </div>

@@ -3,7 +3,9 @@ package com.faststudio.messaging.v1.media;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.media.MediaJobRepository;
 import com.faststudio.v1.repositories.media.MediaJobRepository.Claim;
+import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.services.media.MediaServiceV1;
+import com.faststudio.v1.services.media.MediaSyncServiceV1;
 import com.faststudio.v1.services.media.MediaServiceV1.Packaged;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -36,6 +38,7 @@ public class MediaJobObserverV1 {
 
     private final MediaJobRepository jobs;
     private final MediaServiceV1 media;
+    private final MediaSyncServiceV1 sync;
     private final int programmeWorkers, adWorkers, leaseSeconds, perProject;
     private final String node = ManagementFactory.getRuntimeMXBean().getName();   // pid@host
     private final Map<UUID, Running> active = new ConcurrentHashMap<>();
@@ -55,13 +58,14 @@ public class MediaJobObserverV1 {
         }
     }
 
-    public MediaJobObserverV1(MediaJobRepository jobs, MediaServiceV1 media,
+    public MediaJobObserverV1(MediaJobRepository jobs, MediaServiceV1 media, MediaSyncServiceV1 sync,
                               @Value("${faststudio.media.programme-workers:2}") int programmeWorkers,
                               @Value("${faststudio.media.ad-workers:1}") int adWorkers,
                               @Value("${faststudio.media.lease-seconds:120}") int leaseSeconds,
                               @Value("${faststudio.media.jobs-per-project:2}") int perProject) {
         this.jobs = jobs;
         this.media = media;
+        this.sync = sync;
         this.programmeWorkers = programmeWorkers;
         this.adWorkers = adWorkers;
         this.leaseSeconds = leaseSeconds;
@@ -103,13 +107,37 @@ public class MediaJobObserverV1 {
         Running r = new Running(next.get(), Thread.currentThread());
         active.put(r.claim.id(), r);
         try {
-            TenantScope.as(r.claim.orgId(), () -> { execute(r); return null; });
+            TenantScope.as(r.claim.orgId(), () -> { if (r.claim.kind().equals("SYNC")) executeSync(r); else execute(r); return null; });
         } finally {
             active.remove(r.claim.id());
             synchronized (r) { r.done = true; }
             media.release(r.worker);
         }
         return true;
+    }
+
+    /** A library sync: runs page by page from its checkpoint; failures keep the checkpoint, so a retry resumes there. */
+    private void executeSync(Running r) {
+        Claim c = r.claim;
+        String error = null;
+        boolean retry = true;
+        try {
+            sync.run(c, () -> { synchronized (r) { return r.stop != null; } });
+        } catch (MediaServiceV1.Retryable e) {
+            error = e.getMessage();
+        } catch (ApiException e) {                     // e.g. disconnected or switched off since it was queued: retrying won't help
+            error = e.getMessage();
+            retry = false;
+        } catch (Exception e) {
+            log.error("Library sync job {} failed", c.id(), e);
+            error = "Unexpected error while syncing the library.";
+        }
+        try {
+            if (error != null && jobs.fail(c, error, retry).isPresent()) return;
+            jobs.cancelled(c);                         // no-op unless a cancel was requested
+        } catch (Exception e) {
+            log.error("Library sync job {} could not record its result", c.id(), e);
+        }
     }
 
     private void execute(Running r) {
