@@ -116,9 +116,12 @@ class SchemaCatalogExportTest {
 
         String template = Files.readString(DOCS.resolve("db/visualizeDB.template.html"));
         assertTrue(template.contains("/*__CATALOG__*/") && template.contains("/*__USAGE__*/"), "Template placeholders missing");
+        // API ↔ table data flow traced from the code by `node tools/data-flow.mjs` (run it first; absent = page shows the hand-kept lists)
+        Path flow = DOCS.resolve("db/data-flow.json");
         String html = template
                 .replace("/*__CATALOG__*/null", safeScript(json.writeValueAsString(catalog)))
-                .replace("/*__USAGE__*/null", safeScript(json.writeValueAsString(usage)));
+                .replace("/*__USAGE__*/null", safeScript(json.writeValueAsString(usage)))
+                .replace("/*__FLOW__*/null", Files.exists(flow) ? safeScript(Files.readString(flow)) : "null");
         Files.createDirectories(DOCS.resolve("html"));
         Files.writeString(DOCS.resolve("html/visualizeDB.html"), html, StandardCharsets.UTF_8);
         assertFalse(html.contains("/*__CATALOG__*/"), "Catalog was not injected");

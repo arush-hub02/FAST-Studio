@@ -5,6 +5,12 @@ description: Regenerate and maintain docs/html/visualizeDB.html, the visual data
 
 # Visual database guide (docs/html/visualizeDB.html)
 
+Fastest way to rebuild it (and every other page): `node tools/build-docs.mjs`. It first runs `node tools/data-flow.mjs`,
+which traces every API endpoint through controller → services → repositories → SQL into `docs/db/data-flow.json`; the
+guide shows, per table, which endpoints write (W) and read (R) it with the call path, plus an "API ↔ data flow" view.
+SQL built at run time, interceptors and interface strategies are not traced; the hand-kept `apis` in table-usage.json
+are shown when a table has no traced endpoint.
+
 The guide is **generated**, never hand-edited. It combines two sources:
 
 | Source | What it gives | Maintained |

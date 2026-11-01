@@ -6,4 +6,6 @@ Read and follow [AGENTS.md](AGENTS.md), then read [PROGRESS.md](PROGRESS.md) bef
 
 Claim your work in the Active work table before implementation, inspect the real Git state, respect other agents' ownership, and update PROGRESS.md with changes, verification, remaining work and an exact next action before every handoff. Use a separate worktree/branch for concurrent implementation. Do not rely on a previous chat for project state.
 
+Generated documentation in docs/html/ (API reference, features, database guide with API ↔ table data flow) must be regenerated in the same change whenever the code or docs it describes change: `node tools/build-docs.mjs` (see AGENTS.md).
+
 The detailed ingestion plan is [docs/MEDIA_INGESTION_PLAN.md](docs/MEDIA_INGESTION_PLAN.md). Backend code must follow the folder layout in [docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md). Planned work must not be presented as implemented or production-verified.

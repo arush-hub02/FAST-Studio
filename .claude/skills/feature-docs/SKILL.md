@@ -47,7 +47,9 @@ Every completed feature gets an entry, and its screenshots are re-taken whenever
    - Open `docs/html/API.html`, copy one curl, and run it.
 7. Commit `features.json`, the PNGs, `api.json` and the regenerated pages in `docs/html/` with the feature.
 
-All generated HTML lives in `docs/html/` (index.html links them). Never edit those files by hand.
+All generated HTML lives in `docs/html/` (index.html links them). Never edit those files by hand. `node tools/build-docs.mjs`
+rebuilds all of them in order (data flow, API, features, database guide); run it at the end of every change that touches
+what they describe, and commit the results.
 
 When only the UI changed: steps 3–5 and 7 (and fix recipes whose buttons or labels changed).
 

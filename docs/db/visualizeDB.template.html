@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  TEMPLATE for docs/html/visualizeDB.html. Do not open this file directly: run
+  TEMPLATE for docs/html/visualizeDB.html. Do not open this file directly: run node tools/data-flow.mjs, then
     cd backend && ./mvnw test -Dtest=SchemaCatalogExportTest -Ddbdocs=true
   which injects the real schema (catalog) and docs/db/table-usage.json (usage) and writes docs/html/visualizeDB.html.
   See .claude/skills/visualize-db/SKILL.md.
@@ -30,6 +30,7 @@
   --bad: #f87171; --bad-soft: #2d1515; --code-bg: #060a16; --shadow: none;
 }
 * { box-sizing: border-box; }
+html { scrollbar-gutter: stable; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 a { color: var(--accent); cursor: pointer; text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -60,7 +61,24 @@ main { padding: 22px 28px 60px; min-width: 0; }
 .chip.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
 .chip.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+.mode { font: 700 10.5px ui-monospace, monospace; min-width: 32px; text-align: center; padding: 1px 6px; border-radius: 6px; display: inline-block; }
+.m-read { color: var(--ok); background: var(--ok-soft); } .m-write { color: var(--warn); background: var(--warn-soft); } .m-readwrite { color: var(--accent); background: var(--accent-soft); }
+.meth { font: 700 10px ui-monospace, monospace; padding: 2px 6px; border-radius: 5px; background: var(--panel-2); color: var(--muted); }
+.meth.GET { color: var(--ok); } .meth.POST { color: var(--f7); } .meth.PUT { color: var(--warn); } .meth.PATCH { color: var(--f4); } .meth.DELETE { color: var(--bad); }
+.flowlist { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+details.flowrow { border-top: 1px solid var(--line); } details.flowrow:first-child { border-top: 0; }
+details.flowrow summary { list-style: none; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 7px 10px; flex-wrap: wrap; }
+details.flowrow summary::-webkit-details-marker { display: none; }
+details.flowrow summary:hover { background: var(--panel-2); }
+.chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 2px 10px 10px; }
+.hop { font: 12px ui-monospace, Consolas, monospace; padding: 3px 8px; border-radius: 7px; background: var(--panel-2); border: 1px solid var(--line); }
+.hop small { display: block; font: 600 9.5px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.hop.table { border-color: var(--accent); color: var(--accent); }
+.arr { color: var(--muted); }
+.tchip { display: inline-flex; gap: 5px; align-items: center; font: 12px ui-monospace, Consolas, monospace; padding: 2px 8px 2px 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--text); }
+.tchip:hover { border-color: var(--accent); text-decoration: none; }
+table.flowtable td:first-child { width: 46%; }
 .tcard { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 10px; padding: 10px 12px; cursor: pointer; box-shadow: var(--shadow); }
 .tcard:hover { border-color: var(--c); }
 .tcard b { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
@@ -89,7 +107,7 @@ svg g.link { cursor: pointer; }
 svg g.link:hover .box { stroke: var(--accent); }
 .hide { display: none !important; }
 @media (max-width: 860px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
   nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   main { padding: 16px; }
   header { flex-wrap: wrap; padding: 10px 16px; }
@@ -115,6 +133,7 @@ svg g.link:hover .box { stroke: var(--accent); }
 <script>
 const CATALOG = /*__CATALOG__*/null;
 const USAGE = /*__USAGE__*/null;
+const FLOW = /*__FLOW__*/null || { routes: {}, tables: {} };   // tools/data-flow.mjs: which API endpoints read/write each table
 
 // ------------------------------------------------------------------ data model built from the catalog
 const FEATURE_COLORS = ['--f1','--f2','--f3','--f4','--f5','--f6','--f7','--f8','--f9','--f10','--f11'];
@@ -248,7 +267,7 @@ function relationsSvg(t) {
 
 // ------------------------------------------------------------------ views
 const main = document.getElementById('main');
-const views = [['map', 'Map of all tables'], ['pages', 'By page'], ['features', 'By feature'], ['errors', 'Fix a 500 error'], ['howto', 'How to run a query']];
+const views = [['map', 'Map of all tables'], ['flow', 'API ↔ data flow'], ['pages', 'By page'], ['features', 'By feature'], ['errors', 'Fix a 500 error'], ['howto', 'How to run a query']];
 let current = { view: 'map' };
 
 function renderNav() {
@@ -263,7 +282,7 @@ function renderNav() {
 /** Search across table, column, constraint and index names, purposes and error text. */
 function matches(t, term) {
   if (!term) return true;
-  const hay = [t.name, t.usage.purpose, t.usage.feature, ...(t.usage.watch || []), ...(t.usage.apis || []), ...(t.usage.pages || []),
+  const hay = [t.name, t.usage.purpose, t.usage.feature, ...(t.usage.watch || []), ...(t.usage.apis || []), ...apiKeys(t.name), ...(t.usage.pages || []),
     ...t.columns.map(c => c.name), ...(cons[t.name] || []).map(c => c.name + ' ' + c.definition), ...(idx[t.name] || []).map(i => i.name)].join(' ').toLowerCase();
   return term.split(/\s+/).every(w => hay.includes(w.replace(/["'.,:]/g, '')));
 }
@@ -275,7 +294,7 @@ function renderMap() {
     const ts = tables.filter(t => t.usage.feature === f && matches(t, term));
     if (!ts.length) continue;
     html += `<div class="section-title"><span class="dot" style="background:${featureColor(f)}"></span><b>${esc(f)}</b><span class="muted">— ${esc(USAGE.features[f])}</span></div><div class="grid">`;
-    html += ts.map(t => `<div class="tcard" style="--c:${featureColor(f)}" data-table="${t.name}"><b>${t.name}</b><p>${esc(t.usage.purpose)}</p><div class="chips">${chip(t.columns.length + ' columns')}${t.fks.length ? chip('→ ' + t.fks.length) : ''}${t.children.length ? chip('← ' + t.children.length) : ''}${t.rls ? chip('per project', 'accent') : ''}</div></div>`).join('');
+    html += ts.map(t => `<div class="tcard" style="--c:${featureColor(f)}" data-table="${t.name}"><b>${t.name}</b><p>${esc(t.usage.purpose)}</p><div class="chips">${chip(t.columns.length + ' columns')}${apiCount(t.name)}${t.fks.length ? chip('→ ' + t.fks.length) : ''}${t.children.length ? chip('← ' + t.children.length) : ''}${t.rls ? chip('per project', 'accent') : ''}</div></div>`).join('');
     html += `</div>`;
   }
   main.innerHTML = html || '<div class="card">No table matches your search.</div>';
@@ -298,7 +317,7 @@ function renderTable(name) {
   </div>
   <div class="card"><h2>Where it is used</h2>
     <h3>Screens</h3><div class="chips">${pageChips(u.pages) || '<span class="muted">Not shown directly on a screen.</span>'}</div>
-    <h3>API calls</h3><div class="chips">${(u.apis || []).map(a => chip(`<span class="mono">${esc(a)}</span>`)).join(' ') || '<span class="muted">—</span>'}</div>
+    <h3>API calls</h3>${apiUsage(name, u.apis)}
     <h3>Code that reads or writes it</h3>${code.length ? `<div class="table-wrap"><table class="data"><tr><th>Class</th><th>Layer</th><th>Does</th><th>File</th></tr>${code.map(c => `<tr><td class="mono">${esc(c.class)}</td><td>${esc(c.layer)}</td><td>${esc(c.operations)}</td><td class="mono muted">${esc(c.file)}</td></tr>`).join('')}</table></div>` : '<p class="muted">Only used through database rules (triggers/functions) or migrations.</p>'}
   </div>
   <div class="card"><h2>Relations</h2>${relationsSvg(t)}</div>
@@ -315,6 +334,50 @@ function renderTable(name) {
     <div class="tabs">${Object.entries(groups).map(([k, [l]]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>
     ${groups[tab][1].map(queryBlock).join('')}
   </div>`;
+}
+
+const API_PAGE = 'API.html';
+const routeOf = k => FLOW.routes[k] || {};
+const apiKeys = name => [...(FLOW.tables[name]?.read || []), ...(FLOW.tables[name]?.write || [])];
+const methodChip = m => `<span class="meth ${m}">${m}</span>`;
+function apiCount(name) {
+  const u = FLOW.tables[name];
+  if (!u) return '';
+  return (u.write.length ? chip('API writes ' + u.write.length, 'warn') : '') + (u.read.length ? chip('reads ' + u.read.length) : '');
+}
+/** Endpoints that write, then read, this table, each opening its card in the API reference, with the traced call path. */
+function apiUsage(name, documented) {
+  const u = FLOW.tables[name];
+  if (!u || !(u.read.length + u.write.length))
+    return (documented || []).length ? `<div class="chips">${documented.map(a => chip(`<span class="mono">${esc(a)}</span>`)).join(' ')}</div>` : '<span class="muted">No API endpoint reaches this table directly.</span>';
+  const both = u.write.filter(k => u.read.includes(k));
+  const rows = [...u.write.map(k => [k, both.includes(k) ? 'read+write' : 'write']), ...u.read.filter(k => !both.includes(k)).map(k => [k, 'read'])];
+  return `<div class="flowlist">${rows.map(([k, mode]) => {
+    const r = routeOf(k), [m, p] = k.split(' '), chain = r.tables?.[name]?.chain || [];
+    return `<details class="flowrow"><summary><span class="mode m-${mode.replace('+', '')}">${mode === 'read+write' ? 'R+W' : mode === 'write' ? 'W' : 'R'}</span>${methodChip(m)}
+      <a class="mono" href="${API_PAGE}#${esc(r.id || '')}" title="Open in the API reference">${esc(p)}</a><span class="muted">${esc(r.title || '')}</span></summary>
+      <div class="chain">${chain.map(c => `<span class="hop"><small>${esc(c.layer)}</small>${esc(c.class)}.${esc(c.method)}()</span>`).join('<span class="arr">→</span>')}<span class="arr">→</span><span class="hop table"><small>table</small>${esc(name)}</span></div></details>`;
+  }).join('')}</div><p class="muted" style="margin:6px 0 0">Traced from the code (controller → service → repository → SQL). W = changes rows, R = only reads. Open a row to see the path.</p>`;
+}
+/** Every API area and endpoint with the tables it reads and writes: the whole data flow on one page. */
+function renderFlow() {
+  const term = document.getElementById('search').value.trim().toLowerCase();
+  const groups = {};
+  for (const [k, r] of Object.entries(FLOW.routes)) (groups[r.category || 'Other'] ||= []).push([k, r]);
+  let html = `<div class="card"><h2>API ↔ data flow</h2><p class="muted">For every API endpoint: the tables it changes (W) and reads (R), traced from the code.
+    Click an endpoint to open it in the API reference, a table to open it here. Use it to see what a screen or script touches, or which endpoints to test after changing a table.</p>
+    <div class="chips">${chip('<span class="mode m-write">W</span> changes rows')}${chip('<span class="mode m-read">R</span> only reads')}${chip('<span class="mode m-readwrite">R+W</span> both')}</div></div>`;
+  for (const [cat, list] of Object.entries(groups)) {
+    const rows = list.filter(([k, r]) => !term || (k + ' ' + (r.title || '') + ' ' + Object.keys(r.tables).join(' ')).toLowerCase().includes(term));
+    if (!rows.length) continue;
+    html += `<div class="card"><h2>${esc(cat)}</h2><div class="table-wrap"><table class="data flowtable"><tr><th>Endpoint</th><th>Tables</th></tr>${rows.map(([k, r]) => {
+      const [m, p] = k.split(' ');
+      const ts = Object.entries(r.tables).sort((a, b) => (a[1].mode === 'read') - (b[1].mode === 'read') || a[0].localeCompare(b[0]));
+      return `<tr><td>${methodChip(m)} <a class="mono" href="${API_PAGE}#${esc(r.id || '')}">${esc(p)}</a><div class="muted">${esc(r.title || '')}</div></td>
+        <td><div class="chips">${ts.map(([t, v]) => `<a data-table="${esc(t)}" class="tchip"><span class="mode m-${v.mode.replace('+', '')}">${v.mode === 'read+write' ? 'R+W' : v.mode === 'write' ? 'W' : 'R'}</span>${esc(t)}</a>`).join('') || '<span class="muted">no tables</span>'}</div></td></tr>`;
+    }).join('')}</table></div></div>`;
+  }
+  main.innerHTML = html;
 }
 
 function renderPages() {
@@ -395,9 +458,8 @@ function render() {
   qid = 0;
   renderNav();
   if (current.table) renderTable(current.table);
-  else ({ map: renderMap, pages: renderPages, features: renderFeatures, errors: renderErrors, howto: renderHowto }[current.view] || renderMap)();
+  else ({ map: renderMap, flow: renderFlow, pages: renderPages, features: renderFeatures, errors: renderErrors, howto: renderHowto }[current.view] || renderMap)();
   if (current.anchor) document.getElementById(current.anchor)?.scrollIntoView();
-  else main.scrollTop = 0;
 }
 
 function go(state) {
@@ -421,10 +483,10 @@ document.addEventListener('click', e => {
     navigator.clipboard?.writeText(document.getElementById(el.dataset.copy).textContent).then(() => { el.textContent = 'Copied'; setTimeout(() => el.textContent = 'Copy', 1200); });
   } else if (el.dataset.table) go({ table: el.dataset.table });
   else if (el.dataset.view) go({ view: el.dataset.view });
-  else if (el.dataset.tab) go({ table: current.table, tab: el.dataset.tab });
+  else if (el.dataset.tab) { current.tab = el.dataset.tab; history.replaceState(null, '', '#table=' + current.table + '&tab=' + current.tab); render(); }
   else if (el.dataset.page) { go({ view: 'pages', anchor: 'page-' + el.dataset.page }); }
 });
-document.getElementById('search').addEventListener('input', () => { if (current.table || !['map'].includes(current.view)) current = { view: 'map' }; render(); });
+document.getElementById('search').addEventListener('input', () => { if (current.table || !['map', 'flow'].includes(current.view)) current = { view: 'map' }; render(); });
 document.getElementById('theme').addEventListener('click', () => {
   const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.dataset.theme = dark ? 'light' : 'dark';

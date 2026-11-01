@@ -130,6 +130,20 @@
   pre .k { color: var(--k); } pre .s { color: var(--s); } pre .n { color: var(--n); } pre .b { color: var(--b); } pre .c { color: #8f98b8; } pre .v { color: #fde68a; }
   .note { font-size: 12px; color: #8f98b8; }
   .empty { padding: 40px; text-align: center; color: var(--muted); }
+  .data { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  details.flow { border-top: 1px solid var(--line); } details.flow:first-child { border-top: 0; }
+  details.flow summary { list-style: none; cursor: pointer; display: flex; gap: 10px; align-items: center; padding: 8px 12px; font-size: 13.5px; }
+  details.flow summary::-webkit-details-marker { display: none; }
+  details.flow summary:hover { background: var(--panel2); }
+  .mode { font: 700 10.5px ui-monospace, monospace; min-width: 34px; text-align: center; padding: 2px 6px; border-radius: 6px; }
+  .m-read { color: var(--get); background: var(--get-bg); } .m-write { color: var(--put); background: var(--put-bg); } .m-readwrite { color: var(--patch); background: var(--patch-bg); }
+  .tbl { font: 600 13px ui-monospace, Consolas, monospace; text-decoration: none; }
+  .tbl:hover { text-decoration: underline; }
+  .chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 12px 12px; }
+  .hop { font: 12px ui-monospace, Consolas, monospace; padding: 4px 8px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--line); }
+  .hop small { display: block; font: 600 9.5px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+  .hop.table { border-color: var(--accent); color: var(--accent); }
+  .arr { color: var(--faint); }
   footer { max-width: 1440px; margin: 0 auto; padding: 0 18px 36px; color: var(--muted); font-size: 13px; }
   @media (max-width: 1100px) { .ep-body { grid-template-columns: 1fr; } }
   @media (max-width: 860px) { .layout { grid-template-columns: 1fr; gap: 12px; padding-top: 10px; } nav { position: sticky; top: 53px; z-index: 6; max-height: none; display: flex; gap: 6px; overflow-x: auto; background: var(--bg); padding: 8px 0; margin: 0 -18px; padding-left: 18px; scrollbar-width: none; } nav .group > a { white-space: nowrap; border: 1px solid var(--line); background: var(--panel); padding: 5px 10px; } nav .group > a .n { display: none; } nav .eps { display: none !important; } #expand, .bar .spacer { display: none; } .search { min-width: 0; } html { scroll-padding-top: 110px; } .brand span:last-child { display: none; } .ep > summary { grid-template-columns: auto minmax(0, 1fr); } .ep > summary .badges { grid-column: 1 / -1; justify-content: flex-start; } .search kbd { display: none; } }
@@ -208,6 +222,16 @@ const authBadge = e => e.auth === 'none' ? '<span class="badge open">no token</s
 const authLine = e => ({ none: 'No token needed.', basic: 'HTTP Basic with the API client\'s id and secret.', webhook: 'Signed by the sender; no token.' }[e.auth]
   || 'Needs a token: <code>Authorization: Bearer …</code>');
 const pathHtml = p => esc(p).replace(/\{(\w+)\}/g, '<i>{$1}</i>');
+// database tables the endpoint reaches (traced from the code), writes first, each with the call chain that gets there
+const MODE = { write: ['W', 'writes'], read: ['R', 'reads'], 'read+write': ['R+W', 'reads and writes'] };
+function dataHtml(e) {
+  const rows = Object.entries(e.data || {}).sort((a, b) => (a[1].mode === 'read') - (b[1].mode === 'read') || a[0].localeCompare(b[0]));
+  if (!rows.length) return '';
+  return `<h4>Data it touches</h4><div class="data">${rows.map(([t, v]) => `<details class="flow"><summary><span class="mode m-${v.mode.replace('+', '')}" title="${MODE[v.mode][1]}">${MODE[v.mode][0]}</span>
+      <a class="tbl" href="visualizeDB.html#table=${esc(t)}" title="Open ${esc(t)} in the database guide">${esc(t)}</a><span class="muted">${MODE[v.mode][1]}</span></summary>
+      <div class="chain">${v.chain.map(c => `<span class="hop ${c.layer}"><small>${esc(c.layer)}</small>${esc(c.class)}.${esc(c.method)}()</span>`).join('<span class="arr">→</span>')}<span class="arr">→</span><span class="hop table"><small>table</small>${esc(t)}</span></div></details>`).join('')}</div>
+    <p class="muted" style="margin-top:6px">Traced from the code: controller → services → repositories → SQL. Open a row to see the path; the table name opens the database guide.</p>`;
+}
 
 function fieldRows(list, nested) {
   return list.map(f => `<div class="field${nested ? ' nested' : ''}"><div class="top"><span class="nm">${esc(f.name)}</span><span class="ty">${esc(f.type)}</span>
@@ -226,7 +250,8 @@ function docHtml(e) {
     ${pp.length ? `<h4>Path parameters</h4><div class="fields">${fieldRows(pp)}</div>` : ''}
     ${qp.length ? `<h4>Query parameters</h4><div class="fields">${fieldRows(qp)}</div>` : ''}
     ${body && body.length ? `<h4>Request body${e.multipart ? ' (form data)' : e.form ? ' (form, application/x-www-form-urlencoded)' : ' (JSON)'}</h4><div class="fields">${fieldRows(body)}</div>` : ''}
-    ${!body?.length && !e.multipart && !e.form && e.method !== 'GET' && e.method !== 'DELETE' ? '<h4>Request body</h4><p class="muted">None.</p>' : ''}`;
+    ${!body?.length && !e.multipart && !e.form && e.method !== 'GET' && e.method !== 'DELETE' ? '<h4>Request body</h4><p class="muted">None.</p>' : ''}
+    ${dataHtml(e)}`;
 }
 function codeHtml(e) {
   if (e.noExample) return `<div class="code"><div class="note">No copy-paste example: ${e.auth === 'webhook' ? 'the sender signs each delivery.' : 'these addresses are signed by the server and returned by other endpoints.'}</div></div>`;
@@ -267,7 +292,7 @@ function render(filter = '') {
   const f = filter.trim().toLowerCase();
   let html = '', nav = '';
   for (const c of DATA.categories) {
-    const eps = c.endpoints.filter(e => !f || [e.method, e.path, e.title, e.description, c.title, ...(e.bodyFields || []).map(x => x.name)].join(' ').toLowerCase().includes(f));
+    const eps = c.endpoints.filter(e => !f || [e.method, e.path, e.title, e.description, c.title, ...(e.bodyFields || []).map(x => x.name), ...Object.keys(e.data || {})].join(' ').toLowerCase().includes(f));
     if (!eps.length) continue;
     nav += `<div class="group" data-cat="${c.id}"><a href="#${c.id}"><span class="ic">${ICONS[c.id] || '•'}</span>${esc(c.title)}<span class="n">${eps.length}</span></a>
       <div class="eps">${eps.map(e => `<a href="#${e.id}" data-ep="${e.id}"><span class="pill ${e.method}">${e.method}</span>${esc(e.title)}</a>`).join('')}</div></div>`;

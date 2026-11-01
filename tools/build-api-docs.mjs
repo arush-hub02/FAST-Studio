@@ -14,6 +14,8 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = f => JSON.parse(fs.readFileSync(path.join(root, f), 'utf8'))
 const data = read('docs/api/api.json'), glossary = read('docs/api/glossary.json')
 const responses = fs.existsSync(path.join(root, 'docs/api/responses.json')) ? read('docs/api/responses.json') : {}
+// tables each endpoint reads/writes, traced from the code by tools/data-flow.mjs (run it first when the code changed)
+const flow = fs.existsSync(path.join(root, 'docs/db/data-flow.json')) ? read('docs/db/data-flow.json') : { routes: {} }
 const all = routes()
 const byKey = new Map(all.map(r => [r.method + ' ' + r.path, r]))
 const documented = new Set()
@@ -50,6 +52,7 @@ for (const c of data.categories)
     if (e.form) e.formFields = Object.keys(e.form).map(name => ({ name, type: 'string', required: name === 'grant_type', rules: [], help: glossary.params[name] || '' }))
     e.bodyFields = describe(e.bodyFields || r.bodyFields, e.fields, key)
     e.response = responses[key] || null
+    e.data = flow.routes[key]?.tables || {}
     delete e.checkAccepts
   }
 for (const r of all) if (!documented.has(r.method + ' ' + r.path)) problems.push(`${r.method} ${r.path} (${r.controller}) has no entry in docs/api/api.json`)

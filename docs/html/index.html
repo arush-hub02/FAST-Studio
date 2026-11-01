@@ -22,6 +22,7 @@
   h2 { font-size: 17px; margin: 0 0 6px; }
   .card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
   .src { font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--muted); }
+  code { font: 12px ui-monospace, Consolas, monospace; }
   footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -31,19 +32,19 @@
   <p class="lead">Every page opens straight from this folder in a browser; no server needed. Each is generated from the code and the docs sources, so it stays current.</p>
   <div class="cards">
     <a class="card" href="API.html"><div class="icon">⇄</div><h2>API reference</h2>
-      <p>Every endpoint by feature, explained in plain words, with copy-paste curl and a Postman collection.</p>
+      <p>Every endpoint by feature, explained in plain words: fields, real responses, the tables it touches, copy-paste curl and a Postman collection.</p>
       <div class="src">node tools/build-api-docs.mjs</div></a>
     <a class="card" href="FEATURES.html"><div class="icon">★</div><h2>Features</h2>
       <p>What each finished feature does, who can use it, how it works, how it handles load, with screenshots.</p>
       <div class="src">node tools/build-feature-docs.mjs</div></a>
     <a class="card" href="visualizeDB.html"><div class="icon">▦</div><h2>Database guide</h2>
-      <p>Every table: what it is for, which screens and APIs use it, relations, indexes, row-level security, queries.</p>
-      <div class="src">mvnw test -Dtest=SchemaCatalogExportTest -Ddbdocs=true</div></a>
+      <p>Every table: what it is for, which screens use it, which API endpoints read or write it (traced from the code), relations, indexes, row-level security, queries.</p>
+      <div class="src">node tools/build-docs.mjs</div></a>
     <a class="card" href="FAST_Studio_Product_Guide.html"><div class="icon">☰</div><h2>Product guide</h2>
       <p>A step-by-step walkthrough of every screen for operators, with screenshots.</p>
       <div class="src">node tools/build-guide.mjs</div></a>
   </div>
-  <footer>Sources live next to this folder: docs/api, docs/features, docs/db and docs/PRODUCT_GUIDE.md. Edit those, then run the generator shown on each card.</footer>
+  <footer><b>Rebuild everything:</b> <code>node tools/build-docs.mjs</code>. Sources live next to this folder: docs/api, docs/features, docs/db and docs/PRODUCT_GUIDE.md. Edit those, then run the generator shown on each card.</footer>
 </main>
 </body>
 </html>
