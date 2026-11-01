@@ -19,6 +19,15 @@ $credentialsPath = Join-Path $runtimeDir 'docker.env'
 $composePath = Join-Path $projectRoot 'compose.yaml'
 $appUrl = 'http://localhost:8080'
 
+# Process lookups go through Windows management (CIM), which on some machines fails now and then with
+# "Call cancelled" and works on the next try (seen 2026-11-01). Retry a few times before giving up.
+function Get-ProcessInfo([int]$ProcessId) {
+    for ($try = 1; ; $try++) {
+        try { return Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction Stop }
+        catch { if ($try -ge 5) { throw }; Start-Sleep -Milliseconds 300 }
+    }
+}
+
 function ConvertFrom-JavaProperty([string]$Value) {
     return [regex]::Replace($Value, '\\(u[0-9a-fA-F]{4}|.)', {
         param($match)
@@ -65,7 +74,7 @@ function Find-CompatibleNode([string[]]$Roots) {
 
 # Identify the workspace as well as the PID; never stop every Java process.
 function Get-WorkspaceProcess([int]$ProcessId) {
-    $candidate = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId"
+    $candidate = Get-ProcessInfo $ProcessId
     if (!$candidate -or $candidate.Name -ne 'java.exe') { return $null }
     $command = $candidate.CommandLine
     if ($command -match ('-jar\s+"?' + [regex]::Escape($jarPath) + '"?(?:\s|$)')) { return $candidate }
@@ -85,7 +94,7 @@ function Get-WorkspaceProcess([int]$ProcessId) {
 
 # The local Cloudflare Worker (wrangler dev) this launcher started: node.exe running this workspace's wrangler.
 function Get-EdgeProcess([int]$ProcessId, [string]$CreatedAt) {
-    $candidate = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId"
+    $candidate = Get-ProcessInfo $ProcessId
     if (!$candidate -or $candidate.Name -ne 'node.exe') { return $null }
     if ($candidate.CommandLine -notlike ('*' + (Join-Path $workerDir 'node_modules\wrangler') + '*')) { return $null }
     if ($candidate.CreationDate.ToUniversalTime().ToString('o') -ne $CreatedAt) { return $null }
@@ -153,7 +162,7 @@ try {
             $pgPidFile = Join-Path $pgData 'postmaster.pid'
             if (Test-Path -LiteralPath $pgPidFile) {
                 $pgProcessId = [int](Get-Content -LiteralPath $pgPidFile -TotalCount 1)
-                $pgProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $pgProcessId"
+                $pgProcess = Get-ProcessInfo $pgProcessId
                 if ($pgProcess -and $pgProcess.Name -eq 'postgres.exe') {
                     $pgArguments = [regex]::Match($pgProcess.CommandLine, '-D\s+"([^"]+)"')
                     if ($pgArguments.Success -and [IO.Path]::GetFullPath($pgArguments.Groups[1].Value) -eq $pgData) {
@@ -302,10 +311,16 @@ try {
     $edge = Start-Process -FilePath (Get-Command node.exe).Source -WorkingDirectory $workerDir -WindowStyle Hidden -PassThru `
         -ArgumentList @(('"' + $wrangler + '"'), 'dev', '--ip', '127.0.0.1', '--port', '8787', '--persist-to', ('"' + $edgeData + '"')) `
         -RedirectStandardOutput (Join-Path $runtimeDir 'edge.log') -RedirectStandardError (Join-Path $runtimeDir 'edge-error.log')
-    $edgeCreatedAt = (Get-CimInstance Win32_Process -Filter "ProcessId = $($edge.Id)").CreationDate.ToUniversalTime().ToString('o')
+    $edgeCreatedAt = (Get-ProcessInfo $edge.Id).CreationDate.ToUniversalTime().ToString('o')
     @{ processId = 0; createdAt = ''; docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
     $deadline = (Get-Date).AddSeconds(90)
-    while (!(Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue)) {
+    # Ready when the Worker answers HTTP (any status) or the port shows as listening; the port list alone can come
+    # back empty on some Windows setups while the Worker is already serving (2026-11-01).
+    $edgeAnswers = {
+        try { Invoke-WebRequest -Uri 'http://127.0.0.1:8787/' -UseBasicParsing -TimeoutSec 2 | Out-Null; $true }
+        catch { [bool]$_.Exception.Response }
+    }
+    while (!(Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue) -and !(& $edgeAnswers)) {
         $edge.Refresh()
         if ($edge.HasExited) { throw "The local Cloudflare Worker exited. Check $runtimeDir\edge.log and edge-error.log." }
         if ((Get-Date) -gt $deadline) { throw "The local Cloudflare Worker did not start. Check $runtimeDir\edge.log." }
@@ -315,7 +330,7 @@ try {
 
     $javaPath = (Get-Command java.exe).Source
     $launched = Start-Process -FilePath $javaPath -ArgumentList @('-jar', ('"' + $runtimeJar + '"')) -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeDir 'app.log') -RedirectStandardError (Join-Path $runtimeDir 'app-error.log')
-    $javaProcess = Get-CimInstance Win32_Process -Filter "ProcessId = $($launched.Id)"
+    $javaProcess = Get-ProcessInfo $launched.Id
     @{ processId = $launched.Id; createdAt = $javaProcess.CreationDate.ToUniversalTime().ToString('o'); docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
     Write-Host ("Starting FAST Studio (" + $(if ($Pilot) { 'real-data pilot, data in data-pilot' } else { 'demo' }) + "). Logs: $runtimeDir")
     $deadline = (Get-Date).AddSeconds(180)

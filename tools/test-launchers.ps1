@@ -13,11 +13,13 @@ if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
 # Load only the ownership guard, without executing start/stop actions.
 $guard = $syntax.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-WorkspaceProcess' }, $true)
 Invoke-Expression $guard.Extent.Text
+$retry = $syntax.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Get-ProcessInfo' }, $true)
+Invoke-Expression $retry.Extent.Text
 $decoder = $syntax.Find({ param($node) $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'ConvertFrom-JavaProperty' }, $true)
 Invoke-Expression $decoder.Extent.Text
 if ((ConvertFrom-JavaProperty 'D\:\\Fast Product\\backend') -ne 'D:\Fast Product\backend') { throw 'Java property path escaping was not decoded.' }
 if ((ConvertFrom-JavaProperty '\u0044\:\\backend') -ne 'D:\backend') { throw 'Java Unicode property escaping was not decoded.' }
-function Get-CimInstance { param($ClassName, $Filter) return $script:fixture }
+function Get-CimInstance { [CmdletBinding()] param($ClassName, $Filter) return $script:fixture }
 try {
     $script:fixture = [pscustomobject]@{ Name = 'java.exe'; CommandLine = 'java -jar "' + $jarPath + '"'; ExecutablePath = 'C:\java\bin\java.exe' }
     if (!(Get-WorkspaceProcess 123)) { throw 'Did not recognize a quoted workspace jar path.' }
