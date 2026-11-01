@@ -3,6 +3,7 @@ package com.faststudio.v1.controllers.platform.tenancy;
 import com.faststudio.v1.dto.tenancy.TenantConfiguration.*;
 
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
+import com.faststudio.v1.services.tenancy.TenantDataService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
@@ -26,8 +27,24 @@ import java.util.UUID;
 @RequestMapping("/api/platform")
 public class TenantAdminControllerV1 {
     private final TenantConfigurationServiceV1 service;
+    private final TenantDataService data;
 
-    public TenantAdminControllerV1(TenantConfigurationServiceV1 service) { this.service = service; }
+    public TenantAdminControllerV1(TenantConfigurationServiceV1 service, TenantDataService data) {
+        this.service = service;
+        this.data = data;
+    }
+
+    /** Everything the tenant owns as JSON (no credentials, no video files). */
+    @GetMapping("/tenants/{tenant}/export")
+    ResponseEntity<Map<String, Object>> export(@PathVariable UUID tenant) {
+        return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"tenant-" + tenant + ".json\"").body(data.export(tenant));
+    }
+
+    /** Permanent deletion of a suspended tenant; body {"confirm": "<exact tenant name>"}. */
+    @PostMapping("/tenants/{tenant}/delete")
+    Map<String, Integer> delete(@PathVariable UUID tenant, @RequestBody Map<String, String> body) {
+        return data.delete(tenant, body.get("confirm"));
+    }
 
     /** Configuration may include tenant data; never let a shared cache store it. */
     private static <T> ResponseEntity<T> noStore(T value) {

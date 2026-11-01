@@ -44,8 +44,10 @@ public class EdgePublisher {
     private final EdgeClient edge;
     private final JsonMapper json;
     private final Set<String> stored = ConcurrentHashMap.newKeySet();
-    private final Map<String, String> sent = new HashMap<>();
-    private final Map<String, Long> sentAt = new HashMap<>();
+    private final Map<String, String> sent = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Long> sentAt = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Organizations being deleted: never published again, even before their rows are gone. */
+    private final Set<UUID> retired = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private boolean warned;
 
     public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json) {
@@ -140,12 +142,40 @@ public class EdgePublisher {
                 select o.id as org_id, o.slug as org_slug, c.id as channel_id from channel c join organization o on o.id = c.org_id
                 where c.status <> 'DRAFT'""").query(ChannelRow.class).list());
         for (ChannelRow r : rows) {
+            if (retired.contains(r.orgId())) continue;
             Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
             String key = s.org() + "/" + s.channel(), body = json.writeValueAsString(s);
             if (body.equals(sent.get(key)) && now - sentAt.getOrDefault(key, 0L) < REPUBLISH_MS) continue;
             edge.putChannel(s.org(), s.channel(), body);
             sent.put(key, body);
             sentAt.put(key, now);
+        }
+    }
+
+    /**
+     * Takes every channel of these organizations off the air before they are deleted: the edge gets a final snapshot
+     * with status ARCHIVED and no programmes, so open players show the standby slate and nothing else is published.
+     * Best effort: an unreachable edge keeps the last schedule until it ends (new viewers can't start: the channel is gone).
+     */
+    public void takeOffAir(List<UUID> orgs) {
+        retired.addAll(orgs);
+        if (!edge.configured() || orgs.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        List<ChannelRow> rows = TenantScope.bypass(() -> data.db.sql("""
+                select o.id as org_id, o.slug as org_slug, c.id as channel_id from channel c join organization o on o.id = c.org_id
+                where c.org_id = any(:orgs) and c.status <> 'DRAFT'""").param("orgs", orgs.toArray(new UUID[0])).query(ChannelRow.class).list());
+        for (ChannelRow r : rows) {
+            Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
+            Snapshot off = new Snapshot(s.v(), s.org(), s.channel(), "ARCHIVED", s.territories(), s.segMs(), s.from(), s.until(),
+                    s.ladder(), s.standby(), s.geo(), null, List.of());
+            try {
+                edge.putChannel(off.org(), off.channel(), json.writeValueAsString(off));
+            } catch (IOException e) {
+                log.warn("Couldn't take {}/{} off the edge: {}", off.org(), off.channel(), e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 

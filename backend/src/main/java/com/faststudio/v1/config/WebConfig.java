@@ -8,6 +8,7 @@ import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.partner.PartnerInterceptor;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantInterceptor;
+import com.faststudio.v1.services.tenancy.TenantLimitsService;
 import com.faststudio.v1.core.tenant.TenantScope;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,9 +38,11 @@ public class WebConfig implements WebMvcConfigurer {
     private final JdbcClient db;
     private final Audit audit;
     private final PartnerInterceptor partnerInterceptor;
+    private final TenantLimitsService limits;
 
     public WebConfig(TenantInterceptor tenantInterceptor, PasswordChangeGuard passwordGuard, JdbcClient db, Audit audit,
-                     PartnerInterceptor partnerInterceptor) {
+                     PartnerInterceptor partnerInterceptor, TenantLimitsService limits) {
+        this.limits = limits;
         this.partnerInterceptor = partnerInterceptor;
         this.tenantInterceptor = tenantInterceptor;
         this.passwordGuard = passwordGuard;
@@ -78,6 +81,14 @@ public class WebConfig implements WebMvcConfigurer {
         }).addPathPatterns("/api/**");
         registry.addInterceptor(passwordGuard).addPathPatterns("/api/**").excludePathPatterns("/api/auth/**");
         registry.addInterceptor(tenantInterceptor).addPathPatterns("/api/orgs/**");
+        // per-project API allowance (limits.api_requests_per_minute), counted once the project is known
+        registry.addInterceptor(new HandlerInterceptor() {
+            @Override
+            public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) {
+                if (req.getAttribute(TenantInterceptor.ATTR) instanceof Tenant t && "CUSTOMER".equals(t.kind())) limits.countRequest(t.orgId());
+                return true;
+            }
+        }).addPathPatterns("/api/orgs/**");
         registry.addInterceptor(partnerInterceptor).addPathPatterns("/api/partners/**");
         // platform administration reads across tenants: verified admins only, then row-level security bypass
         registry.addInterceptor(new HandlerInterceptor() {

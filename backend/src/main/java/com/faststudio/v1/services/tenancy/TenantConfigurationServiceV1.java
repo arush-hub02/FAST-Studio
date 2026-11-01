@@ -49,7 +49,15 @@ public class TenantConfigurationServiceV1 {
     private static final Map<String, Consumer<JsonNode>> SYSTEM = Map.of(
             PREMIERE_TIME, v -> MediaSettingsServiceV1.time(v.asString()),
             WEEKDAYS, v -> MediaSettingsServiceV1.days(v.asString()),
-            PERSONALIZED_ADS, v -> {});
+            PERSONALIZED_ADS, v -> {},
+            TenantLimitsService.API_PER_MINUTE, TenantConfigurationServiceV1::wholeNumber,
+            TenantLimitsService.MEDIA_HOURS, TenantConfigurationServiceV1::wholeNumber,
+            TenantLimitsService.PROCESSING, TenantConfigurationServiceV1::wholeNumber);
+
+    /** Limits are whole numbers; 0 means unlimited. */
+    private static void wholeNumber(JsonNode v) {
+        if (!v.isIntegralNumber() || v.asLong() < 0) throw ApiException.bad("Use a whole number (0 = unlimited).");
+    }
 
     private final TenantConfigurationRepository repository;
     private final JsonMapper json;

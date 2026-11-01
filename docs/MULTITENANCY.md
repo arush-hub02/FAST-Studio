@@ -37,9 +37,9 @@ Not done: billing/invoicing, tenant-level SSO, existing-data migration rehearsal
 | --- | --- | --- | --- |
 | 1 | **Tenant resolution** | Admin API paths are `/api/orgs/{orgSlug}/...`. `TenantInterceptor` (one class) loads the org and checks the **session user's membership**. A non-member gets **404**, so the tenant's existence isn't revealed. A suspended org gets **403** `ORG_SUSPENDED`. The resolved `Tenant(orgId, role, userId)` is injected into controllers; client-sent org IDs are never trusted. | ✅ |
 | 2 | **Authorization** | `Tenant.Role` → `Perm` set, checked with `t.require(Perm.X)` in every mutating endpoint. The UI hides controls too, but that's only a convenience. | ✅ |
-| 3 | **Query scoping** | `Data` (shared reads) takes `orgId` first on every method; there is no unscoped "find by id". Every `update`/`delete` includes `org_id = :o`. | ✅ |
+| 3 | **Query scoping** | `Data` (shared reads) takes `orgId` first on every method; there is no unscoped "find by id". Every statement on a tenant table names the organization (`org_id`, `owner_org_id`, `partner_org_id` or `tenant_id`), or carries a `/* all tenants: reason */` comment for deliberate system work. The CI guard `tools/check-tenant-filters.mjs` enforces this for every table under RLS (2026-11-01). | ✅ |
 | 4 | **Database constraints** | Composite unique `(org_id, id)` on tenant tables. Child tables reference parents with **composite foreign keys** `(org_id, x_id) → parent(org_id, id)`. Even a buggy query can't link tenant A's schedule to tenant B's video. | ✅ |
-| 5 | **Row-level security** | Migration `V2` enables PostgreSQL RLS on every tenant table (policy `fs_tenant_ok(org_id)`). The app pool connects and immediately runs `SET ROLE faststudio_app` (no `BYPASSRLS`); `TenantAwareDataSource` stamps `app.org_id` from `TenantScope` on **every connection checkout**, so even an unfiltered `select * from asset` only returns the current tenant and cross-tenant inserts fail in PostgreSQL. Migrations use a separate owner pool. Explicit **bypass** exists only for trusted system paths: verified platform admins, demo seeding, media jobs (look up by id, then work as the asset's tenant), viewer-session lookup by unguessable id. `organization`, `membership`, `app_user` are outside RLS because they establish the tenant. | ✅ |
+| 5 | **Row-level security** | PostgreSQL RLS on every table that carries an organization (policy `fs_tenant_ok`, migrations V2–V18). **Three logins** (V18, `DatabaseLogins`): requests use `faststudio_app_login` (member of `faststudio_app` only, no `BYPASSRLS`, not the owner, cannot `SET ROLE` to anything else); `TenantAwareDataSource` stamps `app.org_id` on every checkout, so an unfiltered `select * from asset` returns only the current tenant and cross-tenant writes fail in PostgreSQL. Cross-tenant **system work** (`TenantScope.bypass`: verified platform admins, media jobs, alert scans, edge sync, client authentication) gets a connection from a separate pool that logs in as `faststudio_system_login`; the policies trust that *login* (`session_user`), which a request connection can't become. The old `app.bypass` session switch is gone. Migrations use the owner pool, which also maintains the two logins (passwords derived from the secrets key). Outside RLS by design: `organization`, `membership` (they establish the tenant), `personal_access_token` (belongs to a person), `email_message` (platform outbox). `RowLevelSecurityTest` fails if any other table with an organization column lacks a policy. | ✅ |
 
 ## 3. Tenant-scoped resources beyond tables
 
@@ -61,7 +61,8 @@ PROVISIONED ──► ACTIVE ◄──► SUSPENDED ──► (OFFBOARDING ─�
 
 - **Create** (platform admin): creates the org, its first OWNER and a default "Web player" destination. ✅
 - **Suspend**: blocks the customer's **admin access** (403 on every `/api/orgs/{org}`). **Data is kept, and channels already on air keep streaming**, so viewers and partners aren't cut off by an account issue. A separate, deliberate "stop all channels" action belongs to the service-suspension runbook, not to a billing callback. ✅
-- **Offboard/purge**: export tenant data, stop channels, wait out the retention period, then delete rows and the `media/{orgSlug}` prefix. ⏳
+- **Export** (platform admin, 2026-11-01): `GET /api/platform/tenants/{tenant}/export` returns every row the tenant owns as JSON, table by table (tables found from the database catalog, so new tables are included), plus its projects and members. Credentials, hashes and unredacted mail are left out; video files are not included. ✅
+- **Delete** (platform admin, 2026-11-01): `POST /api/platform/tenants/{tenant}/delete` with `{"confirm": "<exact tenant name>"}`, only while the tenant is suspended. In one transaction: channels taken off the edge (final ARCHIVED snapshot: open players show the standby slate), nullable references between its tables cleared, rows deleted children-first, people who belonged only to this tenant anonymized (their rows stay because other audit records may name them), projects and tenant removed, local media/upload folders deleted. Audited on the platform. Not yet: copies already on R2 (edge storage) and a retention waiting period before purge. ✅ (R2 cleanup ⏳)
 
 ## 5. Roles and the role ceiling
 
@@ -91,11 +92,14 @@ Rules (✅):
 | Ad server / VAST endpoint, CDN, partner credentials | `provider_binding` with **secret references only** | ⏳ |
 | Branding / white-label, SSO (SAML/OIDC per tenant), SCIM | — | ⏳ (F29/F31) |
 
-## 7. Noisy-neighbour and fairness ⏳
+## 7. Noisy-neighbour and fairness (partly built, 2026-11-01)
 
-- Per-tenant rate limits on the admin API and on playback-session creation.
-- Media job queue picks work round-robin per org, so one tenant's 500-file import can't starve another tenant's single upload.
-- Per-tenant storage and processing quotas, shown on the Billing & Usage page (F12).
+- ✅ **Per-project limits** (V19), ordinary dynamic properties (global default → tenant → project override, set by platform administrators; 0 = unlimited): `limits.api_requests_per_minute` (default 600; 429 `RATE_LIMITED`; counted per server in memory, so N servers allow N × the limit), `limits.media_hours` (default 500; checked before uploads, generated samples, direct uploads and library sync; 409 `MEDIA_LIMIT`), `limits.processing_videos` (default 20 converting at once; 409 `PROCESSING_LIMIT`). Values are cached 60 s per project and server. Test: `TenantLimitsTest`.
+- ✅ **Tenant-first indexes** on the growing event tables (V20): `ad_event`, `playback_session`, `ad_decision` lead with `org_id`.
+- ⏳ Media job queue picks work round-robin per org (Stage 2, [MEDIA_JOBS_DESIGN.md](MEDIA_JOBS_DESIGN.md)).
+- ⏳ Rate limits on playback-session creation; exact global API limits (Cloudflare rate limiting or a shared counter); usage shown to customers (F12).
+- ⏳ Monthly partitions of the event tables: not done, deliberately. `ad_event` and `ad_decision` reference `playback_session` by `(org_id, id)`; partitioning would need the partition key in those keys. Worth doing once volumes are measured.
+- ⏳ A dedicated database for one tenant: only when a customer contract requires it (requests are already routed by the tenant in the token).
 
 ## 7b. Organization IDs, sign-in tokens and partner organizations ✅
 
@@ -109,7 +113,9 @@ Audit result: every route that touches customer data is scoped to one organizati
 
 **Automated (backend `./mvnw test`):**
 - `CrossTenantMatrixTest` reads the live route table and probes **every** `/api/orgs/{org}` endpoint (45 today) twice as another tenant: on the victim's org path (must be 404) and on its own path with the victim's resource IDs (must never return victim data). It also checks the victim's data hash is unchanged. A new endpoint with an unmapped path variable fails the test, so coverage can't silently lapse. The whole app runs under RLS during this test.
-- `RowLevelSecurityTest` proves the database layer on its own: unscoped queries see one tenant, no tenant sees nothing, cross-tenant writes are rejected, and pooled connections don't leak scope.
+- `RowLevelSecurityTest` proves the database layer on its own with the production logins: unscoped queries see one tenant, no tenant sees nothing, cross-tenant writes are rejected, pooled connections don't leak scope, a request connection can't reach system or owner rights (`set role`, `reset role`, the old `app.bypass` switch), and every table with an organization column has RLS and a policy.
+- `TenantLimitsTest` (per-project API, media-hour and conversion limits) and `TenantDataTest` (export, then delete one tenant leaving another untouched).
+- CI guard `tools/check-tenant-filters.mjs`: SQL on tenant tables must name the organization.
 
 **End to end (`node tools/smoke-test.mjs`):**
 

@@ -9,6 +9,7 @@ import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.dto.media.AssetDto.*;
 import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.services.rights.Rights;
+import com.faststudio.v1.services.tenancy.TenantLimitsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,15 +42,17 @@ public class AssetServiceV1 {
     private final MediaServiceV1 media;
     private final MediaSigner signer;
     private final AssetRules rules;
+    private final TenantLimitsService limits;
     private final Audit audit;
 
     public AssetServiceV1(Data data, AssetRepository repository, MediaServiceV1 media, MediaSigner signer,
-                            AssetRules rules, Audit audit) {
+                            AssetRules rules, TenantLimitsService limits, Audit audit) {
         this.data = data;
         this.repository = repository;
         this.media = media;
         this.signer = signer;
         this.rules = rules;
+        this.limits = limits;
         this.audit = audit;
     }
 
@@ -96,6 +99,8 @@ public class AssetServiceV1 {
         long dur = 0;
         if (r.sampleSeconds() != null) {
             if (!media.ffmpegAvailable()) throw ApiException.conflict("NO_FFMPEG", "Sample generation needs ffmpeg on the server.");
+            limits.requireMediaRoom(t.orgId());
+            limits.requireProcessingSlot(t.orgId());
             int secs = Math.max(15, Math.min(r.sampleSeconds(), 1800));
             dur = Times.snapMs(secs * 1000L);
             generator = r.kind().equals("AD") ? "ad:" + AssetRules.color(r.color()).replace("#", "0x") + "|" + Objects.toString(r.sampleTagline(), "")
@@ -120,6 +125,8 @@ public class AssetServiceV1 {
         if (!UPLOAD_EXT.contains(ext)) throw ApiException.bad("Unsupported file type ." + ext + ". Use MP4, MOV, MKV, WEBM or M4V.");
         if (file.isEmpty()) throw ApiException.bad("The file is empty.");
         if (!media.ffmpegAvailable()) throw ApiException.conflict("NO_FFMPEG", "The server has no ffmpeg, so uploads can't be processed.");
+        limits.requireMediaRoom(t.orgId());
+        limits.requireProcessingSlot(t.orgId());
         Path dir = media.uploadDir(t.orgId(), id);
         Files.createDirectories(dir);
         try (var s = Files.list(dir)) { for (Path p : s.toList()) Files.deleteIfExists(p); }
@@ -134,6 +141,7 @@ public class AssetServiceV1 {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Asset a = data.asset(t.orgId(), id);
         if (!a.status().equals("FAILED")) throw ApiException.conflict("NOT_FAILED", "Only failed videos can be retried.");
+        limits.requireProcessingSlot(t.orgId());
         repository.markProcessing(t.orgId(), id, "Retrying");
         media.enqueue(id);
         return get(t, id);

@@ -95,6 +95,16 @@ public class AssetRepository {
     }
 
     /** Serializes episode-number checks of one project. */
+    /** What a project stores and is converting right now (the per-project limits are checked against it). */
+    public record ProjectUsage(long storedMs, int processing) {}
+
+    public ProjectUsage usage(UUID org) {
+        return db.sql("""
+                select coalesce(sum(duration_ms) filter (where status <> 'ARCHIVED'), 0) as stored_ms,
+                       count(*) filter (where status = 'PROCESSING') as processing
+                from asset where org_id = :o""").param("o", org).query(ProjectUsage.class).single();
+    }
+
     public void lockProject(UUID org) {
         db.sql("select id from organization where id = :o for update").param("o", org).query(UUID.class).single();
     }

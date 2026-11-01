@@ -12,6 +12,7 @@ import com.faststudio.v1.dto.media.LibraryDto.SyncResult;
 import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.services.media.sources.MuxSource;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
+import com.faststudio.v1.services.tenancy.TenantLimitsService;
 import com.faststudio.v1.util.mux.MuxClientService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,12 +35,13 @@ public class LibraryServiceV1 {
     private final MediaServiceV1 media;
     private final AssetRules rules;
     private final TenantConfigurationServiceV1 configuration;
+    private final TenantLimitsService limits;
     private final AssetRepository assets;
     private final Audit audit;
     private final String appUrl;
 
     public LibraryServiceV1(Data data, MuxClientService mux, MuxConnectionService connections, MediaServiceV1 media, AssetRules rules,
-                            TenantConfigurationServiceV1 configuration, AssetRepository assets, Audit audit,
+                            TenantConfigurationServiceV1 configuration, TenantLimitsService limits, AssetRepository assets, Audit audit,
                             @Value("${faststudio.app-url}") String appUrl) {
         this.data = data;
         this.mux = mux;
@@ -47,6 +49,7 @@ public class LibraryServiceV1 {
         this.media = media;
         this.rules = rules;
         this.configuration = configuration;
+        this.limits = limits;
         this.assets = assets;
         this.audit = audit;
         this.appUrl = appUrl.replaceAll("/+$", "");
@@ -75,6 +78,8 @@ public class LibraryServiceV1 {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Data.Asset a = data.asset(t.orgId(), id);
         if (a.status().equals("PROCESSING")) throw ApiException.conflict("BUSY", "This video is already being processed.");
+        limits.requireMediaRoom(t.orgId());
+        limits.requireProcessingSlot(t.orgId());
         MuxClientService.Upload u = mux.upload(connections.connected(t.orgId()), appUrl, a.title());
         assets.setUploadReference(t.orgId(), id, MuxSource.UPLOAD_REF + u.id());
         audit.log(t, "asset.upload", "asset", id, a.title() + " (direct upload)");
@@ -83,6 +88,8 @@ public class LibraryServiceV1 {
 
     /** Imports every ready library video not imported yet (each is packaged into our segments once). */
     private SyncResult importLibrary(UUID org) throws InterruptedException {
+        // ponytail: checked once before the sync, so one sync can go past the media limit; check per video if that matters
+        limits.requireMediaRoom(org);
         rules.kindOf(org, "MOVIE");   // library videos arrive as movies; fails clearly if the project has that type switched off
         List<MuxClientService.Asset> all = mux.assets(connections.connected(org));
         return new SyncResult(all.size(), (int) all.stream().filter(x -> apply(org, x)).count());

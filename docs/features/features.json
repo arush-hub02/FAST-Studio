@@ -253,6 +253,181 @@
         "Known ceiling: a very large credential-stuffing attack (millions of attempts an hour) would still reach the application and the database. Block such floods earlier with Cloudflare rate limiting or WAF rules in front; this database limiter is the second line.",
         "DNS rebinding between the address check and the actual connection is not yet prevented; the upgrade is an HTTP client that connects only to the checked address."
       ]
+    },
+    {
+      "id": "tenant-isolation",
+      "title": "Tenant isolation in the database",
+      "area": "Multi-tenancy",
+      "status": "Built",
+      "completed": "2026-11-01",
+      "summary": "Each customer only ever sees its own data, and the database itself enforces it: even a bug in the application can't read or change another customer's rows. Work that must span customers (background jobs, platform administration) runs through a separate, tightly held database login. Nothing to click: it applies to every screen and API.",
+      "who": [
+        "Everyone, automatically"
+      ],
+      "steps": [
+        "Every project API path names the organization (/api/orgs/{organization}/…); platform tenant routes name the tenant (/api/platform/tenants/{tenant}/…).",
+        "The sign-in token carries the organization (org) and its tenant (tid); the organization in the path must be one the token lists and the person belongs to, otherwise the answer is 404.",
+        "Every database query of a project names that organization, and the database adds its own check on top."
+      ],
+      "howItWorks": [
+        "Requests use a database login (faststudio_app_login) that may only see rows of the organization stamped on its connection. It is not the table owner and cannot switch to any other role.",
+        "Each borrowed connection is stamped with the current organization (app.org_id); PostgreSQL row-level security policies compare every row's organization with it. An unfiltered \"select * from asset\" returns only that project's videos, and inserting a row for another organization fails.",
+        "Cross-tenant system work (platform administration, media jobs, alert scans, edge publishing, partner client sign-in) gets its connection from a separate pool that logs in as faststudio_system_login. The policies trust that login, identified by session_user, which a request connection cannot become.",
+        "Both logins are created and kept up to date after every database migration; their passwords are derived from the server's secrets key, so every server sharing the key uses the same ones and nothing extra is configured.",
+        "Every table that carries an organization has a policy; organization and membership (they establish the tenant), personal tokens (they belong to a person) and the platform email outbox are deliberately outside, and a test fails if any other table is missing one.",
+        "In the code, every SQL statement on a tenant table also names the organization explicitly (or is marked as deliberate cross-tenant system work); a CI check enforces this."
+      ],
+      "optimizations": [
+        "The organization is stamped once per connection checkout with one tiny statement; no per-query overhead in the application.",
+        "Policies are simple equality checks on org_id, which the tenant-first indexes serve directly, so row-level security adds no extra table reads.",
+        "System work and requests use separate, small connection pools (10 and 4 per server), so a burst of background work can't take every request connection."
+      ],
+      "scale": [
+        "All projects share one database, so adding a customer costs one row, not a database. Isolation does not weaken with more customers: every query is filtered by organization in the database itself.",
+        "Indexes on large tables lead with org_id, so one project's queries read only its own slice however large other projects grow.",
+        "Known ceiling: one PostgreSQL server for all tenants. Upgrade path, in order: connection pooling (PgBouncer), read replicas for reports, then sharding by tenant (e.g. Citus) without changing the application. A dedicated database for one tenant is possible when a contract requires it.",
+        "Not measured: behaviour under sustained multi-tenant load."
+      ],
+      "rules": [
+        "A request connection that tries \"set role\" to the system role is refused; \"reset role\" leaves it as the same restricted login.",
+        "The old app.bypass session switch no longer exists; setting it changes nothing.",
+        "The configured database user only migrates and must be allowed to create roles (CREATEROLE)."
+      ],
+      "api": [],
+      "tests": [
+        "RowLevelSecurityTest (7, production logins)",
+        "CrossTenantMatrixTest",
+        "tools/check-tenant-filters.mjs (CI)"
+      ],
+      "docs": [
+        "docs/MULTITENANCY.md",
+        "migration V18__system_login_and_rls_coverage.sql"
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "project-limits",
+      "title": "Per-project limits",
+      "area": "Multi-tenancy",
+      "status": "Built",
+      "completed": "2026-11-01",
+      "summary": "Every project has a fair share: a cap on API requests per minute, on stored video hours and on videos converting at once, so one busy project can't slow everyone else down. Platform administrators set the limits per plan, tenant or project.",
+      "who": [
+        "Platform administrators set the limits",
+        "Every project is held to them"
+      ],
+      "steps": [
+        "Platform administration → Tenants → Manage <tenant>: under Custom properties, set \"API requests per minute\", \"Stored media hours\" or \"Videos converting at the same time\". Configuration scope \"Tenant defaults\" applies to all its projects; choose a project to override it for that project only.",
+        "Leave a value at the global default (600 requests, 500 hours, 20 conversions), or use 0 for unlimited.",
+        "A project over a limit gets a clear message: \"made more than N requests in a minute\", \"already stores its limit of N hours\", or \"N videos are already converting\"."
+      ],
+      "howItWorks": [
+        "The limits are ordinary configuration properties (limits.api_requests_per_minute, limits.media_hours, limits.processing_videos): global default, then tenant value, then project override.",
+        "API requests are counted per project in one-minute windows as soon as the project of a request is known; over the limit the answer is 429.",
+        "Before an upload, a generated sample, a direct upload or a library sync, the project's stored hours (all videos except archived ones) are compared with its limit; before starting a conversion, the number of videos converting is compared with its limit; over either the answer is 409."
+      ],
+      "optimizations": [
+        "Each project's limits are read at most once a minute per server (cached), so the check costs nothing on most requests.",
+        "Request counting is in memory: no database write per request.",
+        "Stored hours and conversions come from one query on an (org_id, status) index."
+      ],
+      "scale": [
+        "Known ceiling: request counts are per server, so with N servers a project can make up to N times its limit. Upgrade path: Cloudflare rate limiting in front, or a shared counter.",
+        "The media-hours check runs once before a library sync, so one sync can go past the limit; the next one is refused.",
+        "Changing a limit takes up to a minute to apply on every server (cache lifetime)."
+      ],
+      "rules": [
+        "Limits are whole numbers; 0 means unlimited; anything else is refused (422).",
+        "Partner organizations are not counted (they have no content).",
+        "Videos arriving through library webhooks are not blocked by the conversion limit; fair scheduling of conversions is part of the durable job queue (Stage 2)."
+      ],
+      "api": [
+        "PUT /api/platform/tenants/{tenant}/properties/limits.*",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/limits.*"
+      ],
+      "tests": [
+        "TenantLimitsTest (3)"
+      ],
+      "docs": [
+        "docs/MULTITENANCY.md §7",
+        "migration V19__project_limits.sql"
+      ],
+      "screenshots": [
+        {
+          "id": "limits-settings",
+          "account": "platform",
+          "path": "/platform",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Manage Aurora Media Network"
+              }
+            },
+            {
+              "waitFor": {
+                "text": "limits.media_hours"
+              }
+            },
+            {
+              "eval": "document.evaluate(\"//*[text()='limits.api_requests_per_minute']\",document,null,9,null).singleNodeValue.scrollIntoView({block:\"center\"})"
+            },
+            {
+              "wait": 400
+            }
+          ],
+          "caption": "A tenant’s settings: the limits sit with its other properties (API requests per minute shown; stored media hours and conversions further down). \"global\" means the global default is in effect; Save override sets it for this tenant, or for one project when a project scope is chosen."
+        }
+      ]
+    },
+    {
+      "id": "tenant-export-delete",
+      "title": "Tenant data export and deletion",
+      "area": "Multi-tenancy",
+      "status": "Built",
+      "completed": "2026-11-01",
+      "summary": "When a customer asks for its data or leaves, a platform administrator can export everything the tenant owns as one file, and then delete the tenant permanently, without touching any other customer.",
+      "who": [
+        "Platform administrators"
+      ],
+      "steps": [
+        "Export: call GET /api/platform/tenants/{tenant}/export (a platform personal access token works). The answer is a JSON file with the tenant, its projects, members and every table's rows.",
+        "Delete: first suspend the tenant (Platform administration → Tenants → Suspend).",
+        "Then call POST /api/platform/tenants/{tenant}/delete with {\"confirm\": \"<the tenant's exact name>\"}. The answer lists how many rows were deleted per table.",
+        "There is no screen for these two actions yet; they are API only."
+      ],
+      "howItWorks": [
+        "The tables to export and delete are found from the database catalog: every table with an org_id, owner_org_id, partner_org_id or tenant_id column. New tables are covered without code changes.",
+        "Export leaves out credentials, hashes and unredacted mail (token ids and secrets, webhook secrets, ad-tag URLs, password and token hashes, queued email text).",
+        "Deletion runs in one transaction: channels are taken off the edge (a final ARCHIVED snapshot, so open players show the standby slate), references between the tenant's own tables are cleared, rows are deleted children-first using the foreign keys, projects and the tenant are removed.",
+        "People who belonged only to this tenant are anonymized (email, name and password replaced; sign-in tokens and personal tokens removed), not deleted, because audit records elsewhere may name them. People who also belong to another tenant keep their account.",
+        "Local video and upload folders of the deleted projects are removed; both actions are recorded in the platform audit log."
+      ],
+      "optimizations": [
+        "One query per table, filtered by the tenant's organizations with = any(array), so each table is read or deleted with one index-assisted statement.",
+        "No hand-kept table list to fall out of date."
+      ],
+      "scale": [
+        "Export builds the whole answer in memory: fine for a pilot tenant; for very large tenants (millions of playback events) stream it to a file instead. Not measured.",
+        "Deletion of a large tenant is one long transaction holding row locks only on that tenant's rows; other tenants are not blocked. Not measured at volume.",
+        "Known gaps: video copies already on the edge storage (R2) are not deleted yet, and there is no waiting period between deletion request and purge."
+      ],
+      "rules": [
+        "Platform administrators only; customers get 403.",
+        "Deletion requires the tenant to be suspended and its exact name typed; otherwise 409 or 400.",
+        "Video files are not part of the export."
+      ],
+      "api": [
+        "GET /api/platform/tenants/{tenant}/export",
+        "POST /api/platform/tenants/{tenant}/delete"
+      ],
+      "tests": [
+        "TenantDataTest (export, then delete one tenant; the other stays untouched)"
+      ],
+      "docs": [
+        "docs/MULTITENANCY.md §4"
+      ],
+      "screenshots": []
     }
   ]
 }
