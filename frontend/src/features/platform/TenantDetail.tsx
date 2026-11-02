@@ -6,6 +6,7 @@ import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEdi
 import { ProjectFeatures, ProjectRoles } from '../../shared/configuration/Catalogue'
 import type { Configuration, Plan, Project } from '../../shared/configuration/types'
 import { OrgConnectors } from './Connectors'
+import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
 import { TenantMediaEntitlements } from './MediaTypes'
 
 // One customer tenant, opened from the Tenants list: side tabs for everything the platform manages for it. Tenant-wide
@@ -50,7 +51,11 @@ export default function TenantDetail() {
         {tab.project && !projectId && <section className="card card-pad faint">Add a project on the Overview tab first.</section>}
         {tab.key === 'features' && projectId && <ProjectFeatures key={projectId} base={`/api/platform/orgs/${projectId}/project-features`} editable platform />}
         {tab.key === 'roles' && projectId && <ProjectRoles key={projectId} base={`/api/platform/orgs/${projectId}/roles`} editable kind="CUSTOMER" />}
-        {tab.key === 'connectors' && projectId && <OrgConnectors key={projectId} orgId={projectId} />}
+        {tab.key === 'connectors' && projectId && <>
+          <ConnectorPanel key={projectId} base={`/api/platform/orgs/${projectId}/connector-instances`} title="Connections"
+            intro="Marketplace connections of this project, internal fields included. The platform can connect any available connector." />
+          <OrgConnectors key={'old-' + projectId} orgId={projectId} />
+        </>}
         {tab.key === 'media' && projectId && <TenantMediaEntitlements key={projectId} orgId={projectId} />}
       </div>
     </div>

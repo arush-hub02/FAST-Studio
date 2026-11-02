@@ -1,24 +1,50 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api, type MediaSettingsView} from '../../shared/api'
 import { useOrg } from '../../app/App'
-import { DAYS, ErrorBox, Loading, PageHead, useAction, useApi } from '../../shared/ui'
+import { DAYS, ErrorBox, Icon, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEditor'
 import { ProjectFeatures } from '../../shared/configuration/Catalogue'
+import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
+
+// Project Settings in side tabs (same layout as the platform's tenant page). The tab is in the address (?tab=).
+const TABS = [
+  { key: 'general', label: 'General', icon: 'sliders' },
+  { key: 'features', label: 'Features', icon: 'shield' },
+  { key: 'connectors', label: 'Connectors', icon: 'link' },
+]
 
 export default function Settings() {
   const org = useOrg()
-  const view = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
-  const [scope,setScope]=useState('project')
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.find(t => t.key === params.get('tab')) ?? TABS[0]
   return <div className="page stack">
     <PageHead title="Settings" subtitle={`${org.tenantName??org.name} / ${org.name}. Tenant defaults are inherited by its projects.`} />
+    <div className="side-tabs-layout">
+      <nav className="side-tabs card" aria-label="Settings">
+        {TABS.map(t => <button key={t.key} type="button" className={tab.key === t.key ? 'active' : ''} aria-current={tab.key === t.key ? 'page' : undefined}
+          onClick={() => setParams({ tab: t.key }, { replace: true })}><Icon name={t.icon} size={15} /><span>{t.label}</span></button>)}
+      </nav>
+      <div className="stack" style={{ minWidth: 0 }}>
+        {tab.key === 'general' && <General />}
+        {tab.key === 'features' && <ProjectFeatures base={`/api/orgs/${org.slug}/features`} editable={org.can("TEAM_MANAGE")} />}
+        {tab.key === 'connectors' && <ConnectorPanel base={`/api/orgs/${org.slug}/connectors`}
+          intro="Services this project uses. You can connect the ones marked Connect; others are connected by the platform." />}
+      </div>
+    </div>
+  </div>
+}
+
+function General() {
+  const org = useOrg()
+  const view = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const [scope,setScope]=useState('project')
+  return <>
     <div className="row-wrap"><button className={'btn '+(scope==='project'?'primary':'')} aria-pressed={scope==='project'} onClick={()=>setScope('project')}>Project settings</button><button className={'btn '+(scope==='tenant'?'primary':'')} aria-pressed={scope==='tenant'} onClick={()=>setScope('tenant')}>Tenant settings</button></div>
     <ConfigurationEditor key={scope} base={`/api/orgs/${org.slug}/${scope==='project'?'configuration':'tenant-settings'}`} onSaved={org.reloadProject}/>
-    {scope==='project'&&<>
-    {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
-      <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
-    <ProjectFeatures base={`/api/orgs/${org.slug}/features`} editable={org.can("TEAM_MANAGE")} />
-    </>}
-  </div>
+    {scope==='project'&&(view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
+      <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />)}
+  </>
 }
 
 function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload: () => void }) {

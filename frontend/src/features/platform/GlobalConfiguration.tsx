@@ -5,6 +5,7 @@ import { Empty, ErrorBox, Icon, Loading, Modal, PageHead, useAction, useApi } fr
 import { PropertyInput } from '../../shared/configuration/ConfigurationEditor'
 import type { AccessRole, Connector, Plan, Property } from '../../shared/configuration/types'
 import { GlobalCatalogue, PermissionPicker, type Catalogue } from '../../shared/configuration/Catalogue'
+import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
 import { CategoriesModal, ConnectorFieldsModal, MarketplaceChips, useConnectorCatalogue } from './ConnectorMarketplace'
 
 const emptyConnector: Connector = { key: '', name: '', category: 'MEDIA', driver: 'CUSTOM', enabled: true, description: '' }
@@ -390,6 +391,8 @@ function Connectors() {
           ))}
         </div>
       )}
+
+      <ConnectorPanel base="/api/platform/connector-instances" title="Platform connections" intro="Connectors with one set of values for the whole platform, such as R2 storage." />
 
       {fieldsOf && <ConnectorFieldsModal connectorKey={fieldsOf} onClose={() => setFieldsOf(null)} onChanged={market.reload} />}
       {categoriesOpen && <CategoriesModal onClose={() => setCategoriesOpen(false)} onChanged={market.reload} />}

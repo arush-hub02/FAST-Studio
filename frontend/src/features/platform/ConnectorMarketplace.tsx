@@ -6,17 +6,8 @@ import type { Catalogue } from '../../shared/configuration/Catalogue'
 // Connector marketplace administration (docs/PLATFORM_ADMIN_PLAN.md, P3): categories, a connector's marketplace
 // details, and its fields. Fields are rows in connector_property, never hard-coded.
 
-export type ConnectorCategory = { key: string; name: string; description: string; position: number }
-export type ConnectorField = {
-  connectorKey: string; key: string; label: string; description: string; valueType: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'SELECT' | 'URL'
-  options: string[]; defaultValue: string | null; position: number; required: boolean; encrypted: boolean; scope: 'EXTERNAL' | 'INTERNAL'
-}
-export type MarketConnector = {
-  key: string; name: string; category: string; driver: string; enabled: boolean; description: string; longDescription: string
-  logoUrl: string | null; darkLogoUrl: string | null; referenceLink: string | null; tier: 'FREE' | 'PRO'
-  status: 'AVAILABLE' | 'UPCOMING' | 'UNPUBLISHED'; tenantUpdate: 'ALLOWED' | 'NOT_ALLOWED' | 'CONTACT_ACCOUNT_MANAGER'
-  requiredPermission: string | null; level: 'PLATFORM' | 'PROJECT'; multiInstance: boolean; properties: ConnectorField[]
-}
+import type { ConnectorCategory, ConnectorField, MarketConnector } from '../../shared/configuration/ConnectorPanel'
+
 export type ConnectorCatalogue = { categories: ConnectorCategory[]; connectors: MarketConnector[] }
 
 const STATUS_TEXT = { AVAILABLE: 'Available', UPCOMING: 'Coming soon', UNPUBLISHED: 'Unpublished' }
@@ -55,13 +46,13 @@ export function CategoriesModal({ onClose, onChanged }: { onClose: () => void; o
               {view.data!.categories.map(c => (
                 <tr key={c.key}>
                   <td className="mono">{c.key}</td><td>{c.name}<div className="faint small">{c.description}</div></td><td>{c.position}</td>
-                  <td className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                  <td><div className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
                     <button type="button" className="btn sm" onClick={() => { setIsNew(false); setForm(c) }}>Edit</button>
                     <button type="button" className="btn sm" aria-label={`Delete ${c.name}`} disabled={busy}
                       onClick={() => run(() => api(`/api/platform/connector-categories/${c.key}`, { method: 'DELETE' }), `Category ${c.name} deleted`).then(done)}>
                       <Icon name="trash" size={13} />
                     </button>
-                  </td>
+                  </div></td>
                 </tr>
               ))}
             </tbody>
@@ -191,20 +182,20 @@ export function ConnectorFieldsModal({ connectorKey, onClose, onChanged }: { con
                       <td className="mono">{p.key}</td>
                       <td>{p.label}{p.description && <div className="faint small">{p.description}</div>}</td>
                       <td>{p.valueType}{p.valueType === 'SELECT' && <div className="faint small">{p.options.join(', ')}</div>}</td>
-                      <td className="row-wrap" style={{ gap: 4 }}>
+                      <td><div className="row-wrap" style={{ gap: 4 }}>
                         {p.required && <span className="chip">Required</span>}
                         {p.encrypted && <span className="chip"><Icon name="key" size={11} /> Encrypted</span>}
                         <span className="chip">{p.scope === 'EXTERNAL' ? 'Tenant sees' : 'Platform only'}</span>
                         {p.defaultValue && <span className="chip">Default {p.defaultValue}</span>}
-                      </td>
-                      <td className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                      </div></td>
+                      <td><div className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
                         <button type="button" className="btn sm" onClick={() => { setIsNew(false); setField(p) }}>Edit</button>
                         <button type="button" className="btn sm" aria-label={`Delete field ${p.key}`} disabled={busy}
                           onClick={() => window.confirm(`Delete field ${p.key}? Values stored for it in every project are removed.`)
                             && run(() => api(`/api/platform/connector-definitions/${connectorKey}/properties/${p.key}`, { method: 'DELETE' }), `Field ${p.key} deleted`).then(refresh)}>
                           <Icon name="trash" size={13} />
                         </button>
-                      </td>
+                      </div></td>
                     </tr>
                   ))}
                 </tbody>
