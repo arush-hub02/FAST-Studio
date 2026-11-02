@@ -1340,6 +1340,211 @@
       ]
     },
     {
+      "id": "connector-marketplace",
+      "title": "Connector marketplace: fields and rules",
+      "area": "Multi-tenancy",
+      "status": "Built (backend and platform screens); project Settings tabs and moving Mux, R2 and ad servers onto it are next (P3b–P3d)",
+      "completed": "2026-11-02",
+      "summary": "Platform administrators define each connector's fields in the database: key, type, required, encrypted, and whether tenants see it (external) or only the platform (internal). They group connectors in categories and set, per connector, its status (available, coming soon, unpublished), who connects it (tenants, the platform, or contact your account manager) and the permission someone needs to see it. Connections store values by field key; encrypted values are sealed and never shown again.",
+      "who": [
+        "Platform administrators (fields, categories, rules, any connection)",
+        "Project members with Manage team (connect connectors whose rule allows it)"
+      ],
+      "flow": {
+        "title": "From a field definition to a stored value",
+        "intro": "The boxes are the parts involved; the pill is the request moving through. Pick a situation.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Global configuration",
+            "sub": "Fields, categories, rules"
+          },
+          {
+            "id": "props",
+            "col": 2,
+            "row": 1,
+            "icon": "🧾",
+            "label": "connector_property",
+            "sub": "Field rows"
+          },
+          {
+            "id": "def",
+            "col": 3,
+            "row": 1,
+            "icon": "🔌",
+            "label": "connector_definition",
+            "sub": "Status, rule, permission"
+          },
+          {
+            "id": "tenant",
+            "col": 1,
+            "row": 2,
+            "icon": "👤",
+            "label": "Project member",
+            "sub": "/api/orgs/{org}/connectors"
+          },
+          {
+            "id": "service",
+            "col": 2,
+            "row": 2,
+            "icon": "⚖️",
+            "label": "Marketplace rules",
+            "sub": "ConnectorCatalogueServiceV1"
+          },
+          {
+            "id": "secrets",
+            "col": 3,
+            "row": 2,
+            "icon": "🔐",
+            "label": "Secrets",
+            "sub": "Seal encrypted values"
+          },
+          {
+            "id": "values",
+            "col": 4,
+            "row": 2,
+            "icon": "🗄️",
+            "label": "connector_value",
+            "sub": "RLS by org_id"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Add a field",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "token_secret",
+                "say": "On a connector card, Fields → Add field: key token_secret, required, encrypted, platform only."
+              },
+              {
+                "at": "props",
+                "state": "saved",
+                "say": "The field is a row; nothing in the code lists it.",
+                "tech": "`PUT /api/platform/connector-definitions/mux/properties/token_secret`"
+              }
+            ]
+          },
+          {
+            "name": "A tenant connects an ad server",
+            "steps": [
+              {
+                "at": "tenant",
+                "state": "VAST",
+                "say": "A member with Manage team connects VAST with a tag address.",
+                "tech": "`POST /api/orgs/{org}/connectors/vast`"
+              },
+              {
+                "at": "def",
+                "state": "ALLOWED",
+                "say": "The rule says tenants may connect it, it is available, and they may see it."
+              },
+              {
+                "at": "service",
+                "state": "checked",
+                "say": "Only known external fields; the address must be http(s), the timeout a number; the default fills the timeout."
+              },
+              {
+                "at": "secrets",
+                "state": "sealed",
+                "say": "The tag address is an encrypted field, so it is sealed before storing."
+              },
+              {
+                "at": "values",
+                "state": "stored",
+                "say": "Values are stored under the project; another project can't read or change them."
+              }
+            ]
+          },
+          {
+            "name": "A tenant tries Mux",
+            "steps": [
+              {
+                "at": "tenant",
+                "state": "Mux",
+                "say": "The member opens Mux: they see only external fields, and a note that the platform connects it."
+              },
+              {
+                "at": "service",
+                "state": "403",
+                "say": "Saving is refused: Mux's rule is NOT_ALLOWED. The platform connects it from the tenant page."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Global configuration → Connector definitions.",
+        "Categories: add, rename, reorder or delete marketplace groups.",
+        "On a connector card click Fields: set status, who connects it, the permission needed to see it, level and whether a project can add several; save.",
+        "Add field: key, label, type (text, number, yes/no, list, web address), required, encrypted, and who sees it."
+      ],
+      "howItWorks": [
+        "V26 adds connector_category, connector_property, connector_instance and connector_value, and marketplace columns on connector_definition. Mux, R2 and VAST fields are seeded as rows.",
+        "A project sees a connector when it is published, enabled for its tenant and project, project-level, and the person holds its required permission; tenants get external fields only.",
+        "Saving a connection type-checks values, seals encrypted ones with the server key, and keeps a stored secret when the field is left blank.",
+        "Adapters read a connection's values by field key with defaults filled in (ConnectorCatalogueServiceV1.values)."
+      ],
+      "optimizations": [
+        "One query each for connectors, fields, connections and values per view."
+      ],
+      "scale": [
+        "Not measured: projects with many ad servers.",
+        "Known limit: the field list of a connector is read whole; fine for tens of fields."
+      ],
+      "rules": [
+        "Platform administrators only for fields, categories and rules.",
+        "Tenants connect a connector only when it is available and its rule is ALLOWED, and only with Manage team.",
+        "Encrypted values are never returned, only whether one is stored.",
+        "Changing a field's encryption or deleting it removes its stored values everywhere.",
+        "Not yet: Mux, R2 and ad servers still read their old settings until P3c–P3d move them onto connections."
+      ],
+      "api": [
+        "GET /api/platform/connector-catalogue",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-categories",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "GET /api/platform/connector-instances"
+      ],
+      "tests": [
+        "ConnectorCatalogueTest (fields as rows, sealed secrets, tenant rules, status, project isolation)"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "connector-fields",
+          "account": "platform",
+          "path": "/platform/configuration?tab=connectors",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Fields"
+              }
+            },
+            {
+              "waitFor": {
+                "text": "Marketplace and fields"
+              }
+            },
+            {
+              "wait": 400
+            }
+          ],
+          "caption": "A connector's marketplace details (status, who connects it, permission, level) and its fields: key, type, required, encrypted, and who sees each one."
+        }
+      ]
+    },
+    {
       "id": "durable-media-jobs",
       "title": "Durable media processing",
       "area": "Media library",

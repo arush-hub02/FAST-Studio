@@ -5,6 +5,7 @@ import { Empty, ErrorBox, Icon, Loading, Modal, PageHead, useAction, useApi } fr
 import { PropertyInput } from '../../shared/configuration/ConfigurationEditor'
 import type { AccessRole, Connector, Plan, Property } from '../../shared/configuration/types'
 import { GlobalCatalogue, PermissionPicker, type Catalogue } from '../../shared/configuration/Catalogue'
+import { CategoriesModal, ConnectorFieldsModal, MarketplaceChips, useConnectorCatalogue } from './ConnectorMarketplace'
 
 const emptyConnector: Connector = { key: '', name: '', category: 'MEDIA', driver: 'CUSTOM', enabled: true, description: '' }
 const emptyPlan: Plan = { key: '', name: '', enabled: true, maxProjects: 1, maxChannels: 10, monthlyPrice: 0, currency: 'USD', features: [] }
@@ -225,8 +226,12 @@ function Connectors() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<Connector>(emptyConnector)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'ALL' | 'MEDIA' | 'ADS' | 'STORAGE' | 'OTHER'>('ALL')
+  const [filter, setFilter] = useState('ALL')
   const { busy, run } = useAction()
+  const market = useConnectorCatalogue()
+  const categories = market.data?.categories ?? []
+  const [fieldsOf, setFieldsOf] = useState<string | null>(null)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
 
   const exists = Boolean(view.data?.some(c => c.key === form.key))
 
@@ -250,16 +255,7 @@ function Connectors() {
     })
   }, [view.data, filter, search])
 
-  const counts = useMemo(() => {
-    const list = view.data ?? []
-    return {
-      ALL: list.length,
-      MEDIA: list.filter(c => c.category === 'MEDIA').length,
-      ADS: list.filter(c => c.category === 'ADS').length,
-      STORAGE: list.filter(c => c.category === 'STORAGE').length,
-      OTHER: list.filter(c => c.category === 'OTHER').length,
-    }
-  }, [view.data])
+  const count = (cat: string) => (view.data ?? []).filter(c => cat === 'ALL' || c.category === cat).length
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
@@ -288,10 +284,16 @@ function Connectors() {
               Create definitions globally with typed properties and adapters. Tenants grant them and projects enable or configure them.
             </p>
           </div>
-          <button type="button" className="btn primary" onClick={openCreate}>
-            <Icon name="plus" size={15} />
-            <span>Add connector</span>
-          </button>
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn" onClick={() => setCategoriesOpen(true)}>
+              <Icon name="list" size={15} />
+              <span>Categories</span>
+            </button>
+            <button type="button" className="btn primary" onClick={openCreate}>
+              <Icon name="plus" size={15} />
+              <span>Add connector</span>
+            </button>
+          </div>
         </div>
 
         <div className="between" style={{ flexWrap: 'wrap', gap: 12, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
@@ -307,14 +309,14 @@ function Connectors() {
           </div>
 
           <div className="seg" role="radiogroup" aria-label="Connector category filter">
-            {(['ALL', 'MEDIA', 'ADS', 'STORAGE', 'OTHER'] as const).map(cat => (
+            {[{ key: 'ALL', name: 'All' }, ...categories].map(cat => (
               <button
-                key={cat}
+                key={cat.key}
                 type="button"
-                className={filter === cat ? 'active' : ''}
-                onClick={() => setFilter(cat)}
+                className={filter === cat.key ? 'active' : ''}
+                onClick={() => setFilter(cat.key)}
               >
-                {cat === 'ALL' ? 'All' : cat === 'MEDIA' ? 'Media' : cat === 'ADS' ? 'Advertising' : cat === 'STORAGE' ? 'Storage' : 'Other'} ({counts[cat]})
+                {cat.name} ({count(cat.key)})
               </button>
             ))}
           </div>
@@ -362,6 +364,7 @@ function Connectors() {
               <div className="row-wrap" style={{ gap: 6 }}>
                 <CategoryBadge category={c.category} />
                 <DriverChip driver={c.driver} />
+                <MarketplaceChips c={market.data?.connectors.find(m => m.key === c.key)} />
               </div>
 
               <p className="faint" style={{ minHeight: 40, margin: 0, fontSize: 13, lineHeight: 1.45, flex: 1 }}>
@@ -372,15 +375,24 @@ function Connectors() {
                 <span className="faint small">
                   {c.enabled ? 'Available to tenants' : 'Disabled globally'}
                 </span>
-                <button type="button" className="btn sm" onClick={() => openEdit(c)}>
-                  <Icon name="sliders" size={13} />
-                  <span>Edit definition</span>
-                </button>
+                <div className="row" style={{ gap: 6 }}>
+                  <button type="button" className="btn sm" onClick={() => setFieldsOf(c.key)}>
+                    <Icon name="key" size={13} />
+                    <span>Fields</span>
+                  </button>
+                  <button type="button" className="btn sm" onClick={() => openEdit(c)}>
+                    <Icon name="sliders" size={13} />
+                    <span>Edit definition</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {fieldsOf && <ConnectorFieldsModal connectorKey={fieldsOf} onClose={() => setFieldsOf(null)} onChanged={market.reload} />}
+      {categoriesOpen && <CategoriesModal onClose={() => setCategoriesOpen(false)} onChanged={market.reload} />}
 
       {/* Modal Form for Create & Edit */}
       {modalOpen && (
@@ -447,10 +459,9 @@ function Connectors() {
               <label className="field">
                 Category
                 <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                  <option value="MEDIA">MEDIA (Video & Content)</option>
-                  <option value="ADS">ADS (Advertising & Demand)</option>
-                  <option value="STORAGE">STORAGE (Object storage & CDN)</option>
-                  <option value="OTHER">OTHER (Utilities & Custom)</option>
+                  {(categories.length ? categories : [{ key: form.category, name: form.category }]).map(cat => (
+                    <option key={cat.key} value={cat.key}>{cat.key} ({cat.name})</option>
+                  ))}
                 </select>
                 <span className="hint">Marketplace category for grouping.</span>
               </label>

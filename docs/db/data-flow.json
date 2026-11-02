@@ -10981,6 +10981,1603 @@
         }
       }
     },
+    "GET /api/orgs/{org}/connectors": {
+      "title": "Project connector marketplace",
+      "category": "Project, settings and team",
+      "id": "ep-get-api-orgs-org-connectors",
+      "handler": "ProjectConnectorControllerV1.view",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/connectors/{key}": {
+      "title": "Connect a connector",
+      "category": "Project, settings and team",
+      "id": "ep-post-api-orgs-org-connectors-key",
+      "handler": "ProjectConnectorControllerV1.connect",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/connectors/{key}/{id}": {
+      "title": "Remove a connection",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-connectors-key-id",
+      "handler": "ProjectConnectorControllerV1.delete",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteInstance",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/orgs/{org}/connectors/{key}/{id}": {
+      "title": "Update a connection",
+      "category": "Project, settings and team",
+      "id": "ep-put-api-orgs-org-connectors-key-id",
+      "handler": "ProjectConnectorControllerV1.update",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "GET /api/orgs/{org}/dashboard": {
       "title": "Dashboard",
       "category": "Project, settings and team",
@@ -17994,6 +19591,538 @@
         }
       }
     },
+    "GET /api/platform/connector-catalogue": {
+      "title": "Connector marketplace catalogue",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-get-api-platform-connector-catalogue",
+      "handler": "ConnectorCatalogueControllerV1.catalogue",
+      "tables": {
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "catalogue",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "catalogue",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "catalogue",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/connector-categories": {
+      "title": "Add a connector category",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-connector-categories",
+      "handler": "ConnectorCatalogueControllerV1.addCategory",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categoryExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "saveCategory",
+              "layer": "repository"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "addCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/connector-categories/{key}": {
+      "title": "Delete a connector category",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-connector-categories-key",
+      "handler": "ConnectorCatalogueControllerV1.deleteCategory",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteCategory",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categoryInUse",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/connector-categories/{key}": {
+      "title": "Edit a connector category",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-connector-categories-key",
+      "handler": "ConnectorCatalogueControllerV1.updateCategory",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categoryExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "saveCategory",
+              "layer": "repository"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updateCategory",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveCategory",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
     "GET /api/platform/connector-definitions": {
       "title": "List connectors",
       "category": "Platform: tenants, projects and plans",
@@ -18083,6 +20212,26 @@
             }
           ]
         },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "saveConnector",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "saveConnector",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorCategoryExists",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_definition": {
           "mode": "read+write",
           "chain": [
@@ -18125,6 +20274,1897 @@
               "class": "Audit",
               "method": "platformOrg",
               "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/connector-definitions/{key}/details": {
+      "title": "Marketplace details of a connector",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-connector-definitions-key-details",
+      "handler": "ConnectorCatalogueControllerV1.details",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "details",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveDetails",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "details",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveDetails",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "details",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveDetails",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "saveDetails",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "details",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveDetails",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "details",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveDetails",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/connector-definitions/{key}/properties/{prop}": {
+      "title": "Delete a connector field",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-connector-definitions-key-properties-prop",
+      "handler": "ConnectorCatalogueControllerV1.deleteProperty",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteProperty",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteValuesOf",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deleteProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/connector-definitions/{key}/properties/{prop}": {
+      "title": "Add or change a connector field",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-connector-definitions-key-properties-prop",
+      "handler": "ConnectorCatalogueControllerV1.saveProperty",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connector",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteValuesOf",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "saveProperty",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveProperty",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/connector-instances": {
+      "title": "Platform-level connections",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-get-api-platform-connector-instances",
+      "handler": "ConnectorCatalogueControllerV1.platform",
+      "tables": {
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/connector-instances/{key}": {
+      "title": "Connect a platform-level connector",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-connector-instances-key",
+      "handler": "ConnectorCatalogueControllerV1.connectPlatform",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/connector-instances/{key}/{id}": {
+      "title": "Disconnect a platform-level connector",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-connector-instances-key-id",
+      "handler": "ConnectorCatalogueControllerV1.deletePlatform",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteInstance",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/connector-instances/{key}/{id}": {
+      "title": "Update a platform-level connection",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-connector-instances-key-id",
+      "handler": "ConnectorCatalogueControllerV1.updatePlatform",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
             }
           ]
         }
@@ -21045,6 +25085,1433 @@
             {
               "class": "ConnectorRepository",
               "method": "organization",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/orgs/{orgId}/connector-instances": {
+      "title": "A project's connections (platform view)",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-get-api-platform-orgs-orgid-connector-instances",
+      "handler": "ConnectorCatalogueControllerV1.project",
+      "tables": {
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "connectors",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/orgs/{orgId}/connector-instances/{key}": {
+      "title": "Connect a connector for a project",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-orgs-orgid-connector-instances-key",
+      "handler": "ConnectorCatalogueControllerV1.connect",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}": {
+      "title": "Remove a project's connection",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-orgs-orgid-connector-instances-key-id",
+      "handler": "ConnectorCatalogueControllerV1.delete",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "deleteInstance",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}": {
+      "title": "Update a project's connection",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-orgs-orgid-connector-instances-key-id",
+      "handler": "ConnectorCatalogueControllerV1.update",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -30666,6 +36133,9 @@
         "POST /api/orgs/{org}/channels/{id}/stop",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "POST /api/orgs/{org}/destinations",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -30688,7 +36158,16 @@
         "POST /api/partners/{partner}/clients/{clientId}/revoke",
         "POST /api/partners/{partner}/links/{linkId}/accept",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}",
         "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "DELETE /api/platform/email/templates/{key}",
         "PUT /api/platform/email/templates/{key}",
         "POST /api/platform/feature-groups",
@@ -30707,6 +36186,9 @@
         "DELETE /api/platform/orgs/{orgId}/ad-sources/{id}",
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
@@ -30747,6 +36229,10 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -30763,8 +36249,14 @@
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "GET /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
@@ -30798,6 +36290,10 @@
         "POST /api/auth/token",
         "POST /api/auth/token/refresh",
         "POST /api/auth/token/switch",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -30811,6 +36307,12 @@
         "DELETE /api/orgs/{org}/roles/{key}",
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/roles",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}"
@@ -30855,6 +36357,10 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/dashboard",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
@@ -30877,7 +36383,16 @@
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/partners/{partner}/links",
         "PUT /api/platform/access-roles",
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}",
         "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "GET /api/platform/email/messages",
         "DELETE /api/platform/email/templates/{key}",
         "PUT /api/platform/email/templates/{key}",
@@ -30899,6 +36414,9 @@
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
@@ -30988,6 +36506,10 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -30997,6 +36519,12 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
@@ -31090,6 +36618,10 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -31102,6 +36634,9 @@
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles",
         "GET /api/platform/catalogue",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "POST /api/platform/feature-groups",
         "DELETE /api/platform/feature-groups/{key}",
         "PUT /api/platform/feature-groups/{key}",
@@ -31110,6 +36645,9 @@
         "PUT /api/platform/features/{key}",
         "POST /api/platform/modules",
         "PUT /api/platform/modules/{key}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
@@ -31473,11 +37011,21 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -31501,13 +37049,32 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}",
         "GET /api/platform/connector-definitions",
         "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/property-definitions",
@@ -31524,7 +37091,8 @@
         "GET /play/{session}/info"
       ],
       "write": [
-        "PUT /api/platform/connector-definitions"
+        "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details"
       ]
     },
     "project_connector": {
@@ -31534,11 +37102,21 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -31863,6 +37441,118 @@
       ],
       "write": [
         "POST /api/orgs/{org}/channels/{id}/programming/generate"
+      ]
+    },
+    "connector_instance": {
+      "read": [
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ]
+    },
+    "connector_value": {
+      "read": [
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/connectors/{key}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-instances/{key}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ]
+    },
+    "connector_category": {
+      "read": [
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ],
+      "write": [
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}"
+      ]
+    },
+    "connector_property": {
+      "read": [
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+      ],
+      "write": [
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}"
       ]
     },
     "module": {

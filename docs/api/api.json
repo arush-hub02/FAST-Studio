@@ -501,6 +501,42 @@
             "key": "clip-reviewer"
           },
           "description": "Removes one of the project's own roles. Refused while anyone has it (409 IN_USE). Needs TEAM_MANAGE."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/connectors",
+          "title": "Project connector marketplace",
+          "description": "Published connectors this project may use and the caller may see (required permission), with external fields only. Each says whether it is connected, what is missing and whether the caller may connect it."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/connectors/{key}",
+          "title": "Connect a connector",
+          "description": "Only when its rule is ALLOWED and it is AVAILABLE; needs Manage team. External fields only; values are type-checked.",
+          "body": {
+            "name": "Primary",
+            "enabled": true,
+            "values": {
+              "tag_url": "https://ads.example/vast",
+              "timeout_ms": "1500"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/connectors/{key}/{id}",
+          "title": "Update a connection",
+          "description": "A blank encrypted value keeps the stored one.",
+          "body": {
+            "enabled": false,
+            "values": {}
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/connectors/{key}/{id}",
+          "title": "Remove a connection",
+          "description": "Disconnects it, or removes one ad server of a list."
         }
       ]
     },
@@ -1736,6 +1772,155 @@
           "fields": {
             "key": "Stable identifier, lower-case (e.g. vast-secondary)."
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/connector-catalogue",
+          "title": "Connector marketplace catalogue",
+          "description": "Categories and every connector with its marketplace details and fields (key, type, required, encrypted, external or internal)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/connector-categories",
+          "title": "Add a connector category",
+          "description": "A marketplace group such as ADS or ANALYTICS.",
+          "body": {
+            "key": "ANALYTICS",
+            "name": "Analytics",
+            "description": "Measurement partners",
+            "position": 5
+          },
+          "fields": {
+            "key": "Capitals, digits and _. Can't change later."
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-categories/{key}",
+          "title": "Edit a connector category",
+          "description": "Name, description and order.",
+          "body": {
+            "name": "Analytics",
+            "description": "Measurement partners",
+            "position": 5
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-categories/{key}",
+          "title": "Delete a connector category",
+          "description": "409 while a connector still uses it."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-definitions/{key}/details",
+          "title": "Marketplace details of a connector",
+          "description": "Status (AVAILABLE, UPCOMING, UNPUBLISHED), who connects it (ALLOWED, NOT_ALLOWED, CONTACT_ACCOUNT_MANAGER), the permission needed to see it, level (PROJECT or PLATFORM), several per project, tier, logos and links.",
+          "body": {
+            "tier": "FREE",
+            "status": "AVAILABLE",
+            "tenantUpdate": "ALLOWED",
+            "requiredPermission": "ADS_EDIT",
+            "level": "PROJECT",
+            "multiInstance": true,
+            "longDescription": "Any VAST 4 ad server."
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-definitions/{key}/properties/{prop}",
+          "title": "Add or change a connector field",
+          "description": "Fields are rows, not code. Changing whether a field is encrypted removes the values stored for it.",
+          "body": {
+            "label": "Token secret",
+            "valueType": "STRING",
+            "required": true,
+            "encrypted": true,
+            "scope": "INTERNAL",
+            "position": 2
+          },
+          "fields": {
+            "valueType": "STRING, NUMBER, BOOLEAN, SELECT (needs options) or URL.",
+            "scope": "EXTERNAL: tenants see and fill it. INTERNAL: platform only.",
+            "encrypted": "Stored sealed and never returned; no default allowed."
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-definitions/{key}/properties/{prop}",
+          "title": "Delete a connector field",
+          "description": "Also removes the values every project stored for it."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/connector-instances",
+          "title": "Platform-level connections",
+          "description": "Connectors with one set of values for the whole platform (R2 storage)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/connector-instances/{key}",
+          "title": "Connect a platform-level connector",
+          "description": "Saves its values; encrypted ones are sealed.",
+          "body": {
+            "values": {
+              "worker_url": "https://edge.example",
+              "edge_secret": "s3cret"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-instances/{key}/{id}",
+          "title": "Update a platform-level connection",
+          "description": "A blank encrypted value keeps the stored one; a blank plain value clears it.",
+          "body": {
+            "values": {
+              "public_url": "https://media.example"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-instances/{key}/{id}",
+          "title": "Disconnect a platform-level connector",
+          "description": "Its values go with it."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/connector-instances",
+          "title": "A project's connections (platform view)",
+          "description": "Every project-level connector with internal fields too, used by the tenant page."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}",
+          "title": "Connect a connector for a project",
+          "description": "The platform can connect any available connector, whatever its tenant rule.",
+          "body": {
+            "values": {
+              "token_id": "abc",
+              "token_secret": "xyz"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+          "title": "Update a project's connection",
+          "description": "Same value rules as above.",
+          "body": {
+            "enabled": true,
+            "values": {
+              "environment": "production"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+          "title": "Remove a project's connection",
+          "description": "Disconnects it, or removes one ad server from a list."
         },
         {
           "method": "GET",

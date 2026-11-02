@@ -205,6 +205,7 @@ public class TenantConfigurationServiceV1 {
         requirePlatform();
         Connector old = connectors().stream().filter(x -> x.key().equals(c.key())).findFirst().orElse(null);
         if (old != null && !old.driver().equals(c.driver())) throw ApiException.bad("A connector's driver cannot change. Create a new definition.");
+        if (!repository.connectorCategoryExists(c.category())) throw ApiException.bad("Unknown connector category " + c.category() + ".");
         repository.saveConnector(c, Objects.toString(c.description(), ""));
         driverCache.clear();
         audit.platform(Auth.userId(), "connector.definition.save", "connector", null, c.key());

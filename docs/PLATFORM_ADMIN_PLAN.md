@@ -42,13 +42,76 @@ Project ── links → Features (switched on for the project)
 
 Clicking a tenant on the Tenants page opens /platform/tenants/{tenant} with side tabs: Overview (subscription, status, projects) and Configuration for the tenant, and Features, Roles, Connectors and Media types for the project picked at the top of the side bar. The tab and project are in the address. Platform routes for one customer project: /api/platform/orgs/{orgId}/project-features and /api/platform/orgs/{orgId}/roles. Planned additions: Team (members) with P2, Email templates with P5.
 
+## P3 connector marketplace: design (user decisions 2026-11-02)
+
+Reference: v2 CMS ops portal `ops-core/component/connectors` (add, update, dashboard, category list), `modals/connector.modal.ts` (GlobalConnector, ConnectorProperty, ConnectorStatus, AllowUserToUpdateConnector, ConnectorPropertyType), project `connector-settings`, and the studio `connectors-list` / `connector-detail` (tenant side).
+
+**Decisions:**
+- General settings (premiere time, weekdays, API, media and conversion limits) stay as Properties under Configuration.
+- Connector properties live inside each connector.
+- All connectors move onto connector properties now: Mux, R2 and ad servers.
+- Who connects is a per-connector rule.
+- Tenants connect from Settings with side tabs by category.
+
+**Model**
+
+```
+Connector category ─ Connector ─ Property definitions (required, encrypted, external/internal, type, default)
+                        │
+                        └─ Instances (one per scope, or many for multi-instance connectors such as ad servers)
+                              └─ Property values (encrypted when the property is)
+```
+
+- **Connector category** (global): key, name, position. Replaces the fixed MEDIA/ADS/STORAGE/OTHER list; those four are seeded.
+- **Connector** (global): key, name, short and long description, light and dark logo URL, category, adapter (driver: MUX, R2, VAST, DIRECT, CUSTOM), reference link, plan tier (FREE or PRO). It also has:
+  - **status**: AVAILABLE, UPCOMING (shown as "coming soon", can't be connected) or UNPUBLISHED (hidden from tenants);
+  - **tenant update rule**: ALLOWED, NOT_ALLOWED or CONTACT_ACCOUNT_MANAGER;
+  - **required permission**: tenants see the connector only if they hold it;
+  - **level**: PLATFORM (one set of values for the whole platform, e.g. R2) or PROJECT;
+  - **multi-instance**: true for ad servers (an ordered list per project).
+- **Connector property** (belongs to the connector): key, label, description, type (STRING, NUMBER, BOOLEAN, SELECT, URL), options, default value, position, plus three flags:
+  - **required**;
+  - **encrypted**: stored sealed and never returned, only "configured";
+  - **external or internal**: external properties are shown to tenants; internal ones only to platform administrators.
+- **Connector instance and values:**
+  - Each instance belongs to one connector, at platform level or for one project. It has a name, a position, on/off, and a connected status (all required values present, last check result).
+  - Values are stored per instance and property, sealed when the property is encrypted.
+  - Project instances follow row-level security.
+- **Migration:**
+  - The existing connector, tenant-connector and project-connector switches stay as availability.
+  - `media_connection` rows become Mux instances; their ciphertexts move unchanged into encrypted values.
+  - `ad_source` rows become instances of the VAST and DIRECT connectors (VAST tag URLs are already AES-GCM sealed).
+  - R2 / edge settings become platform-level values, with environment variables as the fallback.
+
+**Fields are data, not code (user, 2026-11-02).** Every connector's fields are rows in the property table, created by a migration as ordinary data:
+- Mux: token ID, token secret, webhook secret, environment, passthrough tag.
+- R2 / edge: Worker URL, edge secret, public URL.
+- VAST: tag URL, timeout.
+
+Platform administrators can rename, re-describe, reorder or extend them, and change their required, encrypted and external/internal flags, in Global configuration. Forms are built from those rows; no screen has a hard-coded field list. An adapter (the Mux, R2 or VAST code) reads a value only by its property key. If a property it needs is missing, the connection shows as "not connected" with the missing field named, rather than failing.
+
+**Screens**
+
+- **Global configuration → Connector definitions:** each connector has its own page with Details and Properties (a property table with required, encrypted and external/internal) and a category list.
+- **Project Settings → Connectors:** side tabs by category. Picking a connector shows its description, status (Connected, Available or Coming soon) and a form of its **external** properties (required marked, encrypted fields write-only), with Connect and Disconnect when the rule allows. "Contact your account manager" is shown when it doesn't. Multi-instance connectors show an ordered list of instances.
+- **Platform tenant page → Connectors tab:** the same view per project, including internal properties and platform-only actions.
+
+**Sub-stages (each tested and pushed on its own)**
+
+| Sub-stage | Scope |
+| --- | --- |
+| P3a | Categories, connector metadata, connector properties, instances and values (tables, APIs, encryption, RLS, tests); Global configuration connector pages |
+| P3b | Project Settings → Connectors side tabs and the tenant page Connectors tab; connect, disconnect and rules |
+| P3c | Mux moves onto instances and values (MediaConnectionService reads from there; webhooks, sync and uploads unchanged); R2 / edge platform values with environment fallback |
+| P3d | Ad servers move onto multi-instance VAST and DIRECT connectors (waterfall order = instance position; ad decisions and creative conditioning unchanged); remove the old tables after a verified migration |
+
 ## Stages
 
 | Stage | Scope | Status |
 | --- | --- | --- |
 | P1. Features and permissions catalogue | `capability` table (V24): global and per-project entries, built-ins seeded and protected. Effective keys in project details. Platform tab "Features & permissions", project Settings section. Custom roles may list global custom permissions | Built 2026-11-01 (pushed 7d81c09); redesigned 2026-11-02 (V25, local) |
 | P2. Roles and people | Roles at global level (exists) and project level. User management (invite, assign to organizations, change roles, deactivate). Organization creation and assignment from one place | Project-level roles built with the redesign (2026-11-02, local); user and organization management planned |
-| P3. Connector marketplace | Global connector catalogue with category, status (available, upcoming), visibility by permission, and per-connector property definitions: key, label, type, encrypted, required, external (shown to tenants) or internal. Tenant page with side tabs to connect a connector by entering its keys. Mux credentials (media_connection), R2 and ad servers move onto connector properties, keeping their encrypted values | Planned |
+| P3. Connector marketplace | Global connector catalogue with category, status (available, upcoming), visibility by permission, and per-connector property definitions: key, label, type, encrypted, required, external (shown to tenants) or internal. Tenant page with side tabs to connect a connector by entering its keys. Mux credentials (media_connection), R2 and ad servers move onto connector properties, keeping their encrypted values | Designed 2026-11-02 (see "P3 connector marketplace: design"); P3a next |
 | P4. Media types | Global and project-level types: create, edit, "add from global" to a project, enable per project | Planned |
 | P5. Project email templates | Per-project overrides of platform templates, with preview and fallback to the platform version | Planned |
 

@@ -40,7 +40,7 @@ public final class TenantConfiguration {
     /** Global connector definition. The driver selects the server adapter and cannot change later. */
     public record Connector(@NotBlank @Pattern(regexp = "[a-z][a-z0-9_-]{1,49}") String key,
                             @NotBlank @Size(max = 100) String name,
-                            @NotNull @Pattern(regexp = "MEDIA|ADS|STORAGE|OTHER") String category,
+                            @NotNull @Pattern(regexp = "[A-Z][A-Z0-9_]{1,39}") String category,
                             @NotNull @Pattern(regexp = "MUX|VAST|R2|CUSTOM") String driver,
                             boolean enabled,
                             @Size(max = 500) String description) {}

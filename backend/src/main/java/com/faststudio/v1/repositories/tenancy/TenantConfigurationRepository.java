@@ -168,6 +168,10 @@ public class TenantConfigurationRepository {
                 .param("p", project).param("d", driver).query(Integer.class).single() > 0;
     }
 
+    public boolean connectorCategoryExists(String key) {
+        return db.sql("select count(*) from connector_category where key = :k").param("k", key).query(Integer.class).single() > 0;
+    }
+
     public String projectFeatures(UUID project) {
         return db.sql("select features from organization where id = :p").param("p", project).query(String.class).optional().orElse("");
     }
