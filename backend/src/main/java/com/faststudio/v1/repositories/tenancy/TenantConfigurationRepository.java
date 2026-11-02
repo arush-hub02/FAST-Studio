@@ -172,6 +172,11 @@ public class TenantConfigurationRepository {
         return db.sql("select features from organization where id = :p").param("p", project).query(String.class).optional().orElse("");
     }
 
+    /** The project's linked feature keys (organization.features, comma-separated). */
+    public void setProjectFeatures(UUID project, String features) {
+        db.sql("update organization set features = :f where id = :p").param("f", features).param("p", project).update();
+    }
+
     public boolean connectorEnabled(UUID project, String key) {
         return db.sql("""
                 select count(*) from organization o join customer_tenant t on t.id = o.tenant_id

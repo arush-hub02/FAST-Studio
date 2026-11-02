@@ -4,7 +4,7 @@ import { api } from '../../shared/api'
 import { Empty, ErrorBox, Icon, Loading, Modal, PageHead, useAction, useApi } from '../../shared/ui'
 import { PropertyInput } from '../../shared/configuration/ConfigurationEditor'
 import type { AccessRole, Connector, Plan, Property } from '../../shared/configuration/types'
-import { GlobalCapabilities } from '../../shared/configuration/CapabilityCatalog'
+import { GlobalCatalogue, PermissionPicker, type Catalogue } from '../../shared/configuration/Catalogue'
 
 const emptyConnector: Connector = { key: '', name: '', category: 'MEDIA', driver: 'CUSTOM', enabled: true, description: '' }
 const emptyPlan: Plan = { key: '', name: '', enabled: true, maxProjects: 1, maxChannels: 10, monthlyPrice: 0, currency: 'USD', features: [] }
@@ -47,7 +47,7 @@ export default function GlobalConfiguration() {
 
       {tab === 'connectors' && <Connectors />}
       {tab === 'properties' && <Properties />}
-      {tab === 'capabilities' && <GlobalCapabilities />}
+      {tab === 'capabilities' && <GlobalCatalogue />}
       {tab === 'plans' && <Plans />}
       {tab === 'roles' && <Roles />}
     </div>
@@ -423,7 +423,7 @@ function Connectors() {
                 Stable key
                 <input
                   required
-                  pattern="[a-z][a-z0-9_-]{1,49}"
+                  pattern="[a-z][a-z0-9_\-]{1,49}"
                   disabled={exists}
                   placeholder="e.g. mux, r2, s3_archive"
                   value={form.key}
@@ -686,7 +686,7 @@ function Properties() {
                 <input
                   required
                   disabled={exists}
-                  pattern="[a-z][a-z0-9_.-]{1,79}"
+                  pattern="[a-z][a-z0-9_.\-]{1,79}"
                   placeholder="e.g. streaming.bitrate_ceiling"
                   value={form.key}
                   onChange={e => setForm({ ...form, key: e.target.value })}
@@ -1072,7 +1072,7 @@ function Plans() {
                 <input
                   required
                   disabled={exists}
-                  pattern="[a-z][a-z0-9_-]{1,49}"
+                  pattern="[a-z][a-z0-9_\-]{1,49}"
                   placeholder="e.g. enterprise, pro, starter"
                   value={form.key}
                   onChange={e => setForm({ ...form, key: e.target.value.toLowerCase() })}
@@ -1183,7 +1183,8 @@ function Plans() {
 // ============================================================================
 
 function Roles() {
-  const view = useApi<{ roles: AccessRole[]; permissions: string[] }>('/api/platform/access-roles')
+  const view = useApi<{ roles: AccessRole[]; permissions: string[]; ceilings: Record<string, string[]> }>('/api/platform/access-roles')
+  const catalogue = useApi<Catalogue>('/api/platform/catalogue')
   const initial = { key: '', name: '', kind: 'CUSTOMER', baseRole: 'ADMIN', permissions: ['VIEW'], enabled: true, expectedRevision: 0 }
   const [form, setForm] = useState(initial)
   const [modalOpen, setModalOpen] = useState(false)
@@ -1430,7 +1431,7 @@ function Roles() {
                 Stable role key
                 <input
                   required
-                  pattern="[a-z][a-z0-9_-]{1,49}"
+                  pattern="[a-z][a-z0-9_\-]{1,49}"
                   disabled={exists}
                   placeholder="e.g. content_lead, traffic_mgr"
                   value={form.key}
@@ -1486,26 +1487,16 @@ function Roles() {
 
             <fieldset style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px 16px' }}>
               <legend style={{ padding: '0 6px', fontWeight: 600, fontSize: 13, color: 'var(--text-2)' }}>
-                Permissions
+                Permissions by module, feature group and feature
               </legend>
-              <div className="row-wrap" style={{ gap: 12 }}>
-                {view.data?.permissions.map(p => (
-                  <label className="check" key={p} style={{ cursor: p === 'VIEW' ? 'not-allowed' : 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      disabled={p === 'VIEW'}
-                      checked={form.permissions.includes(p)}
-                      onChange={e => setForm({
-                        ...form,
-                        permissions: e.target.checked
-                          ? [...form.permissions, p]
-                          : form.permissions.filter(x => x !== p),
-                      })}
-                    />
-                    <span className="mono small">{p}</span>
-                  </label>
-                ))}
-              </div>
+              {catalogue.data ? (
+                <PermissionPicker
+                  c={catalogue.data}
+                  value={form.permissions}
+                  onChange={permissions => setForm({ ...form, permissions })}
+                  allowed={view.data?.ceilings[form.baseRole] ?? []}
+                />
+              ) : catalogue.error ? <ErrorBox error={catalogue.error} retry={catalogue.reload} /> : <Loading />}
             </fieldset>
 
             <label className="check" style={{ cursor: 'pointer', padding: '4px 0' }}>

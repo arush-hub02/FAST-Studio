@@ -146,10 +146,31 @@
     },
     "access_role": {
       "feature": "Tenants & configuration",
-      "purpose": "Custom roles the platform defines for customer projects or partner organizations, always within a built-in role.",
+      "purpose": "Custom roles, always within a built-in role (the ceiling): global ones defined by the platform (org_id empty) or a project's own (org_id set, V25). Built-in permissions stay within the ceiling; custom permissions from the catalogue can be added.",
       "pages": ["/platform/configuration", "/:org/team"],
-      "apis": ["GET /api/platform/access-roles", "PUT /api/platform/access-roles", "GET /api/orgs/{org}/members/roles"],
-      "watch": ["enabled = false: members with this role can only view."]
+      "apis": ["GET /api/platform/access-roles", "PUT /api/platform/access-roles", "GET /api/orgs/{org}/members/roles", "GET /api/orgs/{org}/roles", "PUT /api/orgs/{org}/roles", "DELETE /api/orgs/{org}/roles/{key}", "PATCH /api/orgs/{org}/members/{userId}"],
+      "watch": ["enabled = false: members with this role can only view.", "key is unique across global and project roles (409 KEY_TAKEN).", "A project role can't be removed while a member holds it (409 IN_USE).", "Rows with org_id are hidden from other projects by row-level security."]
+    },
+    "module": {
+      "feature": "Tenants & configuration",
+      "purpose": "Top level of the features and permissions catalogue (e.g. Media, Advertising). The role editor shows one tab per module.",
+      "pages": ["/platform/configuration", "/:org/settings", "/:org/team"],
+      "apis": ["GET /api/platform/catalogue", "POST /api/platform/modules", "PUT /api/platform/modules/{key}", "DELETE /api/platform/modules/{key}", "GET /api/orgs/{org}/features"],
+      "watch": ["A module with feature groups can't be removed (409 IN_USE)."]
+    },
+    "feature_group": {
+      "feature": "Tenants & configuration",
+      "purpose": "A group of features inside a module. Projects search features by group; the role editor shows one tab per group. Unpublished groups are hidden from projects.",
+      "pages": ["/platform/configuration", "/:org/settings", "/:org/team"],
+      "apis": ["GET /api/platform/catalogue", "POST /api/platform/feature-groups", "PUT /api/platform/feature-groups/{key}", "DELETE /api/platform/feature-groups/{key}", "GET /api/orgs/{org}/features"],
+      "watch": ["A group with features can't be removed (409 IN_USE).", "published = false: its features aren't offered to projects."]
+    },
+    "feature_permission": {
+      "feature": "Tenants & configuration",
+      "purpose": "Which permissions each feature uses: how the role editor shows permissions under their feature.",
+      "pages": ["/platform/configuration", "/:org/team"],
+      "apis": ["POST /api/platform/features", "PUT /api/platform/features/{key}", "GET /api/platform/catalogue", "GET /api/orgs/{org}/roles"],
+      "watch": ["Rows go with the feature or permission (on delete cascade).", "Permissions no feature uses appear under \"Other\" in the role editor."]
     },
     "tenant_settings": {
       "feature": "Media library",
@@ -188,10 +209,10 @@
     },
     "capability": {
       "feature": "Tenants & configuration",
-      "purpose": "The features and permissions catalogue: identifiers screens check (org.has / org.can). Built-in rows mirror what the server enforces; platform administrators add global rows (org_id empty), a project's administrators add rows for that project only.",
-      "pages": ["/platform/configuration", "/:org/settings"],
-      "apis": ["GET /api/platform/capabilities", "POST /api/platform/capabilities", "PUT /api/platform/capabilities/{key}", "DELETE /api/platform/capabilities/{key}", "GET /api/orgs/{org}/capabilities", "POST /api/orgs/{org}/capabilities", "PUT /api/orgs/{org}/capabilities/{key}", "DELETE /api/orgs/{org}/capabilities/{key}", "GET /api/orgs/{org}/project-details", "PUT /api/platform/orgs/{orgId}/features"],
-      "watch": ["key is unique across the whole platform (409 KEY_TAKEN).", "built_in rows can't be removed or switched off (409 BUILT_IN).", "A global FEATURE is on for a project only when organization.features lists it; a project's own FEATURE is on while enabled.", "Custom PERMISSION rows go to OWNER/ADMIN and to custom roles listing them; they grant no server access by themselves.", "Rows with org_id are hidden from other projects by row-level security."]
+      "purpose": "Features and permissions, global only since V25 (org_id stays empty). A FEATURE belongs to a feature group (group_key), may be default, hidden or beta, and is switched on per project; a PERMISSION is given through roles. Built-in rows mirror what the server enforces. Screens check them with org.has / org.can.",
+      "pages": ["/platform/configuration", "/:org/settings", "/:org/team"],
+      "apis": ["GET /api/platform/catalogue", "POST /api/platform/features", "PUT /api/platform/features/{key}", "DELETE /api/platform/features/{key}", "POST /api/platform/permissions", "PUT /api/platform/permissions/{key}", "DELETE /api/platform/permissions/{key}", "GET /api/orgs/{org}/features", "PUT /api/orgs/{org}/features/{key}", "GET /api/orgs/{org}/project-details", "PUT /api/platform/orgs/{orgId}/features"],
+      "watch": ["key is unique across features and permissions (409 KEY_TAKEN).", "built_in rows can't be removed or switched off (409 BUILT_IN); built-in features are switched on per project by the platform only (409 PLATFORM_ONLY).", "A FEATURE is on for a project when organization.features lists it (built-in ones also need the tenant's plan).", "Custom PERMISSION rows go to OWNER/ADMIN and to roles listing them; they grant no server access by themselves."]
     },
     "asset_source": {
       "feature": "Media library",

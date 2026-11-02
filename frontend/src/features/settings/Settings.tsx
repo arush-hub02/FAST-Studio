@@ -3,7 +3,7 @@ import { api, type MediaSettingsView} from '../../shared/api'
 import { useOrg } from '../../app/App'
 import { DAYS, ErrorBox, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEditor'
-import { ProjectCapabilities } from '../../shared/configuration/CapabilityCatalog'
+import { ProjectFeatures } from '../../shared/configuration/Catalogue'
 
 export default function Settings() {
   const org = useOrg()
@@ -16,7 +16,7 @@ export default function Settings() {
     {scope==='project'&&<>
     {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
       <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
-    <ProjectCapabilities base={`/api/orgs/${org.slug}/capabilities`} editable={org.can('TEAM_MANAGE')} />
+    <ProjectFeatures slug={org.slug} editable={org.can('TEAM_MANAGE')} />
     </>}
   </div>
 }
@@ -60,7 +60,7 @@ function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload:
       <h2>Viewer integration</h2>
       <p>{initial.viewerKeySet ? 'A signing key is configured.' : 'No signing key is configured.'} Keep it only on your viewer application server. Rotating it revokes existing context for future decisions; in-progress breaks retain their committed ads.</p>
       <p className="faint">Generate a random signing key on your viewer application server, then enter it here to configure or rotate the integration. Stored keys cannot be retrieved.</p>
-      <label className="field"><span>Replacement signing key</span><input type="password" autoComplete="new-password" required minLength={32} maxLength={256} pattern="[A-Za-z0-9_-]+" value={key} disabled={busy || !initial.revision} onChange={e => setKey(e.target.value)} /></label>
+      <label className="field"><span>Replacement signing key</span><input type="password" autoComplete="new-password" required minLength={32} maxLength={256} pattern="[A-Za-z0-9_\-]+" value={key} disabled={busy || !initial.revision} onChange={e => setKey(e.target.value)} /></label>
       <button type="submit" className="btn" disabled={busy || !initial.revision || key.length < 32}>Save replacement signing key</button>
       {!initial.revision && <p className="faint">Save tenant settings first.</p>}
     </form>}

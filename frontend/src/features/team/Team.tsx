@@ -3,6 +3,7 @@ import { api } from '../../shared/api'
 import { useOrg, useSession } from '../../app/App'
 import { Confirm, fmtDate, Icon, initials, Loading, Modal, PageHead, useAction, useApi } from '../../shared/ui'
 import { ResetLinkModal } from '../../shared/components/ResetLinkModal'
+import { ProjectRoles } from '../../shared/configuration/Catalogue'
 
 type Member = { userId: string; name: string; email: string; role: string; createdAt: string; customRoleKey?: string }
 /** Built-in and custom roles assignable in this organization; the server supplies names and descriptions. */
@@ -50,6 +51,7 @@ export default function Team() {
             <div className="callout"><Icon name="shield" /><div className="small">Nobody can give a role higher than their own, and every organization keeps at least one owner.</div></div></div>
         </section>
       </div>
+      <div style={{ marginTop: 16 }}><ProjectRoles slug={org.slug} editable={manage} kind={org.kind} /></div>
       {resetLink && <ResetLinkModal {...resetLink} onClose={() => setResetLink(null)} />}
       {inviting && <Invite onClose={() => setInviting(false)} onDone={list.reload} />}
       {removing && <Confirm danger title={`Remove ${removing.name}?`} confirmLabel="Remove" text="They lose access to this organization immediately. Their past actions stay in the audit log."

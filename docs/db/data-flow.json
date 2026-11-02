@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01",
+  "generatedAt": "2026-11-02",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -1719,6 +1719,11 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
               "layer": "repository"
@@ -1909,6 +1914,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -2105,6 +2115,11 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
               "layer": "repository"
@@ -2298,6 +2313,11 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
               "layer": "repository"
@@ -2468,6 +2488,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -6174,338 +6199,6 @@
             {
               "class": "CampaignRepository",
               "method": "setStatus",
-              "layer": "repository"
-            }
-          ]
-        }
-      }
-    },
-    "GET /api/orgs/{org}/capabilities": {
-      "title": "Project features and permissions",
-      "category": "Project, settings and team",
-      "id": "ep-get-api-orgs-org-capabilities",
-      "handler": "ProjectCapabilityControllerV1.view",
-      "tables": {
-        "access_role": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "permissions",
-              "layer": "service"
-            },
-            {
-              "class": "AccessRoleRepository",
-              "method": "customPermissions",
-              "layer": "repository"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "visibleTo",
-              "layer": "repository"
-            }
-          ]
-        },
-        "customer_tenant": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "grantableFeatures",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "account",
-              "layer": "repository"
-            }
-          ]
-        },
-        "membership": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "permissions",
-              "layer": "service"
-            },
-            {
-              "class": "AccessRoleRepository",
-              "method": "customPermissions",
-              "layer": "repository"
-            }
-          ]
-        },
-        "organization": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "projectFeatures",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "projectFeatures",
-              "layer": "repository"
-            }
-          ]
-        },
-        "subscription_plan": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "view",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "project",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effectiveFeatures",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "grantableFeatures",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "plan",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "plans",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "plans",
-              "layer": "repository"
-            }
-          ]
-        }
-      }
-    },
-    "POST /api/orgs/{org}/capabilities": {
-      "title": "Add a project feature or permission",
-      "category": "Project, settings and team",
-      "id": "ep-post-api-orgs-org-capabilities",
-      "handler": "ProjectCapabilityControllerV1.create",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "create",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "createProject",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "create",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "createProject",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "create",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "insert",
-              "layer": "repository"
-            }
-          ]
-        }
-      }
-    },
-    "DELETE /api/orgs/{org}/capabilities/{key}": {
-      "title": "Remove a project feature or permission",
-      "category": "Project, settings and team",
-      "id": "ep-delete-api-orgs-org-capabilities-key",
-      "handler": "ProjectCapabilityControllerV1.delete",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "delete",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "deleteProject",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "delete",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "deleteProject",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "delete",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "delete",
-              "layer": "repository"
-            }
-          ]
-        }
-      }
-    },
-    "PUT /api/orgs/{org}/capabilities/{key}": {
-      "title": "Change a project feature or permission",
-      "category": "Project, settings and team",
-      "id": "ep-put-api-orgs-org-capabilities-key",
-      "handler": "ProjectCapabilityControllerV1.update",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "update",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "updateProject",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ProjectCapabilityControllerV1",
-              "method": "update",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "updateProject",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "update",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "update",
               "layer": "repository"
             }
           ]
@@ -11517,6 +11210,1198 @@
         }
       }
     },
+    "GET /api/orgs/{org}/features": {
+      "title": "Project features",
+      "category": "Project, settings and team",
+      "id": "ep-get-api-orgs-org-features",
+      "handler": "ProjectFeatureControllerV1.view",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/features/{key}": {
+      "title": "Switch a feature off for the project",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-features-key",
+      "handler": "ProjectFeatureControllerV1.unlink",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "setProjectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/orgs/{org}/features/{key}": {
+      "title": "Switch a feature on for the project",
+      "category": "Project, settings and team",
+      "id": "ep-put-api-orgs-org-features-key",
+      "handler": "ProjectFeatureControllerV1.link",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "setProjectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "link",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/features/defaults": {
+      "title": "Add default features",
+      "category": "Project, settings and team",
+      "id": "ep-post-api-orgs-org-features-defaults",
+      "handler": "ProjectFeatureControllerV1.defaults",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "setProjectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectFeatureControllerV1",
+              "method": "defaults",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "linkDefaults",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "GET /api/orgs/{org}/library": {
       "title": "Connected library status",
       "category": "Video library",
@@ -12030,6 +12915,11 @@
             {
               "class": "TenantConfigurationServiceV1",
               "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -12589,13 +13479,8 @@
               "layer": "service"
             },
             {
-              "class": "AccessRoleServiceV1",
-              "method": "roles",
-              "layer": "service"
-            },
-            {
               "class": "AccessRoleRepository",
-              "method": "roles",
+              "method": "rolesFor",
               "layer": "repository"
             }
           ]
@@ -12880,13 +13765,8 @@
               "layer": "service"
             },
             {
-              "class": "AccessRoleServiceV1",
-              "method": "roles",
-              "layer": "service"
-            },
-            {
               "class": "AccessRoleRepository",
-              "method": "roles",
+              "method": "rolesFor",
               "layer": "repository"
             }
           ]
@@ -13156,13 +14036,8 @@
               "layer": "service"
             },
             {
-              "class": "AccessRoleServiceV1",
-              "method": "roles",
-              "layer": "service"
-            },
-            {
               "class": "AccessRoleRepository",
-              "method": "roles",
+              "method": "rolesFor",
               "layer": "repository"
             }
           ]
@@ -13814,7 +14689,7 @@
               "layer": "service"
             },
             {
-              "class": "CapabilityServiceV1",
+              "class": "CatalogueServiceV1",
               "method": "permissions",
               "layer": "service"
             },
@@ -13929,7 +14804,7 @@
               "layer": "service"
             },
             {
-              "class": "CapabilityServiceV1",
+              "class": "CatalogueServiceV1",
               "method": "permissions",
               "layer": "service"
             },
@@ -14099,7 +14974,7 @@
               "layer": "service"
             },
             {
-              "class": "CapabilityServiceV1",
+              "class": "CatalogueServiceV1",
               "method": "permissions",
               "layer": "service"
             },
@@ -14124,7 +14999,7 @@
               "layer": "service"
             },
             {
-              "class": "CapabilityServiceV1",
+              "class": "CatalogueServiceV1",
               "method": "permissions",
               "layer": "service"
             },
@@ -14460,6 +15335,485 @@
               "class": "Data",
               "method": "policy",
               "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/orgs/{org}/roles": {
+      "title": "Project roles",
+      "category": "Project, settings and team",
+      "id": "ep-get-api-orgs-org-roles",
+      "handler": "ProjectRoleControllerV1.list",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/orgs/{org}/roles": {
+      "title": "Save a project role",
+      "category": "Project, settings and team",
+      "id": "ep-put-api-orgs-org-roles",
+      "handler": "ProjectRoleControllerV1.save",
+      "tables": {
+        "access_role": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "globalRoles",
+              "layer": "repository"
+            }
+          ]
+        },
+        "app_user": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "holders",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/roles/{key}": {
+      "title": "Remove a project role",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-roles-key",
+      "handler": "ProjectRoleControllerV1.delete",
+      "tables": {
+        "access_role": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "holders",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectRoleControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
             }
           ]
         }
@@ -16272,7 +17626,7 @@
             },
             {
               "class": "AccessRoleRepository",
-              "method": "roles",
+              "method": "globalRoles",
               "layer": "repository"
             }
           ]
@@ -16288,6 +17642,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "catalog",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "customPermissions",
               "layer": "service"
             },
             {
@@ -16319,8 +17678,13 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
               "class": "AccessRoleRepository",
-              "method": "insert",
+              "method": "globalRoles",
               "layer": "repository"
             }
           ]
@@ -16384,6 +17748,16 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "checkDefinition",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "customPermissions",
+              "layer": "service"
+            },
+            {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
               "layer": "repository"
@@ -16401,6 +17775,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
               "layer": "service"
             },
             {
@@ -16437,278 +17816,89 @@
         }
       }
     },
-    "GET /api/platform/capabilities": {
+    "GET /api/platform/catalogue": {
       "title": "Features and permissions catalogue",
       "category": "Platform: tenants, projects and plans",
-      "id": "ep-get-api-platform-capabilities",
-      "handler": "CapabilityControllerV1.list",
+      "id": "ep-get-api-platform-catalogue",
+      "handler": "CatalogueControllerV1.catalogue",
       "tables": {
         "capability": {
           "mode": "read",
           "chain": [
             {
-              "class": "CapabilityControllerV1",
-              "method": "list",
+              "class": "CatalogueControllerV1",
+              "method": "catalogue",
               "layer": "controller"
             },
             {
-              "class": "CapabilityServiceV1",
-              "method": "global",
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
               "layer": "service"
             },
             {
-              "class": "CapabilityRepository",
-              "method": "global",
-              "layer": "repository"
-            }
-          ]
-        }
-      }
-    },
-    "POST /api/platform/capabilities": {
-      "title": "Add a global feature or permission",
-      "category": "Platform: tenants, projects and plans",
-      "id": "ep-post-api-platform-capabilities",
-      "handler": "CapabilityControllerV1.create",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "create",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "createGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "create",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "createGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "create",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "insert",
+              "class": "CatalogueRepository",
+              "method": "features",
               "layer": "repository"
             }
           ]
         },
-        "organization": {
+        "feature_group": {
           "mode": "read",
           "chain": [
             {
-              "class": "CapabilityControllerV1",
-              "method": "create",
+              "class": "CatalogueControllerV1",
+              "method": "catalogue",
               "layer": "controller"
             },
             {
-              "class": "CapabilityServiceV1",
-              "method": "createGlobal",
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
-            }
-          ]
-        }
-      }
-    },
-    "DELETE /api/platform/capabilities/{key}": {
-      "title": "Remove a global feature or permission",
-      "category": "Platform: tenants, projects and plans",
-      "id": "ep-delete-api-platform-capabilities-key",
-      "handler": "CapabilityControllerV1.delete",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "delete",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "deleteGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "delete",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "deleteGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "delete",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "delete",
+              "class": "CatalogueRepository",
+              "method": "groups",
               "layer": "repository"
             }
           ]
         },
-        "organization": {
+        "feature_permission": {
           "mode": "read",
           "chain": [
             {
-              "class": "CapabilityControllerV1",
-              "method": "delete",
+              "class": "CatalogueControllerV1",
+              "method": "catalogue",
               "layer": "controller"
             },
             {
-              "class": "CapabilityServiceV1",
-              "method": "deleteGlobal",
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
-            }
-          ]
-        }
-      }
-    },
-    "PUT /api/platform/capabilities/{key}": {
-      "title": "Change a global feature or permission",
-      "category": "Platform: tenants, projects and plans",
-      "id": "ep-put-api-platform-capabilities-key",
-      "handler": "CapabilityControllerV1.update",
-      "tables": {
-        "audit_event": {
-          "mode": "write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "update",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "updateGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "log",
-              "layer": "core"
-            }
-          ]
-        },
-        "capability": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "CapabilityControllerV1",
-              "method": "update",
-              "layer": "controller"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "updateGlobal",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityServiceV1",
-              "method": "update",
-              "layer": "service"
-            },
-            {
-              "class": "CapabilityRepository",
-              "method": "update",
+              "class": "CatalogueRepository",
+              "method": "features",
               "layer": "repository"
             }
           ]
         },
-        "organization": {
+        "module": {
           "mode": "read",
           "chain": [
             {
-              "class": "CapabilityControllerV1",
-              "method": "update",
+              "class": "CatalogueControllerV1",
+              "method": "catalogue",
               "layer": "controller"
             },
             {
-              "class": "CapabilityServiceV1",
-              "method": "updateGlobal",
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
-            },
-            {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
             }
           ]
         }
@@ -17286,6 +18476,824 @@
         }
       }
     },
+    "POST /api/platform/feature-groups": {
+      "title": "Add a feature group",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-feature-groups",
+      "handler": "CatalogueControllerV1.createGroup",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groupExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "moduleExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/feature-groups/{key}": {
+      "title": "Remove a feature group",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-feature-groups-key",
+      "handler": "CatalogueControllerV1.deleteGroup",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groupInUse",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "deleteGroup",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/feature-groups/{key}": {
+      "title": "Change a feature group",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-feature-groups-key",
+      "handler": "CatalogueControllerV1.updateGroup",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groupExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "moduleExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateGroup",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveGroup",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/features": {
+      "title": "Add a feature",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-features",
+      "handler": "CatalogueControllerV1.createFeature",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groupExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "setFeaturePermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/features/{key}": {
+      "title": "Remove a feature",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-features-key",
+      "handler": "CatalogueControllerV1.deleteFeature",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/features/{key}": {
+      "title": "Change a feature",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-features-key",
+      "handler": "CatalogueControllerV1.updateFeature",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groupExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "setFeaturePermissions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateFeature",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveFeature",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
     "GET /api/platform/media-types": {
       "title": "List media types",
       "category": "Platform: organizations, connectors and media types",
@@ -17376,6 +19384,440 @@
             {
               "class": "MediaSettingsServiceV1",
               "method": "saveType",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/modules": {
+      "title": "Add a module",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-modules",
+      "handler": "CatalogueControllerV1.createModule",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "moduleExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/modules/{key}": {
+      "title": "Remove a module",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-modules-key",
+      "handler": "CatalogueControllerV1.deleteModule",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "moduleInUse",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "deleteModule",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deleteModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/modules/{key}": {
+      "title": "Change a module",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-modules-key",
+      "handler": "CatalogueControllerV1.updateModule",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "moduleExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updateModule",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "saveModule",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
               "layer": "service"
             },
             {
@@ -19886,6 +22328,11 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
               "layer": "repository"
@@ -20516,6 +22963,420 @@
             {
               "class": "Accounts",
               "method": "createReset",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/permissions": {
+      "title": "Add a permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-permissions",
+      "handler": "CatalogueControllerV1.createPermission",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "createPermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/permissions/{key}": {
+      "title": "Remove a permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-permissions-key",
+      "handler": "CatalogueControllerV1.deletePermission",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deletePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deletePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "deletePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "deleteEntry",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/permissions/{key}": {
+      "title": "Change a permission",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-permissions-key",
+      "handler": "CatalogueControllerV1.updatePermission",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "entry",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "CatalogueControllerV1",
+              "method": "updatePermission",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "savePermission",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "log",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
               "layer": "core"
             }
           ]
@@ -26368,6 +29229,7 @@
         "POST /api/orgs/{org}/members",
         "DELETE /api/orgs/{org}/members/{userId}",
         "PATCH /api/orgs/{org}/members/{userId}",
+        "PUT /api/orgs/{org}/roles",
         "PUT /api/platform/access-roles",
         "POST /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
@@ -26472,9 +29334,6 @@
         "POST /api/orgs/{org}/campaigns",
         "PUT /api/orgs/{org}/campaigns/{id}",
         "POST /api/orgs/{org}/campaigns/{id}/status",
-        "POST /api/orgs/{org}/capabilities",
-        "DELETE /api/orgs/{org}/capabilities/{key}",
-        "PUT /api/orgs/{org}/capabilities/{key}",
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{channelId}/distribute/{destinationId}",
         "PATCH /api/orgs/{org}/channels/{id}",
@@ -26494,6 +29353,9 @@
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
         "POST /api/orgs/{org}/destinations",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/orgs/{org}/members",
@@ -26503,6 +29365,8 @@
         "POST /api/orgs/{org}/partners",
         "PUT /api/orgs/{org}/partners/{linkId}",
         "POST /api/orgs/{org}/partners/{linkId}/revoke",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
         "PUT /api/orgs/{org}/settings",
         "POST /api/orgs/{org}/settings/viewer-key",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
@@ -26510,13 +29374,19 @@
         "POST /api/partners/{partner}/clients/{clientId}/revoke",
         "POST /api/partners/{partner}/links/{linkId}/accept",
         "PUT /api/platform/access-roles",
-        "POST /api/platform/capabilities",
-        "DELETE /api/platform/capabilities/{key}",
-        "PUT /api/platform/capabilities/{key}",
         "PUT /api/platform/connector-definitions",
         "DELETE /api/platform/email/templates/{key}",
         "PUT /api/platform/email/templates/{key}",
+        "POST /api/platform/feature-groups",
+        "DELETE /api/platform/feature-groups/{key}",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "DELETE /api/platform/features/{key}",
+        "PUT /api/platform/features/{key}",
         "POST /api/platform/media-types",
+        "POST /api/platform/modules",
+        "DELETE /api/platform/modules/{key}",
+        "PUT /api/platform/modules/{key}",
         "POST /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
         "POST /api/platform/orgs/{orgId}/ad-sources",
@@ -26529,6 +29399,9 @@
         "PUT /api/platform/orgs/{orgId}/features",
         "PUT /api/platform/orgs/{orgId}/media-types",
         "POST /api/platform/password-reset",
+        "POST /api/platform/permissions",
+        "DELETE /api/platform/permissions/{key}",
+        "PUT /api/platform/permissions/{key}",
         "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "DELETE /api/platform/property-definitions/{key}/default",
@@ -26553,10 +29426,13 @@
         "POST /api/auth/token/refresh",
         "POST /api/auth/token/switch",
         "POST /api/orgs/{org}/alerts/scan",
-        "GET /api/orgs/{org}/capabilities",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "GET /api/orgs/{org}/members",
         "POST /api/orgs/{org}/members",
         "DELETE /api/orgs/{org}/members/{userId}",
@@ -26564,6 +29440,8 @@
         "POST /api/orgs/{org}/members/{userId}/password-reset",
         "POST /api/orgs/{org}/partners",
         "GET /api/orgs/{org}/project-details",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "PUT /api/platform/access-roles",
@@ -26600,15 +29478,23 @@
         "POST /api/auth/token",
         "POST /api/auth/token/refresh",
         "POST /api/auth/token/switch",
-        "GET /api/orgs/{org}/capabilities",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/members",
         "PATCH /api/orgs/{org}/members/{userId}",
         "GET /api/orgs/{org}/members/roles",
         "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles"
       ],
       "write": [
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
         "PUT /api/platform/access-roles"
       ]
     },
@@ -26636,7 +29522,6 @@
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "GET /api/orgs/{org}/audit",
-        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
         "POST /api/orgs/{org}/channels/{id}/programming/preview",
@@ -26646,6 +29531,10 @@
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
         "GET /api/orgs/{org}/dashboard",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/orgs/{org}/members",
@@ -26663,14 +29552,20 @@
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/partners/{partner}/links",
         "PUT /api/platform/access-roles",
-        "POST /api/platform/capabilities",
-        "DELETE /api/platform/capabilities/{key}",
-        "PUT /api/platform/capabilities/{key}",
         "PUT /api/platform/connector-definitions",
         "GET /api/platform/email/messages",
         "DELETE /api/platform/email/templates/{key}",
         "PUT /api/platform/email/templates/{key}",
+        "POST /api/platform/feature-groups",
+        "DELETE /api/platform/feature-groups/{key}",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "DELETE /api/platform/features/{key}",
+        "PUT /api/platform/features/{key}",
         "POST /api/platform/media-types",
+        "POST /api/platform/modules",
+        "DELETE /api/platform/modules/{key}",
+        "PUT /api/platform/modules/{key}",
         "GET /api/platform/orgs",
         "POST /api/platform/orgs",
         "GET /api/platform/orgs/{orgId}/ad-sources",
@@ -26690,6 +29585,9 @@
         "PUT /api/platform/orgs/{orgId}/media-types",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/password-reset",
+        "POST /api/platform/permissions",
+        "DELETE /api/platform/permissions/{key}",
+        "PUT /api/platform/permissions/{key}",
         "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "DELETE /api/platform/property-definitions/{key}/default",
@@ -26713,6 +29611,9 @@
         "POST /play/sessions"
       ],
       "write": [
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
         "PUT /api/platform/orgs/{orgId}/features",
@@ -26750,11 +29651,14 @@
         "POST /api/orgs/{org}/ad-sources/test",
         "POST /api/orgs/{org}/ads/simulate",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
@@ -26850,27 +29754,40 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
-        "GET /api/orgs/{org}/capabilities",
-        "DELETE /api/orgs/{org}/capabilities/{key}",
-        "PUT /api/orgs/{org}/capabilities/{key}",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles",
-        "GET /api/platform/capabilities",
-        "DELETE /api/platform/capabilities/{key}",
-        "PUT /api/platform/capabilities/{key}",
+        "GET /api/platform/catalogue",
+        "POST /api/platform/feature-groups",
+        "DELETE /api/platform/feature-groups/{key}",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "DELETE /api/platform/features/{key}",
+        "PUT /api/platform/features/{key}",
+        "POST /api/platform/modules",
+        "PUT /api/platform/modules/{key}",
         "GET /api/platform/orgs/{orgId}/connectors",
         "PUT /api/platform/orgs/{orgId}/features",
-        "GET /api/platform/orgs/{orgId}/project-details"
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /api/platform/permissions",
+        "DELETE /api/platform/permissions/{key}",
+        "PUT /api/platform/permissions/{key}"
       ],
       "write": [
-        "POST /api/orgs/{org}/capabilities",
-        "DELETE /api/orgs/{org}/capabilities/{key}",
-        "PUT /api/orgs/{org}/capabilities/{key}",
-        "POST /api/platform/capabilities",
-        "DELETE /api/platform/capabilities/{key}",
-        "PUT /api/platform/capabilities/{key}"
+        "POST /api/platform/features",
+        "DELETE /api/platform/features/{key}",
+        "PUT /api/platform/features/{key}",
+        "POST /api/platform/permissions",
+        "DELETE /api/platform/permissions/{key}",
+        "PUT /api/platform/permissions/{key}"
       ]
     },
     "subscription_plan": {
@@ -26880,11 +29797,14 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
-        "GET /api/orgs/{org}/capabilities",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
@@ -27598,6 +30518,83 @@
       ],
       "write": [
         "POST /api/orgs/{org}/channels/{id}/programming/generate"
+      ]
+    },
+    "module": {
+      "read": [
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
+        "GET /api/platform/catalogue",
+        "POST /api/platform/feature-groups",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}",
+        "POST /api/platform/modules",
+        "DELETE /api/platform/modules/{key}",
+        "PUT /api/platform/modules/{key}",
+        "POST /api/platform/permissions",
+        "PUT /api/platform/permissions/{key}"
+      ],
+      "write": [
+        "POST /api/platform/modules",
+        "DELETE /api/platform/modules/{key}",
+        "PUT /api/platform/modules/{key}"
+      ]
+    },
+    "feature_group": {
+      "read": [
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
+        "GET /api/platform/catalogue",
+        "POST /api/platform/feature-groups",
+        "DELETE /api/platform/feature-groups/{key}",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}",
+        "POST /api/platform/modules",
+        "DELETE /api/platform/modules/{key}",
+        "PUT /api/platform/modules/{key}",
+        "POST /api/platform/permissions",
+        "PUT /api/platform/permissions/{key}"
+      ],
+      "write": [
+        "POST /api/platform/feature-groups",
+        "DELETE /api/platform/feature-groups/{key}",
+        "PUT /api/platform/feature-groups/{key}"
+      ]
+    },
+    "feature_permission": {
+      "read": [
+        "GET /api/orgs/{org}/features",
+        "DELETE /api/orgs/{org}/features/{key}",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
+        "GET /api/platform/catalogue",
+        "POST /api/platform/feature-groups",
+        "PUT /api/platform/feature-groups/{key}",
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}",
+        "POST /api/platform/modules",
+        "PUT /api/platform/modules/{key}",
+        "POST /api/platform/permissions",
+        "PUT /api/platform/permissions/{key}"
+      ],
+      "write": [
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}"
       ]
     },
     "partner_link": {

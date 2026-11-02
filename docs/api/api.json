@@ -435,59 +435,72 @@
         },
         {
           "method": "GET",
-          "path": "/api/orgs/{org}/capabilities",
-          "title": "Project features and permissions",
-          "description": "The catalogue this project can use (global entries plus its own), and the feature and permission identifiers that apply to you now. The same keys are in project details (access.features, access.permissions)."
-        },
-        {
-          "method": "POST",
-          "path": "/api/orgs/{org}/capabilities",
-          "title": "Add a project feature or permission",
-          "fields": {
-            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
-            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
-            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
-            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
-          },
-          "body": {
-            "key": "AURORA_APPROVE",
-            "kind": "PERMISSION",
-            "name": "Approve premieres",
-            "description": "May approve premieres",
-            "category": "Channels",
-            "enabled": true
-          },
-          "description": "Adds an entry for this project only. A project feature is on while enabled; a project permission goes to owners and administrators and to custom roles that list it. Needs TEAM_MANAGE. 409 KEY_TAKEN if the identifier exists anywhere."
+          "path": "/api/orgs/{org}/features",
+          "title": "Project features",
+          "description": "The modules and published feature groups, the features this project can switch on, which ones it has linked, and the feature and permission identifiers that apply to you now (the same keys as project details)."
         },
         {
           "method": "PUT",
-          "path": "/api/orgs/{org}/capabilities/{key}",
-          "title": "Change a project feature or permission",
-          "fields": {
-            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
-            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
-            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
-            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
-          },
-          "body": {
-            "name": "Approve premieres",
-            "description": "May export highlight clips",
-            "category": "Channels",
-            "enabled": true
-          },
+          "path": "/api/orgs/{org}/features/{key}",
+          "title": "Switch a feature on for the project",
           "params": {
-            "key": "AURORA_APPROVE"
+            "key": "CLIPS"
           },
-          "description": "Changes one of this project's own entries (404 for global entries or another project's). Needs TEAM_MANAGE."
+          "description": "Links a global feature to the project. Needs TEAM_MANAGE. Subscription (built-in) features are switched on by the platform administrator: 409 PLATFORM_ONLY. Hidden or unknown features: 404."
         },
         {
           "method": "DELETE",
-          "path": "/api/orgs/{org}/capabilities/{key}",
-          "title": "Remove a project feature or permission",
+          "path": "/api/orgs/{org}/features/{key}",
+          "title": "Switch a feature off for the project",
           "params": {
-            "key": "AURORA_APPROVE"
+            "key": "CLIPS"
           },
-          "description": "Removes one of this project's own entries. Needs TEAM_MANAGE."
+          "description": "Unlinks a feature. Needs TEAM_MANAGE; subscription features: 409 PLATFORM_ONLY."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/features/defaults",
+          "title": "Add default features",
+          "description": "Switches on every feature marked as default (except subscription features). Needs TEAM_MANAGE."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/roles",
+          "title": "Project roles",
+          "description": "Platform roles (read-only here) and the project's own roles, the permission identifiers a role may list, what each ceiling allows, and the catalogue for the grouped permission editor."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/roles",
+          "title": "Save a project role",
+          "body": {
+            "key": "clip-reviewer",
+            "name": "Clip reviewer",
+            "kind": "CUSTOMER",
+            "baseRole": "ANALYST",
+            "permissions": [
+              "VIEW",
+              "CLIPS_EXPORT"
+            ],
+            "enabled": true,
+            "expectedRevision": 0
+          },
+          "fields": {
+            "key": "Stable role identifier: lower-case letters, digits, \"_\" or \"-\". Unique across the platform.",
+            "baseRole": "Ceiling: the most this role may do (not OWNER, not above your own role).",
+            "permissions": "Permission identifiers: built-in ones within the ceiling, plus custom ones. Must include VIEW.",
+            "expectedRevision": "The revision you edited (0 for a new role); a stale one gets 409."
+          },
+          "description": "Creates or updates a role for this project only; other projects never see it. Needs TEAM_MANAGE. Give it to people on the Team page."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/roles/{key}",
+          "title": "Remove a project role",
+          "params": {
+            "key": "clip-reviewer"
+          },
+          "description": "Removes one of the project's own roles. Refused while anyone has it (409 IN_USE). Needs TEAM_MANAGE."
         }
       ]
     },
@@ -1751,59 +1764,227 @@
         },
         {
           "method": "GET",
-          "path": "/api/platform/capabilities",
+          "path": "/api/platform/catalogue",
           "title": "Features and permissions catalogue",
-          "description": "Every global feature and permission: identifier, kind (FEATURE or PERMISSION), name, description, category, whether it is built in (enforced by the server) and whether it is switched on. Platform administrators only."
+          "description": "Everything in one answer: modules, feature groups, features (with the permissions each uses and the default / hidden / beta flags) and permissions (system or custom). Used by Global configuration and the role editor. Platform administrators only."
         },
         {
           "method": "POST",
-          "path": "/api/platform/capabilities",
-          "title": "Add a global feature or permission",
-          "fields": {
-            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
-            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
-            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
-            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
-          },
+          "path": "/api/platform/modules",
+          "title": "Add a module",
           "body": {
-            "key": "CLIPS_EXPORT",
-            "kind": "PERMISSION",
-            "name": "Export clips",
-            "description": "May export highlight clips",
-            "category": "Media",
+            "key": "STUDIO",
+            "name": "Studio",
+            "description": "Clip and highlight tools",
+            "position": 6,
             "enabled": true
           },
-          "description": "Adds an entry every project can use. A feature is then switched on per project (PUT /api/platform/orgs/{orgId}/features); a permission goes to owners and administrators and to custom roles that list it. Added entries are identifiers for screens; they grant no server access by themselves. 409 KEY_TAKEN if the identifier exists anywhere."
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "position": "Order in lists (lower first).",
+            "enabled": "true = in use."
+          },
+          "description": "Adds a module, the top level of the catalogue (e.g. Media). The role editor shows one tab per module. 409 KEY_TAKEN if the identifier is used."
         },
         {
           "method": "PUT",
-          "path": "/api/platform/capabilities/{key}",
-          "title": "Change a global feature or permission",
-          "fields": {
-            "key": "Identifier screens check: capitals, digits and underscores, starting with a letter (e.g. CLIPS_EXPORT). Unique across the platform; it can't change later.",
-            "kind": "FEATURE (switched on per project) or PERMISSION (given to people through roles).",
-            "category": "Group shown on screens, e.g. Media or Advertising (default General).",
-            "enabled": "true = in use, false = switched off. Built-in entries can't be switched off."
-          },
+          "path": "/api/platform/modules/{key}",
+          "title": "Change a module",
           "body": {
+            "key": "STUDIO",
+            "name": "Studio",
+            "description": "Clip and highlight tools",
+            "position": 6,
+            "enabled": true
+          },
+          "params": {
+            "key": "STUDIO"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "position": "Order in lists (lower first).",
+            "enabled": "true = in use."
+          },
+          "description": "Changes a module. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/modules/{key}",
+          "title": "Remove a module",
+          "params": {
+            "key": "STUDIO"
+          },
+          "description": "Removes a module. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/feature-groups",
+          "title": "Add a feature group",
+          "body": {
+            "key": "CLIPS_TOOLS",
+            "moduleKey": "STUDIO",
+            "name": "Clips",
+            "description": "Highlight clips",
+            "position": 1,
+            "published": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "moduleKey": "The module the group belongs to.",
+            "position": "Order in lists (lower first).",
+            "published": "true = offered to projects and shown in the role editor."
+          },
+          "description": "Adds a group of features inside a module. Projects search features by group; the role editor shows one tab per group. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/feature-groups/{key}",
+          "title": "Change a feature group",
+          "body": {
+            "key": "CLIPS_TOOLS",
+            "moduleKey": "STUDIO",
+            "name": "Clips",
+            "description": "Highlight clips",
+            "position": 1,
+            "published": true
+          },
+          "params": {
+            "key": "CLIPS_TOOLS"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "moduleKey": "The module the group belongs to.",
+            "position": "Order in lists (lower first).",
+            "published": "true = offered to projects and shown in the role editor."
+          },
+          "description": "Changes a feature group. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/feature-groups/{key}",
+          "title": "Remove a feature group",
+          "params": {
+            "key": "CLIPS_TOOLS"
+          },
+          "description": "Removes a feature group. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/features",
+          "title": "Add a feature",
+          "body": {
+            "key": "CLIPS",
+            "name": "Clips",
+            "description": "Highlight clips from long videos",
+            "groupKey": "CLIPS_TOOLS",
+            "permissions": [
+              "CLIPS_EXPORT",
+              "ASSETS_EDIT"
+            ],
+            "isDefault": true,
+            "hidden": false,
+            "beta": false,
+            "enabled": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "groupKey": "The feature group.",
+            "permissions": "Permission identifiers this feature uses.",
+            "isDefault": "true = switched on by a project's \"Add default features\".",
+            "hidden": "true = not offered to projects.",
+            "beta": "true = shown as beta.",
+            "enabled": "true = in use (built-in features stay on)."
+          },
+          "description": "Adds a feature: projects switch it on; screens hide its parts when it is off. permissions lists the permissions it uses, which is how the role editor groups them. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/features/{key}",
+          "title": "Change a feature",
+          "body": {
+            "key": "CLIPS",
+            "name": "Clips",
+            "description": "Highlight clips from long videos",
+            "groupKey": "CLIPS_TOOLS",
+            "permissions": [
+              "CLIPS_EXPORT",
+              "ASSETS_EDIT"
+            ],
+            "isDefault": true,
+            "hidden": false,
+            "beta": false,
+            "enabled": true
+          },
+          "params": {
+            "key": "CLIPS"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "groupKey": "The feature group.",
+            "permissions": "Permission identifiers this feature uses.",
+            "isDefault": "true = switched on by a project's \"Add default features\".",
+            "hidden": "true = not offered to projects.",
+            "beta": "true = shown as beta.",
+            "enabled": "true = in use (built-in features stay on)."
+          },
+          "description": "Changes a feature. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/features/{key}",
+          "title": "Remove a feature",
+          "params": {
+            "key": "CLIPS"
+          },
+          "description": "Removes a feature. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/permissions",
+          "title": "Add a permission",
+          "body": {
+            "key": "CLIPS_EXPORT",
             "name": "Export clips",
             "description": "May export highlight clips",
-            "category": "Media",
+            "category": "Studio",
+            "enabled": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "category": "Group shown on screens, e.g. Media (default General).",
+            "enabled": "true = in use (system permissions stay on)."
+          },
+          "description": "Adds a custom permission. Roles give permissions to people; custom ones show or hide things in screens (usually together with a feature) and grant no server access by themselves. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/permissions/{key}",
+          "title": "Change a permission",
+          "body": {
+            "key": "CLIPS_EXPORT",
+            "name": "Export clips",
+            "description": "May export highlight clips",
+            "category": "Studio",
             "enabled": true
           },
           "params": {
             "key": "CLIPS_EXPORT"
           },
-          "description": "Renames, re-describes or switches an entry on or off. The identifier and kind never change. Built-in entries can be renamed but not switched off (409 BUILT_IN)."
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "category": "Group shown on screens, e.g. Media (default General).",
+            "enabled": "true = in use (system permissions stay on)."
+          },
+          "description": "Changes a permission. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
         },
         {
           "method": "DELETE",
-          "path": "/api/platform/capabilities/{key}",
-          "title": "Remove a global feature or permission",
+          "path": "/api/platform/permissions/{key}",
+          "title": "Remove a permission",
           "params": {
             "key": "CLIPS_EXPORT"
           },
-          "description": "Removes an added entry. Built-in entries can't be removed (409 BUILT_IN). Projects that had the feature switched on simply stop seeing it."
+          "description": "Removes a permission. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
         }
       ]
     },

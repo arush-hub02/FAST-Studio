@@ -7,7 +7,7 @@ import com.faststudio.v1.dto.project.ProjectDetails;
 import com.faststudio.v1.repositories.project.ProjectDetailsRepository;
 import com.faststudio.v1.repositories.tenancy.TenantConfigurationRepository;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
-import com.faststudio.v1.services.tenancy.CapabilityServiceV1;
+import com.faststudio.v1.services.tenancy.CatalogueServiceV1;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
 import com.faststudio.v1.util.cloudflare.EdgeClient;
 
@@ -29,10 +29,10 @@ public class ProjectDetailsServiceV1 {
     private final EdgeClient edge;
     private final TenantConfigurationServiceV1 configuration;
     private final TenantConfigurationRepository tenancy;
-    private final CapabilityServiceV1 capabilities;
+    private final CatalogueServiceV1 capabilities;
 
     public ProjectDetailsServiceV1(ProjectDetailsRepository repository, MediaSettingsServiceV1 settings, EdgeClient edge,
-                                     TenantConfigurationServiceV1 configuration, TenantConfigurationRepository tenancy, CapabilityServiceV1 capabilities) {
+                                     TenantConfigurationServiceV1 configuration, TenantConfigurationRepository tenancy, CatalogueServiceV1 capabilities) {
         this.capabilities = capabilities;
         this.repository = repository;
         this.settings = settings;

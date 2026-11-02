@@ -874,19 +874,19 @@
     },
     {
       "id": "features-permissions-catalogue",
-      "title": "Features and permissions catalogue",
+      "title": "Features, permissions and roles",
       "area": "Multi-tenancy",
       "status": "Built",
-      "completed": "2026-11-01",
-      "summary": "One list of every feature and permission, each with a fixed identifier such as CLIPS or SCHEDULE_PUBLISH. Platform administrators add global ones; a project can add its own. After sign-in the app receives the identifiers that apply to the person in that project, and screens show or hide things by them.",
+      "completed": "2026-11-02",
+      "summary": "One platform catalogue, organised like the v2 CMS: modules contain feature groups, feature groups contain features, and each feature lists the permissions it uses. Projects switch features on from that catalogue; roles (from the platform or a project's own) give people permissions, picked module by module and group by group. Screens hide parts whose feature is off, and can require a feature and a permission together.",
       "who": [
-        "Platform administrators: the global catalogue (Global configuration → Features & permissions) and which features each project has (Connectors page)",
-        "Project owners and administrators (TEAM_MANAGE): their project's own features and permissions (Settings)",
+        "Platform administrators: modules, feature groups, features, permissions and global roles (Global configuration)",
+        "Project owners and administrators (TEAM_MANAGE): switch features on for their project (Settings) and make project roles (Team)",
         "Everyone: sees which features and permissions apply to them (Settings)"
       ],
       "flow": {
-        "title": "From a new identifier to a button on screen",
-        "intro": "The boxes are the parts involved; the pill is one identifier on its way to a screen. Pick a situation.",
+        "title": "From the catalogue to a button on screen",
+        "intro": "The boxes are the parts involved; the pill is one feature or permission on its way to a screen. Pick a situation.",
         "nodes": [
           {
             "id": "platform",
@@ -902,7 +902,7 @@
             "row": 1,
             "icon": "📚",
             "label": "Catalogue",
-            "sub": "Every feature and permission, by identifier"
+            "sub": "Module › group › feature › permissions"
           },
           {
             "id": "project",
@@ -910,15 +910,15 @@
             "row": 1,
             "icon": "🏢",
             "label": "Project",
-            "sub": "Which features are switched on"
+            "sub": "Features switched on"
           },
           {
-            "id": "owner",
+            "id": "padmin",
             "col": 4,
             "row": 1,
             "icon": "👤",
             "label": "Project admin",
-            "sub": "Settings: own entries"
+            "sub": "Settings and Team"
           },
           {
             "id": "role",
@@ -926,7 +926,7 @@
             "row": 2,
             "icon": "🎭",
             "label": "Role",
-            "sub": "Owner, admin or a custom role"
+            "sub": "Platform or project role"
           },
           {
             "id": "login",
@@ -942,7 +942,7 @@
             "row": 2,
             "icon": "🖥️",
             "label": "Screen",
-            "sub": "org.has(…) / org.can(…)"
+            "sub": "org.has(…) && org.can(…)"
           },
           {
             "id": "server",
@@ -950,168 +950,174 @@
             "row": 2,
             "icon": "🛡️",
             "label": "Server",
-            "sub": "Enforces built-in permissions"
+            "sub": "Enforces system permissions"
           }
         ],
         "scenarios": [
           {
-            "name": "Global feature",
+            "name": "New feature",
             "steps": [
               {
                 "at": "platform",
                 "state": "CLIPS",
-                "say": "A platform admin adds the feature CLIPS to the catalogue.",
-                "tech": "`POST /api/platform/capabilities` with kind FEATURE."
+                "say": "A platform admin adds the feature Clips to the group \"Clips tools\" of the module Studio, and lists the permissions it uses.",
+                "tech": "`POST /api/platform/features` with groupKey and permissions."
               },
               {
                 "at": "catalogue",
-                "state": "CLIPS · on",
-                "say": "It is now available to every project, but no project has it yet."
+                "state": "CLIPS · uses CLIPS_EXPORT",
+                "say": "It is in the catalogue for every project, switched on nowhere yet."
+              },
+              {
+                "at": "padmin",
+                "state": "switch on",
+                "say": "A project admin finds it by module and group in Settings and switches it on.",
+                "tech": "`PUT /api/orgs/{org}/features/CLIPS`."
               },
               {
                 "at": "project",
-                "state": "switched on",
-                "say": "On the Connectors page the admin switches CLIPS on for one project.",
-                "tech": "Stored in the project's feature list; built-in features also need the tenant's plan."
+                "state": "CLIPS on",
+                "say": "The project now has the feature."
               },
               {
                 "at": "login",
                 "state": "features: CLIPS",
-                "say": "When someone opens that project, the answer after sign-in lists CLIPS."
+                "say": "After sign-in, project details list it."
               },
               {
                 "at": "screen",
                 "state": "shown",
-                "say": "The screen checks the identifier and shows the clips tools. Other projects never see them.",
+                "say": "The clips screens appear in this project, and stay hidden everywhere else.",
                 "tech": "`org.has('CLIPS')`"
               }
             ]
           },
           {
-            "name": "Custom permission",
+            "name": "Role by feature group",
             "steps": [
               {
-                "at": "platform",
-                "state": "CLIPS_EXPORT",
-                "say": "The admin adds a permission, CLIPS_EXPORT."
+                "at": "padmin",
+                "state": "new role",
+                "say": "A project admin creates a role \"Clip reviewer\" with the Analyst ceiling."
+              },
+              {
+                "at": "catalogue",
+                "state": "Studio › Clips",
+                "say": "The role editor shows a tab per module and per group; under the feature Clips it offers the permissions Clips uses."
               },
               {
                 "at": "role",
-                "state": "granted",
-                "say": "Owners and administrators have it automatically; a custom role can list it for others."
+                "state": "VIEW + CLIPS_EXPORT",
+                "say": "They tick Export clips. Permissions above the ceiling are greyed out.",
+                "tech": "Built-in permissions stay within the ceiling; custom ones can always be added."
               },
               {
                 "at": "login",
-                "state": "permissions: …",
-                "say": "Each person's list of permissions comes with the project details."
+                "state": "permissions: CLIPS_EXPORT",
+                "say": "Someone given that role on the Team page now has the permission."
               },
               {
                 "at": "screen",
-                "state": "button shown",
-                "say": "The Export button appears only for people who have it.",
-                "tech": "`org.can('CLIPS_EXPORT')`"
+                "state": "Export shown",
+                "say": "The Export button needs both: the feature on and the permission.",
+                "tech": "`org.has('CLIPS') && org.can('CLIPS_EXPORT')`"
               }
             ]
           },
           {
-            "name": "Project's own entry",
-            "steps": [
-              {
-                "at": "owner",
-                "state": "AURORA_BETA",
-                "say": "A project admin adds a feature just for their project in Settings."
-              },
-              {
-                "at": "catalogue",
-                "state": "project only",
-                "say": "It belongs to that project; other projects can't see or change it.",
-                "tech": "Row-level security on `capability.org_id`."
-              },
-              {
-                "at": "login",
-                "state": "features: AURORA_BETA",
-                "say": "It is on while enabled and appears after sign-in."
-              },
-              {
-                "at": "screen",
-                "state": "shown",
-                "say": "Screens in that project can use it."
-              }
-            ]
-          },
-          {
-            "name": "Built-in entries",
+            "name": "Subscription features",
             "steps": [
               {
                 "at": "catalogue",
-                "state": "SCHEDULE_PUBLISH",
-                "say": "Built-in permissions and features are in the same list."
+                "state": "LIBRARY_SYNC",
+                "say": "Built-in features belong to the subscription."
               },
               {
-                "at": "platform",
-                "state": "switch off?",
-                "say": "An admin tries to switch one off or remove it."
+                "at": "padmin",
+                "state": "switch on?",
+                "say": "A project admin tries to switch one on."
               },
               {
-                "at": "catalogue",
+                "at": "project",
                 "state": "refused: 409",
-                "say": "Refused: the server enforces these, so they always stay. They can be renamed."
+                "say": "Refused: the platform administrator switches these on, and only if the tenant's plan includes them."
+              }
+            ]
+          },
+          {
+            "name": "Isolation",
+            "steps": [
+              {
+                "at": "padmin",
+                "state": "clip-reviewer",
+                "say": "Aurora creates a project role."
+              },
+              {
+                "at": "role",
+                "state": "Aurora only",
+                "say": "Northwind never sees it, even with a direct query.",
+                "tech": "Row-level security on `access_role.org_id`."
               },
               {
                 "at": "server",
                 "state": "enforced",
-                "say": "The server checks built-in permissions on every request; screens only follow its lead."
+                "say": "System permissions are still checked by the server on every request; custom ones only drive what screens show."
               }
             ]
           }
         ]
       },
       "steps": [
-        "Platform: Global configuration → Features & permissions. Add an identifier (capitals and underscores), choose Feature or Permission, give it a name and category.",
-        "Switch a global feature on for a project on the Connectors page (\"What … can see\").",
-        "Give a custom permission to people through organization roles; owners and administrators have every custom permission.",
-        "Project: Settings → \"This project's own features and permissions\" to add entries just for that project (needs Manage team and settings).",
-        "Settings → \"Features and permissions that apply to you\" shows the identifiers that are active for you.",
-        "In screens, check them with org.has('FEATURE_KEY') and org.can('PERMISSION_KEY')."
+        "Platform: Global configuration → Features & permissions. Four lists: Features, Permissions, Feature groups and Modules, each with Add, Edit and Remove.",
+        "Add a feature with its group and the permissions it uses; mark it Default, Hidden or Beta if needed.",
+        "Project: Settings → Project features. Search by module and group, switch features on or off, or \"Add default features\". Subscription features are switched on by the platform.",
+        "Project: Team → Roles. Add a role with a ceiling, then tick permissions module by module and group by group. Give it to people in the member list.",
+        "Platform roles: Global configuration → Organization roles uses the same grouped editor.",
+        "In screens, hide by feature with org.has('KEY'), and use org.has(feature) && org.can(permission) when both apply."
       ],
       "howItWorks": [
-        "All entries are rows of one catalogue table with a unique identifier, a kind (FEATURE or PERMISSION), a name, a category, an owner (global or one project) and a switch.",
-        "The 3 built-in features and 11 built-in permissions are seeded as built-in rows; the server keeps enforcing them as before.",
-        "A project's features are: switched-on global features (built-in ones only if the tenant's plan includes them), plus its own enabled features.",
-        "A person's permissions are: their role's built-in permissions, plus custom permissions — all of them for owners and administrators, the listed ones for a custom role, none for other built-in roles.",
-        "The project details answer after sign-in carries both lists, so the app reads them once; GET /api/orgs/{org}/capabilities shows them with the catalogue."
+        "Modules and feature groups are their own tables; features and permissions are rows of the catalogue table, global only, with a list of the permissions each feature uses.",
+        "A project's features are the global features it has switched on; built-in ones also need the tenant's plan.",
+        "A person's permissions are their role's built-in permissions plus custom ones: all for owners and administrators, the listed ones for a custom role (platform or project).",
+        "Project roles are rows with the project's organization; row-level security keeps them inside the project. Role keys are unique across the platform.",
+        "Project details after sign-in carry both lists; GET /api/orgs/{org}/features shows them with the catalogue."
       ],
       "optimizations": [
-        "Two small indexed queries per project details request; the catalogue is tiny.",
-        "Identifiers are plain strings, so screens check them without another request."
+        "The catalogue comes back in one answer for the configuration screens and the role editor.",
+        "Checks in screens are plain identifier lookups; no extra request."
       ],
       "scale": [
-        "Adding a feature or permission needs no code or deployment, only a catalogue row.",
-        "Known limit: added permissions control what screens show; to protect a new endpoint, its code must check the identifier.",
+        "New features, permissions, groups and roles need no code or deployment.",
+        "Known limit: custom permissions only control what screens show; protecting a new endpoint needs a server check of its identifier.",
         "Not measured: catalogues with thousands of entries."
       ],
       "rules": [
-        "Identifiers are unique across the platform and never change.",
-        "Built-in entries can be renamed but not switched off or removed.",
-        "A project can only change its own entries; it sees global ones read-only.",
-        "Project entries need the Manage team and settings permission; global entries need a platform administrator."
+        "Identifiers are unique and never change.",
+        "Built-in features and permissions can be renamed and regrouped, not switched off or removed.",
+        "Modules and groups that still contain something can't be removed.",
+        "A role can't reach above its creator's own role, and owner stays a built-in role.",
+        "A project role can't be removed while someone has it."
       ],
       "api": [
-        "GET /api/platform/capabilities",
-        "POST /api/platform/capabilities",
-        "PUT /api/platform/capabilities/{key}",
-        "DELETE /api/platform/capabilities/{key}",
-        "GET /api/orgs/{org}/capabilities",
-        "POST /api/orgs/{org}/capabilities",
-        "PUT /api/orgs/{org}/capabilities/{key}",
-        "DELETE /api/orgs/{org}/capabilities/{key}"
+        "GET /api/platform/catalogue",
+        "POST /api/platform/modules",
+        "POST /api/platform/feature-groups",
+        "POST /api/platform/features",
+        "POST /api/platform/permissions",
+        "GET /api/orgs/{org}/features",
+        "PUT /api/orgs/{org}/features/{key}",
+        "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}"
       ],
       "tests": [
-        "CapabilityTest (3: global catalogue and built-in protection, global feature per project and permissions per role, project entries and isolation)"
+        "CatalogueTest (3: catalogue rules and built-in protection; project linking incl. hidden, subscription and defaults; project roles, isolation, assignment and in-use protection)",
+        "frontend/e2e/global-config.spec.ts (permission and feature added through the screens, grouped role editor)"
       ],
       "docs": [
         "docs/PLATFORM_ADMIN_PLAN.md",
-        "migration V24__capability_catalogue.sql"
+        "migration V25__modules_feature_groups_roles.sql"
       ],
       "screenshots": []
     },

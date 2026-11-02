@@ -51,7 +51,7 @@ function CreateProject({tenant,onClose,done}:{tenant:string;onClose:()=>void;don
   const {busy,run}=useAction()
   return <Modal title="New project" subtitle="A separate content workspace under this customer tenant." onClose={onClose}><form className="stack" onSubmit={e=>{e.preventDefault();run(()=>api(`/api/platform/tenants/${tenant}/projects`,{body:form}),'Project created').then(r=>{if(r){done();onClose()}})}}>
     <label className="field">Project name<input required maxLength={80} value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label>
-    <label className="field">Unique project slug<input required pattern="[a-z0-9-]{3,40}" value={form.slug} onChange={e=>setForm({...form,slug:e.target.value})}/></label>
+    <label className="field">Unique project slug<input required pattern="[a-z0-9\-]{3,40}" value={form.slug} onChange={e=>setForm({...form,slug:e.target.value})}/></label>
     <div className="grid g2"><label className="field">Country<input required pattern="[A-Z]{2}" value={form.country} onChange={e=>setForm({...form,country:e.target.value})}/></label><label className="field">Timezone<input required value={form.timezone} onChange={e=>setForm({...form,timezone:e.target.value})}/></label></div>
     {owners.error?<ErrorBox error={owners.error} retry={owners.reload}/>:<label className="field">Initial project owner<select required value={form.ownerUserId} onChange={e=>setForm({...form,ownerUserId:e.target.value})}><option value="">Choose an existing tenant owner/admin</option>{owners.data?.map(o=><option value={o.id} key={o.id}>{o.name} · {o.email}</option>)}</select></label>}
     <button className="btn primary" disabled={busy}>Create project</button>

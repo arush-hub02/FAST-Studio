@@ -69,47 +69,41 @@ test('platform admin can view global configuration cards and use modal forms', a
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
 
-  // Switch to Features & permissions tab
+  // Switch to Features & permissions: separate sections for features, permissions, feature groups and modules
   await page.getByRole('button', { name: 'Features & permissions' }).click()
-  await expect(page.locator('h2', { hasText: 'Features & permissions catalogue' })).toBeVisible()
-  
-  // Verify capability cards and icons
-  const capabilityCards = page.locator('.connector-card')
-  expect(await capabilityCards.count()).toBeGreaterThanOrEqual(10)
-  const libraryCard = capabilityCards.filter({ hasText: 'Library self-sync' }).first()
-  await expect(libraryCard).toBeVisible()
-  await expect(libraryCard.locator('.connector-icon-wrap')).toBeVisible()
-  await expect(libraryCard.locator('.badge', { hasText: 'Built in' })).toBeVisible()
-  await expect(libraryCard.locator('.badge', { hasText: 'Feature' })).toBeVisible()
+  await expect(page.locator('h2', { hasText: 'Features' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: /Library self-sync/ })).toBeVisible()
 
-  // Open "Add feature or permission" modal
-  await page.getByRole('button', { name: 'Add feature or permission' }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('dialog')).toContainText('Add a feature or permission')
-  await expect(page.locator('.connector-preview-box')).toBeVisible()
-
-  // Create custom capability
-  const testCapKey = 'TEST_EXPORT_' + Date.now().toString().slice(-4)
-  await page.locator('input[placeholder*="CLIPS_EXPORT"]').fill(testCapKey)
-  await page.locator('input[placeholder*="Video Clips Export"]').fill('Test Export Tool')
-  await page.locator('input[placeholder*="Media, Advertising"]').fill('Media')
-  await page.locator('textarea').fill('Test feature for exporting clips')
-  await page.getByRole('button', { name: 'Add capability' }).click()
+  // Add a custom permission
+  const stamp = Date.now().toString().slice(-5)
+  const permKey = 'TEST_EXPORT_' + stamp
+  await page.getByRole('tab', { name: /^Permissions/ }).click()
+  await page.getByRole('button', { name: 'Add permission' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Add a permission')
+  await page.getByRole('dialog').locator('input[placeholder="e.g. CLIPS_EXPORT"]').fill(permKey)
+  await page.getByRole('dialog').getByLabel('Name').fill('Test export')
+  await page.getByRole('button', { name: 'Save permission' }).click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page.getByRole('cell', { name: new RegExp(permKey) }).first()).toBeVisible()
 
-  // Verify newly created capability appears as a card
-  const newCapCard = page.locator('.connector-card', { hasText: testCapKey })
-  await expect(newCapCard).toBeVisible()
-  await expect(newCapCard.locator('.badge', { hasText: 'On' })).toBeVisible()
-
-  // Edit custom capability via modal
-  await newCapCard.getByRole('button', { name: 'Edit' }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('dialog')).toContainText('Edit capability: Test Export Tool')
-  await page.locator('input[placeholder*="Video Clips Export"]').fill('Test Export Tool Updated')
-  await page.getByRole('button', { name: 'Save capability' }).click()
+  // Add a feature that uses it
+  const featureKey = 'TEST_CLIPS_' + stamp
+  await page.getByRole('tab', { name: /^Features/ }).click()
+  await page.getByRole('button', { name: 'Add feature' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Add a feature')
+  await page.getByRole('dialog').locator('input[placeholder="e.g. CLIPS"]').fill(featureKey)
+  await page.getByRole('dialog').getByLabel('Name').fill('Test clips')
+  await page.getByRole('dialog').getByRole('checkbox', { name: permKey }).check()
+  await page.getByRole('button', { name: 'Add feature' }).last().click()
   await expect(page.getByRole('dialog')).not.toBeVisible()
-  await expect(page.locator('.connector-card', { hasText: testCapKey })).toContainText('Test Export Tool Updated')
+  const row = page.getByRole('row', { name: new RegExp(featureKey) })
+  await expect(row).toContainText(permKey)
+
+  // Feature groups and modules have their own lists
+  await page.getByRole('tab', { name: /^Feature groups/ }).click()
+  await expect(page.getByRole('cell', { name: /Library/ }).first()).toBeVisible()
+  await page.getByRole('tab', { name: /^Modules/ }).click()
+  await expect(page.getByRole('cell', { name: /Media/ }).first()).toBeVisible()
 
   // Switch to Properties tab
   await page.getByRole('button', { name: 'Properties' }).click()
@@ -133,6 +127,8 @@ test('platform admin can view global configuration cards and use modal forms', a
   await page.getByRole('button', { name: 'Add role' }).first().click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByRole('dialog')).toContainText('Define organization role')
+  await expect(page.getByRole('dialog')).toContainText('Permissions by module, feature group and feature')
+  await expect(page.getByRole('dialog').getByRole('tablist', { name: 'Modules' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
 
   expect(errors, 'uncaught errors in the page').toEqual([])

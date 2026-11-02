@@ -255,13 +255,11 @@ public class TenantConfigurationServiceV1 {
     // ------------------------------------------------------------------ plan features and limits
 
     /**
-     * The features on for a project: the switched-on keys the platform may grant it (built-in ones only when the
-     * tenant's plan includes them; enabled global custom ones always), plus the project's own enabled custom features.
+     * The features on for a project: its linked keys that may apply (built-in ones only when the tenant's plan includes
+     * them; enabled global custom ones always).
      */
     public List<String> effectiveFeatures(UUID project, String requested) {
-        List<String> on = new ArrayList<>(grantableFeatures(project, requested));
-        TenantScope.as(project, () -> capabilities.enabledCustom("FEATURE", project, false)).stream().filter(f -> !on.contains(f)).forEach(on::add);
-        return on;
+        return grantableFeatures(project, requested);
     }
 
     /** The project's switched-on feature keys as stored (organization.features). */
