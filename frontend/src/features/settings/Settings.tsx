@@ -16,7 +16,7 @@ export default function Settings() {
     {scope==='project'&&<>
     {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
       <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
-    <ProjectFeatures slug={org.slug} editable={org.can('TEAM_MANAGE')} />
+    <ProjectFeatures base={`/api/orgs/${org.slug}/features`} editable={org.can("TEAM_MANAGE")} />
     </>}
   </div>
 }

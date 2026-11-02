@@ -38,7 +38,7 @@ export default function Connectors() {
   )
 }
 
-function OrgConnectors({ orgId }: { orgId: string }) {
+export function OrgConnectors({ orgId }: { orgId: string }) {
   const view = useApi<Overview>(`/api/platform/orgs/${orgId}/connectors`)
   const { busy, run } = useAction()
   if (view.error) return <ErrorBox error={view.error} retry={view.reload} />

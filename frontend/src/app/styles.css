@@ -7384,3 +7384,17 @@ table.table { width: 100%; border-collapse: collapse; }
 
 
 
+
+/* Side tabs (tenant detail page): a vertical menu beside the content; stacks above it on narrow screens. */
+.side-tabs-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; }
+.side-tabs { display: flex; flex-direction: column; gap: 2px; padding: 12px; position: sticky; top: 16px; }
+.side-tabs-project { margin-bottom: 8px; }
+.side-tabs-heading { font: 600 11px var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3, var(--text-2)); margin: 10px 8px 4px; }
+.side-tabs button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 8px 10px; border-radius: 8px;
+  font: 550 13.5px var(--font); color: var(--text-2); cursor: pointer; text-align: left; border-left: 3px solid transparent; }
+.side-tabs button:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+.side-tabs button.active { background: var(--surface-2); color: var(--text); border-left-color: var(--accent, var(--text)); }
+.side-tabs button:disabled { opacity: .45; cursor: not-allowed; }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover td { background: var(--surface-2); }
+@media (max-width: 860px) { .side-tabs-layout { grid-template-columns: minmax(0, 1fr); } .side-tabs { position: static; } }

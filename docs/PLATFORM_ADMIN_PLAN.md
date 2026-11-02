@@ -38,6 +38,10 @@ Project ── links → Features (switched on for the project)
 
 **Status (2026-11-02):** Antigravity's Global configuration redesign was checked and committed (cdefc69). This redesign is built on top of it, locally: V25 (module, feature_group, feature_permission, feature flags on capability, access_role.org_id with row-level security; P1 project-made entries moved to global and kept switched on), CatalogueServiceV1 and CatalogueControllerV1 (platform), ProjectFeatureControllerV1 and ProjectRoleControllerV1 (project), and the screens in frontend/src/shared/configuration/Catalogue.tsx (Global configuration tab, Settings → Project features, Team → Roles, grouped permission picker also in the platform role editor). P1's /capabilities endpoints are removed. Projects no longer create features or permissions. Not yet: built-in features for every screen area (permissions no feature uses are listed under "Other" by category); screens using the new identifiers.
 
+## Tenant detail page (2026-11-02)
+
+Clicking a tenant on the Tenants page opens /platform/tenants/{tenant} with side tabs: Overview (subscription, status, projects) and Configuration for the tenant, and Features, Roles, Connectors and Media types for the project picked at the top of the side bar. The tab and project are in the address. Platform routes for one customer project: /api/platform/orgs/{orgId}/project-features and /api/platform/orgs/{orgId}/roles. Planned additions: Team (members) with P2, Email templates with P5.
+
 ## Stages
 
 | Stage | Scope | Status |

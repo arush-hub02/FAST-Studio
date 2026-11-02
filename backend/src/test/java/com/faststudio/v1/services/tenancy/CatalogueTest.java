@@ -159,4 +159,25 @@ class CatalogueTest {
                 "the project role grants its custom permission");
         assertEquals(409, status(delete(roles + "/clip-reviewer"), "owner@aurora.test", null), "in use");
     }
+
+    @Test @Order(4)
+    void thePlatformManagesAProjectsFeaturesAndRolesFromTheTenantPage() throws Exception {
+        String base = "/api/platform/orgs/" + org("northwind");
+        assertEquals(403, status(get(base + "/project-features"), "owner@northwind.test", null), "platform only");
+        assertTrue(keys(read(get(base + "/project-features"), ADMIN).path("available")).contains("INTERNAL_TOOLS"), "the platform also sees hidden features");
+        assertEquals(200, status(put(base + "/project-features/CLIPS"), ADMIN, null));
+        assertTrue(keys(access("northwind", "owner@northwind.test").path("features")).contains("CLIPS"));
+        assertEquals(200, status(delete(base + "/project-features/CLIPS"), ADMIN, null));
+        assertFalse(keys(access("northwind", "owner@northwind.test").path("features")).contains("CLIPS"));
+
+        String role = "{\"key\":\"nw-editor\",\"name\":\"Editor\",\"kind\":\"CUSTOMER\",\"baseRole\":\"CONTENT_MANAGER\",\"permissions\":[\"VIEW\",\"ASSETS_EDIT\"],\"enabled\":true}";
+        assertEquals(200, status(put(base + "/roles"), ADMIN, role));
+        assertTrue(call(get("/api/orgs/" + org("northwind") + "/roles"), "owner@northwind.test", null).getResponse().getContentAsString().contains("nw-editor"),
+                "the project sees the role the platform made for it");
+        assertFalse(read(get("/api/platform/orgs/" + org("aurora") + "/roles"), ADMIN).toString().contains("nw-editor"), "only in that project");
+        assertEquals(200, status(delete(base + "/roles/nw-editor"), ADMIN, null));
+
+        UUID partner = org("partner-tv");
+        assertEquals(404, status(get("/api/platform/orgs/" + partner + "/project-features"), ADMIN, null), "customer projects only");
+    }
 }

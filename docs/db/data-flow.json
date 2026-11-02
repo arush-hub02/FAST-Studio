@@ -15360,6 +15360,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "AccessRoleRepository",
               "method": "rolesFor",
               "layer": "repository"
@@ -15377,6 +15382,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
               "layer": "service"
             },
             {
@@ -15400,6 +15410,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "groups",
               "layer": "repository"
@@ -15420,6 +15435,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "features",
               "layer": "repository"
@@ -15437,6 +15457,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
               "layer": "service"
             },
             {
@@ -15469,6 +15494,11 @@
             },
             {
               "class": "AccessRoleServiceV1",
+              "method": "saveIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
               "method": "store",
               "layer": "service"
             },
@@ -15490,6 +15520,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveIn",
               "layer": "service"
             },
             {
@@ -15543,6 +15578,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "features",
               "layer": "repository"
@@ -15565,6 +15605,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
               "layer": "service"
             },
             {
@@ -15593,6 +15638,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "features",
               "layer": "repository"
@@ -15610,6 +15660,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "saveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveIn",
               "layer": "service"
             },
             {
@@ -15643,6 +15698,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "modules",
               "layer": "repository"
@@ -15668,6 +15728,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteIn",
               "layer": "service"
             },
             {
@@ -15716,6 +15781,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "features",
               "layer": "repository"
@@ -15738,6 +15808,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
               "layer": "service"
             },
             {
@@ -15766,6 +15841,11 @@
               "layer": "service"
             },
             {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
               "class": "CatalogueRepository",
               "method": "features",
               "layer": "repository"
@@ -15783,6 +15863,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "deleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteIn",
               "layer": "service"
             },
             {
@@ -15808,6 +15893,11 @@
             {
               "class": "AccessRoleServiceV1",
               "method": "projectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
               "layer": "service"
             },
             {
@@ -22801,6 +22891,1229 @@
         }
       }
     },
+    "GET /api/platform/orgs/{orgId}/project-features": {
+      "title": "A project's features (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-orgs-orgid-project-features",
+      "handler": "PlatformProjectAccessControllerV1.features",
+      "tables": {
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "features",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/orgs/{orgId}/project-features/{key}": {
+      "title": "Switch a feature off for a project (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-delete-api-platform-orgs-orgid-project-features-key",
+      "handler": "PlatformProjectAccessControllerV1.unlink",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "requirePlanFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "unlink",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "requirePlanFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/orgs/{orgId}/project-features/{key}": {
+      "title": "Switch a feature on for a project (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-put-api-platform-orgs-orgid-project-features-key",
+      "handler": "PlatformProjectAccessControllerV1.link",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "requirePlanFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "catalogue",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "link",
+              "layer": "controller"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "platformLink",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "requirePlanFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/orgs/{orgId}/roles": {
+      "title": "A project's roles (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-orgs-orgid-roles",
+      "handler": "PlatformProjectAccessControllerV1.roles",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformProjectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformProjectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformProjectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformProjectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformProjectRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/orgs/{orgId}/roles": {
+      "title": "Save a project role (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-put-api-platform-orgs-orgid-roles",
+      "handler": "PlatformProjectAccessControllerV1.saveRole",
+      "tables": {
+        "access_role": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "globalRoles",
+              "layer": "repository"
+            }
+          ]
+        },
+        "app_user": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "saveIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "store",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "holders",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformSaveProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "saveRole",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/orgs/{orgId}/roles/{key}": {
+      "title": "Remove a project role (platform)",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-delete-api-platform-orgs-orgid-roles-key",
+      "handler": "PlatformProjectAccessControllerV1.deleteRole",
+      "tables": {
+        "access_role": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_group": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "groups",
+              "layer": "repository"
+            }
+          ]
+        },
+        "feature_permission": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "features",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "deleteIn",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "holders",
+              "layer": "repository"
+            }
+          ]
+        },
+        "module": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformDeleteProjectRole",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "rolesOf",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueRepository",
+              "method": "modules",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectAccessControllerV1",
+              "method": "deleteRole",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/platform/password-reset": {
       "title": "Send someone a password reset",
       "category": "Platform: organizations, connectors and media types",
@@ -29233,6 +30546,7 @@
         "PUT /api/platform/access-roles",
         "POST /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
+        "PUT /api/platform/orgs/{orgId}/roles",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /api/platform/tenants/{tenant}/projects",
         "POST /api/platform/tenants/{tenant}/status"
@@ -29398,6 +30712,10 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
         "PUT /api/platform/orgs/{orgId}/media-types",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/password-reset",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
@@ -29448,6 +30766,8 @@
         "GET /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
@@ -29490,12 +30810,17 @@
         "PUT /api/orgs/{org}/roles",
         "DELETE /api/orgs/{org}/roles/{key}",
         "GET /api/platform/access-roles",
-        "PUT /api/platform/access-roles"
+        "PUT /api/platform/access-roles",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}"
       ],
       "write": [
         "PUT /api/orgs/{org}/roles",
         "DELETE /api/orgs/{org}/roles/{key}",
-        "PUT /api/platform/access-roles"
+        "PUT /api/platform/access-roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}"
       ]
     },
     "organization": {
@@ -29584,6 +30909,12 @@
         "GET /api/platform/orgs/{orgId}/media-types",
         "PUT /api/platform/orgs/{orgId}/media-types",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/password-reset",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
@@ -29618,6 +30949,8 @@
         "POST /api/platform/orgs/{id}/status",
         "PUT /api/platform/orgs/{orgId}/features",
         "PUT /api/platform/orgs/{orgId}/media-types",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /api/platform/tenants/{tenant}/projects"
       ]
@@ -29668,6 +31001,9 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
         "PUT /api/platform/plans",
         "GET /api/platform/tenants",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -29777,6 +31113,12 @@
         "GET /api/platform/orgs/{orgId}/connectors",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
         "PUT /api/platform/permissions/{key}"
@@ -29812,6 +31154,9 @@
         "GET /api/platform/orgs/{orgId}/connectors",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
         "GET /api/platform/plans",
         "PUT /api/platform/plans",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -30537,6 +31882,12 @@
         "POST /api/platform/modules",
         "DELETE /api/platform/modules/{key}",
         "PUT /api/platform/modules/{key}",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "PUT /api/platform/permissions/{key}"
       ],
@@ -30564,6 +31915,12 @@
         "POST /api/platform/modules",
         "DELETE /api/platform/modules/{key}",
         "PUT /api/platform/modules/{key}",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "PUT /api/platform/permissions/{key}"
       ],
@@ -30589,6 +31946,12 @@
         "PUT /api/platform/features/{key}",
         "POST /api/platform/modules",
         "PUT /api/platform/modules/{key}",
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "PUT /api/platform/permissions/{key}"
       ],

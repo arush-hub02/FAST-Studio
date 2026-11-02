@@ -51,7 +51,7 @@ export default function Team() {
             <div className="callout"><Icon name="shield" /><div className="small">Nobody can give a role higher than their own, and every organization keeps at least one owner.</div></div></div>
         </section>
       </div>
-      <div style={{ marginTop: 16 }}><ProjectRoles slug={org.slug} editable={manage} kind={org.kind} /></div>
+      <div style={{ marginTop: 16 }}><ProjectRoles base={`/api/orgs/${org.slug}/roles`} editable={manage} kind={org.kind} /></div>
       {resetLink && <ResetLinkModal {...resetLink} onClose={() => setResetLink(null)} />}
       {inviting && <Invite onClose={() => setInviting(false)} onDone={list.reload} />}
       {removing && <Confirm danger title={`Remove ${removing.name}?`} confirmLabel="Remove" text="They lose access to this organization immediately. Their past actions stay in the audit log."

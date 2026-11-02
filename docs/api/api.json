@@ -2211,6 +2211,81 @@
           "body": {
             "email": "owner@aurora.test"
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/project-features",
+          "title": "A project's features (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "description": "For the tenant detail page: the catalogue (including hidden features), the features this customer project has switched on, and its effective features. Platform administrators only; 404 for partner organizations."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/project-features/{key}",
+          "title": "Switch a feature on for a project (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "CLIPS"
+          },
+          "description": "Switches any enabled feature on for the project, including subscription (built-in) features when the tenant's plan includes them (otherwise 422 \"Not included in this tenant's plan\")."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/project-features/{key}",
+          "title": "Switch a feature off for a project (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "CLIPS"
+          },
+          "description": "Switches a feature off for the project."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/roles",
+          "title": "A project's roles (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "description": "Platform roles and the project's own roles, what each ceiling allows and the catalogue for the grouped permission editor, for the tenant detail page."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/roles",
+          "title": "Save a project role (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "body": {
+            "key": "nw-editor",
+            "name": "Editor",
+            "kind": "CUSTOMER",
+            "baseRole": "CONTENT_MANAGER",
+            "permissions": [
+              "VIEW",
+              "ASSETS_EDIT"
+            ],
+            "enabled": true,
+            "expectedRevision": 0
+          },
+          "fields": {
+            "key": "Stable role identifier: lower-case letters, digits, \"_\" or \"-\". Unique across the platform.",
+            "baseRole": "Ceiling: the most this role may do (not OWNER).",
+            "permissions": "Permission identifiers: built-in ones within the ceiling, plus custom ones. Must include VIEW.",
+            "expectedRevision": "The revision you edited (0 for a new role); a stale one gets 409."
+          },
+          "description": "Creates or updates a role for this customer project only, as the project's own administrators can on its Team page."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/roles/{key}",
+          "title": "Remove a project role (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "nw-editor"
+          },
+          "description": "Removes one of the project's own roles; refused while anyone has it (409 IN_USE)."
         }
       ]
     },

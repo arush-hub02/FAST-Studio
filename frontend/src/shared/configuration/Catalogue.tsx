@@ -280,8 +280,8 @@ export function PermissionPicker({ c, value, onChange, allowed }: { c: Catalogue
 
 type ProjectView = { modules: ModuleEntry[]; groups: Group[]; available: Feature[]; linked: string[]; features: string[]; permissions: string[] }
 
-export function ProjectFeatures({ slug, editable }: { slug: string; editable: boolean }) {
-  const base = `/api/orgs/${slug}/features`
+/** base: /api/orgs/{org}/features (project) or /api/platform/orgs/{orgId}/project-features (platform: may also switch subscription features). */
+export function ProjectFeatures({ base, editable, platform = false }: { base: string; editable: boolean; platform?: boolean }) {
   const view = useApi<ProjectView>(base)
   const [search, setSearch] = useState('')
   const [moduleKey, setModuleKey] = useState('')
@@ -296,16 +296,16 @@ export function ProjectFeatures({ slug, editable }: { slug: string; editable: bo
   const set = (f: Feature, on: boolean) => run(() => api<ProjectView>(`${base}/${f.key}`, { method: on ? 'PUT' : 'DELETE' }), `${f.name} ${on ? 'switched on' : 'switched off'}`)
     .then(r => { if (r) view.setData(r) })
   return <>
-    <section className="card card-pad stack" aria-label="Features and permissions that apply to you">
+    {!platform && <section className="card card-pad stack" aria-label="Features and permissions that apply to you">
       <h2>Features and permissions that apply to you</h2>
       <p className="faint">Screens show or hide things by these identifiers.</p>
       <div><b>Features</b> <span className="row-wrap" style={{ gap: 6, display: 'inline-flex' }}>{v.features.length ? v.features.map(f => <span key={f} className="badge ok mono small">{f}</span>) : <span className="faint">none</span>}</span></div>
       <div><b>Permissions</b> <span className="row-wrap" style={{ gap: 6, display: 'inline-flex' }}>{v.permissions.map(p => <span key={p} className="badge mono small">{p}</span>)}</span></div>
-    </section>
+    </section>}
     <section className="card card-pad stack" style={{ gap: 12 }} aria-label="Project features">
       <div className="between" style={{ flexWrap: 'wrap', gap: 12 }}>
-        <div><h2 style={{ margin: 0 }}>Project features</h2><p className="faint" style={{ margin: '4px 0 0' }}>Switch on features from the platform catalogue for this project. Subscription features are switched on by the platform administrator.</p></div>
-        {editable && <button type="button" className="btn" disabled={busy} onClick={() => run(() => api<ProjectView>(`${base}/defaults`, { method: 'POST' }), 'Default features switched on').then(r => { if (r) view.setData(r) })}>Add default features</button>}
+        <div><h2 style={{ margin: 0 }}>Project features</h2><p className="faint" style={{ margin: '4px 0 0' }}>{platform ? 'Switch features on or off for this project, including subscription features its plan includes.' : 'Switch on features from the platform catalogue for this project. Subscription features are switched on by the platform administrator.'}</p></div>
+        {editable && !platform && <button type="button" className="btn" disabled={busy} onClick={() => run(() => api<ProjectView>(`${base}/defaults`, { method: 'POST' }), 'Default features switched on').then(r => { if (r) view.setData(r) })}>Add default features</button>}
       </div>
       <div className="row-wrap" style={{ gap: 10 }}>
         <input type="search" className="input" style={{ flex: '1 1 220px', maxWidth: 320 }} placeholder="Search features…" aria-label="Search features" value={search} onChange={e => setSearch(e.target.value)} />
@@ -322,7 +322,7 @@ export function ProjectFeatures({ slug, editable }: { slug: string; editable: bo
               <td><b>{f.name}</b> {f.beta && <span className="badge small">Beta</span>}<div className="faint mono small">{f.key}</div>{f.description && <div className="faint small">{f.description}</div>}</td>
               <td>{groupOf(f.groupKey)?.name}<div className="faint small">{v.modules.find(m => m.key === groupOf(f.groupKey)?.moduleKey)?.name}</div></td>
               <td>{f.builtIn ? <span className="badge">{on ? 'On (subscription)' : 'Subscription'}</span> : status(on)}</td>
-              <td>{editable && !f.builtIn && <button type="button" className={`btn sm ${linked ? '' : 'primary'}`} disabled={busy} onClick={() => set(f, !linked)}>{linked ? 'Switch off' : 'Switch on'}</button>}</td>
+              <td>{editable && (platform || !f.builtIn) && <button type="button" className={`btn sm ${linked ? '' : 'primary'}`} disabled={busy} onClick={() => set(f, !linked)}>{linked ? 'Switch off' : 'Switch on'}</button>}</td>
             </tr>
           })}</tbody></table>}
     </section>
@@ -335,8 +335,8 @@ type RoleRow = { key: string; name: string; kind: string; baseRole: string; perm
 type ProjectRolesView = { roles: RoleRow[]; permissions: string[]; ceilings: Record<string, string[]>; catalogue: Catalogue }
 const CUSTOMER_CEILINGS = ['ADMIN', 'CONTENT_MANAGER', 'CHANNEL_OPERATOR', 'AD_OPS', 'ANALYST']
 
-export function ProjectRoles({ slug, editable, kind }: { slug: string; editable: boolean; kind: string }) {
-  const base = `/api/orgs/${slug}/roles`
+/** base: /api/orgs/{org}/roles (project) or /api/platform/orgs/{orgId}/roles (platform). */
+export function ProjectRoles({ base, editable, kind }: { base: string; editable: boolean; kind: string }) {
   const view = useApi<ProjectRolesView>(base)
   const blank = { key: '', name: '', kind, baseRole: kind === 'PARTNER' ? 'PARTNER_VIEWER' : 'ANALYST', permissions: ['VIEW'], enabled: true, expectedRevision: 0 }
   const [form, setForm] = useState<typeof blank | null>(null)

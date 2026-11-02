@@ -132,16 +132,13 @@ public class AccessRoleServiceV1 {
 
     public ProjectRoles projectRoles(Tenant t) {
         t.require(Tenant.Perm.VIEW);
-        return new ProjectRoles(repository.rolesFor(t.orgId()).stream().filter(r -> r.kind().equals(t.kind())).toList(), catalog(), ceilings(),
-                TenantScope.bypass(() -> new CatalogueDto.Catalogue(catalogue.modules(), catalogue.groups(), catalogue.features(), catalogue.permissions())));
+        return rolesOf(t.orgId(), t.kind());
     }
 
     /** A project's administrators create or update a role for this project; its ceiling can't be above their own role. */
     public ProjectRoles saveProjectRole(Tenant t, Role role) {
         t.require(Tenant.Perm.TEAM_MANAGE);
-        if (!role.kind().equals(t.kind())) throw ApiException.bad("Roles of a project are for its own organization type.");
-        checkDefinition(role, t);
-        TenantScope.as(t.orgId(), () -> { store(role, t.orgId()); return null; });
+        saveIn(t.orgId(), t.kind(), role, t);
         audit.log(t, "role.definition.save", "role", null, role.key());
         return projectRoles(t);
     }
@@ -149,13 +146,46 @@ public class AccessRoleServiceV1 {
     /** Deletes one of the project's own roles; refused while anyone holds it. */
     public ProjectRoles deleteProjectRole(Tenant t, String key) {
         t.require(Tenant.Perm.TEAM_MANAGE);
-        Row row = repository.rolesFor(t.orgId()).stream().filter(r -> r.key().equals(key) && t.orgId().equals(r.orgId())).findFirst()
-                .orElseThrow(() -> ApiException.notFound("Role"));
-        if (!repository.holders(row.key()).isEmpty())
-            throw ApiException.conflict("IN_USE", "Give the people with this role another role first.");
-        repository.delete(key, t.orgId());
+        deleteIn(t.orgId(), key);
         audit.log(t, "role.definition.delete", "role", null, key);
         return projectRoles(t);
+    }
+
+    // ------------------------------------------------------------------ platform: one customer project's roles (tenant detail page)
+
+    public ProjectRoles platformProjectRoles(UUID org) { return rolesOf(org, "CUSTOMER"); }
+
+    public ProjectRoles platformSaveProjectRole(UUID org, Role role) {
+        saveIn(org, "CUSTOMER", role, null);
+        audit.log(org, Auth.userId(), "role.definition.save", "role", null, role.key() + " (platform)");
+        return rolesOf(org, "CUSTOMER");
+    }
+
+    public ProjectRoles platformDeleteProjectRole(UUID org, String key) {
+        deleteIn(org, key);
+        audit.log(org, Auth.userId(), "role.definition.delete", "role", null, key + " (platform)");
+        return rolesOf(org, "CUSTOMER");
+    }
+
+    private ProjectRoles rolesOf(UUID org, String kind) {
+        return new ProjectRoles(TenantScope.as(org, () -> repository.rolesFor(org)).stream().filter(r -> r.kind().equals(kind)).toList(), catalog(), ceilings(),
+                TenantScope.bypass(() -> new CatalogueDto.Catalogue(catalogue.modules(), catalogue.groups(), catalogue.features(), catalogue.permissions())));
+    }
+
+    private void saveIn(UUID org, String kind, Role role, Tenant caller) {
+        if (!role.kind().equals(kind)) throw ApiException.bad("Roles of a project are for its own organization type.");
+        checkDefinition(role, caller);
+        TenantScope.as(org, () -> { store(role, org); return null; });
+    }
+
+    private void deleteIn(UUID org, String key) {
+        TenantScope.as(org, () -> {
+            Row row = repository.rolesFor(org).stream().filter(r -> r.key().equals(key) && org.equals(r.orgId())).findFirst()
+                    .orElseThrow(() -> ApiException.notFound("Role"));
+            if (!repository.holders(row.key()).isEmpty())
+                throw ApiException.conflict("IN_USE", "Give the people with this role another role first.");
+            return repository.delete(key, org);
+        });
     }
 
     // ------------------------------------------------------------------ shared rules

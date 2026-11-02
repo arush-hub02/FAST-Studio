@@ -162,11 +162,33 @@ public class CatalogueServiceV1 {
         return project(t);
     }
 
-    private void update(Tenant t, java.util.function.Consumer<Set<String>> change) {
+    // ------------------------------------------------------------------ platform: one project's features (tenant detail page)
+
+    /** Like {@link #project} for a platform administrator: every enabled feature incl. hidden ones; no personal permissions. */
+    public ProjectFeatures platformProject(UUID org) {
+        Catalogue c = catalogue();
+        String linked = configuration.projectFeatures(org);
+        return new ProjectFeatures(c.modules(), c.groups(), c.features().stream().filter(Feature::enabled).toList(), Times.codes(linked),
+                configuration.effectiveFeatures(org, linked), List.of());
+    }
+
+    /** The platform switches any enabled feature on or off for a project; built-in ones only when the tenant's plan includes them. */
+    public ProjectFeatures platformLink(UUID org, String key, boolean on) {
+        Feature f = catalogue().features().stream().filter(x -> x.key().equals(key) && x.enabled()).findFirst()
+                .orElseThrow(() -> ApiException.notFound("Feature"));
+        if (on && f.builtIn()) configuration.requirePlanFeatures(org, List.of(key));
+        update(org, keys -> { if (on) keys.add(key); else keys.remove(key); });
+        audit.log(org, Auth.userId(), on ? "feature.link" : "feature.unlink", "feature", key, f.name() + " (platform)");
+        return platformProject(org);
+    }
+
+    private void update(Tenant t, java.util.function.Consumer<Set<String>> change) { update(t.orgId(), change); }
+
+    private void update(UUID org, java.util.function.Consumer<Set<String>> change) {
         TenantScope.bypass(() -> tx.execute(s -> {
-            Set<String> keys = new LinkedHashSet<>(Times.codes(projects.projectFeatures(t.orgId())));
+            Set<String> keys = new LinkedHashSet<>(Times.codes(projects.projectFeatures(org)));
             change.accept(keys);
-            projects.setProjectFeatures(t.orgId(), String.join(",", keys));
+            projects.setProjectFeatures(org, String.join(",", keys));
             return null;
         }));
     }

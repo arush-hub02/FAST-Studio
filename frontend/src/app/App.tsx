@@ -23,6 +23,7 @@ const Team = lazy(() => import('../features/team/Team'))
 const Learn = lazy(() => import('../features/home/Learn'))
 const PartnerOrganizations = lazy(() => import('../features/platform/PartnerOrganizations'))
 const Platform = lazy(() => import('../features/platform/TenantAdmin'))
+const TenantDetail = lazy(() => import('../features/platform/TenantDetail'))
 const GlobalConfiguration = lazy(() => import('../features/platform/GlobalConfiguration'))
 const Connectors = lazy(() => import('../features/platform/Connectors'))
 const Settings = lazy(() => import('../features/settings/Settings'))
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/login" element={me ? <Navigate to={landing(me)} replace /> : <Login />} />
         <Route element={me ? <Shell /> : <RedirectToLogin />}>
           <Route path="/platform" element={<Platform />} />
+          <Route path="/platform/tenants/:tenantId" element={<TenantDetail />} />
           <Route path="/platform/partners" element={<PartnerOrganizations />} />
           <Route path="/platform/configuration" element={<GlobalConfiguration />} />
           <Route path="/platform/email" element={<Email />} />

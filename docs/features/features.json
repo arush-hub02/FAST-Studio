@@ -1122,6 +1122,224 @@
       "screenshots": []
     },
     {
+      "id": "tenant-detail-page",
+      "title": "Tenant detail page",
+      "area": "Multi-tenancy",
+      "status": "Built",
+      "completed": "2026-11-02",
+      "summary": "Clicking a customer tenant on the Tenants page opens its own page. Side tabs hold everything the platform manages for it: subscription and projects, configuration, and for the project picked at the top of the side bar, its features, roles, connectors and media types. The address remembers the tab and project, so a link or a reload opens the same place.",
+      "who": [
+        "Platform administrators"
+      ],
+      "flow": {
+        "title": "From the Tenants list to one project's settings",
+        "intro": "The boxes are the parts of the page; the pill is where you are. Pick a situation.",
+        "nodes": [
+          {
+            "id": "list",
+            "col": 1,
+            "row": 1,
+            "icon": "📋",
+            "label": "Tenants list",
+            "sub": "Every customer tenant"
+          },
+          {
+            "id": "page",
+            "col": 2,
+            "row": 1,
+            "icon": "🏢",
+            "label": "Tenant page",
+            "sub": "/platform/tenants/{id}"
+          },
+          {
+            "id": "tenantTabs",
+            "col": 3,
+            "row": 1,
+            "icon": "🧾",
+            "label": "Tenant tabs",
+            "sub": "Overview, Configuration"
+          },
+          {
+            "id": "picker",
+            "col": 4,
+            "row": 1,
+            "icon": "🎯",
+            "label": "Project picker",
+            "sub": "Top of the side bar"
+          },
+          {
+            "id": "features",
+            "col": 1,
+            "row": 2,
+            "icon": "🧩",
+            "label": "Features",
+            "sub": "Switch features on"
+          },
+          {
+            "id": "roles",
+            "col": 2,
+            "row": 2,
+            "icon": "🎭",
+            "label": "Roles",
+            "sub": "The project's own roles"
+          },
+          {
+            "id": "connectors",
+            "col": 3,
+            "row": 2,
+            "icon": "🔌",
+            "label": "Connectors",
+            "sub": "Mux, ad servers, R2"
+          },
+          {
+            "id": "media",
+            "col": 4,
+            "row": 2,
+            "icon": "🎞️",
+            "label": "Media types",
+            "sub": "Permitted types"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Open a tenant",
+            "steps": [
+              {
+                "at": "list",
+                "state": "Aurora",
+                "say": "On the Tenants page you click a tenant (or its Manage button)."
+              },
+              {
+                "at": "page",
+                "state": "Overview",
+                "say": "Its page opens on Overview: subscription plan and status, suspend, and the list of projects with Add project."
+              },
+              {
+                "at": "tenantTabs",
+                "state": "Configuration",
+                "say": "The Configuration tab edits tenant defaults, or one project's overrides, with the scope picker."
+              }
+            ]
+          },
+          {
+            "name": "Work on a project",
+            "steps": [
+              {
+                "at": "picker",
+                "state": "Aurora Media",
+                "say": "Pick a project at the top of the side bar, or click Open on a project in Overview."
+              },
+              {
+                "at": "features",
+                "state": "features",
+                "say": "Features: switch catalogue features on for this project, including subscription features its plan includes.",
+                "tech": "`/api/platform/orgs/{orgId}/project-features`"
+              },
+              {
+                "at": "roles",
+                "state": "roles",
+                "say": "Roles: add or edit the project's own roles with the grouped permission editor.",
+                "tech": "`/api/platform/orgs/{orgId}/roles`"
+              },
+              {
+                "at": "connectors",
+                "state": "connectors",
+                "say": "Connectors: the video library, ad demand waterfall and storage for this project."
+              },
+              {
+                "at": "media",
+                "state": "media types",
+                "say": "Media types: which types this project may use."
+              }
+            ]
+          },
+          {
+            "name": "Share a link",
+            "steps": [
+              {
+                "at": "page",
+                "state": "?tab=roles&project=…",
+                "say": "The address holds the tab and the project."
+              },
+              {
+                "at": "roles",
+                "state": "same place",
+                "say": "Opening the link or reloading shows the same tab for the same project."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Tenants: click a tenant's name or Manage.",
+        "Overview: change the subscription plan or status, suspend the tenant, add a project, suspend a project, or click Open on a project.",
+        "Configuration: choose Tenant defaults or one project, then edit its properties.",
+        "Pick a project at the top of the side bar, then use Features, Roles, Connectors or Media types for it."
+      ],
+      "howItWorks": [
+        "The page is /platform/tenants/{tenant}; the side tab and the project are kept in the address (?tab=…&project=…).",
+        "Overview and Configuration use the existing tenant settings routes; Connectors and Media types reuse the per-project parts of the Connectors and Media types screens.",
+        "Features and Roles use new platform routes for one customer project, because platform administrators aren't project members; they follow the same rules as the project's own Settings and Team pages, plus subscription features when the plan includes them."
+      ],
+      "optimizations": [
+        "Each tab loads only its own data when opened.",
+        "The side bar stays in view while scrolling (sticky), and stacks above the content on narrow screens."
+      ],
+      "scale": [
+        "Known limit: the project picker is a simple list; a tenant with hundreds of projects would want search there.",
+        "Not measured: tenants with many projects."
+      ],
+      "rules": [
+        "Platform administrators only.",
+        "Project tabs work on customer projects; partner organizations get 404.",
+        "Project roles made here belong to that project only."
+      ],
+      "api": [
+        "GET /api/platform/orgs/{orgId}/project-features",
+        "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/roles",
+        "PUT /api/platform/orgs/{orgId}/roles",
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}"
+      ],
+      "tests": [
+        "CatalogueTest (platform manages a project's features and roles)",
+        "frontend/e2e/tenant-detail.spec.ts (opens a tenant and every side tab, reload keeps the tab)"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "tenant-tabs",
+          "account": "platform",
+          "path": "/platform",
+          "steps": [
+            {
+              "click": {
+                "role": "link",
+                "name": "Manage Aurora Media Network"
+              }
+            },
+            {
+              "click": {
+                "role": "button",
+                "name": "Roles"
+              }
+            },
+            {
+              "waitFor": {
+                "text": "Platform roles are available to every project"
+              }
+            },
+            {
+              "wait": 400
+            }
+          ],
+          "caption": "A tenant's page: side tabs for the tenant (Overview, Configuration) and, for the project picked at the top, its Features, Roles, Connectors and Media types. Here the project's roles."
+        }
+      ]
+    },
+    {
       "id": "durable-media-jobs",
       "title": "Durable media processing",
       "area": "Media library",
@@ -2057,8 +2275,14 @@
           "steps": [
             {
               "click": {
-                "role": "button",
+                "role": "link",
                 "name": "Manage Aurora Media Network"
+              }
+            },
+            {
+              "click": {
+                "role": "button",
+                "name": "Configuration"
               }
             },
             {
@@ -2073,7 +2297,7 @@
               "wait": 400
             }
           ],
-          "caption": "A tenant’s settings: the limits sit with its other properties (API requests per minute shown at its old default of 600, now 6000; stored media hours and conversions further down). \"global\" means the global default is in effect; Save override sets it for this tenant, or for one project when a project scope is chosen."
+          "caption": "Tenant page → Configuration: the limits sit with its other properties (API requests per minute shown at its old default of 600, now 6000; stored media hours and conversions further down). \"global\" means the global default is in effect; Save override sets it for this tenant, or for one project when a project scope is chosen."
         }
       ]
     },
