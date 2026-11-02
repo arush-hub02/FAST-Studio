@@ -51,6 +51,7 @@ class ConnectorCatalogueTest {
     @Autowired Tokens tokens;
     @Autowired JsonMapper json;
     @Autowired ConnectorCatalogueServiceV1 service;
+    @Autowired com.faststudio.v1.util.cloudflare.EdgeClient edge;
 
     UUID org(String slug) { return TenantScope.bypass(() -> db.sql("select id from organization where slug = :s").param("s", slug).query(UUID.class).single()); }
 
@@ -175,5 +176,11 @@ class ConnectorCatalogueTest {
         JsonNode r2 = state(ok(get("/api/platform/connector-instances"), ADMIN, null), "r2");
         assertNotNull(r2);
         assertTrue(r2.path("connector").path("properties").toString().contains("edge_secret"), "platform sees internal fields");
+
+        // the edge client follows the platform's R2 connection, field by field over its start-up settings (P3c)
+        ok(post("/api/platform/connector-instances/r2"), ADMIN, "{\"values\":{\"worker_url\":\"https://edge.test\",\"edge_secret\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"public_url\":\"https://media.test/\"}}");
+        edge.refresh();
+        assertEquals("https://media.test", edge.publicUrl());
+        assertTrue(edge.configured(), "secret from the connection");
     }
 }

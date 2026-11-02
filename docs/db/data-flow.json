@@ -5618,6 +5618,141 @@
             }
           ]
         },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "uploadUrl",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "uploadUrl",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "uploadUrl",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "uploadUrl",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "uploadUrl",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "uploadUrl",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -5649,7 +5784,7 @@
           ]
         },
         "media_connection": {
-          "mode": "read",
+          "mode": "write",
           "chain": [
             {
               "class": "LibraryControllerV1",
@@ -5672,8 +5807,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "MediaConnectionService",
               "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -14005,7 +14145,7 @@
       "id": "ep-get-api-orgs-org-library",
       "handler": "LibraryControllerV1.library",
       "tables": {
-        "media_connection": {
+        "connector_instance": {
           "mode": "read",
           "chain": [
             {
@@ -14024,8 +14164,128 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "MediaConnectionService",
               "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "sync",
               "layer": "repository"
             }
           ]
@@ -14153,6 +14413,141 @@
             }
           ]
         },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "prepare",
+              "layer": "controller"
+            },
+            {
+              "class": "LibraryServiceV1",
+              "method": "prepare",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -14184,7 +14579,7 @@
           ]
         },
         "media_connection": {
-          "mode": "read",
+          "mode": "write",
           "chain": [
             {
               "class": "LibraryControllerV1",
@@ -14207,8 +14602,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "MediaConnectionService",
               "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -14557,6 +14957,156 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -16467,6 +17017,56 @@
             }
           ]
         },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -16493,31 +17093,6 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
-        "media_connection": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectDetailsControllerV1",
-              "method": "tenant",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "tenant",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "library",
               "layer": "repository"
             }
           ]
@@ -26702,7 +27277,7 @@
       "id": "ep-get-api-platform-orgs-orgid-connectors-mux",
       "handler": "MuxControllerV1.account",
       "tables": {
-        "media_connection": {
+        "connector_instance": {
           "mode": "read",
           "chain": [
             {
@@ -26721,8 +27296,133 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "MediaConnectionService",
               "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "account",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "account",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "account",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -26760,6 +27460,46 @@
       "id": "ep-put-api-platform-orgs-orgid-connectors-mux",
       "handler": "MuxControllerV1.setAccount",
       "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -26774,9 +27514,14 @@
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "record",
+              "layer": "service"
             },
             {
               "class": "Audit",
@@ -26785,7 +27530,127 @@
             }
           ]
         },
-        "media_connection": {
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_category": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "categories",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
           "mode": "read+write",
           "chain": [
             {
@@ -26799,8 +27664,193 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
               "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connectors",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "removeValue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "CatalogueServiceV1",
+              "method": "permissions",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "customPermissions",
               "layer": "repository"
             }
           ]
@@ -26819,14 +27869,94 @@
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "MediaConnectionService",
+              "method": "requireCustomer",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
             }
           ]
         }
@@ -26863,7 +27993,7 @@
             }
           ]
         },
-        "media_connection": {
+        "connector_instance": {
           "mode": "read+write",
           "chain": [
             {
@@ -26877,8 +28007,123 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "ConnectorCatalogueServiceV1",
               "method": "checked",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "checked",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "check",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "check",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -27085,6 +28330,156 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformSync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformSync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformSync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connected",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -27951,6 +29346,56 @@
             }
           ]
         },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectDetailsControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "platform",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectDetailsControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "platform",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsRepository",
+              "method": "library",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read",
           "chain": [
@@ -27977,31 +29422,6 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
-        "media_connection": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlatformProjectDetailsControllerV1",
-              "method": "platform",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "platform",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "library",
               "layer": "repository"
             }
           ]
@@ -33682,7 +35102,7 @@
             }
           ]
         },
-        "media_connection": {
+        "connector_instance": {
           "mode": "read",
           "chain": [
             {
@@ -33701,8 +35121,133 @@
               "layer": "service"
             },
             {
-              "class": "MediaConnectionRepository",
+              "class": "MediaConnectionService",
               "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "account",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "account",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MuxWebhookControllerV1",
+              "method": "webhook",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaWebhookServiceV1",
+              "method": "mux",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "account",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -36257,6 +37802,7 @@
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
@@ -36313,6 +37859,7 @@
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "GET /api/platform/orgs/{orgId}/roles",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}"
@@ -36526,6 +38073,7 @@
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
@@ -36649,6 +38197,7 @@
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
         "GET /api/platform/orgs/{orgId}/project-features",
@@ -37026,6 +38575,7 @@
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -37075,6 +38625,7 @@
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/property-definitions",
@@ -37117,6 +38668,7 @@
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
@@ -37373,26 +38925,140 @@
         "POST /hooks/mux/{org}"
       ]
     },
-    "media_connection": {
+    "connector_property": {
       "read": [
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /hooks/mux/{org}"
+      ],
+      "write": [
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}"
+      ]
+    },
+    "connector_value": {
+      "read": [
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
-        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /hooks/mux/{org}"
       ],
       "write": [
+        "POST /api/orgs/{org}/connectors/{key}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-instances/{key}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux"
+      ]
+    },
+    "connector_instance": {
+      "read": [
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /hooks/mux/{org}"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check"
+      ]
+    },
+    "media_connection": {
+      "read": [
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /hooks/mux/{org}"
       ]
     },
     "destination": {
@@ -37443,63 +39109,6 @@
         "POST /api/orgs/{org}/channels/{id}/programming/generate"
       ]
     },
-    "connector_instance": {
-      "read": [
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
-      ]
-    },
-    "connector_value": {
-      "read": [
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "POST /api/platform/connector-categories",
-        "PUT /api/platform/connector-categories/{key}",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/connectors/{key}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "POST /api/platform/connector-instances/{key}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
-      ]
-    },
     "connector_category": {
       "read": [
         "GET /api/orgs/{org}/connectors",
@@ -37521,38 +39130,13 @@
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux"
       ],
       "write": [
         "POST /api/platform/connector-categories",
         "DELETE /api/platform/connector-categories/{key}",
         "PUT /api/platform/connector-categories/{key}"
-      ]
-    },
-    "connector_property": {
-      "read": [
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "GET /api/platform/connector-catalogue",
-        "POST /api/platform/connector-categories",
-        "PUT /api/platform/connector-categories/{key}",
-        "PUT /api/platform/connector-definitions/{key}/details",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}"
-      ],
-      "write": [
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}"
       ]
     },
     "module": {

@@ -26,9 +26,12 @@ public class ProjectDetailsRepository {
     /** Read credential presence in SQL: encrypted or decrypted values never enter the response projection. */
     public LibraryState library(UUID org) {
         return db.sql("""
-                select environment, (token_id is not null and token_secret is not null) as credentials_configured,
-                (webhook_secret is not null) as webhook_configured from media_connection where org_id=:o""")
-                .param("o", org).query(LibraryState.class).optional().orElse(new LibraryState("", false, false));
+                select coalesce(max(v.value) filter (where v.property_key = 'environment'), '') as environment,
+                (count(*) filter (where v.property_key in ('token_id', 'token_secret')) = 2) as credentials_configured,
+                (count(*) filter (where v.property_key = 'webhook_secret') = 1) as webhook_configured
+                from connector_instance i left join connector_value v on v.instance_id = i.id and v.org_id = :o
+                where i.org_id = :o and i.connector_key = 'mux' and i.enabled""")
+                .param("o", org).query(LibraryState.class).single();
     }
 
     public List<ProjectDetails.Advertising> advertising(UUID org) {

@@ -111,8 +111,16 @@ class LibrarySyncTest {
                     .param("o", org).update();
             db.sql("update organization set features = 'LIBRARY_SYNC' where id = :o").param("o", org).update();
             db.sql("delete from media_connection where org_id = :o").param("o", org).update();
-            return db.sql("insert into media_connection(org_id, provider, token_id, token_secret) values (:o, 'fake', :i, :s)")
-                    .param("o", org).param("i", secrets.seal("id")).param("s", secrets.seal("secret")).update();
+            // the fake library's connector fields and the project's connection to it (credentials live there since V27)
+            db.sql("""
+                    insert into connector_property(connector_key, key, label, value_type, position, required, encrypted, scope)
+                    values ('fake', 'token_id', 'Token', 'STRING', 1, true, true, 'INTERNAL'), ('fake', 'token_secret', 'Secret', 'STRING', 2, true, true, 'INTERNAL')
+                    on conflict do nothing""").update();
+            db.sql("delete from connector_instance where org_id = :o and connector_key = 'fake'").param("o", org).update();
+            UUID fake = db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('fake', :o, 'Fake', 0) returning id")
+                    .param("o", org).query(UUID.class).single();
+            return db.sql("insert into connector_value(instance_id, org_id, property_key, value) values (:f, :o, 'token_id', :i), (:f, :o, 'token_secret', :s)")
+                    .param("f", fake).param("o", org).param("i", secrets.seal("id")).param("s", secrets.seal("secret")).update();
         });
     }
 

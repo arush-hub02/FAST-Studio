@@ -154,11 +154,14 @@ public class ConnectorCatalogueServiceV1 {
             } else {
                 instance = repository.insertInstance(key, org, name, c.multiInstance() ? repository.nextPosition(key, org) : 0, enabled);
             }
+            boolean changed = false;
             for (var e : sealed.entrySet()) {
                 if (e.getValue() == null) continue;                       // blank encrypted value: keep the stored one
                 if (e.getValue().isEmpty()) repository.removeValue(instance, org, e.getKey());
                 else repository.putValue(instance, org, e.getKey(), e.getValue());
+                changed = true;
             }
+            if (changed && existing.isPresent()) repository.checked(instance, org, null, true);   // new values need a new check
             return instance;
         }));
         record(caller, org, "connector.connect", key, c.name() + " (" + saved + ")");
@@ -178,12 +181,18 @@ public class ConnectorCatalogueServiceV1 {
      * The values of a project's (or the platform's) enabled instance of a connector, decrypted, by property key, with
      * defaults filled in: what adapters read (Mux, R2, ad servers). Empty when not connected.
      */
-    public List<Map<String, String>> values(UUID org, String key) {
+    public List<Map<String, String>> values(UUID org, String key) { return connections(org, key).stream().map(Connection::values).toList(); }
+
+    /** An enabled connection as adapters use it: decrypted values by field key (defaults filled in) and its last health check. */
+    public record Connection(UUID id, Map<String, String> values, java.time.OffsetDateTime checkedAt, String checkError) {}
+
+    /** A project's (org) or the platform's (org null) enabled connections of a connector, in list order. */
+    public List<Connection> connections(UUID org, String key) {
         return scoped(org, () -> {
             Map<String, PropertyRow> fields = repository.properties().stream().filter(p -> p.connectorKey().equals(key))
                     .collect(Collectors.toMap(PropertyRow::key, p -> p, (a, b) -> a, LinkedHashMap::new));
             Map<UUID, List<ValueRow>> byInstance = repository.values(org).stream().collect(Collectors.groupingBy(ValueRow::instanceId));
-            List<Map<String, String>> out = new ArrayList<>();
+            List<Connection> out = new ArrayList<>();
             for (InstanceRow i : repository.instances(org)) {
                 if (!i.connectorKey().equals(key) || !i.enabled()) continue;
                 Map<String, String> v = new LinkedHashMap<>();
@@ -192,11 +201,17 @@ public class ConnectorCatalogueServiceV1 {
                     PropertyRow p = fields.get(row.propertyKey());
                     if (p != null) v.put(p.key(), p.encrypted() ? secrets.open(row.value()) : row.value());
                 }
-                out.add(v);
+                out.add(new Connection(i.id(), v, i.checkedAt(), i.checkError()));
             }
             return out;
         });
     }
+
+    /** The first enabled connection, if any (single-instance connectors such as Mux and R2). */
+    public Optional<Connection> connection(UUID org, String key) { return connections(org, key).stream().findFirst(); }
+
+    /** Records a health check of a connection: error null = it worked. */
+    public void checked(UUID org, UUID instance, String error) { scoped(org, () -> { repository.checked(instance, org, error, false); return null; }); }
 
     // ------------------------------------------------------------------ building views
 

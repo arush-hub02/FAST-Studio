@@ -60,8 +60,10 @@ class ProjectDetailsTest {
             UUID org = org("aurora");
             db.sql("update organization set status='ACTIVE', features='LIBRARY_SYNC,AD_WATERFALL_VIEW,AD_OWN_TAGS' where slug in ('aurora','northwind')").update();
             db.sql("delete from media_connection where org_id=:o").param("o",org).update();
-            db.sql("insert into media_connection(org_id,token_id,token_secret,webhook_secret,environment) values (:o,:i,:s,:w,'Production')")
-                    .param("o",org).param("i",secrets.seal(TOKEN)).param("s",secrets.seal(SECRET)).param("w",secrets.seal(WEBHOOK)).update();
+            db.sql("delete from connector_instance where org_id=:o and connector_key='mux'").param("o",org).update();
+            UUID mux = db.sql("insert into connector_instance(connector_key,org_id,name,position) values ('mux',:o,'Mux',0) returning id").param("o",org).query(UUID.class).single();
+            db.sql("insert into connector_value(instance_id,org_id,property_key,value) values (:m,:o,'token_id',:i),(:m,:o,'token_secret',:s),(:m,:o,'webhook_secret',:w),(:m,:o,'environment','Production')")
+                    .param("m",mux).param("o",org).param("i",secrets.seal(TOKEN)).param("s",secrets.seal(SECRET)).param("w",secrets.seal(WEBHOOK)).update();
             db.sql("delete from tenant_settings where org_id=:o").param("o",org).update();
             db.sql("insert into tenant_settings(org_id,enabled_types,default_type,personalized_ads,viewer_secret) values (:o,'MOVIE,EPISODE,SHORT,AD,PROMO','MOVIE',true,:s)")
                     .param("o",org).param("s",secrets.seal(VIEWER)).update();

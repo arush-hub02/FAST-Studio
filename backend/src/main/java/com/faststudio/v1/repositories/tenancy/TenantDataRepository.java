@@ -67,10 +67,16 @@ public class TenantDataRepository {
         return Map.of("tenant", tenant, "orgs", orgs.toArray(new UUID[0]));
     }
 
-    /** The tenant's rows of one table, secret columns left out. */
+    /** Rows never exported because the row itself is a secret: values of encrypted connector fields. */
+    static final Map<String, String> SECRET_ROWS = Map.of("connector_value", """
+            not exists (select 1 from connector_instance i join connector_property p on p.connector_key = i.connector_key and p.key = property_key
+                        where i.id = instance_id and p.encrypted)""");
+
+    /** The tenant's rows of one table, secret columns and secret rows left out. */
     public List<Map<String, Object>> rows(Table t, UUID tenant, List<UUID> orgs) {
         String cols = String.join(", ", t.columns().stream().filter(c -> !SECRET_COLUMNS.contains(c)).map(TenantDataRepository::q).toList());
-        return db.sql("select " + cols + " from " + q(t.name()) + " where " + owned(t)).params(params(tenant, orgs)).query().listOfRows();
+        String secret = SECRET_ROWS.containsKey(t.name()) ? " and " + SECRET_ROWS.get(t.name()) : "";
+        return db.sql("select " + cols + " from " + q(t.name()) + " where " + owned(t) + secret).params(params(tenant, orgs)).query().listOfRows();
     }
 
     /** Clears a nullable reference on the tenant's rows (breaks cycles such as channel ⇄ schedule_version before deleting). */

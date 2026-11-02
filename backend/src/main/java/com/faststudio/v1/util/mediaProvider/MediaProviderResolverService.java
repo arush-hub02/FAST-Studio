@@ -17,6 +17,9 @@ public class MediaProviderResolverService {
         this.providers = providers.stream().collect(Collectors.toMap(IMediaProvider::key, Function.identity()));
     }
 
+    /** Every registered provider key, sorted (a project's library is the first of these it has a connection for). */
+    public List<String> keys() { return providers.keySet().stream().sorted().toList(); }
+
     public IMediaProvider get(String key) {
         IMediaProvider p = providers.get(key);
         if (p == null) throw new IllegalStateException("No media provider registered for '" + key + "'");

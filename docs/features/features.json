@@ -1343,7 +1343,7 @@
       "id": "connector-marketplace",
       "title": "Connector marketplace: fields, rules and connections",
       "area": "Multi-tenancy",
-      "status": "Built (fields, rules, connection screens for projects, the tenant page and the platform); Mux, R2 and ad servers move onto it next (P3c–P3d)",
+      "status": "Built: fields, rules, connection screens, Mux and R2 read their connections; ad servers move onto it next (P3d)",
       "completed": "2026-11-03",
       "summary": "Platform administrators define each connector's fields in the database: key, type, required, encrypted, and whether tenants see it (external) or only the platform (internal). They group connectors in categories and set, per connector, its status (available, coming soon, unpublished), who connects it (tenants, the platform, or contact your account manager) and the permission someone needs to see it. Connections store values by field key; encrypted values are sealed and never shown again. Projects connect from Settings → Connectors; the platform connects for any project on the tenant page, and keeps platform-wide connections (R2) in Global configuration.",
       "who": [
@@ -1473,6 +1473,27 @@
                 "say": "Saving is refused: Mux's rule is NOT_ALLOWED. The platform connects it from the tenant page."
               }
             ]
+          },
+          {
+            "name": "Mux syncs the library",
+            "steps": [
+              {
+                "at": "values",
+                "state": "mux",
+                "say": "A library sync needs the project's Mux credentials: they are the project's mux connection values.",
+                "tech": "`ConnectorCatalogueServiceV1.connection(org, \"mux\")`"
+              },
+              {
+                "at": "secrets",
+                "state": "opened",
+                "say": "Encrypted values are opened on the server only, for the call to Mux; they never go into an answer."
+              },
+              {
+                "at": "service",
+                "state": "connected",
+                "say": "No token id or secret = 409 LIBRARY_NOT_CONNECTED; otherwise the sync runs as before."
+              }
+            ]
           }
         ]
       },
@@ -1490,7 +1511,9 @@
         "A project sees a connector when it is published, enabled for its tenant and project, project-level, and the person holds its required permission; tenants get external fields only.",
         "Saving a connection type-checks values, seals encrypted ones with the server key, and keeps a stored secret when the field is left blank.",
         "Adapters read a connection's values by field key with defaults filled in (ConnectorCatalogueServiceV1.values).",
-        "One screen (shared/configuration/ConnectorPanel.tsx) serves all three places; it builds each form from the fields the server sends, so a new field needs no code. Encrypted fields are password boxes that stay empty; leaving one blank keeps the stored secret."
+        "One screen (shared/configuration/ConnectorPanel.tsx) serves all three places; it builds each form from the fields the server sends, so a new field needs no code. Encrypted fields are password boxes that stay empty; leaving one blank keeps the stored secret.",
+        "Mux reads its credentials from the project's mux connection (V27 moved existing ones over with the same ciphertext); the old Mux form and the marketplace edit the same values, and the health check is stored on the connection.",
+        "The edge client (R2 uploads, live playback signing) reads the platform's r2 connection, cached 30 seconds, and falls back to faststudio.edge.* for fields not stored there."
       ],
       "optimizations": [
         "One query each for connectors, fields, connections and values per view."
@@ -1504,7 +1527,9 @@
         "Tenants connect a connector only when it is available and its rule is ALLOWED, and only with Manage team.",
         "Encrypted values are never returned, only whether one is stored.",
         "Changing a field's encryption or deleting it removes its stored values everywhere.",
-        "Not yet: Mux, R2 and ad servers still read their old settings until P3c–P3d move them onto connections."
+        "Not yet: ad servers still use their own table until P3d.",
+        "The Worker must hold the same edge secret as the r2 connection; the page security policy still reads faststudio.edge.public-url at start-up.",
+        "Tenant exports never include values of encrypted fields."
       ],
       "api": [
         "GET /api/platform/connector-catalogue",
@@ -1519,7 +1544,10 @@
       ],
       "tests": [
         "ConnectorCatalogueTest (fields as rows, sealed secrets, tenant rules, status, project isolation)",
-        "frontend/e2e/project-connectors.spec.ts (owner connects and removes an ad server from Settings)"
+        "frontend/e2e/project-connectors.spec.ts (owner connects and removes an ad server from Settings)",
+        "MuxConnectorMigrationTest (V27 moves credentials unchanged)",
+        "MuxTest, LibrarySyncTest, ProjectDetailsTest (Mux through the connection)",
+        "TenantDataTest (encrypted connector values not exported)"
       ],
       "docs": [
         "docs/PLATFORM_ADMIN_PLAN.md"
@@ -2208,7 +2236,8 @@
         "Importing a video is idempotent: a new ready video becomes a Draft asset bound by source_ref; a known one only updates its asset_source row (the library's title, length, status and when it was last seen).",
         "When a full scan reaches its last page, videos of that library not seen since the scan started are flagged MISSING, in the same statement that completes the job.",
         "Prepare marks each eligible video Processing and queues an ordinary packaging job, which fetches the original file and converts it.",
-        "Mux webhooks (created, ready, errored, deleted) take the same import path; a direct upload of ours is linked to its row and prepared at once."
+        "Mux webhooks (created, ready, errored, deleted) take the same import path; a direct upload of ours is linked to its row and prepared at once.",
+        "Since V27 the Mux credentials are the project's mux connector connection (connector marketplace); media_connection keeps the sync checkpoint."
       ],
       "optimizations": [
         "Pages of 100; one small insert or update per video and one checkpoint update per page.",

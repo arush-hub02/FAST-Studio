@@ -458,7 +458,7 @@
     },
     "media_connection": {
       "feature": "Media library",
-      "purpose": "A project's video platform connection (provider 'mux' today; was mux_account until V23): encrypted credentials, the last connection check, and where the library sync stands (checkpoint, counts, start and finish of the last full scan).",
+      "purpose": "A project's video-library sync state: which provider ('mux' today) and where the library sync stands (checkpoint, counts, start and finish of the last full scan). Since V27 the credentials and the connection check live in the project's connector connection (connector_instance / connector_value, connector 'mux').",
       "pages": [
         "/platform/connectors",
         "/:org/library"
@@ -474,11 +474,9 @@
         "POST /hooks/mux/{org}"
       ],
       "watch": [
-        "No row = 409 LIBRARY_NOT_CONNECTED on sync.",
-        "webhook_secret missing = Mux webhooks get 404.",
-        "checked_at null = never checked; check_error says why the last check failed. New credentials clear both.",
-        "sync_cursor set while a sync is unfinished: the next run continues from that page. sync_finished_at null = the last full scan hasn't completed.",
-        "Token columns hold ciphertext only; never copy them anywhere else."
+        "No connector connection with a token id and secret = 409 LIBRARY_NOT_CONNECTED on sync.",
+        "The row is created when a connection is first found, so a library connected from the marketplace can sync.",
+        "sync_cursor set while a sync is unfinished: the next run continues from that page. sync_finished_at null = the last full scan hasn't completed."
       ]
     },
     "capability": {
@@ -900,7 +898,9 @@
       ],
       "watch": [
         "Row-level security by org_id; platform-level rows need the system login.",
-        "Only one single-instance connection per connector and project (unique index on position 0)."
+        "Only one single-instance connection per connector and project (unique index on position 0).",
+        "checked_at / check_error: last health check (Mux check button); saving new values clears them.",
+        "The platform-level r2 connection (org_id empty) feeds the edge client (worker_url, edge_secret, public_url); unset fields fall back to faststudio.edge.*."
       ]
     },
     "connector_value": {
@@ -912,11 +912,15 @@
       "apis": [
         "POST /api/orgs/{org}/connectors/{key}",
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}"
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check"
       ],
       "watch": [
         "org_id is copied from the connection for row-level security.",
-        "A value that can't be opened usually means the secrets key changed."
+        "A value that can't be opened usually means the secrets key changed.",
+        "V27 copied Mux credentials here from media_connection unchanged (same ciphertext).",
+        "Tenant export leaves out values of encrypted fields."
       ]
     }
   }

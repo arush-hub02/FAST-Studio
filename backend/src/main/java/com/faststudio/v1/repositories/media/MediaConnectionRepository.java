@@ -5,15 +5,13 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * SQL for a project's video-platform connection (media_connection, one per project): credentials arrive and leave
- * sealed (this class never decrypts), the last health check, and the checkpoint of the library sync. Checkpoint
- * writes carry the sync job's fence, so a worker that lost its job can't move the scan.
+ * SQL for a project's video-platform sync state (media_connection, one per project): which provider and the checkpoint of
+ * the library sync. Credentials and the health check live in the project's connector connection (V27). Checkpoint writes
+ * carry the sync job's fence, so a worker that lost its job can't move the scan.
  */
 @Repository
 public class MediaConnectionRepository {
@@ -21,40 +19,16 @@ public class MediaConnectionRepository {
 
     public MediaConnectionRepository(JdbcClient db) { this.db = db; }
 
-    /** Sealed credentials as stored, plus the health check. */
-    public record Row(String provider, String tokenId, String tokenSecret, String webhookSecret, String environment, String passthroughTag,
-                      OffsetDateTime checkedAt, String checkError) {}
-
     /** Where the library sync stands. startedAt: start of the current/last full scan; finishedAt: when it completed. */
     public record SyncRow(String cursor, int pages, int videos, int added, OffsetDateTime startedAt, OffsetDateTime finishedAt) {}
 
-    public Optional<Row> find(UUID org) {
-        return db.sql("""
-                select provider, token_id, token_secret, webhook_secret, environment, passthrough_tag, checked_at, check_error
-                from media_connection where org_id = :o""")
-                .param("o", org).query(Row.class).optional();
-    }
-
-    /** Creates or updates the connection; a null sealed value keeps the stored one. New credentials need a new check. */
-    public void save(UUID org, String provider, String tokenId, String tokenSecret, String webhookSecret, String environment, String tag) {
-        Map<String, Object> p = new HashMap<>(Map.of("o", org, "p", provider, "e", environment, "t", tag));
-        p.put("i", tokenId);
-        p.put("s", tokenSecret);
-        p.put("w", webhookSecret);
-        if (db.sql("""
-                update media_connection set provider = :p, token_id = coalesce(:i, token_id), token_secret = coalesce(:s, token_secret),
-                  webhook_secret = coalesce(:w, webhook_secret), environment = :e, passthrough_tag = :t, updated_at = now(),
-                  checked_at = case when cast(:i as text) is null and cast(:s as text) is null then checked_at end,
-                  check_error = case when cast(:i as text) is null and cast(:s as text) is null then check_error end
-                where org_id = :o""").params(p).update() == 0)
-            db.sql("""
-                    insert into media_connection(org_id, provider, token_id, token_secret, webhook_secret, environment, passthrough_tag)
-                    values (:o, :p, :i, :s, :w, :e, :t)""").params(p).update();
-    }
-
-    /** Records a health check: error null = it worked. */
-    public void checked(UUID org, String error) {
-        db.sql("update media_connection set checked_at = now(), check_error = :e where org_id = :o").param("e", error).param("o", org).update();
+    /**
+     * Makes sure the project has its sync-state row for this provider (credentials live in the project's connector
+     * connection since V27). Called when a connection is found, so a library connected from the marketplace can sync.
+     */
+    public void ensure(UUID org, String provider) {
+        db.sql("insert into media_connection(org_id, provider) values (:o, :p) on conflict (org_id) do update set provider = excluded.provider where media_connection.provider <> excluded.provider")
+                .param("o", org).param("p", provider).update();
     }
 
     public Optional<SyncRow> sync(UUID org) {

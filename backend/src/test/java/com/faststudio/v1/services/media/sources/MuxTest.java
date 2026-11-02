@@ -117,7 +117,7 @@ class MuxTest {
         assertEquals(200, r.getResponse().getStatus(), text);
         assertTrue(text.contains("\"connected\":true") && text.contains("\"webhookSecretSet\":true") && text.contains("/hooks/mux/" + aurora()), text);
         for (String s : List.of(TOKEN, SECRET, HOOK)) assertFalse(text.contains(s), "the answer never carries credentials");
-        String stored = TenantScope.bypass(() -> db.sql("select token_id || token_secret || webhook_secret from media_connection where org_id = :o")
+        String stored = TenantScope.bypass(() -> db.sql("select string_agg(value, '') from connector_value where org_id = :o and property_key in ('token_id', 'token_secret', 'webhook_secret')")
                 .param("o", aurora()).query(String.class).single());
         for (String s : List.of(TOKEN, SECRET, HOOK)) assertFalse(stored.contains(s), "credentials are encrypted at rest");
         assertTrue(text.contains("\"healthy\":null"), "saved credentials alone are not a working connection: " + text);

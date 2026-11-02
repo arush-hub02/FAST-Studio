@@ -147,6 +147,16 @@ public class ConnectorCatalogueRepository {
         return db.sql("delete from connector_instance where id = :id and org_id is not distinct from cast(:o as uuid)").params(p).update();
     }
 
+    /** Records a health check of a connection (error null = it worked); clear = forget it (new values need a new check). */
+    public void checked(UUID instance, UUID org, String error, boolean clear) {
+        Map<String, Object> p = new HashMap<>(Map.of("id", instance, "c", clear));
+        p.put("o", org);
+        p.put("e", error);
+        db.sql("""
+                update connector_instance set checked_at = case when :c then null else now() end, check_error = case when :c then null else :e end
+                where id = :id and org_id is not distinct from cast(:o as uuid)""").params(p).update();
+    }
+
     public void putValue(UUID instance, UUID org, String key, String value) {
         Map<String, Object> p = new HashMap<>(Map.of("i", instance, "k", key, "v", value));
         p.put("o", org);

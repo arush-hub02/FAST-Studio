@@ -102,7 +102,7 @@ Platform administrators can rename, re-describe, reorder or extend them, and cha
 | --- | --- |
 | P3a | Categories, connector metadata, connector properties, instances and values (tables, APIs, encryption, RLS, tests); Global configuration connector pages |
 | P3b | Project Settings → Connectors side tabs and the tenant page Connectors tab; connect, disconnect and rules |
-| P3c | Mux moves onto instances and values (MediaConnectionService reads from there; webhooks, sync and uploads unchanged); R2 / edge platform values with environment fallback |
+| P3c | **Built 2026-11-03.** Mux moves onto instances and values (V27 copies ciphertexts; MediaConnectionService reads from there; webhooks, sync and uploads unchanged; check stored on the connection); R2 / edge platform values with environment fallback (EdgeClient, 30 s cache; CSP still from start-up settings); tenant export leaves out encrypted connector values |
 | P3d | Ad servers move onto multi-instance VAST and DIRECT connectors (waterfall order = instance position; ad decisions and creative conditioning unchanged); remove the old tables after a verified migration |
 
 ## Stages
