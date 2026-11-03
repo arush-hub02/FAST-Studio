@@ -224,6 +224,12 @@ public class AccessRoleServiceV1 {
         }
     }
 
+    /** Platform administrators may hand out any enabled custom role of the organization's kind (no ceiling above them). */
+    public Row platformAssignable(UUID org, String kind, String key) {
+        return repository.rolesFor(org).stream().filter(x -> x.key().equals(key) && x.enabled() && x.kind().equals(kind)).findFirst()
+                .orElseThrow(() -> ApiException.bad("Role is not available for this organization type."));
+    }
+
     /** Validates that the caller may hand out a custom role in their organization: same type and no privilege escalation. */
     public Row assignable(Tenant t, String key) {
         Row row = repository.rolesFor(t.orgId()).stream().filter(x -> x.key().equals(key) && x.enabled() && x.kind().equals(t.kind())).findFirst()

@@ -398,10 +398,12 @@ public class TenantConfigurationServiceV1 {
             boolean editable = platform || (project == null ? isTenantOwner(tenant) : isMember(scope, List.of("OWNER", "ADMIN")));
 
             List<EffectiveProperty> properties = new ArrayList<>();
+            Map<String, String> tenantValues = repository.values(tenant, null);
+            Map<String, String> projectValues = project == null ? Map.of() : repository.values(tenant, project);
             for (Definition d : repository.definitions()) {
                 if (!d.enabled() && !platform) continue;
-                String tenantValue = repository.value(tenant, null, d.key());
-                String projectValue = project == null || !d.projectOverride() ? null : repository.value(tenant, project, d.key());
+                String tenantValue = tenantValues.get(d.key());
+                String projectValue = project == null || !d.projectOverride() ? null : projectValues.get(d.key());
                 String value = projectValue != null ? projectValue : tenantValue != null ? tenantValue : d.defaultValue();
                 String source = projectValue != null ? "PROJECT" : tenantValue != null ? "TENANT" : value != null ? "GLOBAL" : "UNSET";
                 boolean overridden = project == null ? tenantValue != null : projectValue != null;
@@ -410,9 +412,11 @@ public class TenantConfigurationServiceV1 {
             }
 
             List<ConnectorState> connectors = new ArrayList<>();
+            Map<String, Boolean> tenantSwitches = repository.switches(tenant, null);
+            Map<String, Boolean> projectSwitches = project == null ? Map.of() : repository.switches(tenant, project);
             for (Connector c : connectors()) {
-                boolean allowed = c.enabled() && Boolean.TRUE.equals(repository.enabled(tenant, null, c.key()));
-                Boolean override = project == null ? null : repository.enabled(tenant, project, c.key());
+                boolean allowed = c.enabled() && Boolean.TRUE.equals(tenantSwitches.get(c.key()));
+                Boolean override = project == null ? null : projectSwitches.get(c.key());
                 connectors.add(new ConnectorState(c, allowed, allowed && !Boolean.FALSE.equals(override), override != null));
             }
 
@@ -451,6 +455,23 @@ public class TenantConfigurationServiceV1 {
      * The value product code should use for a project: project override → tenant value → global default.
      * Returns null when nothing is set. Secret values are opened for server-side use only; never return them to clients.
      */
+    /** effective() for several keys with one lookup of the tenant, the definitions and each scope's values. */
+    public Map<String, JsonNode> effective(UUID project, Collection<String> keys) {
+        return TenantScope.bypass(() -> {
+            UUID tenant = repository.tenant(project);
+            Map<String, String> projectValues = repository.values(tenant, project), tenantValues = repository.values(tenant, null);
+            Map<String, JsonNode> out = new HashMap<>();
+            for (Definition d : repository.definitions()) {
+                if (!keys.contains(d.key())) continue;
+                String value = d.projectOverride() ? projectValues.get(d.key()) : null;
+                if (value == null) value = tenantValues.get(d.key());
+                if (value == null) value = d.defaultValue();
+                if (value != null) out.put(d.key(), json.readTree(d.secret() ? secrets.open(value) : value));
+            }
+            return out;
+        });
+    }
+
     public JsonNode effective(UUID project, String key) {
         return TenantScope.bypass(() -> {
             UUID tenant = repository.tenant(project);

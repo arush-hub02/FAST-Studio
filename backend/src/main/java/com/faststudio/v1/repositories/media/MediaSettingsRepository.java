@@ -1,5 +1,6 @@
 package com.faststudio.v1.repositories.media;
 
+import com.faststudio.v1.dto.media.MediaSettingsDto.ProjectType;
 import com.faststudio.v1.dto.media.MediaSettingsDto.Row;
 import com.faststudio.v1.dto.media.MediaSettingsDto.Type;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -70,5 +71,31 @@ public class MediaSettingsRepository {
     public void forgetViewerContext(UUID org) {
         db.sql("update playback_session set viewer_key = null, audiences = '', personalized_until = null where org_id = :o")
                 .param("o", org).update();
+    }
+
+    // ------------------------------------------------------------------ the project's own media types (P4)
+
+    public List<ProjectType> projectTypes(UUID org) {
+        return db.sql("""
+                select t.key, t.label, t.kind, t.enabled,
+                  (select count(*) from asset a where a.org_id = t.org_id and a.media_type = t.key) as assets
+                from project_media_type t where t.org_id = :o order by t.label""").param("o", org).query(ProjectType.class).list();
+    }
+
+    /** Insert or update; {@code kind} is only set on insert. */
+    public void saveProjectType(UUID org, String key, String label, String kind, boolean enabled) {
+        db.sql("""
+                insert into project_media_type(org_id, key, label, kind, enabled) values (:o, :k, :l, :b, :e)
+                on conflict (org_id, key) do update set label = excluded.label, enabled = excluded.enabled""")
+                .param("o", org).param("k", key).param("l", label).param("b", kind).param("e", enabled).update();
+    }
+
+    /** True when some project has its own type with this key (run as the system). */
+    public boolean projectTypeKeyUsed(String key) {
+        return db.sql("select count(*) from project_media_type /* all tenants: a new platform key must not collide with any project's */ where key = :k").param("k", key).query(Integer.class).single() > 0;
+    }
+
+    public int deleteProjectType(UUID org, String key) {
+        return db.sql("delete from project_media_type where org_id = :o and key = :k").param("o", org).param("k", key).update();
     }
 }

@@ -82,8 +82,9 @@ public class MailServiceV1 {
 
     /** Queues an email. Inside a transaction it is only handed over after commit, so a rollback sends nothing. */
     public UUID send(UUID orgId, String template, String to, Map<String, String> vars) {
-        var real = templates.render(template, vars, appUrl, false);
-        var shown = templates.render(template, vars, appUrl, true);
+        var both = templates.render(orgId, template, vars, appUrl, true);   // the project's own wording when it has one
+        var real = both[0];
+        var shown = both[1];
         UUID id = messages.insertQueued(orgId, template, to, shown.subject(), shown.text(), shown.html(), real.subject(), real.text(), real.html());
         if (TransactionSynchronizationManager.isSynchronizationActive())
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

@@ -110,10 +110,10 @@ Platform administrators can rename, re-describe, reorder or extend them, and cha
 | Stage | Scope | Status |
 | --- | --- | --- |
 | P1. Features and permissions catalogue | `capability` table (V24): global and per-project entries, built-ins seeded and protected. Effective keys in project details. Platform tab "Features & permissions", project Settings section. Custom roles may list global custom permissions | Built 2026-11-01 (pushed 7d81c09); redesigned 2026-11-02 (V25, pushed e7a6299) |
-| P2. Roles and people | Roles at global level (exists) and project level. User management (invite, assign to organizations, change roles, deactivate). Organization creation and assignment from one place | Project-level roles built with the redesign (2026-11-02, pushed e7a6299); user and organization management planned |
+| P2. Roles and people | Roles at global level (exists) and project level. User management (invite, assign to organizations, change roles, deactivate). Organization creation and assignment from one place | Built: project-level roles (2026-11-02, pushed e7a6299); people across organizations on the platform People page (list, add to an organization, change or remove a role, switch an account off or on; V29 app_user.disabled_at) built 2026-11-03, local |
 | P3. Connector marketplace | Global connector catalogue with category, status (available, upcoming), visibility by permission, and per-connector property definitions: key, label, type, encrypted, required, external (shown to tenants) or internal. Tenant page with side tabs to connect a connector by entering its keys. Mux credentials (media_connection), R2 and ad servers move onto connector properties, keeping their encrypted values | Built 2026-11-02/03 in four sub-stages, all pushed with CI green: P3a 678dbe8, P3b f16f520, P3c 3a18621, P3d 9ae1652 (ad servers on connections, Google Ad Manager connector) |
-| P4. Media types | Global and project-level types: create, edit, "add from global" to a project, enable per project | Planned |
-| P5. Project email templates | Per-project overrides of platform templates, with preview and fallback to the platform version | Planned |
+| P4. Media types | Global and project-level types: create, edit, "add from global" to a project, enable per project | Built 2026-11-03, local: the global catalogue and per-project entitlement already existed; projects now create their own types (V29 project_media_type) in Settings → Media types; the tenant page shows them |
+| P5. Project email templates | Per-project overrides of platform templates, with preview and fallback to the platform version | Built 2026-11-03, local: Settings → Emails (V29 project_email_template); sent emails use the project's wording |
 
 ## P1 as built
 

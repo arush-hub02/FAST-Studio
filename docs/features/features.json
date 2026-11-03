@@ -2768,6 +2768,543 @@
         "docs/MULTITENANCY.md §4"
       ],
       "screenshots": []
+    },
+    {
+      "id": "platform-people",
+      "title": "People across organizations",
+      "area": "Multi-tenancy",
+      "status": "Built (P2, 2026-11-03)",
+      "completed": "2026-11-03",
+      "summary": "Platform administrators see everyone with an account and every organization they belong to, add people to any organization with a role, change or remove roles, and switch an account off or on.",
+      "who": [
+        "Platform administrators"
+      ],
+      "flow": {
+        "title": "From the People page to a person's sign-in",
+        "intro": "The boxes are the parts involved; the pill is the request moving through. Pick a situation.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "People page",
+            "sub": "/platform/people"
+          },
+          {
+            "id": "svc",
+            "col": 2,
+            "row": 1,
+            "icon": "⚖️",
+            "label": "People rules",
+            "sub": "PlatformPeopleServiceV1"
+          },
+          {
+            "id": "db",
+            "col": 3,
+            "row": 1,
+            "icon": "🗄️",
+            "label": "app_user + membership",
+            "sub": "one query per page"
+          },
+          {
+            "id": "tokens",
+            "col": 2,
+            "row": 2,
+            "icon": "🔑",
+            "label": "Tokens",
+            "sub": "version per person"
+          },
+          {
+            "id": "person",
+            "col": 3,
+            "row": 2,
+            "icon": "👤",
+            "label": "The person",
+            "sub": "their next request"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Add someone to an organization",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "Add person",
+                "say": "Enter an email, name, organization and role.",
+                "tech": "`POST /api/platform/people`"
+              },
+              {
+                "at": "svc",
+                "state": "role fits",
+                "say": "The role must fit the organization kind; a new email gets an account with a one-time password."
+              },
+              {
+                "at": "db",
+                "state": "membership",
+                "say": "The membership row is added."
+              },
+              {
+                "at": "tokens",
+                "state": "bumped",
+                "say": "Their tokens are bumped so the new organization appears on their next refresh."
+              }
+            ]
+          },
+          {
+            "name": "Switch an account off",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "Switch off",
+                "say": "Confirm switching the account off.",
+                "tech": "`PUT /api/platform/people/{userId}/status`"
+              },
+              {
+                "at": "db",
+                "state": "disabled_at",
+                "say": "disabled_at is set and every sign-in (refresh token) is revoked."
+              },
+              {
+                "at": "tokens",
+                "state": "-1",
+                "say": "The token version reads -1 for a switched-off account."
+              },
+              {
+                "at": "person",
+                "state": "401",
+                "say": "Their next request is refused; sign-in fails until the account is switched back on."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → People.",
+        "Search by name or email.",
+        "Add person: email, name, organization, role. New accounts get a one-time password, shown once and emailed.",
+        "Click an organization chip to change the role, or × to remove the person from it.",
+        "Switch off signs the person out everywhere; Switch on restores everything. Reset password creates a one-time link."
+      ],
+      "howItWorks": [
+        "One query returns a page of people with their memberships (json_agg) and the total count (window function).",
+        "Role changes, removals and switching off bump the person's token version, so their access changes at once; switching off also revokes refresh tokens, and Tokens.mint refuses switched-off accounts (ACCOUNT_DISABLED).",
+        "The last plain owner of an organization can't be demoted or removed (409 LAST_OWNER)."
+      ],
+      "optimizations": [
+        "One query per page of people, memberships included.",
+        "Index membership_user (V29) for per-person membership lookups at sign-in."
+      ],
+      "scale": [
+        "Paged by 50 (up to 200)."
+      ],
+      "rules": [
+        "Platform administrators only.",
+        "Customer roles only in customer organizations, partner roles only in partner organizations.",
+        "You can't switch off your own account.",
+        "Memberships and history are kept when an account is switched off."
+      ],
+      "api": [
+        "GET /api/platform/people",
+        "POST /api/platform/people",
+        "GET /api/platform/people/{userId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest (people, last owner, switched-off accounts stop at once)",
+        "frontend/e2e/admin-stages.spec.ts (platform manages people across organizations)"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "people",
+          "account": "platform",
+          "path": "/platform/people",
+          "steps": [
+            {
+              "waitFor": {
+                "text": "Organizations and roles"
+              }
+            },
+            {
+              "wait": 300
+            }
+          ],
+          "caption": "Everyone, their organizations and roles, and account status."
+        }
+      ]
+    },
+    {
+      "id": "project-media-types",
+      "title": "Project media types",
+      "area": "Media library",
+      "status": "Built (P4, 2026-11-03)",
+      "completed": "2026-11-03",
+      "summary": "Besides the platform's media types it is entitled to, a project creates its own types (for example Trailer) with the scheduling behaviour of an existing kind.",
+      "who": [
+        "Project owners and administrators (create, edit, delete)",
+        "Every project member (use the types)",
+        "Platform administrators (see them on the tenant page)"
+      ],
+      "flow": {
+        "title": "From a new type to a video",
+        "intro": "The boxes are the parts involved; the pill is the request moving through.",
+        "nodes": [
+          {
+            "id": "owner",
+            "col": 1,
+            "row": 1,
+            "icon": "👤",
+            "label": "Settings → Media types",
+            "sub": "project owner"
+          },
+          {
+            "id": "svc",
+            "col": 2,
+            "row": 1,
+            "icon": "⚖️",
+            "label": "Media settings",
+            "sub": "MediaSettingsServiceV1"
+          },
+          {
+            "id": "own",
+            "col": 3,
+            "row": 1,
+            "icon": "🗄️",
+            "label": "project_media_type",
+            "sub": "RLS by org_id"
+          },
+          {
+            "id": "lib",
+            "col": 2,
+            "row": 2,
+            "icon": "🎬",
+            "label": "Library",
+            "sub": "AssetRules"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Create and use a type",
+            "steps": [
+              {
+                "at": "owner",
+                "state": "Trailer",
+                "say": "New type: name Trailer, behaves like Short.",
+                "tech": "`POST /api/orgs/{org}/settings/media-types`"
+              },
+              {
+                "at": "svc",
+                "state": "checked",
+                "say": "The key may not be a platform type's; kind is fixed from now on."
+              },
+              {
+                "at": "own",
+                "state": "saved",
+                "say": "The row is stored for this project only."
+              },
+              {
+                "at": "lib",
+                "state": "TRAILER",
+                "say": "Videos can now use Trailer; saving checks the type against what the project may use."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Settings → Media types.",
+        "New type: name, identifier, behaves like (movie, episode, short, ad).",
+        "Switch it off to stop new use; delete it once no video uses it.",
+        "Turn types on and pick the default under Settings → General."
+      ],
+      "howItWorks": [
+        "The project's types are the platform types it is entitled to plus its own enabled ones (MediaSettingsServiceV1.view).",
+        "asset.media_type no longer has a foreign key to the platform catalogue (V29); every save checks the type through MediaSettingsServiceV1.require.",
+        "Keys never collide: a project can't take a platform key and the platform can't take a key a project uses."
+      ],
+      "optimizations": [
+        "The type lists come from project details already in the browser, not a separate request per screen."
+      ],
+      "scale": [
+        "Tens of types per project."
+      ],
+      "rules": [
+        "Owners and administrators only (Manage team).",
+        "Kind never changes after creation.",
+        "Deleting is refused while videos use the type (409 IN_USE)."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "GET /api/platform/orgs/{orgId}/project-media-types"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest (projects keep their own media types)",
+        "frontend/e2e/admin-stages.spec.ts"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "project-media-types",
+          "account": "owner",
+          "path": "/aurora/settings?tab=media-types",
+          "steps": [
+            {
+              "waitFor": {
+                "text": "From the platform"
+              }
+            },
+            {
+              "wait": 300
+            }
+          ],
+          "caption": "The platform's types and the project's own."
+        }
+      ]
+    },
+    {
+      "id": "project-email-templates",
+      "title": "Project email wording",
+      "area": "Email",
+      "status": "Built (P5, 2026-11-03)",
+      "completed": "2026-11-03",
+      "summary": "A project words the emails sent about it (invitations, password reset and change, alerts, partner sharing, footer) its own way, with a live preview; without its own version the platform's wording is used.",
+      "who": [
+        "Project owners and administrators (edit)",
+        "Every project member (read and preview)"
+      ],
+      "flow": {
+        "title": "From the project's wording to a sent email",
+        "intro": "The boxes are the parts involved; the pill is the email moving through.",
+        "nodes": [
+          {
+            "id": "owner",
+            "col": 1,
+            "row": 1,
+            "icon": "👤",
+            "label": "Settings → Emails",
+            "sub": "project owner"
+          },
+          {
+            "id": "tpl",
+            "col": 2,
+            "row": 1,
+            "icon": "🧩",
+            "label": "EmailTemplates",
+            "sub": "project → platform → built-in"
+          },
+          {
+            "id": "own",
+            "col": 3,
+            "row": 1,
+            "icon": "🗄️",
+            "label": "project_email_template",
+            "sub": "RLS by org_id"
+          },
+          {
+            "id": "mail",
+            "col": 2,
+            "row": 2,
+            "icon": "✉️",
+            "label": "MailServiceV1",
+            "sub": "renders on send"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Reword and send",
+            "steps": [
+              {
+                "at": "owner",
+                "state": "Subject",
+                "say": "Change the password reset subject; the preview updates as you type.",
+                "tech": "`PUT /api/orgs/{org}/email-templates/password_reset`"
+              },
+              {
+                "at": "own",
+                "state": "saved",
+                "say": "The project's own version is stored."
+              },
+              {
+                "at": "mail",
+                "state": "send",
+                "say": "A reset for someone in this project renders with the project's wording."
+              },
+              {
+                "at": "tpl",
+                "state": "fallback",
+                "say": "Other projects keep the platform's wording."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Settings → Emails.",
+        "Pick an email, change the subject or message; required placeholders must stay.",
+        "Save template; Back to the platform's wording removes your version."
+      ],
+      "howItWorks": [
+        "EmailTemplates.list(org) lays the project's rows over the platform's; a send renders the real and the redacted copy from one lookup.",
+        "Organization welcome and the test email stay the platform's."
+      ],
+      "optimizations": [
+        "One template lookup per sent email (was four)."
+      ],
+      "scale": [
+        "A handful of templates per project."
+      ],
+      "rules": [
+        "Owners and administrators edit (Manage team); everyone in the project may read and preview.",
+        "The same checks as the platform editor: allowed placeholders, required ones, subject length."
+      ],
+      "api": [
+        "GET /api/orgs/{org}/email-templates",
+        "POST /api/orgs/{org}/email-templates/{key}/preview",
+        "PUT /api/orgs/{org}/email-templates/{key}",
+        "DELETE /api/orgs/{org}/email-templates/{key}"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest (projects word their own emails)",
+        "frontend/e2e/admin-stages.spec.ts"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "project-emails",
+          "account": "owner",
+          "path": "/aurora/settings?tab=emails",
+          "steps": [
+            {
+              "waitFor": {
+                "text": "Fill-in values"
+              }
+            },
+            {
+              "wait": 500
+            }
+          ],
+          "caption": "Editing an email with a live preview and the platform's wording to fall back to."
+        }
+      ]
+    },
+    {
+      "id": "project-details-cache",
+      "title": "Fast project loading",
+      "area": "Multi-tenancy",
+      "status": "Built (2026-11-03)",
+      "completed": "2026-11-03",
+      "summary": "Project details are fetched after sign-in and kept in the browser, so screens and new tabs open at once from the last copy while a fresh one loads in the background; it refreshes after changes and when you come back to the tab.",
+      "who": [
+        "Everyone signed in to a project"
+      ],
+      "flow": {
+        "title": "From sign-in to an instant screen",
+        "intro": "The boxes are the parts involved; the pill is the project details moving through.",
+        "nodes": [
+          {
+            "id": "signin",
+            "col": 1,
+            "row": 1,
+            "icon": "🔑",
+            "label": "Sign-in",
+            "sub": "POST /api/auth/login"
+          },
+          {
+            "id": "boot",
+            "col": 2,
+            "row": 1,
+            "icon": "🧭",
+            "label": "Project bootstrap",
+            "sub": "App.tsx"
+          },
+          {
+            "id": "store",
+            "col": 3,
+            "row": 1,
+            "icon": "💾",
+            "label": "Browser copy",
+            "sub": "fs.project.<person>.<project>"
+          },
+          {
+            "id": "api",
+            "col": 2,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Project details",
+            "sub": "/api/orgs/{org}/project-details"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Open a screen",
+            "steps": [
+              {
+                "at": "signin",
+                "state": "signed in",
+                "say": "After sign-in the project opens."
+              },
+              {
+                "at": "store",
+                "state": "copy",
+                "say": "If a copy is stored for this person and project, the screen renders from it at once."
+              },
+              {
+                "at": "api",
+                "state": "fresh",
+                "say": "A fresh copy loads in the background and replaces it.",
+                "tech": "`GET /api/orgs/{org}/project-details`"
+              },
+              {
+                "at": "boot",
+                "state": "refused",
+                "say": "If the project refuses (403/404), the copy is dropped and the error shown."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Nothing to do: it happens on sign-in.",
+        "Changes made in Settings refresh it at once.",
+        "Signing out clears every stored copy."
+      ],
+      "howItWorks": [
+        "shared/projectCache.ts stores the response by person and project; it holds names, switches and permissions, never credentials.",
+        "ProjectBootstrap renders from the copy, re-fetches on open, after changes (reloadProject) and when the tab is shown again after 60 s.",
+        "Screens that only need media types read them from project details (shared/projectMedia.ts) instead of /settings."
+      ],
+      "optimizations": [
+        "Project details: about 60 database queries per call down to about 17 (configuration values and connector switches read once per scope).",
+        "Channel list: one read-only transaction, the library loaded once instead of once per channel, schedule entries mapped by hand: about 250 ms down to 47 ms on the demo data (local, 2026-11-03)."
+      ],
+      "scale": [
+        "Measured on the local demo data only."
+      ],
+      "rules": [
+        "Cleared at sign-out and when the sign-in expires.",
+        "The API still checks every permission; the copy is only a display hint."
+      ],
+      "api": [
+        "GET /api/orgs/{org}/project-details"
+      ],
+      "tests": [
+        "frontend/e2e/smoke.spec.ts (every main screen)",
+        "Browser check 2026-11-03: copy stored without secret fields, screens request data before project details returns, cleared at sign-out."
+      ],
+      "docs": [
+        "docs/PROJECT_BOOTSTRAP_SECURITY.md"
+      ],
+      "screenshots": []
     }
   ]
 }

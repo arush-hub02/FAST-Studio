@@ -136,6 +136,26 @@ public class TenantConfigurationRepository {
     // ------------------------------------------------------------------ connector grants (project == null means the tenant scope)
 
     /** TRUE/FALSE when the scope has an explicit setting, null when it inherits. */
+    /** Every stored value of one scope by property key (settings screens read them all at once, not one query per property). */
+    public Map<String, String> values(UUID tenant, UUID project) {
+        var q = project == null
+                ? db.sql("select property_key, value from tenant_property_value where tenant_id = :id").param("id", tenant)
+                : db.sql("select property_key, value from project_property_value where org_id = :id").param("id", project);
+        Map<String, String> out = new java.util.HashMap<>();
+        q.query((rs, n) -> out.put(rs.getString(1), rs.getString(2))).list();
+        return out;
+    }
+
+    /** Every connector switch of one scope by connector key. */
+    public Map<String, Boolean> switches(UUID tenant, UUID project) {
+        var q = project == null
+                ? db.sql("select connector_key, enabled from tenant_connector where tenant_id = :id").param("id", tenant)
+                : db.sql("select connector_key, enabled from project_connector where org_id = :id").param("id", project);
+        Map<String, Boolean> out = new java.util.HashMap<>();
+        q.query((rs, n) -> out.put(rs.getString(1), rs.getBoolean(2))).list();
+        return out;
+    }
+
     public Boolean enabled(UUID tenant, UUID project, String key) {
         var q = project == null
                 ? db.sql("select enabled from tenant_connector where tenant_id = :id and connector_key = :k").param("id", tenant)

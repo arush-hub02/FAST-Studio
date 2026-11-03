@@ -333,6 +333,101 @@
           }
         },
         {
+          "method": "POST",
+          "path": "/api/orgs/{org}/settings/media-types",
+          "title": "Add or change one of the project's own media types",
+          "description": "A type only this project uses, next to the platform's. Its key can't be one of the platform's, and kind (how it schedules) never changes once created. Returns the settings, with the new type in types and ownTypes. Owners and administrators.",
+          "body": {
+            "key": "TRAILER",
+            "label": "Trailer",
+            "kind": "SHORT",
+            "enabled": true
+          },
+          "bodyFields": [
+            {
+              "name": "key",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "capitals, digits and _, e.g. TRAILER",
+                "not a platform type's key"
+              ]
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "up to 80 characters"
+              ]
+            },
+            {
+              "name": "kind",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "one of: MOVIE, EPISODE, SHORT, AD",
+                "can't change later"
+              ]
+            },
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "required": false
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/settings/media-types/{key}",
+          "title": "Delete one of the project's own media types",
+          "params": {
+            "key": "TRAILER"
+          },
+          "description": "Refused with 409 IN_USE while videos use it; switch it off instead."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/email-templates",
+          "title": "The project's emails",
+          "description": "Emails sent about this project (invitations, password reset and change, alerts, partner sharing, footer). customized = the project has its own wording; defaultSubject and defaultBody are the platform's wording it falls back to. Org welcome and test emails stay the platform's."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/email-templates/{key}/preview",
+          "title": "Preview a draft",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Renders the draft with example values and the project's footer, and lists what would stop it saving. Nothing is stored.",
+          "body": {
+            "subject": "Reset your Aurora password",
+            "body": "Hello {{name}},\n\n{{resetUrl}}"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/email-templates/{key}",
+          "title": "Use the project's own wording",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Saved emails about this project use it from now on. Placeholders such as {{name}} are filled in when sent; required ones must stay. Owners and administrators.",
+          "body": {
+            "subject": "Reset your Aurora password",
+            "body": "Hello {{name}},\n\n{{resetUrl}}"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/email-templates/{key}",
+          "title": "Back to the platform's wording",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Removes the project's own version."
+        },
+        {
           "method": "GET",
           "path": "/api/orgs/{org}/configuration",
           "title": "Project configuration",
@@ -2386,6 +2481,141 @@
               "SHORT",
               "AD"
             ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/project-media-types",
+          "title": "A project's own media types",
+          "description": "Types the project created for itself, with how many videos use each (read-only; the project manages them)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people",
+          "title": "List people",
+          "description": "Everyone with an account and every organization they belong to, by name. q filters by name or email; limit (up to 200) and offset page through; total counts all matches.",
+          "query": {
+            "q": "aurora",
+            "limit": "50",
+            "offset": "0"
+          },
+          "paramHelp": {
+            "q": "Part of a name or email (blank = everyone).",
+            "limit": "How many people per page, 1 to 200.",
+            "offset": "How many matches to skip, for the next page."
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/people",
+          "title": "Add a person to an organization",
+          "description": "Creates the account when the email is new (the answer then holds a one-time password) and emails them. The role must fit the organization: customer roles in customer organizations, partner roles in partner ones. 409 when already a member.",
+          "body": {
+            "email": "new.person@example.com",
+            "name": "New Person",
+            "orgId": "00000000-0000-0000-0000-000000000000",
+            "role": "ANALYST"
+          },
+          "bodyFields": [
+            {
+              "name": "email",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "an email address"
+              ]
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "up to 80 characters"
+              ]
+            },
+            {
+              "name": "orgId",
+              "type": "uuid",
+              "required": true,
+              "rules": [
+                "a customer or partner organization"
+              ]
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "OWNER, ADMIN, CONTENT_MANAGER, CHANNEL_OPERATOR, AD_OPS, ANALYST (customer) or PARTNER_ADMIN, PARTNER_VIEWER (partner)"
+              ]
+            },
+            {
+              "name": "customRoleKey",
+              "type": "string",
+              "required": false,
+              "rules": [
+                "an enabled custom role of the organization based on role"
+              ]
+            }
+          ],
+          "fields": {
+            "orgId": "The customer or partner organization to add them to (an id from List organizations).",
+            "customRoleKey": "Optional custom role of that organization that narrows role."
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people/{userId}",
+          "title": "One person",
+          "description": "The person and their organizations."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/people/{userId}/memberships/{orgId}",
+          "title": "Change a person's role in an organization",
+          "description": "Applies to their sign-in at once. An organization keeps at least one plain owner (409 LAST_OWNER).",
+          "body": {
+            "role": "AD_OPS"
+          },
+          "bodyFields": [
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "a role of that kind of organization"
+              ]
+            },
+            {
+              "name": "customRoleKey",
+              "type": "string",
+              "required": false
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/people/{userId}/memberships/{orgId}",
+          "title": "Remove a person from an organization",
+          "description": "Their account and other organizations stay. The last owner can't be removed (409 LAST_OWNER)."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/people/{userId}/status",
+          "title": "Switch an account off or on",
+          "description": "Off: they are signed out everywhere, existing tokens stop at once and they can't sign in (401 ACCOUNT_DISABLED). Organizations, roles and history are kept, so on restores everything. You can't switch off your own account.",
+          "body": {
+            "disabled": true
+          },
+          "bodyFields": [
+            {
+              "name": "disabled",
+              "type": "boolean",
+              "required": true
+            }
+          ],
+          "fields": {
+            "disabled": "true switches the account off, false switches it back on."
           }
         },
         {

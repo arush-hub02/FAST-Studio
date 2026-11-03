@@ -1,11 +1,12 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, ensureCsrf, type Me, type Membership, type ProjectDetails } from '../shared/api'
+import { api, ApiError, ensureCsrf, type Me, type Membership, type ProjectDetails } from '../shared/api'
 import { Dropdown, ErrorBox, Icon, initials, Loading, useApi } from '../shared/ui'
 import Login from '../features/auth/Login'
 import { ForcedPasswordChange, ResetPassword } from '../features/auth/Password'
 import { ThemeProvider, useTheme } from './theme'
 import { ProfileSettingsModal } from '../shared/components/ProfileSettingsModal'
+import { clearProjects, forgetProject, readProject, writeProject } from '../shared/projectCache'
 
 // Each screen is its own chunk, downloaded the first time it is opened.
 const Home = lazy(() => import('../features/home/Home'))
@@ -22,6 +23,7 @@ const Analytics = lazy(() => import('../features/monitoring/Analytics'))
 const Team = lazy(() => import('../features/team/Team'))
 const Learn = lazy(() => import('../features/home/Learn'))
 const PartnerOrganizations = lazy(() => import('../features/platform/PartnerOrganizations'))
+const People = lazy(() => import('../features/platform/People'))
 const Platform = lazy(() => import('../features/platform/TenantAdmin'))
 const TenantDetail = lazy(() => import('../features/platform/TenantDetail'))
 const GlobalConfiguration = lazy(() => import('../features/platform/GlobalConfiguration'))
@@ -64,11 +66,12 @@ export default function App() {
   }, [])
   const logout = useCallback(async () => {
     try { await api('/api/auth/logout', { method: 'POST' }) } catch { /* session already gone */ }
+    clearProjects()
     setMe(null)
   }, [])
   useEffect(() => { ensureCsrf().then(refresh) }, [refresh])
   useEffect(() => {
-    const h = () => setMe(null)
+    const h = () => { clearProjects(); setMe(null) }
     window.addEventListener('fs:unauthorized', h)
     return () => window.removeEventListener('fs:unauthorized', h)
   }, [])
@@ -86,6 +89,7 @@ export default function App() {
           <Route path="/platform" element={<Platform />} />
           <Route path="/platform/tenants/:tenantId" element={<TenantDetail />} />
           <Route path="/platform/partners" element={<PartnerOrganizations />} />
+          <Route path="/platform/people" element={<People />} />
           <Route path="/platform/configuration" element={<GlobalConfiguration />} />
           <Route path="/platform/email" element={<Email />} />
           <Route path="/platform/connectors" element={<Connectors />} />
@@ -150,13 +154,44 @@ function OrgGuard() {
   return m.kind === 'PARTNER' ? <Outlet /> : <ProjectBootstrap key={m.orgId} membership={m} />
 }
 
-/** Login and tenant changes fetch a fresh, allowlisted project context; never persist it in browser storage. */
+/** Re-read project details when the person comes back to the tab after this long. */
+const PROJECT_FRESH_MS = 60_000
+
+/**
+ * Project details are fetched after sign-in and kept in the browser (shared/projectCache.ts): screens open at once from
+ * the stored copy while a fresh one loads in the background. reload() refreshes it on demand (after a change), and it
+ * is re-read when the person returns to the tab, so permissions and switches stay current.
+ */
 function ProjectBootstrap({ membership }: { membership: Membership }) {
-  const project = useApi<ProjectDetails>(`/api/orgs/${membership.slug}/project-details`)
-  if (project.error) return <div className="page"><ErrorBox error={project.error} retry={project.reload} /></div>
-  if (project.loading || !project.data || project.data.project.id !== membership.orgId)
-    return <div className="page"><Loading /></div>
-  return <ProjectCtx.Provider value={{ details: project.data, reload: project.reload }}><Outlet /></ProjectCtx.Provider>
+  const { me } = useSession()
+  const user = me!.id
+  const [details, setDetails] = useState<ProjectDetails | null>(() => readProject(user, membership.orgId)?.details ?? null)
+  const [error, setError] = useState<unknown>(null)
+  const reload = useCallback(async () => {
+    try {
+      const fresh = await api<ProjectDetails>(`/api/orgs/${membership.slug}/project-details`)
+      writeProject(user, membership.orgId, fresh)
+      setDetails(fresh)
+      setError(null)
+    } catch (e) {
+      // access removed or project gone: stop showing the stored copy
+      if (e instanceof ApiError && (e.status === 403 || e.status === 404)) { forgetProject(user, membership.orgId); setDetails(null) }
+      setError(e)
+    }
+  }, [user, membership.slug, membership.orgId])
+  useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    const back = () => {
+      if (document.visibilityState !== 'visible') return
+      const at = readProject(user, membership.orgId)?.at ?? 0
+      if (Date.now() - at > PROJECT_FRESH_MS) reload()
+    }
+    document.addEventListener('visibilitychange', back)
+    return () => document.removeEventListener('visibilitychange', back)
+  }, [reload, user, membership.orgId])
+  if (!details && error) return <div className="page"><ErrorBox error={error as never} retry={reload} /></div>
+  if (!details || details.project.id !== membership.orgId) return <div className="page"><Loading /></div>
+  return <ProjectCtx.Provider value={{ details, reload }}><Outlet /></ProjectCtx.Provider>
 }
 
 /** Customers start at Home; partner organizations at what is shared with them. */
@@ -509,6 +544,7 @@ function Shell() {
                 {collapsed && <span className="nav-collapsed-dot accent" />}
               </NavLink>
               <NavLink to="/platform/partners" className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name="users" size={17}/><div className="nav-text-col"><span className="nav-label">Partner organizations</span><small>Sharing & external access</small></div></NavLink>
+              <NavLink to="/platform/people" className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name="users" size={17}/><div className="nav-text-col"><span className="nav-label">People</span><small>Everyone, their organizations & roles</small></div></NavLink>
               <NavLink to="/platform/configuration" className={({isActive})=>`nav-item ${isActive?'active':''}`}><Icon name="sliders" size={17}/><div className="nav-text-col"><span className="nav-label">Global configuration</span><small>Properties, plans, connectors & roles</small></div></NavLink>
               <NavLink
                 to="/platform/connectors"

@@ -6,12 +6,16 @@ import { DAYS, ErrorBox, Icon, Loading, PageHead, useAction, useApi } from '../.
 import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEditor'
 import { ProjectFeatures } from '../../shared/configuration/Catalogue'
 import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
+import { EmailTemplates } from '../../shared/components/EmailTemplates'
+import { ProjectMediaTypes } from './ProjectMediaTypes'
 
 // Project Settings in side tabs (same layout as the platform's tenant page). The tab is in the address (?tab=).
 const TABS = [
   { key: 'general', label: 'General', icon: 'sliders' },
   { key: 'features', label: 'Features', icon: 'shield' },
   { key: 'connectors', label: 'Connectors', icon: 'link' },
+  { key: 'media-types', label: 'Media types', icon: 'film' },
+  { key: 'emails', label: 'Emails', icon: 'mail' },
 ]
 
 export default function Settings() {
@@ -30,6 +34,11 @@ export default function Settings() {
         {tab.key === 'features' && <ProjectFeatures base={`/api/orgs/${org.slug}/features`} editable={org.can("TEAM_MANAGE")} />}
         {tab.key === 'connectors' && <ConnectorPanel base={`/api/orgs/${org.slug}/connectors`}
           intro="Services this project uses. You can connect the ones marked Connect; others are connected by the platform." />}
+        {tab.key === 'media-types' && <ProjectMediaTypes />}
+        {tab.key === 'emails' && <>
+          <p className="faint">How emails about this project are worded. Without your own version, the platform's wording is used.</p>
+          <EmailTemplates base={`/api/orgs/${org.slug}/email-templates`} editable={org.can('TEAM_MANAGE')} inherited="Platform wording" backLabel="Back to the platform's wording" />
+        </>}
       </div>
     </div>
   </div>
@@ -55,7 +64,7 @@ function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload:
   const editable = org.can('TEAM_MANAGE')
   const base = `/api/orgs/${org.slug}/settings`
   return <>
-    <form className="card card-pad stack" onSubmit={e => { e.preventDefault(); run(() => api(base, { method: 'PUT', body: { ...form, expectedRevision: form.revision } }), 'Settings saved').then(r => { if (r) reload() }) }}>
+    <form className="card card-pad stack" onSubmit={e => { e.preventDefault(); run(() => api(base, { method: 'PUT', body: { ...form, expectedRevision: form.revision } }), 'Settings saved').then(r => { if (r) { reload(); org.reloadProject() } }) }}>
       <fieldset disabled={!editable || busy} className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
         <legend><h2>Media types</h2></legend>
         <p className="faint">The platform owner controls which types your company may use. Disabling a type prevents new use and keeps existing videos and published schedules.</p>

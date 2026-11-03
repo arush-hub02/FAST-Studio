@@ -168,6 +168,41 @@
               "layer": "repository"
             }
           ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AuthControllerV1",
+              "method": "forgot",
+              "layer": "controller"
+            },
+            {
+              "class": "AccountServiceV1",
+              "method": "forgot",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -216,14 +251,14 @@
               "layer": "controller"
             },
             {
-              "class": "Tokens",
-              "method": "signIn",
-              "layer": "core"
+              "class": "AccountServiceV1",
+              "method": "me",
+              "layer": "service"
             },
             {
-              "class": "Tokens",
-              "method": "mint",
-              "layer": "core"
+              "class": "UserAccountRepository",
+              "method": "user",
+              "layer": "repository"
             }
           ]
         },
@@ -816,6 +851,46 @@
             }
           ]
         },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AuthControllerV1",
+              "method": "changePassword",
+              "layer": "controller"
+            },
+            {
+              "class": "AccountServiceV1",
+              "method": "changePassword",
+              "layer": "service"
+            },
+            {
+              "class": "AccountServiceV1",
+              "method": "changedNotice",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        },
         "refresh_token": {
           "mode": "read+write",
           "chain": [
@@ -1243,6 +1318,46 @@
             }
           ]
         },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AuthControllerV1",
+              "method": "reset",
+              "layer": "controller"
+            },
+            {
+              "class": "AccountServiceV1",
+              "method": "completeReset",
+              "layer": "service"
+            },
+            {
+              "class": "AccountServiceV1",
+              "method": "changedNotice",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        },
         "refresh_token": {
           "mode": "write",
           "chain": [
@@ -1307,6 +1422,11 @@
             {
               "class": "Tokens",
               "method": "mint",
+              "layer": "core"
+            },
+            {
+              "class": "Tokens",
+              "method": "user",
               "layer": "core"
             }
           ]
@@ -1455,6 +1575,11 @@
             {
               "class": "Tokens",
               "method": "mint",
+              "layer": "core"
+            },
+            {
+              "class": "Tokens",
+              "method": "user",
               "layer": "core"
             }
           ]
@@ -3587,6 +3712,51 @@
             }
           ]
         },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "OpsControllerV1",
+              "method": "scanNow",
+              "layer": "controller"
+            },
+            {
+              "class": "MonitoringServiceV1",
+              "method": "scanNow",
+              "layer": "service"
+            },
+            {
+              "class": "AlertScanner",
+              "method": "scanOrg",
+              "layer": "service"
+            },
+            {
+              "class": "AlertScanner",
+              "method": "notify",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        },
         "rights_policy": {
           "mode": "read",
           "chain": [
@@ -3981,6 +4151,46 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRules",
+              "method": "newAssetType",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRules",
+              "method": "kindOf",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "require",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -4015,23 +4225,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -4070,23 +4270,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -4175,23 +4365,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -4467,6 +4647,41 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRules",
+              "method": "kindOf",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "require",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -4496,23 +4711,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -4546,23 +4751,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -4646,23 +4841,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -5194,7 +5379,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -5229,7 +5414,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -5314,7 +5499,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -5620,7 +5805,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -5655,7 +5840,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -5740,7 +5925,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -6113,7 +6298,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -6148,7 +6333,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -6213,7 +6398,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -6570,13 +6755,8 @@
               "layer": "service"
             },
             {
-              "class": "ChannelServiceV1",
-              "method": "view",
-              "layer": "service"
-            },
-            {
               "class": "Data",
-              "method": "asset",
+              "method": "assets",
               "layer": "core"
             }
           ]
@@ -6804,6 +6984,36 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ChannelControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "ChannelServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "ChannelServiceV1",
+              "method": "autofillNewChannel",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -6828,23 +7038,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -6873,23 +7073,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -7023,23 +7213,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -7284,13 +7464,8 @@
               "layer": "service"
             },
             {
-              "class": "ChannelServiceV1",
-              "method": "view",
-              "layer": "service"
-            },
-            {
               "class": "Data",
-              "method": "asset",
+              "method": "assets",
               "layer": "core"
             }
           ]
@@ -7520,13 +7695,8 @@
               "layer": "service"
             },
             {
-              "class": "ChannelServiceV1",
-              "method": "view",
-              "layer": "service"
-            },
-            {
               "class": "Data",
-              "method": "asset",
+              "method": "assets",
               "layer": "core"
             }
           ]
@@ -7837,13 +8007,8 @@
               "layer": "service"
             },
             {
-              "class": "ChannelServiceV1",
-              "method": "view",
-              "layer": "service"
-            },
-            {
               "class": "Data",
-              "method": "asset",
+              "method": "assets",
               "layer": "core"
             }
           ]
@@ -7904,11 +8069,6 @@
             {
               "class": "ChannelServiceV1",
               "method": "goLive",
-              "layer": "service"
-            },
-            {
-              "class": "ChannelServiceV1",
-              "method": "readiness",
               "layer": "service"
             },
             {
@@ -8299,13 +8459,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
               "layer": "service"
             },
             {
-              "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
               "layer": "repository"
             }
           ]
@@ -8355,6 +8515,36 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProgrammingControllerV1",
+              "method": "generate",
+              "layer": "controller"
+            },
+            {
+              "class": "ProgrammingRuleServiceV1",
+              "method": "generate",
+              "layer": "service"
+            },
+            {
+              "class": "ProgrammingServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -8379,23 +8569,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -8424,23 +8604,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -8534,23 +8704,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -8707,13 +8867,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
               "layer": "service"
             },
             {
-              "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
               "layer": "repository"
             }
           ]
@@ -8743,6 +8903,36 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProgrammingControllerV1",
+              "method": "preview",
+              "layer": "controller"
+            },
+            {
+              "class": "ProgrammingRuleServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "ProgrammingServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -8767,23 +8957,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -8812,23 +8992,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -8932,23 +9102,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -9213,13 +9373,38 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "autofill",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "autofill",
+              "layer": "service"
+            },
+            {
               "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "method": "view",
               "layer": "service"
             },
             {
               "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "method": "projectTypes",
               "layer": "repository"
             }
           ]
@@ -9243,23 +9428,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -9283,23 +9458,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -9388,23 +9553,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -9762,13 +9917,43 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
               "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "method": "require",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
               "layer": "service"
             },
             {
               "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "method": "projectTypes",
               "layer": "repository"
             }
           ]
@@ -9797,23 +9982,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -9842,23 +10017,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -9957,23 +10122,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -10359,13 +10514,8 @@
               "layer": "service"
             },
             {
-              "class": "ChannelServiceV1",
-              "method": "view",
-              "layer": "service"
-            },
-            {
               "class": "Data",
-              "method": "asset",
+              "method": "assets",
               "layer": "core"
             }
           ]
@@ -10613,7 +10763,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -10633,7 +10783,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -10703,7 +10853,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -10723,7 +10873,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -10905,18 +11055,18 @@
               "layer": "controller"
             },
             {
-              "class": "ProjectConfigurationControllerV1",
-              "method": "configuration",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -11010,18 +11160,18 @@
               "layer": "controller"
             },
             {
-              "class": "ProjectConfigurationControllerV1",
-              "method": "configuration",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -11199,7 +11349,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -11299,7 +11449,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -11632,7 +11782,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -12090,7 +12240,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -12588,7 +12738,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -13056,7 +13206,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -13346,6 +13496,308 @@
             {
               "class": "DistributionRepository",
               "method": "insertDestination",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/orgs/{org}/email-templates": {
+      "title": "The project's emails",
+      "category": "Project, settings and team",
+      "id": "ep-get-api-orgs-org-email-templates",
+      "handler": "ProjectEmailControllerV1.list",
+      "tables": {
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "views",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "views",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/email-templates/{key}": {
+      "title": "Back to the platform's wording",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-email-templates-key",
+      "handler": "ProjectEmailControllerV1.reset",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "reset",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "reset",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "reset",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "reset",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "views",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "reset",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "reset",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "resetProject",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "deleteProject",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/orgs/{org}/email-templates/{key}": {
+      "title": "Use the project's own wording",
+      "category": "Project, settings and team",
+      "id": "ep-put-api-orgs-org-email-templates-key",
+      "handler": "ProjectEmailControllerV1.save",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "views",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "saveProject",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saveProject",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/email-templates/{key}/preview": {
+      "title": "Preview a draft",
+      "category": "Project, settings and team",
+      "id": "ep-post-api-orgs-org-email-templates-key-preview",
+      "handler": "ProjectEmailControllerV1.preview",
+      "tables": {
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "preview",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectEmailControllerV1",
+              "method": "preview",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectEmailServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -15133,7 +15585,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -15168,7 +15620,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -15233,7 +15685,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -15706,6 +16158,46 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "sync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "sync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRules",
+              "method": "kindOf",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "require",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -15741,7 +16233,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -15781,7 +16273,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -15901,7 +16393,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -16188,6 +16680,46 @@
             {
               "class": "MembershipRepository",
               "method": "organizationName",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TeamControllerV1",
+              "method": "invite",
+              "layer": "controller"
+            },
+            {
+              "class": "TeamServiceV1",
+              "method": "invite",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -16563,6 +17095,46 @@
               "class": "Accounts",
               "method": "createReset",
               "layer": "core"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TeamControllerV1",
+              "method": "resetMember",
+              "layer": "controller"
+            },
+            {
+              "class": "TeamServiceV1",
+              "method": "resetPassword",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "passwordReset",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
             }
           ]
         }
@@ -16991,6 +17563,46 @@
             {
               "class": "DistributionRepository",
               "method": "addSharedChannel",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PartnerSharingControllerV1",
+              "method": "share",
+              "layer": "controller"
+            },
+            {
+              "class": "PartnerSharingServiceV1",
+              "method": "share",
+              "layer": "service"
+            },
+            {
+              "class": "PartnerSharingServiceV1",
+              "method": "notifyPartner",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -17587,6 +18199,36 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectDetailsControllerV1",
+              "method": "tenant",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "tenant",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -17611,23 +18253,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -17651,8 +18283,13 @@
               "layer": "service"
             },
             {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "effective",
               "layer": "service"
             },
             {
@@ -17761,23 +18398,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -18462,6 +19089,26 @@
       "id": "ep-get-api-orgs-org-settings",
       "handler": "MediaSettingsControllerV1.view",
       "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "media_type": {
           "mode": "read",
           "chain": [
@@ -18501,13 +19148,33 @@
               "layer": "service"
             },
             {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
               "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "method": "view",
               "layer": "service"
             },
             {
               "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "method": "projectTypes",
               "layer": "repository"
             }
           ]
@@ -18526,23 +19193,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -18561,23 +19218,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -18596,23 +19243,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -18650,6 +19287,31 @@
       "id": "ep-put-api-orgs-org-settings",
       "handler": "MediaSettingsControllerV1.save",
       "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -18716,6 +19378,31 @@
             {
               "class": "MediaSettingsRepository",
               "method": "lockProject",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
               "layer": "repository"
             }
           ]
@@ -18817,12 +19504,528 @@
         }
       }
     },
+    "POST /api/orgs/{org}/settings/media-types": {
+      "title": "Add or change one of the project's own media types",
+      "category": "Project, settings and team",
+      "id": "ep-post-api-orgs-org-settings-media-types",
+      "handler": "MediaSettingsControllerV1.saveType",
+      "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "catalog",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "catalog",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "property_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "definitions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_settings": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "row",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "settings",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/settings/media-types/{key}": {
+      "title": "Delete one of the project's own media types",
+      "category": "Project, settings and team",
+      "id": "ep-delete-api-orgs-org-settings-media-types-key",
+      "handler": "MediaSettingsControllerV1.deleteType",
+      "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "catalog",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "catalog",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "property_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "definitions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_settings": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "deleteType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "deleteProjectType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "row",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "settings",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/orgs/{org}/settings/viewer-key": {
       "title": "Set the viewer-context signing key",
       "category": "Project, settings and team",
       "id": "ep-post-api-orgs-org-settings-viewer-key",
       "handler": "MediaSettingsControllerV1.viewerKey",
       "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "viewerKey",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "rotateViewerKey",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -18892,13 +20095,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "entitlements",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
               "layer": "service"
             },
             {
-              "class": "MediaSettingsRepository",
-              "method": "entitlements",
+              "class": "TenantConfigurationRepository",
+              "method": "tenant",
               "layer": "repository"
             }
           ]
@@ -18923,6 +20126,31 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaSettingsControllerV1",
+              "method": "viewerKey",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "rotateViewerKey",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -18942,23 +20170,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -18982,23 +20200,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -19022,23 +20230,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -19201,7 +20399,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -19221,7 +20419,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -19291,7 +20489,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -19311,7 +20509,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -19489,7 +20687,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -19589,7 +20787,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -21226,6 +22424,56 @@
               "layer": "core"
             }
           ]
+        },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "saveConnector",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "saveConnector",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "saveConnector",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "saveConnector",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "saveConnector",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "saveConnector",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -21719,7 +22967,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -21894,7 +23142,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -21934,7 +23182,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -21964,7 +23212,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -22397,7 +23645,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -22895,7 +24143,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -23363,7 +24611,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -23576,6 +24824,31 @@
               "layer": "repository"
             }
           ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "EmailControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "EmailAdminServiceV1",
+              "method": "templates",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -23657,6 +24930,31 @@
               "class": "Audit",
               "method": "platformOrg",
               "layer": "core"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "EmailControllerV1",
+              "method": "reset",
+              "layer": "controller"
+            },
+            {
+              "class": "EmailAdminServiceV1",
+              "method": "reset",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
             }
           ]
         }
@@ -23742,6 +25040,31 @@
               "layer": "core"
             }
           ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "EmailControllerV1",
+              "method": "save",
+              "layer": "controller"
+            },
+            {
+              "class": "EmailAdminServiceV1",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -23772,6 +25095,31 @@
             {
               "class": "EmailTemplateRepository",
               "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "EmailControllerV1",
+              "method": "preview",
+              "layer": "controller"
+            },
+            {
+              "class": "EmailAdminServiceV1",
+              "method": "preview",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -23860,6 +25208,41 @@
             {
               "class": "EmailTemplateRepository",
               "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "EmailControllerV1",
+              "method": "test",
+              "layer": "controller"
+            },
+            {
+              "class": "EmailAdminServiceV1",
+              "method": "sendTest",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -24787,6 +26170,26 @@
               "layer": "core"
             }
           ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaTypeControllerV1",
+              "method": "saveType",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "saveType",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypeKeyUsed",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -25549,6 +26952,46 @@
             {
               "class": "MembershipRepository",
               "method": "slugTaken",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "OrganizationAdminControllerV1",
+              "method": "createOrg",
+              "layer": "controller"
+            },
+            {
+              "class": "OrganizationAdminServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
               "layer": "repository"
             }
           ]
@@ -26647,7 +28090,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -26822,7 +28265,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -26862,7 +28305,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -26892,7 +28335,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -27325,7 +28768,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -27823,7 +29266,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -28291,7 +29734,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "canConnect",
+              "method": "ownAdServers",
               "layer": "service"
             },
             {
@@ -29984,6 +31427,46 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "platformSync",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformSync",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "start",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRules",
+              "method": "kindOf",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "require",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -30019,7 +31502,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -30059,7 +31542,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -30134,7 +31617,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -30826,6 +32309,36 @@
             }
           ]
         },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformProjectDetailsControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "platform",
+              "layer": "service"
+            },
+            {
+              "class": "ProjectDetailsServiceV1",
+              "method": "details",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
         "project_property_value": {
           "mode": "read",
           "chain": [
@@ -30850,23 +32363,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -30890,8 +32393,13 @@
               "layer": "service"
             },
             {
+              "class": "MediaSettingsServiceV1",
+              "method": "view",
+              "layer": "service"
+            },
+            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "effective",
               "layer": "service"
             },
             {
@@ -31000,23 +32508,13 @@
               "layer": "service"
             },
             {
-              "class": "MediaSettingsServiceV1",
-              "method": "premiereTime",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "text",
-              "layer": "service"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
               "method": "effective",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -31686,6 +33184,79 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/orgs/{orgId}/project-media-types": {
+      "title": "A project's own media types",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-orgs-orgid-project-media-types",
+      "handler": "MediaTypeControllerV1.projectTypes",
+      "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaTypeControllerV1",
+              "method": "projectTypes",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "projectTypesForPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaTypeControllerV1",
+              "method": "projectTypes",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "projectTypesForPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "requireCustomer",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "isCustomerOrganization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_media_type": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MediaTypeControllerV1",
+              "method": "projectTypes",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSettingsServiceV1",
+              "method": "projectTypesForPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSettingsRepository",
+              "method": "projectTypes",
               "layer": "repository"
             }
           ]
@@ -32446,6 +34017,739 @@
               "layer": "core"
             }
           ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "OrganizationAdminControllerV1",
+              "method": "platformReset",
+              "layer": "controller"
+            },
+            {
+              "class": "OrganizationAdminServiceV1",
+              "method": "resetPassword",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "passwordReset",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/people": {
+      "title": "List people",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-people",
+      "handler": "PlatformPeopleControllerV1.list",
+      "tables": {
+        "app_user": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "page",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "page",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "page",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/people": {
+      "title": "Add a person to an organization",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-post-api-platform-people",
+      "handler": "PlatformPeopleControllerV1.add",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "role",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformAssignable",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "MembershipRepository",
+              "method": "userByEmail",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "email_message": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailMessageRepository",
+              "method": "insertQueued",
+              "layer": "repository"
+            }
+          ]
+        },
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "MembershipRepository",
+              "method": "isMember",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "joinableKind",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/platform/people/{userId}": {
+      "title": "One person",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-people-userid",
+      "handler": "PlatformPeopleControllerV1.get",
+      "tables": {
+        "app_user": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "person",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "person",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "person",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/people/{userId}/memberships/{orgId}": {
+      "title": "Remove a person from an organization",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-delete-api-platform-people-userid-memberships-orgid",
+      "handler": "PlatformPeopleControllerV1.removeMembership",
+      "tables": {
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "removeMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "removeMembership",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "removeMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "removeMembership",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "removeMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "removeMembership",
+              "layer": "service"
+            },
+            {
+              "class": "MembershipRepository",
+              "method": "role",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "removeMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "removeMembership",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "joinableKind",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/people/{userId}/memberships/{orgId}": {
+      "title": "Change a person's role in an organization",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-put-api-platform-people-userid-memberships-orgid",
+      "handler": "PlatformPeopleControllerV1.setMembership",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setMembership",
+              "layer": "service"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "role",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformAssignable",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setMembership",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setMembership",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setMembership",
+              "layer": "service"
+            },
+            {
+              "class": "MembershipRepository",
+              "method": "role",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setMembership",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setMembership",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "joinableKind",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/people/{userId}/status": {
+      "title": "Switch an account off or on",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-put-api-platform-people-userid-status",
+      "handler": "PlatformPeopleControllerV1.setStatus",
+      "tables": {
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setStatus",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "setDisabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setStatus",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setStatus",
+              "layer": "service"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "person",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setStatus",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "refresh_token": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "setStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "setStatus",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "revokeSignIns",
+              "layer": "repository"
+            }
+          ]
         }
       }
     },
@@ -32992,6 +35296,31 @@
             }
           ]
         },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "savePlan",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "savePlan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "savePlan",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
         "subscription_plan": {
           "mode": "read+write",
           "chain": [
@@ -33008,6 +35337,31 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "savePlan",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "savePlan",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "savePlan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "savePlan",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -33576,18 +35930,18 @@
               "layer": "controller"
             },
             {
-              "class": "TenantAdminControllerV1",
-              "method": "settings",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -33681,18 +36035,18 @@
               "layer": "controller"
             },
             {
-              "class": "TenantAdminControllerV1",
-              "method": "settings",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -34259,6 +36613,31 @@
             }
           ]
         },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "createProject",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "createProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "insertProject",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
         "subscription_plan": {
           "mode": "read",
           "chain": [
@@ -34285,6 +36664,31 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "createProject",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "createProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "insertProject",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -34466,18 +36870,18 @@
               "layer": "controller"
             },
             {
-              "class": "TenantAdminControllerV1",
-              "method": "projectSettings",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -34571,18 +36975,18 @@
               "layer": "controller"
             },
             {
-              "class": "TenantAdminControllerV1",
-              "method": "projectSettings",
-              "layer": "controller"
-            },
-            {
               "class": "TenantConfigurationServiceV1",
-              "method": "settings",
+              "method": "setConnector",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "enable",
+              "layer": "repository"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -34760,7 +37164,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -34860,7 +37264,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35023,7 +37427,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35043,7 +37447,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -35113,7 +37517,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35133,7 +37537,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -35311,7 +37715,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35411,7 +37815,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35574,7 +37978,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35594,7 +37998,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -35664,7 +38068,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35684,7 +38088,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -35857,7 +38261,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35882,7 +38286,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -35967,7 +38371,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -35992,7 +38396,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -36175,7 +38579,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -36200,7 +38604,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -36280,7 +38684,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "enabled",
+              "method": "switches",
               "layer": "repository"
             }
           ]
@@ -36305,7 +38709,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -37080,7 +39484,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -37115,7 +39519,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -37275,7 +39679,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -37723,7 +40127,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -37758,7 +40162,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -37918,7 +40322,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -38356,7 +40760,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -38391,7 +40795,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -38561,7 +40965,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -38717,7 +41121,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -38752,7 +41156,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "definition",
+              "method": "definitions",
               "layer": "repository"
             }
           ]
@@ -38837,7 +41241,7 @@
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "value",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -38930,6 +41334,12 @@
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/password-reset",
+        "GET /api/platform/people",
+        "POST /api/platform/people",
+        "GET /api/platform/people/{userId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status",
         "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "DELETE /api/platform/property-definitions/{key}/default",
@@ -38959,6 +41369,10 @@
         "POST /api/platform/orgs",
         "POST /api/platform/orgs/{id}/status",
         "PUT /api/platform/orgs/{orgId}/roles",
+        "POST /api/platform/people",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /api/platform/tenants/{tenant}/projects",
         "POST /api/platform/tenants/{tenant}/status"
@@ -38976,12 +41390,16 @@
         "POST /api/platform/password-reset"
       ]
     },
-    "email_template": {
+    "project_email_template": {
       "read": [
         "POST /api/auth/forgot",
         "POST /api/auth/password",
         "POST /api/auth/reset",
         "POST /api/orgs/{org}/alerts/scan",
+        "GET /api/orgs/{org}/email-templates",
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "PUT /api/orgs/{org}/email-templates/{key}",
+        "POST /api/orgs/{org}/email-templates/{key}/preview",
         "POST /api/orgs/{org}/members",
         "POST /api/orgs/{org}/members/{userId}/password-reset",
         "POST /api/orgs/{org}/partners",
@@ -38991,7 +41409,35 @@
         "POST /api/platform/email/templates/{key}/preview",
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
-        "POST /api/platform/password-reset"
+        "POST /api/platform/password-reset",
+        "POST /api/platform/people"
+      ],
+      "write": [
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "PUT /api/orgs/{org}/email-templates/{key}"
+      ]
+    },
+    "email_template": {
+      "read": [
+        "POST /api/auth/forgot",
+        "POST /api/auth/password",
+        "POST /api/auth/reset",
+        "POST /api/orgs/{org}/alerts/scan",
+        "GET /api/orgs/{org}/email-templates",
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "PUT /api/orgs/{org}/email-templates/{key}",
+        "POST /api/orgs/{org}/email-templates/{key}/preview",
+        "POST /api/orgs/{org}/members",
+        "POST /api/orgs/{org}/members/{userId}/password-reset",
+        "POST /api/orgs/{org}/partners",
+        "GET /api/platform/email/templates",
+        "DELETE /api/platform/email/templates/{key}",
+        "PUT /api/platform/email/templates/{key}",
+        "POST /api/platform/email/templates/{key}/preview",
+        "POST /api/platform/email/test",
+        "POST /api/platform/orgs",
+        "POST /api/platform/password-reset",
+        "POST /api/platform/people"
       ],
       "write": [
         "DELETE /api/platform/email/templates/{key}",
@@ -39012,7 +41458,8 @@
         "POST /api/platform/email/messages/{id}/retry",
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
-        "POST /api/platform/password-reset"
+        "POST /api/platform/password-reset",
+        "POST /api/platform/people"
       ],
       "write": [
         "POST /api/auth/forgot",
@@ -39025,7 +41472,8 @@
         "POST /api/platform/email/messages/{id}/retry",
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
-        "POST /api/platform/password-reset"
+        "POST /api/platform/password-reset",
+        "POST /api/platform/people"
       ]
     },
     "audit_event": {
@@ -39082,6 +41530,8 @@
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "POST /api/orgs/{org}/destinations",
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "PUT /api/orgs/{org}/email-templates/{key}",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
         "POST /api/orgs/{org}/features/defaults",
@@ -39097,6 +41547,8 @@
         "PUT /api/orgs/{org}/roles",
         "DELETE /api/orgs/{org}/roles/{key}",
         "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "POST /api/partners/{partner}/clients",
@@ -39144,6 +41596,10 @@
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/password-reset",
+        "POST /api/platform/people",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
         "PUT /api/platform/permissions/{key}",
@@ -39206,6 +41662,12 @@
         "GET /api/platform/orgs/{orgId}/project-details",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
+        "GET /api/platform/people",
+        "POST /api/platform/people",
+        "GET /api/platform/people/{userId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
@@ -39224,6 +41686,9 @@
         "DELETE /api/orgs/{org}/members/{userId}",
         "PATCH /api/orgs/{org}/members/{userId}",
         "POST /api/platform/orgs",
+        "POST /api/platform/people",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
         "POST /api/platform/tenants/{tenant}/projects"
       ]
     },
@@ -39262,7 +41727,9 @@
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "GET /api/platform/orgs/{orgId}/roles",
         "PUT /api/platform/orgs/{orgId}/roles",
-        "DELETE /api/platform/orgs/{orgId}/roles/{key}"
+        "DELETE /api/platform/orgs/{orgId}/roles/{key}",
+        "POST /api/platform/people",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}"
       ],
       "write": [
         "PUT /api/orgs/{org}/roles",
@@ -39325,6 +41792,8 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
         "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
@@ -39379,10 +41848,17 @@
         "GET /api/platform/orgs/{orgId}/project-features",
         "DELETE /api/platform/orgs/{orgId}/project-features/{key}",
         "PUT /api/platform/orgs/{orgId}/project-features/{key}",
+        "GET /api/platform/orgs/{orgId}/project-media-types",
         "GET /api/platform/orgs/{orgId}/roles",
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/password-reset",
+        "GET /api/platform/people",
+        "POST /api/platform/people",
+        "GET /api/platform/people/{userId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "PUT /api/platform/people/{userId}/status",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
         "PUT /api/platform/permissions/{key}",
@@ -39436,7 +41912,8 @@
         "POST /api/auth/reset",
         "POST /api/auth/token",
         "POST /api/auth/token/refresh",
-        "POST /api/auth/token/switch"
+        "POST /api/auth/token/switch",
+        "PUT /api/platform/people/{userId}/status"
       ]
     },
     "customer_tenant": {
@@ -39904,6 +42381,11 @@
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
         "POST /api/orgs/{org}/rights/check",
+        "GET /api/orgs/{org}/settings",
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "POST /api/orgs/{org}/settings/viewer-key",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml",
         "GET /api/platform/orgs",
@@ -39911,6 +42393,7 @@
         "GET /api/platform/orgs/{orgId}/connectors",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/orgs/{orgId}/project-media-types",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
@@ -40290,7 +42773,7 @@
         "POST /api/orgs/{org}/campaigns/{id}/status"
       ]
     },
-    "media_type": {
+    "project_media_type": {
       "read": [
         "POST /api/orgs/{org}/assets",
         "PATCH /api/orgs/{org}/assets/{id}",
@@ -40303,84 +42786,17 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
         "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
-        "GET /api/platform/media-types",
         "POST /api/platform/media-types",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "PUT /api/platform/orgs/{orgId}/media-types",
-        "GET /api/platform/orgs/{orgId}/project-details"
-      ],
-      "write": [
-        "POST /api/platform/media-types"
-      ]
-    },
-    "tenant_settings": {
-      "read": [
-        "POST /api/orgs/{org}/assets",
-        "PATCH /api/orgs/{org}/assets/{id}",
-        "POST /api/orgs/{org}/channels",
-        "POST /api/orgs/{org}/channels/{id}/programming/generate",
-        "POST /api/orgs/{org}/channels/{id}/programming/preview",
-        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
-        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/orgs/{org}/project-details",
-        "GET /api/orgs/{org}/settings",
-        "PUT /api/orgs/{org}/settings",
-        "POST /api/orgs/{org}/settings/viewer-key",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
-        "POST /play/sessions"
+        "GET /api/platform/orgs/{orgId}/project-media-types"
       ],
       "write": [
-        "PUT /api/orgs/{org}/settings",
-        "POST /api/orgs/{org}/settings/viewer-key"
-      ]
-    },
-    "property_definition": {
-      "read": [
-        "POST /api/orgs/{org}/assets",
-        "PATCH /api/orgs/{org}/assets/{id}",
-        "POST /api/orgs/{org}/assets/{id}/retry",
-        "POST /api/orgs/{org}/assets/{id}/upload",
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "POST /api/orgs/{org}/channels",
-        "POST /api/orgs/{org}/channels/{id}/programming/generate",
-        "POST /api/orgs/{org}/channels/{id}/programming/preview",
-        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
-        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
-        "GET /api/orgs/{org}/configuration",
-        "PUT /api/orgs/{org}/configuration/connectors/{key}",
-        "PUT /api/orgs/{org}/configuration/properties/{key}",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/orgs/{org}/project-details",
-        "GET /api/orgs/{org}/settings",
-        "PUT /api/orgs/{org}/settings",
-        "POST /api/orgs/{org}/settings/viewer-key",
-        "GET /api/orgs/{org}/tenant-settings",
-        "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "GET /api/platform/orgs/{orgId}/project-details",
-        "GET /api/platform/property-definitions",
-        "PUT /api/platform/property-definitions",
-        "DELETE /api/platform/property-definitions/{key}/default",
-        "PUT /api/platform/tenants/{tenant}/connectors/{key}",
-        "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
-        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
-        "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
-        "PUT /api/platform/tenants/{tenant}/properties/{key}",
-        "GET /api/platform/tenants/{tenant}/settings",
-        "POST /api/platform/tenants/{tenant}/status",
-        "PUT /api/platform/tenants/{tenant}/subscription",
-        "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info",
-        "POST /play/sessions"
-      ],
-      "write": [
-        "PUT /api/platform/property-definitions",
-        "DELETE /api/platform/property-definitions/{key}/default"
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}"
       ]
     },
     "tenant_property_value": {
@@ -40403,13 +42819,18 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
         "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "PUT /api/platform/connector-definitions",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
         "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
@@ -40444,13 +42865,18 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/settings",
         "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "PUT /api/platform/connector-definitions",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
         "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
@@ -40464,6 +42890,105 @@
         "POST /play/sessions"
       ],
       "write": []
+    },
+    "property_definition": {
+      "read": [
+        "POST /api/orgs/{org}/assets",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "POST /api/orgs/{org}/channels",
+        "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "POST /api/orgs/{org}/channels/{id}/programming/preview",
+        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "GET /api/orgs/{org}/configuration",
+        "PUT /api/orgs/{org}/configuration/connectors/{key}",
+        "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/settings",
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "POST /api/orgs/{org}/settings/viewer-key",
+        "GET /api/orgs/{org}/tenant-settings",
+        "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "GET /api/platform/property-definitions",
+        "PUT /api/platform/property-definitions",
+        "DELETE /api/platform/property-definitions/{key}/default",
+        "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
+        "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
+        "PUT /api/platform/tenants/{tenant}/properties/{key}",
+        "GET /api/platform/tenants/{tenant}/settings",
+        "POST /api/platform/tenants/{tenant}/status",
+        "PUT /api/platform/tenants/{tenant}/subscription",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}",
+        "GET /play/{session}/info",
+        "POST /play/sessions"
+      ],
+      "write": [
+        "PUT /api/platform/property-definitions",
+        "DELETE /api/platform/property-definitions/{key}/default"
+      ]
+    },
+    "media_type": {
+      "read": [
+        "POST /api/orgs/{org}/assets",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/channels",
+        "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "POST /api/orgs/{org}/channels/{id}/programming/preview",
+        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/settings",
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "POST /api/orgs/{org}/settings/viewer-key",
+        "GET /api/platform/media-types",
+        "POST /api/platform/media-types",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "PUT /api/platform/orgs/{orgId}/media-types",
+        "GET /api/platform/orgs/{orgId}/project-details"
+      ],
+      "write": [
+        "POST /api/platform/media-types"
+      ]
+    },
+    "tenant_settings": {
+      "read": [
+        "POST /api/orgs/{org}/assets",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/channels",
+        "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "POST /api/orgs/{org}/channels/{id}/programming/preview",
+        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/settings",
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "POST /api/orgs/{org}/settings/viewer-key",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /play/sessions"
+      ],
+      "write": [
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/viewer-key"
+      ]
     },
     "asset_source": {
       "read": [

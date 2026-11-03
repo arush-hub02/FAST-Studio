@@ -67,18 +67,22 @@
         "/login",
         "/reset-password",
         "/:org/team",
-        "/platform"
+        "/platform",
+        "/platform/people"
       ],
       "apis": [
         "POST /api/auth/login",
         "GET /api/auth/me",
         "POST /api/auth/password",
-        "POST /api/orgs/{org}/members"
+        "POST /api/orgs/{org}/members",
+        "GET /api/platform/people",
+        "PUT /api/platform/people/{userId}/status"
       ],
       "watch": [
         "email is unique and stored lower-case.",
         "must_change_password = true forces a new password at next sign-in.",
-        "token_version changes sign everyone out of that account."
+        "token_version changes sign everyone out of that account.",
+        "disabled_at set = the account is switched off (V29): sign-in refused, token version reads -1 so every token stops, refresh tokens revoked. Clearing it restores access; memberships are kept."
       ]
     },
     "membership": {
@@ -86,17 +90,22 @@
       "purpose": "Who belongs to which project or partner organization, and with which role (plus an optional custom role).",
       "pages": [
         "/:org/team",
-        "/platform"
+        "/platform",
+        "/platform/people"
       ],
       "apis": [
         "GET /api/orgs/{org}/members",
         "POST /api/orgs/{org}/members",
         "PATCH /api/orgs/{org}/members/{userId}",
-        "DELETE /api/orgs/{org}/members/{userId}"
+        "DELETE /api/orgs/{org}/members/{userId}",
+        "POST /api/platform/people",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}"
       ],
       "watch": [
         "No membership row = the person gets 404 for that organization (on purpose).",
-        "custom_role_key must match an enabled access_role of the same kind, or the member falls back to view-only."
+        "custom_role_key must match an enabled access_role of the same kind, or the member falls back to view-only.",
+        "Index membership_user (V29) serves the per-person lookups made at every sign-in and in the people list."
       ]
     },
     "refresh_token": {
@@ -407,7 +416,8 @@
         "PUT /api/platform/orgs/{orgId}/media-types"
       ],
       "watch": [
-        "A type not enabled for the project gives 'This media type is not enabled for your company.'"
+        "A type not enabled for the project gives 'This media type is not enabled for your company.'",
+        "asset.media_type no longer has a foreign key to this table (V29): it may also hold a project type key (project_media_type). Keys never collide: the platform refuses a key a project uses and vice versa."
       ]
     },
     "asset": {
@@ -813,7 +823,8 @@
         "DELETE /api/platform/email/templates/{key}"
       ],
       "watch": [
-        "Delete the row to go back to the built-in text."
+        "Delete the row to go back to the built-in text.",
+        "A project may word some emails itself (project_email_template); without a project row this text (or the built-in one) is used."
       ]
     },
     "email_message": {
@@ -913,6 +924,44 @@
         "A value that can't be opened usually means the secrets key changed.",
         "V27 copied Mux credentials here from media_connection unchanged (same ciphertext).",
         "Tenant export leaves out values of encrypted fields."
+      ]
+    },
+    "project_media_type": {
+      "feature": "Media library",
+      "purpose": "A project's own media types (P4), offered next to the platform types it is entitled to.",
+      "pages": [
+        "/:org/settings?tab=media-types",
+        "/:org/library",
+        "/platform/tenants/{id}?tab=media"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "GET /api/platform/orgs/{orgId}/project-media-types"
+      ],
+      "watch": [
+        "Row-level security by org_id.",
+        "kind is set on insert and never changes.",
+        "Delete is refused (409 IN_USE) while videos use the key; switch it off instead."
+      ]
+    },
+    "project_email_template": {
+      "feature": "Email",
+      "purpose": "A project's own wording of an email sent about it (P5). No row = the platform's wording.",
+      "pages": [
+        "/:org/settings?tab=emails"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/email-templates",
+        "PUT /api/orgs/{org}/email-templates/{key}",
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "POST /api/orgs/{org}/email-templates/{key}/preview"
+      ],
+      "watch": [
+        "Row-level security by org_id.",
+        "Only invitations, password reset/changed, alerts, partner sharing and the footer can be overridden (EmailTemplates.PROJECT_KEYS).",
+        "MailServiceV1.send renders with the project row when the email has an org."
       ]
     }
   }

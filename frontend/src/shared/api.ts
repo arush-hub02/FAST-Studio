@@ -77,7 +77,8 @@ export type Asset = {
   mediaKey?: string; color: string; createdAt: string; updatedAt: string
 }
 export type MediaType = { key: string; label: string; kind: string; enabled: boolean }
-export type MediaSettingsView = { types: MediaType[]; enabledTypes: string[]; defaultType: string; premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerKeySet: boolean; revision: number }
+export type MediaSettingsView = { types: MediaType[]; enabledTypes: string[]; defaultType: string; premiereTime: string; weekdays: number[]; personalizedAds: boolean; viewerKeySet: boolean; revision: number
+  ownTypes: { key: string; label: string; kind: string; enabled: boolean; assets: number }[] }
 export type ProjectDetails = {
   configuration: import('./configuration/types').Configuration
   schemaVersion: number

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Hls from 'hls.js'
-import { api, type AssetView, type MediaSettingsView } from '../../shared/api'
+import { api, type AssetView } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import {
   Confirm,
@@ -12,10 +12,10 @@ import {
   InfoTip,
   Status,
   useAction,
-  useApi,
 } from '../../shared/ui'
 import { GenreSelector } from '../../shared/components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
+import { useProjectMedia } from '../../shared/projectMedia'
 
 /** Redesigned Asset Drawer with Preview Player, Interactive Cue Timeline, and Easy Ad Insertion */
 export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: () => void; onChange: () => void }) {
@@ -27,7 +27,7 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const [title, setTitle] = useState(a.title)
   const [description, setDescription] = useState(a.description)
   const [genre, setGenre] = useState(a.genre)
-  const mediaSettings = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const mediaSettings = useProjectMedia()
   const [mediaType, setMediaType] = useState(a.mediaType)
   const editKind = mediaSettings.data?.types.find(t => t.key === mediaType)?.kind ?? a.kind
   const [series, setSeries] = useState(a.series ?? '')

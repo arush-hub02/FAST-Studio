@@ -15,7 +15,16 @@ export function TenantMediaEntitlements({ orgId }: { orgId: string }) {
         const next = e.target.checked ? [...selected.data!, t.key] : selected.data!.filter(k => k !== t.key)
         run(() => api<string[]>(`/api/platform/orgs/${orgId}/media-types`, { method: 'PUT', body: { types: next } }), 'Media permissions saved').then(r => { if (r) selected.setData(r) })
       }} />{t.label}{!t.enabled && ' (disabled platform-wide)'}</label>)}</div>}
+    <ProjectOwnTypes orgId={orgId} />
   </section>
+}
+
+/** Types the project created for itself (read-only here; the project manages them in Settings → Media types). */
+function ProjectOwnTypes({ orgId }: { orgId: string }) {
+  const own = useApi<{ key: string; label: string; kind: string; enabled: boolean; assets: number }[]>(`/api/platform/orgs/${orgId}/project-media-types`)
+  if (!own.data || own.data.length === 0) return null
+  return <div className="stack" style={{ gap: 6 }}><h3 className="small">The project's own types</h3>
+    <div className="row-wrap">{own.data.map(t => <span key={t.key} className="chip">{t.label} <span className="faint small">{t.kind.toLowerCase()} · {t.assets} videos{t.enabled ? '' : ' · off'}</span></span>)}</div></div>
 }
 
 export function PlatformMediaTypes() {

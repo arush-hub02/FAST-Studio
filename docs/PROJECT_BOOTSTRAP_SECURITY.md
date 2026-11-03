@@ -7,7 +7,7 @@ After login or page reload the application requests /api/auth/me for identity an
 
 GET /api/orgs/{org}/project-details
 
-The tenant controller uses the existing membership, token-org, active-tenant, forced-password-change and service-token guards. The response is no-store, varies by Cookie/Authorization and is kept in React context only. Tenant switching remounts that context; it is not written to localStorage/sessionStorage. The stored last-tenant slug is still only a navigation preference.
+The tenant controller uses the existing membership, token-org, active-tenant, forced-password-change and service-token guards. The response is no-store and varies by Cookie/Authorization. Since 3 November 2026 (user decision, for faster screens) the browser keeps a copy in localStorage under fs.project.<person id>.<project id> (frontend/src/shared/projectCache.ts): screens render from it while a fresh copy loads, it is refreshed after changes and when the tab is shown again, dropped when the API answers 403/404, and every copy is removed at sign-out or when the sign-in expires. This is acceptable because the response holds no credentials (only whether one is stored) and is a display hint; the API still enforces every permission. Tenant switching remounts the context. The stored last-tenant slug is still only a navigation preference.
 
 The allowlisted payload contains schemaVersion, project identity/status, current role/permissions/features, enabled media types and scheduling defaults, connector configuration/capabilities and catalogue/channel summary counts. It does not dump the full catalogue. Detailed data continues through paginated/domain APIs.
 

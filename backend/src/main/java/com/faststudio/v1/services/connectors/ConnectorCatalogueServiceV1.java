@@ -237,6 +237,7 @@ public class ConnectorCatalogueServiceV1 {
         Map<UUID, Map<String, String>> values = new HashMap<>();
         scoped(org, () -> repository.values(org)).forEach(v -> values.computeIfAbsent(v.instanceId(), k -> new HashMap<>()).put(v.propertyKey(), v.value()));
         List<ConnectorState> states = new ArrayList<>();
+        Supplier<Boolean> ownAdServers = ownAdServers(caller);   // read once per request, not once per ad connector
         for (Connector c : list) {
             List<Instance> views = instances.getOrDefault(c.key(), List.of()).stream().map(i -> instance(c, i, values.getOrDefault(i.id(), Map.of()), caller)).toList();
             Connector shown = caller == null ? c : withProperties(c, c.properties().stream().filter(p -> p.scope().equals("EXTERNAL")).toList());
@@ -244,7 +245,7 @@ public class ConnectorCatalogueServiceV1 {
                     : caller == null ? null
                     : c.tenantUpdate().equals("CONTACT_ACCOUNT_MANAGER") ? "Contact your account manager to connect this."
                     : c.tenantUpdate().equals("NOT_ALLOWED") ? "Your platform administrator connects this." : null;
-            states.add(new ConnectorState(shown, views, views.stream().anyMatch(Instance::connected), canConnect(caller, c), note));
+            states.add(new ConnectorState(shown, views, views.stream().anyMatch(Instance::connected), canConnect(caller, c, ownAdServers), note));
         }
         return new Marketplace(TenantScope.bypass(repository::categories), states);
     }
@@ -268,14 +269,20 @@ public class ConnectorCatalogueServiceV1 {
                 caller == null || i.managedBy().equals("TENANT"));
     }
 
-    private boolean canConnect(Tenant caller, Connector c) {
+    /** Whether the caller's project may add its own ad servers (AD_OWN_TAGS), looked up at most once. */
+    private Supplier<Boolean> ownAdServers(Tenant caller) {
+        Boolean[] memo = {null};
+        return () -> memo[0] != null ? memo[0] : (memo[0] = caller != null
+                && configuration.effectiveFeatures(caller.orgId(), projects.projectFeatures(caller.orgId())).contains(Feature.AD_OWN_TAGS.name()));
+    }
+
+    private boolean canConnect(Tenant caller, Connector c, Supplier<Boolean> ownAdServers) {
         if (!c.status().equals("AVAILABLE")) return false;
         if (caller == null) return true;
         if (!c.tenantUpdate().equals("ALLOWED")) return false;
         if (!AD_DRIVERS.contains(c.driver())) return caller.permissions().contains(Tenant.Perm.TEAM_MANAGE);
         // a project's own ad servers: the same rule as the Ads page (ADS_EDIT and the AD_OWN_TAGS feature)
-        return caller.permissions().contains(Tenant.Perm.ADS_EDIT)
-                && configuration.effectiveFeatures(caller.orgId(), projects.projectFeatures(caller.orgId())).contains(Feature.AD_OWN_TAGS.name());
+        return caller.permissions().contains(Tenant.Perm.ADS_EDIT) && ownAdServers.get();
     }
 
     private Set<String> adConnectors() {
@@ -299,7 +306,7 @@ public class ConnectorCatalogueServiceV1 {
 
     private void requireConnect(Tenant caller, Connector c) {
         if (caller != null) caller.require(AD_DRIVERS.contains(c.driver()) ? Tenant.Perm.ADS_EDIT : Tenant.Perm.TEAM_MANAGE);
-        if (canConnect(caller, c)) return;
+        if (canConnect(caller, c, ownAdServers(caller))) return;
         if (caller != null && c.status().equals("AVAILABLE") && c.tenantUpdate().equals("ALLOWED"))   // only the feature is missing
             throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "This isn't switched on for your company. Ask the platform administrator.");
         if (!c.status().equals("AVAILABLE")) throw ApiException.conflict("NOT_AVAILABLE", "This connector is coming soon and can't be connected yet.");

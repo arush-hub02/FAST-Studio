@@ -110,13 +110,13 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    record Cred(UUID id, String passwordHash) {}
+    record Cred(UUID id, String passwordHash, boolean disabled) {}
 
     @Bean
     UserDetailsService users(JdbcClient db) {
-        return email -> db.sql("select id, password_hash from app_user where lower(email) = lower(:e)")
+        return email -> db.sql("select id, password_hash, disabled_at is not null as disabled from app_user where lower(email) = lower(:e)")
                 .param("e", email).query(Cred.class).optional()
-                .map(c -> User.withUsername(c.id().toString()).password(c.passwordHash()).roles("USER").build())
+                .map(c -> User.withUsername(c.id().toString()).password(c.passwordHash()).disabled(c.disabled()).roles("USER").build())
                 .orElseThrow(() -> new UsernameNotFoundException("unknown"));
     }
 

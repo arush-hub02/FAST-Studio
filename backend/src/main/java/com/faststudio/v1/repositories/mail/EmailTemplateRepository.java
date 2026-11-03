@@ -28,6 +28,23 @@ public class EmailTemplateRepository {
                 .param("k", key).param("s", subject).param("b", body).param("u", by).update();
     }
 
+    // --- a project's own versions (project_email_template, P5); explicit org filter, works as the project or the system
+
+    public List<Saved> projectSaved(UUID org) {
+        return db.sql("select key, subject, body, updated_at from project_email_template where org_id = :o").param("o", org).query(Saved.class).list();
+    }
+
+    public void saveProject(UUID org, String key, String subject, String body, UUID by) {
+        db.sql("""
+                insert into project_email_template(org_id, key, subject, body, updated_by) values (:o,:k,:s,:b,:u)
+                on conflict (org_id, key) do update set subject = excluded.subject, body = excluded.body, updated_by = excluded.updated_by, updated_at = now()""")
+                .param("o", org).param("k", key).param("s", subject).param("b", body).param("u", by).update();
+    }
+
+    public int deleteProject(UUID org, String key) {
+        return db.sql("delete from project_email_template where org_id = :o and key = :k").param("o", org).param("k", key).update();
+    }
+
     /** Back to the built-in default. */
     public void delete(String key) {
         db.sql("delete from email_template where key = :k").param("k", key).update();
