@@ -83,6 +83,7 @@ class PlatformAdminStagesTest {
         assertEquals("OWNER", find(owner.path("memberships"), "slug", "aurora").path("role").asString());
         assertTrue(page.path("total").asInt() >= page.path("people").size());
         assertEquals(403, status(get("/api/platform/people"), OWNER, null), "platform only");
+        assertTrue(ok(get("/api/platform/people/roles?orgId=" + aurora), ADMIN, null).isArray(), "custom roles for the pickers");
 
         // add a new person, then the same again
         String add = "{\"email\":\"newbie@people.test\",\"name\":\"New Bie\",\"orgId\":\"" + northwind + "\",\"role\":\"ANALYST\"}";

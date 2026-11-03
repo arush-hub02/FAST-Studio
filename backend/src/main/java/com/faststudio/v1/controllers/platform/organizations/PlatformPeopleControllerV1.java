@@ -25,6 +25,9 @@ public class PlatformPeopleControllerV1 {
     @ResponseStatus(HttpStatus.CREATED)
     AddResult add(@Valid @RequestBody AddPerson r) { return people.add(r); }
 
+    @GetMapping("/roles")
+    java.util.List<CustomRole> roles(@RequestParam UUID orgId) { return people.customRoles(orgId); }
+
     @GetMapping("/{userId}")
     Person get(@PathVariable UUID userId) { return people.get(userId); }
 

@@ -29,4 +29,7 @@ public final class PeopleDto {
     public record MembershipRequest(@NotBlank String role, String customRoleKey) {}
 
     public record StatusRequest(boolean disabled) {}
+
+    /** A custom role the platform can give in one organization: it narrows its built-in baseRole. */
+    public record CustomRole(String key, String name, String baseRole) {}
 }

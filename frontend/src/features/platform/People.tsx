@@ -15,6 +15,22 @@ const ROLES: Record<'CUSTOMER' | 'PARTNER', [string, string][]> = {
 }
 const label = (kind: 'CUSTOMER' | 'PARTNER', role: string) => ROLES[kind].find(r => r[0] === role)?.[1] ?? role
 const PAGE = 50
+type CustomRole = { key: string; name: string; baseRole: string }
+
+/** The roles a person can get in one organization: built-in ones, then its custom roles ("custom:key" values). */
+function RoleSelect({ orgId, kind, value, onChange }: { orgId: string; kind: 'CUSTOMER' | 'PARTNER'; value: string; onChange: (v: { role: string; customRoleKey: string | null }) => void }) {
+  const custom = useApi<CustomRole[]>(orgId ? `/api/platform/people/roles?orgId=${orgId}` : null)
+  return <label className="field">Role<select value={value} onChange={e => {
+    const v = e.target.value
+    const c = v.startsWith('custom:') ? custom.data?.find(x => x.key === v.slice(7)) : null
+    onChange(c ? { role: c.baseRole, customRoleKey: c.key } : { role: v, customRoleKey: null })
+  }}>
+    {ROLES[kind].map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+    {(custom.data ?? []).length > 0 && <optgroup label="Custom roles">
+      {custom.data!.map(c => <option key={c.key} value={'custom:' + c.key}>{c.name} (based on {label(kind, c.baseRole)})</option>)}
+    </optgroup>}
+  </select></label>
+}
 
 /** Everyone across every organization: find a person, add them to an organization, change or remove a role, switch their account off. */
 export default function People() {
@@ -86,7 +102,7 @@ export default function People() {
 
 function AddPerson({ person, orgs, onClose, onDone }: { person: Person | null; orgs: Org[]; onClose: () => void; onDone: () => void }) {
   const joinable = orgs.filter(o => o.kind === 'CUSTOMER' || o.kind === 'PARTNER').filter(o => !person?.memberships.some(m => m.orgId === o.id))
-  const [f, setF] = useState({ email: person?.email ?? '', name: person?.name ?? '', orgId: joinable[0]?.id ?? '', role: '' })
+  const [f, setF] = useState({ email: person?.email ?? '', name: person?.name ?? '', orgId: joinable[0]?.id ?? '', role: '', customRoleKey: null as string | null })
   const org = joinable.find(o => o.id === f.orgId)
   const roles = org ? ROLES[org.kind] : []
   const role = roles.some(r => r[0] === f.role) ? f.role : roles[roles.length - 1]?.[0] ?? ''
@@ -96,17 +112,15 @@ function AddPerson({ person, orgs, onClose, onDone }: { person: Person | null; o
     <Modal title={person ? `Add ${person.name} to an organization` : 'Add person'} subtitle="New email addresses get an account with a one-time password." onClose={onClose}
       footer={result ? <button className="btn primary" onClick={onClose}>Done</button> : <><button className="btn" onClick={onClose}>Cancel</button>
         <button className="btn primary" disabled={busy || !f.email.includes('@') || !f.name.trim() || !org}
-          onClick={() => run(() => api<{ temporaryPassword: string | null; note: string }>('/api/platform/people', { body: { ...f, role } }), 'Added').then(r => { if (r) { setResult(r); onDone() } })}>Add</button></>}>
+          onClick={() => run(() => api<{ temporaryPassword: string | null; note: string }>('/api/platform/people', { body: { ...f, role, customRoleKey: f.customRoleKey } }), 'Added').then(r => { if (r) { setResult(r); onDone() } })}>Add</button></>}>
       {result ? <div className="callout sim"><Icon name="sparkle" /><div>Added. {result.note}{result.temporaryPassword && <div style={{ marginTop: 8 }}>One-time password: <code style={{ fontSize: 15 }}>{result.temporaryPassword}</code></div>}</div></div> : (
         <div className="grid g2">
           <label className="field">Email<input type="email" value={f.email} disabled={!!person} onChange={e => setF({ ...f, email: e.target.value })} /></label>
           <label className="field">Name<input value={f.name} disabled={!!person} onChange={e => setF({ ...f, name: e.target.value })} /></label>
-          <label className="field">Organization<select value={f.orgId} onChange={e => setF({ ...f, orgId: e.target.value })}>
+          <label className="field">Organization<select value={f.orgId} onChange={e => setF({ ...f, orgId: e.target.value, role: '', customRoleKey: null })}>
             {joinable.map(o => <option key={o.id} value={o.id}>{o.name}{o.kind === 'PARTNER' ? ' (partner)' : ''}</option>)}
           </select></label>
-          <label className="field">Role<select value={role} onChange={e => setF({ ...f, role: e.target.value })}>
-            {roles.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select></label>
+          {org && <RoleSelect orgId={org.id} kind={org.kind} value={f.customRoleKey ? 'custom:' + f.customRoleKey : role} onChange={v => setF({ ...f, ...v })} />}
         </div>
       )}
     </Modal>
@@ -114,16 +128,15 @@ function AddPerson({ person, orgs, onClose, onDone }: { person: Person | null; o
 }
 
 function ChangeRole({ person, m, onClose, onDone }: { person: Person; m: Membership; onClose: () => void; onDone: () => void }) {
-  const [role, setRole] = useState(m.role)
+  const [role, setRole] = useState({ role: m.role, customRoleKey: m.customRoleKey })
   const { busy, run } = useAction()
+  const unchanged = role.role === m.role && role.customRoleKey === m.customRoleKey
   return (
     <Modal title={`${person.name} in ${m.name}`} subtitle="The new role applies to their sign-in at once." onClose={onClose}
       footer={<><button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn primary" disabled={busy || role === m.role}
-          onClick={() => run(() => api(`/api/platform/people/${person.id}/memberships/${m.orgId}`, { method: 'PUT', body: { role } }), 'Role changed').then(r => { if (r) { onDone(); onClose() } })}>Save</button></>}>
-      <label className="field">Role<select value={role} onChange={e => setRole(e.target.value)}>
-        {ROLES[m.kind].map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-      </select></label>
+        <button className="btn primary" disabled={busy || unchanged}
+          onClick={() => run(() => api(`/api/platform/people/${person.id}/memberships/${m.orgId}`, { method: 'PUT', body: role }), 'Role changed').then(r => { if (r) { onDone(); onClose() } })}>Save</button></>}>
+      <RoleSelect orgId={m.orgId} kind={m.kind} value={role.customRoleKey ? 'custom:' + role.customRoleKey : role.role} onChange={setRole} />
     </Modal>
   )
 }

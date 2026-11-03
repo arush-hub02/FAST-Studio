@@ -55,6 +55,14 @@ public class PlatformPeopleServiceV1 {
         return new Page(page, total[0]);
     }
 
+    /** Custom roles that can be given in this organization. */
+    public List<CustomRole> customRoles(UUID org) {
+        return system(() -> {
+            String kind = people.joinableKind(org).orElseThrow(() -> ApiException.notFound("Organization"));
+            return accessRoles.platformAssignableRoles(org, kind).stream().map(r -> new CustomRole(r.key(), r.name(), r.baseRole())).toList();
+        });
+    }
+
     public Person get(UUID id) { return system(() -> people.person(id)).orElseThrow(() -> ApiException.notFound("Person")); }
 
     public AddResult add(AddPerson r) {

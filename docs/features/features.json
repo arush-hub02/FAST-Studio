@@ -2882,7 +2882,7 @@
       "steps": [
         "Platform administration → People.",
         "Search by name or email.",
-        "Add person: email, name, organization, role. New accounts get a one-time password, shown once and emailed.",
+        "Add person: email, name, organization, role (built-in or one of that organization’s custom roles). New accounts get a one-time password, shown once and emailed.",
         "Click an organization chip to change the role, or × to remove the person from it.",
         "Switch off signs the person out everywhere; Switch on restores everything. Reset password creates a one-time link."
       ],
@@ -2907,6 +2907,7 @@
       "api": [
         "GET /api/platform/people",
         "POST /api/platform/people",
+        "GET /api/platform/people/roles",
         "GET /api/platform/people/{userId}",
         "PUT /api/platform/people/{userId}/memberships/{orgId}",
         "DELETE /api/platform/people/{userId}/memberships/{orgId}",

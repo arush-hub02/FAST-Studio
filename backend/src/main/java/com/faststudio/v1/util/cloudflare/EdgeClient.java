@@ -116,6 +116,9 @@ public class EdgeClient implements MediaStore {
     }
 
     private String token(String sessionJson) {
+        // without the shared secret no viewer link can be signed: say so instead of failing with a server error
+        if (!configured()) throw new com.faststudio.v1.core.common.ApiException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                "EDGE_NOT_CONFIGURED", "Live playback isn't set up yet: the edge secret is missing. Ask the platform administrator.");
         String payload = B64.encodeToString(sessionJson.getBytes(StandardCharsets.UTF_8));
         return payload + "." + B64.encodeToString(hmac(payload));
     }

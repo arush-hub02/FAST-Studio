@@ -1069,8 +1069,8 @@
           "description": "Shows which episodes would air when, without saving anything.",
           "body": {
             "series": "Slow Roads",
-            "startDate": "2026-11-02",
-            "endDate": "2026-11-30",
+            "startDate": "2027-01-04",
+            "endDate": "2027-01-31",
             "premiereTime": "20:00",
             "repeatTime": "23:00",
             "weekdays": [
@@ -1093,8 +1093,8 @@
           "description": "Saves the rule; generate then writes its episodes into the draft schedule.",
           "body": {
             "series": "Slow Roads",
-            "startDate": "2026-11-02",
-            "endDate": "2026-11-30",
+            "startDate": "2027-01-04",
+            "endDate": "2027-01-31",
             "premiereTime": "20:00",
             "repeatTime": "23:00",
             "weekdays": [
@@ -2561,6 +2561,18 @@
           "fields": {
             "orgId": "The customer or partner organization to add them to (an id from List organizations).",
             "customRoleKey": "Optional custom role of that organization that narrows role."
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people/roles",
+          "title": "Custom roles for one organization",
+          "description": "Enabled custom roles of the organization’s kind (global and its own) that can be given with Add person or Change role: send role = baseRole and customRoleKey = key.",
+          "query": {
+            "orgId": "{{orgId}}"
+          },
+          "paramHelp": {
+            "orgId": "The organization the person joins or belongs to."
           }
         },
         {

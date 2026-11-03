@@ -224,6 +224,11 @@ public class AccessRoleServiceV1 {
         }
     }
 
+    /** Every enabled custom role of the organization's kind (global ones and its own), for the platform's role pickers. */
+    public List<Row> platformAssignableRoles(UUID org, String kind) {
+        return repository.rolesFor(org).stream().filter(x -> x.enabled() && x.kind().equals(kind)).toList();
+    }
+
     /** Platform administrators may hand out any enabled custom role of the organization's kind (no ceiling above them). */
     public Row platformAssignable(UUID org, String kind, String key) {
         return repository.rolesFor(org).stream().filter(x -> x.key().equals(key) && x.enabled() && x.kind().equals(kind)).findFirst()
