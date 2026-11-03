@@ -4,7 +4,7 @@ Status: **planned, nothing built.** Written 3 November 2026 after the user's dec
 
 ## Goal
 
-- A viewer's live playlist takes **programme segments from the online video platform (OVP)** the programme lives on: Mux today, JW Player or others later, or several in one project.
+- A viewer's live playlist takes **programme segments from the online video platform (OVP)** the programme lives on: Mux today, JW Player soon, and any other platform (e.g. Brightcove, Watchity), or several in one project.
 - **Ads and slate** are FAST Studio's own: transcoded by us, stored in R2, delivered by the Cloudflare CDN, and spliced into the playlist at the breaks.
 - Scheduling, rights, ad decisions, beacons and measurement keep working as they do now.
 
@@ -39,9 +39,17 @@ For programmes, all three assumptions break: their segments live on the OVP, may
 - Ad and slate segments stay on R2 and are inserted at breaks with `#EXT-X-DISCONTINUITY`. Markers (CUE-OUT, DATERANGE, SGAI interstitials) and server-side beacons keep their current logic.
 - If the OVP can't be reached, the Worker plays the channel's standby slate rather than failing.
 
+**Any platform, one contract.** Adding a platform (JW Player, Brightcove, Watchity or another) means writing one adapter, with no changes to the Worker or the schedule. The contract assumes as little as possible:
+- segment lengths can be anything (the Worker follows them);
+- the format can be MPEG-TS or fMP4/CMAF (we keep ads and slate in both and pick per platform);
+- signed URLs are optional, and so are a fixed quality ladder and a catalogue API;
+- the platform must give an HLS playback playlist per asset. A platform that can't is not supported for delivery.
+
+What each platform offers is declared as adapter capabilities, as today, so the screens only show what that platform can do.
+
 **5. Ads and slate match the OVP's renditions.**
 - Ad and slate conditioning encodes to the channel's playback ladder, which now comes from the OVP: resolutions, codecs, frame rate, audio layout and loudness, and keyframes aligned to segment boundaries.
-- If the OVP serves fMP4/CMAF, our ad and slate segments must be fMP4 too, with `EXT-X-MAP` after each discontinuity. Mixing containers inside one rendition is a known stall risk.
+- Ads and slate are prepared in the format each platform uses. If it serves fMP4/CMAF, ours are fMP4 too, with `EXT-X-MAP` after each discontinuity. Mixing formats inside one rendition is a known stall risk. A channel that mixes platforms with different formats is checked in S6.
 
 **6. Signed playback.**
 - When the OVP requires signed URLs, the control plane issues a token per viewer session through the adapter.

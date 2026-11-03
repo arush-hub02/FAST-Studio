@@ -13,7 +13,7 @@ What this changes:
 - Ad and slate segments must match the programme's Mux renditions (resolution ladder, codecs, audio, GOP/segment alignment), or players stall at the joins. Proving programme → ad → programme transitions on real Mux assets remains the feasibility gate.
 - Mux signed playback, if enabled, needs its tokens issued per viewer session.
 
-**Any video platform, not only Mux (user, 3 November 2026).** Mux is the first online video platform (OVP); JW Player or others may follow, or several may be combined in one project.
+**Any video platform, not only Mux (user, 3 November 2026).** Mux is the first online video platform (OVP). JW Player is next, and any other platform (e.g. Brightcove, Watchity) can follow, or several can be combined in one project.
 - Programme delivery must go through the video-platform adapter (`util/mediaProvider/IMediaProvider`, a connector), never through Mux-specific code. Each adapter gains a "playback manifest" capability: the programme's HLS manifest and its renditions.
 - With combined OVPs, each programme asset records which connection it comes from. The Worker then splices ads and slate into that platform's manifest.
 - Today a project uses only its first library connection (`MediaConnectionService.find`). Combined OVPs need one project to hold several library connections.
