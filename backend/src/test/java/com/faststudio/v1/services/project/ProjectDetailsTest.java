@@ -67,8 +67,10 @@ class ProjectDetailsTest {
             db.sql("delete from tenant_settings where org_id=:o").param("o",org).update();
             db.sql("insert into tenant_settings(org_id,enabled_types,default_type,personalized_ads,viewer_secret) values (:o,'MOVIE,EPISODE,SHORT,AD,PROMO','MOVIE',true,:s)")
                     .param("o",org).param("s",secrets.seal(VIEWER)).update();
-            db.sql("delete from ad_source where id=:id").param("id",SOURCE).update();
-            db.sql("insert into ad_source(id,org_id,name,kind,tag_url,timeout_ms,position,managed_by) values (:id,:o,'Private demand','VAST',:u,1000,9,'TENANT')")
+            db.sql("delete from connector_instance where id=:id").param("id",SOURCE).update();
+            db.sql("insert into connector_instance(id,connector_key,org_id,name,position,managed_by) values (:id,'vast',:o,'Private demand',9,'TENANT')")
+                    .param("id",SOURCE).param("o",org).update();
+            db.sql("insert into connector_value(instance_id,org_id,property_key,value) values (:id,:o,'tag_url',:u),(:id,:o,'timeout_ms','1000')")
                     .param("id",SOURCE).param("o",org).param("u",TAG).update();
             return null;
         });
@@ -155,7 +157,7 @@ class ProjectDetailsTest {
         ok(own); noCredentials(own);
         ok(call(put("/api/orgs/aurora/ad-sources/"+SOURCE),"ads@aurora.test",
                 Map.of("name","Private demand","kind","VAST","timeoutMs",1000,"enabled",false)));
-        String stored = TenantScope.bypass(() -> db.sql("select tag_url from ad_source where id=:id").param("id",SOURCE).query(String.class).single());
+        String stored = TenantScope.bypass(() -> db.sql("select value from connector_value where instance_id=:id and property_key='tag_url'").param("id",SOURCE).query(String.class).single());
         assertEquals(TAG,stored,"A metadata-only edit must not erase a write-only provider URL");
     }
 

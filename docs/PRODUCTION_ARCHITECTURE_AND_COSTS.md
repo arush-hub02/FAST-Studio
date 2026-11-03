@@ -1,6 +1,20 @@
 # FAST Studio: production architecture, features and budget
 Prepared 31 October 2026 (Asia/Calcutta).
 
+## Delivery decision changed on 3 November 2026 (supersedes the R2 programme delivery below)
+
+The user decided: **programmes play from Mux delivery; ads and slate are ours.**
+- The viewer's manifest is built from the programme's Mux playback (HLS) manifest. FAST Studio stitches ad and slate segments into it at the breaks.
+- Ads (from Google Ad Manager, other VAST ad servers and direct-sold campaigns) and slate are transcoded by FAST Studio, stored in R2 and delivered by the Cloudflare CDN. This part is unchanged from the current code.
+
+What this changes:
+- Programme segments are no longer copied to R2, so Mux delivery is billed per viewer-minute. The 29 October estimate was roughly $34k/month per 1,000 concurrent viewers.
+- **The budget sections below assume R2 programme delivery and must be re-costed with Mux delivery before they are used.**
+- Ad and slate segments must match the programme's Mux renditions (resolution ladder, codecs, audio, GOP/segment alignment), or players stall at the joins. Proving programme → ad → programme transitions on real Mux assets remains the feasibility gate.
+- Mux signed playback, if enabled, needs its tokens issued per viewer session.
+
+This is **planned, not implemented**. Today the Worker builds manifests only over R2 media. The splicing stage is still to be scheduled; see PROGRESS.md.
+
 ## Decision and present position
 
 The intended product is a multi-tenant FAST channel operations and monetization platform: upload a licensed catalogue in bulk, prepare media, schedule linear channels, deliver personalized advertising, distribute approved feeds, and report usage and commercial performance.

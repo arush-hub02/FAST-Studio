@@ -51,8 +51,9 @@ public final class ConnectorCatalogueDto {
     public record Value(String value, boolean configured) {}
 
     /** One configured use of a connector. connected: enabled and every required property has a value; missing names the rest. */
+    /** editable: false for a tenant looking at a connection the platform administrator set up (managed_by PLATFORM). */
     public record Instance(UUID id, String name, int position, boolean enabled, boolean connected, List<String> missing,
-                           Map<String, Value> values, OffsetDateTime checkedAt, String checkError) {}
+                           Map<String, Value> values, OffsetDateTime checkedAt, String checkError, boolean editable) {}
 
     /**
      * A connector as one project (or the platform, for PLATFORM-level ones) sees it: the connector (properties limited to

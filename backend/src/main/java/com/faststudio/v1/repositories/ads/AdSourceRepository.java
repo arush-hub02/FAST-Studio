@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/** SQL for the ad waterfall (ad_source), stored per-viewer break decisions (ad_decision) and ad creatives fetched from ad servers. */
+/** SQL for the ad waterfall (instances of the ad connectors), stored per-viewer break decisions (ad_decision) and ad creatives fetched from ad servers. */
 @Repository
 public class AdSourceRepository {
     private final JdbcClient db;
@@ -43,56 +43,95 @@ public class AdSourceRepository {
                 .param("o", org).param("b", breakId).query(String.class).optional().orElse("");
     }
 
-    // --- waterfall ---
+    // --- waterfall: instances of the ad connectors (driver DIRECT or VAST), in position order ---
 
-    /** Configured sources in waterfall order; empty when the project never edited its waterfall. */
+    private static final String AD_INSTANCE = " connector_instance i join connector_definition d on d.key = i.connector_key and d.driver in ('DIRECT','VAST') ";
+
+    /** Configured sources in waterfall order; empty when the project never edited its waterfall. Timeout kept within 100–5000 ms. */
     public List<IAdSource.Config> waterfall(UUID org) {
-        return db.sql("select id, name, kind, tag_url, timeout_ms, position, enabled, managed_by from ad_source where org_id = :o order by position, created_at")
+        return db.sql("""
+                select i.id, i.name, d.driver as kind, t.value as tag_url, i.position, i.enabled, i.managed_by,
+                  least(5000, greatest(100, coalesce(substring(m.value from '^[0-9]{1,6}$'), substring(p.default_value from '^[0-9]{1,6}$'), '1000')::int)) as timeout_ms
+                from """ + AD_INSTANCE + """
+
+                left join connector_value t on t.instance_id = i.id and t.property_key = 'tag_url'
+                left join connector_value m on m.instance_id = i.id and m.property_key = 'timeout_ms'
+                left join connector_property p on p.connector_key = i.connector_key and p.key = 'timeout_ms'
+                where i.org_id = :o order by i.position, i.created_at""")
                 .param("o", org).query(IAdSource.Config.class).list();
     }
 
     public int count(UUID org) {
-        return db.sql("select count(*) from ad_source where org_id = :o").param("o", org).query(Integer.class).single();
+        return db.sql("select count(*) from " + AD_INSTANCE + " where i.org_id = :o").param("o", org).query(Integer.class).single();
     }
 
     public boolean hasDirect(UUID org) {
-        return db.sql("select count(*) from ad_source where org_id = :o and kind = 'DIRECT'").param("o", org).query(Integer.class).single() > 0;
+        return db.sql("select count(*) from " + AD_INSTANCE + " where i.org_id = :o and d.driver = 'DIRECT'").param("o", org).query(Integer.class).single() > 0;
     }
 
     public void insertDirect(UUID org, String name) {
-        db.sql("insert into ad_source(org_id, name, kind, timeout_ms, position) values (:o, :n, 'DIRECT', 1000, 0)").param("o", org).param("n", name).update();
+        db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('direct', :o, :n, :p)")
+                .param("o", org).param("n", name).param("p", nextPosition(org)).update();
     }
 
-    /** Appends a source at the end of the waterfall. */
-    public UUID insert(UUID org, String name, String kind, String tagUrl, int timeoutMs, boolean enabled, String managedBy) {
+    /** Next waterfall position: shared by every multi-instance connector of the project (ad servers). */
+    public int nextPosition(UUID org) {
         return db.sql("""
-                insert into ad_source(org_id, name, kind, tag_url, timeout_ms, position, enabled, managed_by)
-                values (:o, :n, :k, :u, :ms, (select coalesce(max(position), -1) + 1 from ad_source where org_id = :o), :en, :by) returning id""")
-                .param("o", org).param("n", name).param("k", kind).param("u", tagUrl).param("ms", timeoutMs)
-                .param("en", enabled).param("by", managedBy).query(UUID.class).single();
+                select coalesce(max(i.position), 0) + 1 from connector_instance i join connector_definition d on d.key = i.connector_key
+                where d.multi_instance and i.org_id = :o""").param("o", org).query(Integer.class).single();
     }
 
-    /** Stored VAST tag URL; onlyManagedBy (null = any) limits which rows the caller may read. */
+    /** Appends a source at the end of the waterfall; tagUrl is already sealed. */
+    public UUID insert(UUID org, String name, String kind, String tagUrl, int timeoutMs, boolean enabled, String managedBy) {
+        UUID id = db.sql("""
+                insert into connector_instance(connector_key, org_id, name, position, enabled, managed_by)
+                values (:k, :o, :n, :p, :en, :by) returning id""")
+                .param("k", key(kind)).param("o", org).param("n", name).param("p", nextPosition(org)).param("en", enabled).param("by", managedBy)
+                .query(UUID.class).single();
+        if ("VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs);
+        return id;
+    }
+
+    /** Stored (sealed) VAST tag URL; onlyManagedBy (null = any) limits which rows the caller may read. */
     public Optional<String> vastTagUrl(UUID org, UUID id, String onlyManagedBy) {
-        return db.sql("select tag_url from ad_source where org_id=:o and id=:id and kind='VAST'" + (onlyManagedBy == null ? "" : " and managed_by=:by"))
-                .param("o", org).param("id", id).params(by(onlyManagedBy)).query(String.class).optional();
+        return db.sql("""
+                select coalesce(v.value, '') from connector_instance i join connector_definition d on d.key = i.connector_key and d.driver = 'VAST'
+                left join connector_value v on v.instance_id = i.id and v.property_key = 'tag_url'
+                where i.org_id = :o and i.id = :id""" + (onlyManagedBy == null ? "" : " and i.managed_by = :by"))
+                .param("o", org).param("id", id).params(by(onlyManagedBy)).query(String.class).optional().filter(s -> !s.isEmpty());
     }
 
     /** False when no row of that kind (and owner) exists. */
     public boolean update(UUID org, UUID id, String kind, String name, String tagUrl, int timeoutMs, boolean enabled, String onlyManagedBy) {
-        return db.sql("update ad_source set name = :n, tag_url = :u, timeout_ms = :ms, enabled = :en where org_id = :o and id = :id and kind = :k"
-                        + (onlyManagedBy == null ? "" : " and managed_by = :by"))
-                .param("n", name).param("u", tagUrl).param("ms", timeoutMs).param("en", enabled)
-                .param("o", org).param("id", id).param("k", kind).params(by(onlyManagedBy)).update() > 0;
+        boolean found = db.sql("""
+                update connector_instance i set name = :n, enabled = :en, updated_at = now() from connector_definition d
+                where d.key = i.connector_key and d.driver = :k and i.org_id = :o and i.id = :id""" + (onlyManagedBy == null ? "" : " and i.managed_by = :by"))
+                .param("n", name).param("en", enabled).param("k", kind).param("o", org).param("id", id).params(by(onlyManagedBy)).update() > 0;
+        if (found && "VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs);
+        return found;
+    }
+
+    private void putVast(UUID org, UUID id, String tagUrl, int timeoutMs) {
+        put(org, id, "tag_url", tagUrl);
+        put(org, id, "timeout_ms", Integer.toString(timeoutMs));
+    }
+
+    private void put(UUID org, UUID id, String key, String value) {
+        db.sql("""
+                insert into connector_value(instance_id, org_id, property_key, value) values (:i, :o, :k, :v)
+                on conflict (instance_id, property_key) do update set value = excluded.value, updated_at = now()""")
+                .param("i", id).param("o", org).param("k", key).param("v", value).update();
     }
 
     public boolean delete(UUID org, UUID id, String onlyManagedBy) {
-        return db.sql("delete from ad_source where org_id = :o and id = :id" + (onlyManagedBy == null ? "" : " and managed_by = :by"))
+        return db.sql("delete from connector_instance i using connector_definition d where d.key = i.connector_key and d.driver in ('DIRECT','VAST') and i.org_id = :o and i.id = :id"
+                        + (onlyManagedBy == null ? "" : " and i.managed_by = :by"))
                 .param("o", org).param("id", id).params(by(onlyManagedBy)).update() > 0;
     }
 
+    /** position is the 0-based place in the waterfall; instances use 1..n. */
     public void setPosition(UUID org, UUID id, int position) {
-        db.sql("update ad_source set position = :p where org_id = :o and id = :id").param("p", position).param("o", org).param("id", id).update();
+        db.sql("update connector_instance set position = :p, updated_at = now() where org_id = :o and id = :id").param("p", position + 1).param("o", org).param("id", id).update();
     }
 
     /** A stored tag URL (sealed, or plaintext from before encryption) for the start-up re-encryption. */
@@ -100,12 +139,13 @@ public class AdSourceRepository {
 
     /** Tags still stored as plaintext (they contain "://"; sealed values are Base64). Run under TenantScope.bypass. */
     public List<StoredTag> plaintextTags() {
-        return db.sql("select org_id, id, tag_url from ad_source where tag_url like '%://%'").query(StoredTag.class).list();
+        return db.sql("select org_id, instance_id as id, value as tag_url from connector_value where property_key = 'tag_url' and value like '%://%'")
+                .query(StoredTag.class).list();
     }
 
-    public void setTagUrl(UUID org, UUID id, String tagUrl) {
-        db.sql("update ad_source set tag_url = :u where org_id = :o and id = :id").param("u", tagUrl).param("o", org).param("id", id).update();
-    }
+    public void setTagUrl(UUID org, UUID id, String tagUrl) { put(org, id, "tag_url", tagUrl); }
+
+    private static String key(String kind) { return "DIRECT".equals(kind) ? "direct" : "vast"; }
 
     private static Map<String, Object> by(String managedBy) {
         return managedBy == null ? Map.of() : Map.of("by", managedBy);

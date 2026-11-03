@@ -36,8 +36,10 @@ public class ProjectDetailsRepository {
 
     public List<ProjectDetails.Advertising> advertising(UUID org) {
         return db.sql("""
-                select id, name, kind, enabled, managed_by, (kind='DIRECT' or tag_url is not null) as configured
-                from ad_source where org_id=:o order by position, id""")
+                select i.id, i.name, d.driver as kind, i.enabled, i.managed_by,
+                  (d.driver='DIRECT' or exists (select 1 from connector_value v where v.instance_id=i.id and v.property_key='tag_url')) as configured
+                from connector_instance i join connector_definition d on d.key=i.connector_key and d.driver in ('DIRECT','VAST')
+                where i.org_id=:o order by i.position, i.id""")
                 .param("o", org).query(ProjectDetails.Advertising.class).list();
     }
 

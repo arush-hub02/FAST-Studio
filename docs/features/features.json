@@ -1343,7 +1343,7 @@
       "id": "connector-marketplace",
       "title": "Connector marketplace: fields, rules and connections",
       "area": "Multi-tenancy",
-      "status": "Built: fields, rules, connection screens, Mux and R2 read their connections; ad servers move onto it next (P3d)",
+      "status": "Built: fields, rules, connection screens; Mux, R2 and the ad waterfall read their connections (P3a–P3d)",
       "completed": "2026-11-03",
       "summary": "Platform administrators define each connector's fields in the database: key, type, required, encrypted, and whether tenants see it (external) or only the platform (internal). They group connectors in categories and set, per connector, its status (available, coming soon, unpublished), who connects it (tenants, the platform, or contact your account manager) and the permission someone needs to see it. Connections store values by field key; encrypted values are sealed and never shown again. Projects connect from Settings → Connectors; the platform connects for any project on the tenant page, and keeps platform-wide connections (R2) in Global configuration.",
       "who": [
@@ -1513,7 +1513,10 @@
         "Adapters read a connection's values by field key with defaults filled in (ConnectorCatalogueServiceV1.values).",
         "One screen (shared/configuration/ConnectorPanel.tsx) serves all three places; it builds each form from the fields the server sends, so a new field needs no code. Encrypted fields are password boxes that stay empty; leaving one blank keeps the stored secret.",
         "Mux reads its credentials from the project's mux connection (V27 moved existing ones over with the same ciphertext); the old Mux form and the marketplace edit the same values, and the health check is stored on the connection.",
-        "The edge client (R2 uploads, live playback signing) reads the platform's r2 connection, cached 30 seconds, and falls back to faststudio.edge.* for fields not stored there."
+        "The edge client (R2 uploads, live playback signing) reads the platform's r2 connection, cached 30 seconds, and falls back to faststudio.edge.* for fields not stored there.",
+        "The ad waterfall is the project's instances of connectors with driver DIRECT or VAST, in position order (V28 moved ad_source over with the same ids and sealed tag URLs, then dropped it). All multi-instance connections of a project share one numbering, so a new ad server goes to the end. The Ads page and the platform Connectors page keep their ad-source screens and edit the same connections.",
+        "Google Ad Manager is its own connector (key gam, V28) on the VAST adapter with the same field keys (tag_url sealed, timeout_ms), so its connections join the waterfall with no code. Its creatives are conditioned into R2 and delivered by Cloudflare like every ad.",
+        "When the first external ad server is added to a project still on the implicit default waterfall, direct-sold campaigns are saved first, so they stay at the top instead of dropping out."
       ],
       "optimizations": [
         "One query each for connectors, fields, connections and values per view."
@@ -1524,12 +1527,12 @@
       ],
       "rules": [
         "Platform administrators only for fields, categories and rules.",
-        "Tenants connect a connector only when it is available and its rule is ALLOWED, and only with Manage team.",
+        "Tenants connect a connector only when it is available and its rule is ALLOWED, and only with Manage team; ad servers (direct, vast) instead need Edit ads and the project's AD_OWN_TAGS feature, as on the Ads page.",
         "Encrypted values are never returned, only whether one is stored.",
         "Changing a field's encryption or deleting it removes its stored values everywhere.",
-        "Not yet: ad servers still use their own table until P3d.",
         "The Worker must hold the same edge secret as the r2 connection; the page security policy still reads faststudio.edge.public-url at start-up.",
-        "Tenant exports never include values of encrypted fields."
+        "Tenant exports never include values of encrypted fields.",
+        "Connections the platform administrator sets up (managed by the platform) are read-only for the project: shown as \"Managed by the platform\", and changing or removing them is refused (403 PLATFORM_MANAGED)."
       ],
       "api": [
         "GET /api/platform/connector-catalogue",
@@ -1543,11 +1546,13 @@
         "GET /api/platform/connector-instances"
       ],
       "tests": [
-        "ConnectorCatalogueTest (fields as rows, sealed secrets, tenant rules, status, project isolation)",
-        "frontend/e2e/project-connectors.spec.ts (owner connects and removes an ad server from Settings)",
+        "ConnectorCatalogueTest (fields as rows, sealed secrets, tenant rules, status, project isolation, ad-server rules, Google Ad Manager in the waterfall, direct-sold kept first)",
+        "frontend/e2e/project-connectors.spec.ts (platform adds an ad server to Aurora; the owner sees it read-only and can't add one without AD_OWN_TAGS; platform removes it)",
         "MuxConnectorMigrationTest (V27 moves credentials unchanged)",
         "MuxTest, LibrarySyncTest, ProjectDetailsTest (Mux through the connection)",
-        "TenantDataTest (encrypted connector values not exported)"
+        "TenantDataTest (encrypted connector values not exported)",
+        "AdServerMigrationTest (V28 moves the ad waterfall: ids, order, sealed tags, owner)",
+        "ConnectorsTest, SecurityHardeningTest, CrossTenantMatrixTest (ad sources through the connections)"
       ],
       "docs": [
         "docs/PLATFORM_ADMIN_PLAN.md"

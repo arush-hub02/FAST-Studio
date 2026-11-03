@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02",
+  "generatedAt": "2026-11-03",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -1665,36 +1665,6 @@
       "id": "ep-get-api-orgs-org-ad-sources",
       "handler": "AdsControllerV1.sources",
       "tables": {
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "AdsControllerV1",
-              "method": "sources",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "list",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "list",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "capability": {
           "mode": "read",
           "chain": [
@@ -1726,6 +1696,96 @@
             {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -1843,31 +1903,6 @@
       "id": "ep-post-api-orgs-org-ad-sources",
       "handler": "AdsControllerV1.addSource",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "AdsControllerV1",
-              "method": "addSource",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "add",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "add",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "hasDirect",
-              "layer": "repository"
-            }
-          ]
-        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -1924,6 +1959,91 @@
             {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "addSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "hasDirect",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "addSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "insert",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "addSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "insert",
+              "layer": "repository"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "putVast",
+              "layer": "repository"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "put",
               "layer": "repository"
             }
           ]
@@ -2041,31 +2161,6 @@
       "id": "ep-delete-api-orgs-org-ad-sources-id",
       "handler": "AdsControllerV1.deleteSource",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "AdsControllerV1",
-              "method": "deleteSource",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "delete",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "delete",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "delete",
-              "layer": "repository"
-            }
-          ]
-        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -2122,6 +2217,31 @@
             {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "deleteSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "delete",
               "layer": "repository"
             }
           ]
@@ -2239,31 +2359,6 @@
       "id": "ep-put-api-orgs-org-ad-sources-id",
       "handler": "AdsControllerV1.updateSource",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "AdsControllerV1",
-              "method": "updateSource",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "update",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "update",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "vastTagUrl",
-              "layer": "repository"
-            }
-          ]
-        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -2320,6 +2415,81 @@
             {
               "class": "CapabilityRepository",
               "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
               "layer": "repository"
             }
           ]
@@ -2675,41 +2845,6 @@
             }
           ]
         },
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "AdsControllerV1",
-              "method": "simulate",
-              "layer": "controller"
-            },
-            {
-              "class": "CampaignServiceV1",
-              "method": "simulate",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "asset": {
           "mode": "read",
           "chain": [
@@ -2781,6 +2916,76 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -11407,6 +11612,56 @@
             }
           ]
         },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "view",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_connector": {
           "mode": "read",
           "chain": [
@@ -11584,23 +11839,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -11816,6 +12056,66 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -12043,7 +12343,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "deleteInstance",
+              "method": "instances",
               "layer": "repository"
             }
           ]
@@ -12258,6 +12558,66 @@
             }
           ]
         },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_connector": {
           "mode": "read",
           "chain": [
@@ -12445,23 +12805,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -12677,6 +13022,66 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ProjectConnectorControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -16847,31 +17252,6 @@
             }
           ]
         },
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ProjectDetailsControllerV1",
-              "method": "tenant",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "tenant",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "advertising",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -17006,13 +17386,8 @@
               "layer": "service"
             },
             {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "class": "ProjectDetailsRepository",
+              "method": "advertising",
               "layer": "repository"
             }
           ]
@@ -21324,6 +21699,46 @@
       "id": "ep-get-api-platform-connector-instances",
       "handler": "ConnectorCatalogueControllerV1.platform",
       "tables": {
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_category": {
           "mode": "read",
           "chain": [
@@ -21455,6 +21870,126 @@
             {
               "class": "ConnectorCatalogueRepository",
               "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "platform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatform",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -21611,23 +22146,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -21843,6 +22363,66 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connectPlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -22070,7 +22650,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "deleteInstance",
+              "method": "instances",
               "layer": "repository"
             }
           ]
@@ -22285,6 +22865,66 @@
             }
           ]
         },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "deletePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_connector": {
           "mode": "read",
           "chain": [
@@ -22472,23 +23112,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -22704,6 +23329,66 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "updatePlatform",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -24969,7 +25654,37 @@
       "id": "ep-get-api-platform-orgs-orgid-ad-sources",
       "handler": "ConnectorsControllerV1.sources",
       "tables": {
-        "ad_source": {
+        "app_user": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "adSources",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "asProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "project",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorRepository",
+              "method": "isPlatformAdmin",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
           "mode": "read",
           "chain": [
             {
@@ -24999,7 +25714,7 @@
             }
           ]
         },
-        "app_user": {
+        "connector_property": {
           "mode": "read",
           "chain": [
             {
@@ -25013,18 +25728,48 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorAdminServiceV1",
-              "method": "asProject",
+              "class": "AdSourceAdminService",
+              "method": "list",
               "layer": "service"
             },
             {
-              "class": "ConnectorAdminServiceV1",
-              "method": "project",
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
               "layer": "service"
             },
             {
-              "class": "ConnectorRepository",
-              "method": "isPlatformAdmin",
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "sources",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "adSources",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -25067,31 +25812,6 @@
       "id": "ep-post-api-platform-orgs-orgid-ad-sources",
       "handler": "ConnectorsControllerV1.add",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ConnectorsControllerV1",
-              "method": "add",
-              "layer": "controller"
-            },
-            {
-              "class": "ConnectorAdminServiceV1",
-              "method": "addAdSource",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "add",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "hasDirect",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -25144,6 +25864,91 @@
               "class": "Audit",
               "method": "log",
               "layer": "core"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "hasDirect",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "insert",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "insert",
+              "layer": "repository"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "putVast",
+              "layer": "repository"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "put",
+              "layer": "repository"
             }
           ]
         },
@@ -25185,31 +25990,6 @@
       "id": "ep-delete-api-platform-orgs-orgid-ad-sources-id",
       "handler": "ConnectorsControllerV1.delete",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ConnectorsControllerV1",
-              "method": "delete",
-              "layer": "controller"
-            },
-            {
-              "class": "ConnectorAdminServiceV1",
-              "method": "deleteAdSource",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "delete",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "delete",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -25262,6 +26042,31 @@
               "class": "Audit",
               "method": "log",
               "layer": "core"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "deleteAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "delete",
+              "layer": "repository"
             }
           ]
         },
@@ -25303,31 +26108,6 @@
       "id": "ep-put-api-platform-orgs-orgid-ad-sources-id",
       "handler": "ConnectorsControllerV1.update",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ConnectorsControllerV1",
-              "method": "update",
-              "layer": "controller"
-            },
-            {
-              "class": "ConnectorAdminServiceV1",
-              "method": "updateAdSource",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "update",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "vastTagUrl",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -25380,6 +26160,81 @@
               "class": "Audit",
               "method": "log",
               "layer": "core"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "vastTagUrl",
+              "layer": "repository"
             }
           ]
         },
@@ -25421,31 +26276,6 @@
       "id": "ep-post-api-platform-orgs-orgid-ad-sources-order",
       "handler": "ConnectorsControllerV1.order",
       "tables": {
-        "ad_source": {
-          "mode": "read+write",
-          "chain": [
-            {
-              "class": "ConnectorsControllerV1",
-              "method": "order",
-              "layer": "controller"
-            },
-            {
-              "class": "ConnectorAdminServiceV1",
-              "method": "orderAdSources",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "order",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "setPosition",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -25498,6 +26328,131 @@
               "class": "Audit",
               "method": "log",
               "layer": "core"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "order",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "orderAdSources",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "order",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "materializeDefault",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "count",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "order",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "orderAdSources",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "order",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "setPosition",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "order",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "orderAdSources",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "order",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "order",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "orderAdSources",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "order",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
             }
           ]
         },
@@ -25672,6 +26627,46 @@
       "id": "ep-get-api-platform-orgs-orgid-connector-instances",
       "handler": "ConnectorCatalogueControllerV1.project",
       "tables": {
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_category": {
           "mode": "read",
           "chain": [
@@ -25803,6 +26798,126 @@
             {
               "class": "ConnectorCatalogueRepository",
               "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "project",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forPlatformProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -25959,23 +27074,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -26191,6 +27291,66 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "connect",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -26418,7 +27578,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "deleteInstance",
+              "method": "instances",
               "layer": "repository"
             }
           ]
@@ -26633,6 +27793,66 @@
             }
           ]
         },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "deleteInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_connector": {
           "mode": "read",
           "chain": [
@@ -26820,23 +28040,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -27056,6 +28261,66 @@
             }
           ]
         },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorCatalogueControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "visible",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "forProject",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "marketplace",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "canConnect",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_connector": {
           "mode": "read",
           "chain": [
@@ -27099,36 +28364,6 @@
       "id": "ep-get-api-platform-orgs-orgid-connectors",
       "handler": "ConnectorsControllerV1.overview",
       "tables": {
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "ConnectorsControllerV1",
-              "method": "overview",
-              "layer": "controller"
-            },
-            {
-              "class": "ConnectorAdminServiceV1",
-              "method": "overview",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceAdminService",
-              "method": "list",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -27190,6 +28425,96 @@
             {
               "class": "CapabilityRepository",
               "method": "global",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "overview",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "overview",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "overview",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "overview",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "overview",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "overview",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -27629,23 +28954,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "class": "ConnectorCatalogueRepository",
+              "method": "nextPosition",
               "layer": "repository"
             }
           ]
@@ -29166,31 +30476,6 @@
       "id": "ep-get-api-platform-orgs-orgid-project-details",
       "handler": "PlatformProjectDetailsControllerV1.platform",
       "tables": {
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlatformProjectDetailsControllerV1",
-              "method": "platform",
-              "layer": "controller"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "platform",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsServiceV1",
-              "method": "details",
-              "layer": "service"
-            },
-            {
-              "class": "ProjectDetailsRepository",
-              "method": "advertising",
-              "layer": "repository"
-            }
-          ]
-        },
         "app_user": {
           "mode": "read",
           "chain": [
@@ -29335,13 +30620,8 @@
               "layer": "service"
             },
             {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
+              "class": "ProjectDetailsRepository",
+              "method": "advertising",
               "layer": "repository"
             }
           ]
@@ -35425,46 +36705,6 @@
             }
           ]
         },
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "beacon",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "beacon",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "asset": {
           "mode": "read",
           "chain": [
@@ -35561,6 +36801,86 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "beacon",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "beacon",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "beacon",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "beacon",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -36028,46 +37348,6 @@
             }
           ]
         },
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "decision",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "asset": {
           "mode": "read",
           "chain": [
@@ -36164,6 +37444,86 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "decision",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "decision",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -36621,46 +37981,6 @@
             }
           ]
         },
-        "ad_source": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
         "asset": {
           "mode": "read",
           "chain": [
@@ -36757,6 +38077,86 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "driverEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "info",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "info",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "info",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "info",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "waterfall",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -37937,6 +39337,7 @@
         "PUT /api/platform/connector-definitions/{key}/details",
         "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
         "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
@@ -37961,6 +39362,7 @@
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
@@ -38066,9 +39468,11 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "GET /api/platform/connector-instances",
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
@@ -38130,33 +39534,165 @@
         "DELETE /api/auth/personal-tokens/{id}"
       ]
     },
-    "ad_source": {
+    "connector_definition": {
       "read": [
         "GET /api/orgs/{org}/ad-sources",
         "POST /api/orgs/{org}/ad-sources",
-        "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/configuration",
+        "PUT /api/orgs/{org}/configuration/connectors/{key}",
+        "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "GET /api/orgs/{org}/tenant-settings",
+        "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "DELETE /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-categories/{key}",
+        "GET /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/ad-sources",
         "POST /api/platform/orgs/{orgId}/ad-sources",
-        "DELETE /api/platform/orgs/{orgId}/ad-sources/{id}",
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "PUT /api/platform/property-definitions",
+        "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
+        "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
+        "PUT /api/platform/tenants/{tenant}/properties/{key}",
+        "GET /api/platform/tenants/{tenant}/settings",
+        "POST /api/platform/tenants/{tenant}/status",
+        "PUT /api/platform/tenants/{tenant}/subscription",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}",
+        "GET /play/{session}/info"
+      ],
+      "write": [
+        "PUT /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions/{key}/details"
+      ]
+    },
+    "connector_value": {
+      "read": [
+        "GET /api/orgs/{org}/ad-sources",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connectors",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
         "GET /play/{session}/info"
       ],
       "write": [
         "POST /api/orgs/{org}/ad-sources",
-        "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "POST /api/platform/connector-instances/{key}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources",
-        "DELETE /api/platform/orgs/{orgId}/ad-sources/{id}",
         "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
-        "POST /api/platform/orgs/{orgId}/ad-sources/order"
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux"
+      ]
+    },
+    "connector_property": {
+      "read": [
+        "GET /api/orgs/{org}/ad-sources",
+        "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "PUT /api/platform/connector-definitions/{key}/details",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/ad-sources",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connectors",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /hooks/mux/{org}",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}",
+        "GET /play/{session}/info"
+      ],
+      "write": [
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}"
       ]
     },
     "capability": {
@@ -38182,6 +39718,7 @@
         "GET /api/platform/access-roles",
         "PUT /api/platform/access-roles",
         "GET /api/platform/catalogue",
+        "GET /api/platform/connector-instances",
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
@@ -38193,6 +39730,7 @@
         "PUT /api/platform/features/{key}",
         "POST /api/platform/modules",
         "PUT /api/platform/modules/{key}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
@@ -38230,6 +39768,10 @@
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
         "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/orgs/{org}/features",
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
@@ -38238,6 +39780,14 @@
         "GET /api/orgs/{org}/project-details",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
@@ -38258,6 +39808,60 @@
       ],
       "write": [
         "PUT /api/platform/plans"
+      ]
+    },
+    "connector_instance": {
+      "read": [
+        "POST /api/orgs/{org}/ad-sources",
+        "DELETE /api/orgs/{org}/ad-sources/{id}",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/orgs/{org}/project-details",
+        "GET /api/platform/connector-instances",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "DELETE /api/platform/orgs/{orgId}/ad-sources/{id}",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /hooks/mux/{org}"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/ad-sources",
+        "DELETE /api/orgs/{org}/ad-sources/{id}",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/platform/connector-instances/{key}",
+        "DELETE /api/platform/connector-instances/{key}/{id}",
+        "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "DELETE /api/platform/orgs/{orgId}/ad-sources/{id}",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check"
       ]
     },
     "asset": {
@@ -38592,60 +40196,6 @@
       ],
       "write": []
     },
-    "connector_definition": {
-      "read": [
-        "POST /api/orgs/{org}/ads/simulate",
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/configuration",
-        "PUT /api/orgs/{org}/configuration/connectors/{key}",
-        "PUT /api/orgs/{org}/configuration/properties/{key}",
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/orgs/{org}/project-details",
-        "GET /api/orgs/{org}/tenant-settings",
-        "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
-        "GET /api/platform/connector-catalogue",
-        "POST /api/platform/connector-categories",
-        "DELETE /api/platform/connector-categories/{key}",
-        "PUT /api/platform/connector-categories/{key}",
-        "GET /api/platform/connector-definitions",
-        "PUT /api/platform/connector-definitions",
-        "PUT /api/platform/connector-definitions/{key}/details",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "GET /api/platform/orgs/{orgId}/project-details",
-        "PUT /api/platform/property-definitions",
-        "PUT /api/platform/tenants/{tenant}/connectors/{key}",
-        "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
-        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
-        "GET /api/platform/tenants/{tenant}/projects/{project}/settings",
-        "PUT /api/platform/tenants/{tenant}/properties/{key}",
-        "GET /api/platform/tenants/{tenant}/settings",
-        "POST /api/platform/tenants/{tenant}/status",
-        "PUT /api/platform/tenants/{tenant}/subscription",
-        "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
-      ],
-      "write": [
-        "PUT /api/platform/connector-definitions",
-        "PUT /api/platform/connector-definitions/{key}/details"
-      ]
-    },
     "project_connector": {
       "read": [
         "POST /api/orgs/{org}/ads/simulate",
@@ -38923,123 +40473,6 @@
       "write": [
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /hooks/mux/{org}"
-      ]
-    },
-    "connector_property": {
-      "read": [
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/platform/connector-catalogue",
-        "POST /api/platform/connector-categories",
-        "PUT /api/platform/connector-categories/{key}",
-        "PUT /api/platform/connector-definitions/{key}/details",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connectors/mux",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "POST /hooks/mux/{org}"
-      ],
-      "write": [
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}"
-      ]
-    },
-    "connector_value": {
-      "read": [
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/orgs/{org}/project-details",
-        "POST /api/platform/connector-categories",
-        "PUT /api/platform/connector-categories/{key}",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connectors/mux",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "GET /api/platform/orgs/{orgId}/project-details",
-        "POST /hooks/mux/{org}"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/connectors/{key}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
-        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
-        "POST /api/platform/connector-instances/{key}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux"
-      ]
-    },
-    "connector_instance": {
-      "read": [
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/connectors",
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/orgs/{org}/project-details",
-        "GET /api/platform/connector-instances",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connector-instances",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "GET /api/platform/orgs/{orgId}/connectors/mux",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "GET /api/platform/orgs/{orgId}/project-details",
-        "POST /hooks/mux/{org}"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/connectors/{key}",
-        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
-        "PUT /api/orgs/{org}/connectors/{key}/{id}",
-        "POST /api/platform/connector-instances/{key}",
-        "DELETE /api/platform/connector-instances/{key}/{id}",
-        "PUT /api/platform/connector-instances/{key}/{id}",
-        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
-        "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/check"
       ]
     },
     "media_connection": {

@@ -27,8 +27,9 @@ public class ConnectorCatalogueRepository {
     public record PropertyRow(String connectorKey, String key, String label, String description, String valueType, String options,
                               String defaultValue, int position, boolean required, boolean encrypted, String scope) {}
 
+    /** managedBy: PLATFORM (set up by the platform administrator) or TENANT (the project's own). */
     public record InstanceRow(UUID id, String connectorKey, UUID orgId, String name, int position, boolean enabled,
-                              OffsetDateTime checkedAt, String checkError) {}
+                              OffsetDateTime checkedAt, String checkError, String managedBy) {}
 
     public record ValueRow(UUID instanceId, String propertyKey, String value) {}
 
@@ -112,7 +113,7 @@ public class ConnectorCatalogueRepository {
     /** Instances of one project (org) or of the platform (org null). */
     public List<InstanceRow> instances(UUID org) {
         return db.sql("""
-                select id, connector_key, org_id, name, position, enabled, checked_at, check_error from connector_instance
+                select id, connector_key, org_id, name, position, enabled, checked_at, check_error, managed_by from connector_instance
                 where org_id is not distinct from cast(:o as uuid) order by connector_key, position""")
                 .param("o", org).query(InstanceRow.class).list();
     }
@@ -122,15 +123,17 @@ public class ConnectorCatalogueRepository {
                 .param("o", org).query(ValueRow.class).list();
     }
 
-    public int nextPosition(String connector, UUID org) {
-        return db.sql("select coalesce(max(position), 0) + 1 from connector_instance where connector_key = :c and org_id is not distinct from cast(:o as uuid)")
-                .param("c", connector).param("o", org).query(Integer.class).single();
+    /** Next place in the list; all multi-instance connectors of a project (the ad servers) share one order, the waterfall. */
+    public int nextPosition(UUID org) {
+        return db.sql("""
+                select coalesce(max(i.position), 0) + 1 from connector_instance i join connector_definition d on d.key = i.connector_key
+                where d.multi_instance and i.org_id is not distinct from cast(:o as uuid)""").param("o", org).query(Integer.class).single();
     }
 
-    public UUID insertInstance(String connector, UUID org, String name, int position, boolean enabled) {
-        Map<String, Object> p = new HashMap<>(Map.of("c", connector, "n", name, "p", position, "e", enabled));
+    public UUID insertInstance(String connector, UUID org, String name, int position, boolean enabled, String managedBy) {
+        Map<String, Object> p = new HashMap<>(Map.of("c", connector, "n", name, "p", position, "e", enabled, "by", managedBy));
         p.put("o", org);
-        return db.sql("insert into connector_instance(connector_key, org_id, name, position, enabled) values (:c, :o, :n, :p, :e) returning id")
+        return db.sql("insert into connector_instance(connector_key, org_id, name, position, enabled, managed_by) values (:c, :o, :n, :p, :e, :by) returning id")
                 .params(p).query(UUID.class).single();
     }
 

@@ -21,6 +21,7 @@ export type MarketConnector = {
 export type ConnectorInstance = {
   id: string; name: string; position: number; enabled: boolean; connected: boolean; missing: string[]
   values: Record<string, { value: string | null; configured: boolean }>; checkedAt: string | null; checkError: string | null
+  editable: boolean
 }
 export type ConnectorState = { connector: MarketConnector; instances: ConnectorInstance[]; connected: boolean; canConnect: boolean; note: string | null }
 export type Marketplace = { categories: ConnectorCategory[]; connectors: ConnectorState[] }
@@ -80,7 +81,8 @@ export function ConnectorPanel({ base, title = 'Connectors', intro }: { base: st
                         {!i.enabled ? 'Switched off' : i.connected ? 'Ready' : `Missing: ${i.missing.map(k => c.properties.find(p => p.key === k)?.label ?? k).join(', ')}`}
                       </div>
                     </div>
-                    {s.canConnect && (
+                    {!i.editable && <span className="faint small">Managed by the platform</span>}
+                    {s.canConnect && i.editable && (
                       <div className="row" style={{ gap: 6 }}>
                         <button type="button" className="btn sm" onClick={() => setEditing({ state: s, instance: i })}>Edit</button>
                         <button type="button" className="btn sm" aria-label={`Remove ${i.name}`} onClick={() => setRemoving({ state: s, instance: i })}><Icon name="trash" size={13} /></button>

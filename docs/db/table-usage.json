@@ -629,23 +629,6 @@
         "One row per rule and date (primary key): generating the same date twice is refused."
       ]
     },
-    "ad_source": {
-      "feature": "Advertising",
-      "purpose": "A project's ad demand waterfall: direct-sold campaigns and external VAST ad servers, in order.",
-      "pages": [
-        "/platform/connectors",
-        "/:org/ads"
-      ],
-      "apis": [
-        "GET /api/orgs/{org}/ad-sources",
-        "POST /api/platform/orgs/{orgId}/ad-sources",
-        "POST /api/platform/orgs/{orgId}/ad-sources/order"
-      ],
-      "watch": [
-        "kind VAST needs a tag_url (check constraint).",
-        "Platform-managed tag URLs are never shown to the project."
-      ]
-    },
     "campaign": {
       "feature": "Advertising",
       "purpose": "Direct-sold ad campaigns: creative, dates, countries, priority, CPM, audiences and frequency cap.",
@@ -883,10 +866,13 @@
     },
     "connector_instance": {
       "feature": "Connector marketplace",
-      "purpose": "One connection of a connector: for a project (org_id) or for the whole platform (org_id empty). Ad servers can have several, in waterfall order (position).",
+      "purpose": "One connection of a connector: for a project (org_id) or for the whole platform (org_id empty). Ad servers (direct and vast connectors) can have several; their positions 1..n are the project's ad waterfall, asked in that order.",
       "pages": [
         "/platform/configuration?tab=connectors",
-        "/platform/tenants/{id}?tab=connectors"
+        "/platform/tenants/{id}?tab=connectors",
+        "/:org/settings?tab=connectors",
+        "/platform/connectors",
+        "/:org/ads"
       ],
       "apis": [
         "GET /api/orgs/{org}/connectors",
@@ -894,13 +880,19 @@
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connector-instances",
-        "GET /api/platform/connector-instances"
+        "GET /api/platform/connector-instances",
+        "GET /api/orgs/{org}/ad-sources",
+        "POST /api/orgs/{org}/ad-sources",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order"
       ],
       "watch": [
         "Row-level security by org_id; platform-level rows need the system login.",
-        "Only one single-instance connection per connector and project (unique index on position 0).",
+        "Only one single-instance connection per connector and project (unique index on position 0); only one direct connection per project (connector_instance_one_direct).",
         "checked_at / check_error: last health check (Mux check button); saving new values clears them.",
-        "The platform-level r2 connection (org_id empty) feeds the edge client (worker_url, edge_secret, public_url); unset fields fall back to faststudio.edge.*."
+        "The platform-level r2 connection (org_id empty) feeds the edge client (worker_url, edge_secret, public_url); unset fields fall back to faststudio.edge.*.",
+        "managed_by: PLATFORM rows are set up by the platform administrator and read-only for the project; TENANT rows are the project's own ad tags (AD_OWN_TAGS feature).",
+        "Ad waterfall (V28, replaces ad_source): instances whose connector driver is DIRECT or VAST (direct, vast, gam = Google Ad Manager), ordered by position; VAST-driver values tag_url (sealed) and timeout_ms."
       ]
     },
     "connector_value": {

@@ -124,18 +124,18 @@ class SecurityHardeningTest {
         assertEquals(200, add.getResponse().getStatus(), add.getResponse().getContentAsString());
         UUID sourceId = UUID.fromString((String) json.readValue(add.getResponse().getContentAsString(), Map.class).get("id"));
 
-        String stored = TenantScope.bypass(() -> db.sql("select tag_url from ad_source where id = :id").param("id", sourceId).query(String.class).single());
+        String stored = TenantScope.bypass(() -> db.sql("select value from connector_value where instance_id = :id and property_key = 'tag_url'").param("id", sourceId).query(String.class).single());
         assertFalse(stored.contains("secret-123") || stored.contains("://"), "stored encrypted, not as the URL");
         assertEquals(tag, TenantScope.as(orgId, () -> decisions.waterfall(orgId)).stream().filter(s -> s.id().equals(sourceId)).findFirst().orElseThrow().tagUrl(),
                 "the waterfall reads it back decrypted");
 
         // a row saved before encryption existed is re-sealed by the start-up upgrade and still works before that
-        TenantScope.bypass(() -> db.sql("update ad_source set tag_url = :u where id = :id").param("u", tag).param("id", sourceId).update());
+        TenantScope.bypass(() -> db.sql("update connector_value set value = :u where instance_id = :id and property_key = 'tag_url'").param("u", tag).param("id", sourceId).update());
         assertEquals(tag, TenantScope.as(orgId, () -> decisions.waterfall(orgId)).stream().filter(s -> s.id().equals(sourceId)).findFirst().orElseThrow().tagUrl());
         var upgrade = Class.forName("com.faststudio.v1.services.ads.AdSourceAdminService").getDeclaredMethod("sealPlaintextTags");
         upgrade.setAccessible(true);
         upgrade.invoke(applicationBean("adSourceAdminService"));
-        assertFalse(TenantScope.bypass(() -> db.sql("select tag_url from ad_source where id = :id").param("id", sourceId).query(String.class).single()).contains("://"));
+        assertFalse(TenantScope.bypass(() -> db.sql("select value from connector_value where instance_id = :id and property_key = 'tag_url'").param("id", sourceId).query(String.class).single()).contains("://"));
     }
 
     @Autowired org.springframework.context.ApplicationContext context;

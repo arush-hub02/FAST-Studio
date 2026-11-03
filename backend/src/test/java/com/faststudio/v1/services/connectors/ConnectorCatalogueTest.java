@@ -20,6 +20,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.file.Files;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +53,7 @@ class ConnectorCatalogueTest {
     @Autowired JsonMapper json;
     @Autowired ConnectorCatalogueServiceV1 service;
     @Autowired com.faststudio.v1.util.cloudflare.EdgeClient edge;
+    @Autowired com.faststudio.v1.services.ads.AdDecisionServiceV1 decisions;
 
     UUID org(String slug) { return TenantScope.bypass(() -> db.sql("select id from organization where slug = :s").param("s", slug).query(UUID.class).single()); }
 
@@ -140,7 +142,13 @@ class ConnectorCatalogueTest {
         assertEquals(403, status(post(aurora() + "/mux"), OWNER, "{\"values\":{\"environment\":\"prod\"}}"));
         assertNull(state(m, "r2"), "platform-level connector not in a project");
 
-        JsonNode vast = state(m, "vast");
+        // a project's own ad servers follow the Ads page rule: ADS_EDIT and the AD_OWN_TAGS feature (P3d)
+        UUID aurora = org("aurora");
+        TenantScope.bypass(() -> db.sql("update organization set features = replace(features, 'AD_OWN_TAGS', '') where id = :o").param("o", aurora).update());
+        assertFalse(state(ok(get(aurora()), OWNER, null), "vast").path("canConnect").asBoolean(), "own ad servers switched off");
+        assertEquals(403, status(post(aurora() + "/vast"), OWNER, "{\"values\":{\"tag_url\":\"https://ads.test/vast\"}}"));
+        TenantScope.bypass(() -> db.sql("update organization set features = trim(both ',' from features || ',AD_OWN_TAGS') where id = :o").param("o", aurora).update());
+        JsonNode vast = state(ok(get(aurora()), OWNER, null), "vast");
         assertTrue(vast.path("canConnect").asBoolean());
         assertEquals(422, status(post(aurora() + "/vast"), OWNER, "{\"values\":{\"tag_url\":\"https://ads.test/vast\",\"timeout_ms\":\"soon\"}}"));
         assertEquals(422, status(post(aurora() + "/vast"), OWNER, "{\"values\":{\"tag_url\":\"ftp://ads.test\"}}"));
@@ -150,7 +158,35 @@ class ConnectorCatalogueTest {
         ok(post(aurora() + "/vast"), OWNER, "{\"name\":\"Backup\",\"values\":{\"tag_url\":\"https://ads.test/backup\"}}");
         assertEquals(2, ok(get(aurora()), OWNER, null).path("connectors").findValues("instances").stream()
                 .filter(x -> x.toString().contains("Backup")).findFirst().orElseThrow().size(), "ad servers are a list");
-        assertEquals(403, status(post(aurora() + "/vast"), "analyst@aurora.test", "{\"values\":{\"tag_url\":\"https://x.test\"}}"), "needs TEAM_MANAGE");
+        assertEquals(403, status(post(aurora() + "/vast"), "analyst@aurora.test", "{\"values\":{\"tag_url\":\"https://x.test\"}}"), "needs ADS_EDIT");
+
+        // the waterfall is the connections in list order, the project's own after the existing ones
+        var waterfall = TenantScope.as(aurora, () -> decisions.waterfall(aurora)).stream().map(c -> c.name()).toList();
+        assertEquals(List.of("Primary", "Backup"), waterfall.subList(waterfall.size() - 2, waterfall.size()));
+
+        // the platform's ad servers are read-only for the project
+        JsonNode platform = ok(post("/api/platform/orgs/" + aurora + "/connector-instances/vast"), ADMIN, "{\"name\":\"House SSP\",\"values\":{\"tag_url\":\"https://ssp.test/vast\"}}");
+        String house = find(platform.path("instances"), "name", "House SSP").path("id").asString();
+        assertFalse(find(state(ok(get(aurora()), OWNER, null), "vast").path("instances"), "name", "House SSP").path("editable").asBoolean());
+        assertEquals(403, status(put(aurora() + "/vast/" + house), OWNER, "{\"values\":{\"tag_url\":\"https://evil.test\"}}"));
+        assertEquals(403, status(delete(aurora() + "/vast/" + house), OWNER, null));
+        ok(delete("/api/platform/orgs/" + aurora + "/connector-instances/vast/" + house), ADMIN, null);
+
+        // Google Ad Manager is its own connector on the VAST adapter: its connection joins the waterfall like any VAST tag
+        String gamTag = "https://pubads.g.doubleclick.net/gampad/ads?iu=/1234/fast&cb=[CACHEBUSTER]";
+        JsonNode gam = ok(post("/api/platform/orgs/" + aurora + "/connector-instances/gam"), ADMIN, "{\"name\":\"GAM\",\"values\":{\"tag_url\":\"" + gamTag + "\"}}");
+        assertTrue(find(gam.path("instances"), "name", "GAM").path("connected").asBoolean());
+        var last = TenantScope.as(aurora, () -> decisions.waterfall(aurora)).getLast();
+        assertEquals(List.of("GAM", "VAST", gamTag, 1000), List.of(last.name(), last.kind(), last.tagUrl(), last.timeoutMs()));
+        ok(delete("/api/platform/orgs/" + aurora + "/connector-instances/gam/" + find(gam.path("instances"), "name", "GAM").path("id").asString()), ADMIN, null);
+
+        // a project still on the implicit default (direct-sold only) keeps direct-sold first when its first ad server is added
+        UUID nw = org("northwind");
+        TenantScope.as(nw, () -> db.sql("delete from connector_instance where org_id = :o and connector_key in ('direct','vast','gam')").param("o", nw).update());
+        assertEquals(List.of("Direct-sold campaigns"), TenantScope.as(nw, () -> decisions.waterfall(nw)).stream().map(c -> c.name()).toList());
+        ok(post("/api/platform/orgs/" + nw + "/connector-instances/gam"), ADMIN, "{\"name\":\"GAM\",\"values\":{\"tag_url\":\"" + gamTag + "\"}}");
+        assertEquals(List.of("Direct-sold campaigns", "GAM"), TenantScope.as(nw, () -> decisions.waterfall(nw)).stream().map(c -> c.name()).toList());
+        TenantScope.as(nw, () -> db.sql("delete from connector_instance where org_id = :o and connector_key in ('direct','gam')").param("o", nw).update());
 
         // upcoming connectors can't be connected; unpublished ones vanish
         String details = "{\"tier\":\"FREE\",\"status\":\"%s\",\"tenantUpdate\":\"ALLOWED\",\"level\":\"PROJECT\",\"multiInstance\":true}";
@@ -167,6 +203,7 @@ class ConnectorCatalogueTest {
         JsonNode aurora = state(ok(get(aurora()), OWNER, null), "vast");
         String id = aurora.path("instances").get(0).path("id").asString();
         String northwind = "/api/orgs/" + org("northwind") + "/connectors";
+        TenantScope.bypass(() -> db.sql("update organization set features = trim(both ',' from features || ',AD_OWN_TAGS') where slug = 'northwind'").update());
         assertEquals(0, state(ok(get(northwind), "owner@northwind.test", null), "vast").path("instances").size());
         assertEquals(404, status(put(northwind + "/vast/" + id), "owner@northwind.test", "{\"values\":{\"tag_url\":\"https://evil.test\"}}"));
         assertEquals(404, status(delete(northwind + "/vast/" + id), "owner@northwind.test", null));

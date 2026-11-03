@@ -3,6 +3,8 @@ package com.faststudio.v1.services.connectors;
 import com.faststudio.v1.core.auth.Auth;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
+import com.faststudio.v1.core.common.Feature;
+import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantScope;
@@ -40,9 +42,11 @@ public class ConnectorCatalogueServiceV1 {
     private final JsonMapper json;
     private final TransactionTemplate tx;
     private final Audit audit;
+    private final AssetRepository projects;
 
     public ConnectorCatalogueServiceV1(ConnectorCatalogueRepository repository, TenantConfigurationServiceV1 configuration, CatalogueServiceV1 catalogue,
-                                       Secrets secrets, JsonMapper json, TransactionTemplate tx, Audit audit) {
+                                       Secrets secrets, JsonMapper json, TransactionTemplate tx, Audit audit, AssetRepository projects) {
+        this.projects = projects;
         this.repository = repository;
         this.configuration = configuration;
         this.catalogue = catalogue;
@@ -146,13 +150,17 @@ public class ConnectorCatalogueServiceV1 {
             Optional<InstanceRow> existing = repository.instances(org).stream().filter(i -> i.connectorKey().equals(key)
                     && (id == null ? !c.multiInstance() && i.position() == 0 : i.id().equals(id))).findFirst();
             if (id != null && existing.isEmpty()) throw ApiException.notFound("Connection");
+            if (caller != null && existing.isPresent() && existing.get().managedBy().equals("PLATFORM")) throw platformManaged();
             String name = r.name() == null || r.name().isBlank() ? existing.map(InstanceRow::name).filter(n -> !n.isBlank()).orElse(c.name()) : r.name().trim();
             boolean enabled = r.enabled() == null ? existing.map(InstanceRow::enabled).orElse(true) : r.enabled();
             if (existing.isPresent()) {
                 instance = existing.get().id();
                 repository.updateInstance(instance, org, name, enabled);
             } else {
-                instance = repository.insertInstance(key, org, name, c.multiInstance() ? repository.nextPosition(key, org) : 0, enabled);
+                // the implicit default waterfall (direct-sold only) becomes a real first entry before an ad server is added
+                if (c.driver().equals("VAST") && org != null && repository.instances(org).stream().noneMatch(i -> adConnectors().contains(i.connectorKey())))
+                    repository.insertInstance("direct", org, "Direct-sold campaigns", repository.nextPosition(org), true, "PLATFORM");
+                instance = repository.insertInstance(key, org, name, c.multiInstance() ? repository.nextPosition(org) : 0, enabled, caller == null ? "PLATFORM" : "TENANT");
             }
             boolean changed = false;
             for (var e : sealed.entrySet()) {
@@ -172,6 +180,8 @@ public class ConnectorCatalogueServiceV1 {
     public ConnectorState deleteInstance(Tenant caller, UUID org, String key, UUID id) {
         Connector c = visible(caller, org, key);
         requireConnect(caller, c);
+        if (caller != null && scoped(org, () -> repository.instances(org)).stream().anyMatch(i -> i.id().equals(id) && i.managedBy().equals("PLATFORM")))
+            throw platformManaged();
         if (scoped(org, () -> repository.deleteInstance(id, org)) == 0) throw ApiException.notFound("Connection");
         record(caller, org, "connector.disconnect", key, c.name());
         return state(caller, org, key);
@@ -254,12 +264,29 @@ public class ConnectorCatalogueServiceV1 {
             if (caller != null && !p.scope().equals("EXTERNAL")) continue;
             shown.put(p.key(), p.encrypted() ? new Value(null, v != null) : new Value(v != null ? v : p.defaultValue(), v != null));
         }
-        return new Instance(i.id(), i.name(), i.position(), i.enabled(), i.enabled() && missing.isEmpty(), missing, shown, i.checkedAt(), i.checkError());
+        return new Instance(i.id(), i.name(), i.position(), i.enabled(), i.enabled() && missing.isEmpty(), missing, shown, i.checkedAt(), i.checkError(),
+                caller == null || i.managedBy().equals("TENANT"));
     }
 
     private boolean canConnect(Tenant caller, Connector c) {
         if (!c.status().equals("AVAILABLE")) return false;
-        return caller == null || (c.tenantUpdate().equals("ALLOWED") && caller.permissions().contains(Tenant.Perm.TEAM_MANAGE));
+        if (caller == null) return true;
+        if (!c.tenantUpdate().equals("ALLOWED")) return false;
+        if (!AD_DRIVERS.contains(c.driver())) return caller.permissions().contains(Tenant.Perm.TEAM_MANAGE);
+        // a project's own ad servers: the same rule as the Ads page (ADS_EDIT and the AD_OWN_TAGS feature)
+        return caller.permissions().contains(Tenant.Perm.ADS_EDIT)
+                && configuration.effectiveFeatures(caller.orgId(), projects.projectFeatures(caller.orgId())).contains(Feature.AD_OWN_TAGS.name());
+    }
+
+    private Set<String> adConnectors() {
+        return repository.connectors().stream().filter(d -> AD_DRIVERS.contains(d.driver())).map(ConnectorRow::key).collect(Collectors.toSet());
+    }
+
+    /** Adapters whose instances form the ad waterfall. */
+    private static final Set<String> AD_DRIVERS = Set.of("DIRECT", "VAST");
+
+    private static ApiException platformManaged() {
+        return new ApiException(HttpStatus.FORBIDDEN, "PLATFORM_MANAGED", "Your platform administrator manages this connection.");
     }
 
     /** The connector, if this caller can see it at this scope (404 otherwise, never revealing hidden connectors). */
@@ -271,8 +298,10 @@ public class ConnectorCatalogueServiceV1 {
     }
 
     private void requireConnect(Tenant caller, Connector c) {
-        if (caller != null) caller.require(Tenant.Perm.TEAM_MANAGE);
+        if (caller != null) caller.require(AD_DRIVERS.contains(c.driver()) ? Tenant.Perm.ADS_EDIT : Tenant.Perm.TEAM_MANAGE);
         if (canConnect(caller, c)) return;
+        if (caller != null && c.status().equals("AVAILABLE") && c.tenantUpdate().equals("ALLOWED"))   // only the feature is missing
+            throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "This isn't switched on for your company. Ask the platform administrator.");
         if (!c.status().equals("AVAILABLE")) throw ApiException.conflict("NOT_AVAILABLE", "This connector is coming soon and can't be connected yet.");
         throw new ApiException(HttpStatus.FORBIDDEN, "CONNECT_NOT_ALLOWED", c.tenantUpdate().equals("CONTACT_ACCOUNT_MANAGER")
                 ? "Contact your account manager to connect this." : "Your platform administrator connects this.");

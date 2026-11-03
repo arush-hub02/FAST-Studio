@@ -67,7 +67,7 @@ class CrossTenantMatrixTest {
                     db.sql("select id from app_user where email = 'operator@aurora.test'").query(UUID.class).single(),
                     alert,
                     db.sql("select id from partner_link where owner_org_id = :o limit 1").param("o", org).query(UUID.class).single(),
-                    db.sql("insert into ad_source(org_id, name, kind, position) values (:o, 'Direct-sold campaigns', 'DIRECT', 0) on conflict (org_id) where kind = 'DIRECT' do update set name = excluded.name returning id")
+                    db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('direct', :o, 'Direct-sold campaigns', 1) on conflict (org_id) where connector_key = 'direct' do update set name = excluded.name returning id")
                             .param("o", org).query(UUID.class).single(),
                     connection(org));
         });
@@ -91,9 +91,8 @@ class CrossTenantMatrixTest {
                   union all select id || name from destination where org_id = :o
                   union all select id || status from alert where org_id = :o and dedup_key = 'matrix-test'
                   union all select user_id || role from membership where org_id = :o
-                  union all select id || name || enabled || position from ad_source where org_id = :o
                   union all select id || status || scopes from partner_link where owner_org_id = :o
-                  union all select id || name || enabled from connector_instance where org_id = :o
+                  union all select id || name || enabled || position || managed_by from connector_instance where org_id = :o
                   union all select instance_id || property_key || value from connector_value where org_id = :o) x""").param("o", org).query(String.class).single());
     }
 
