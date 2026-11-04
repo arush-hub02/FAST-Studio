@@ -17,8 +17,9 @@ public class PlatformPeopleControllerV1 {
     public PlatformPeopleControllerV1(PlatformPeopleServiceV1 people) { this.people = people; }
 
     @GetMapping
-    Page list(@RequestParam(defaultValue = "") String q, @RequestParam(defaultValue = "50") int limit, @RequestParam(defaultValue = "0") int offset) {
-        return people.list(q, limit, offset);
+    Page list(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) UUID tenantId,
+              @RequestParam(defaultValue = "50") int limit, @RequestParam(defaultValue = "0") int offset) {
+        return people.list(q, tenantId, limit, offset);
     }
 
     @PostMapping

@@ -34,11 +34,19 @@ function RoleSelect({ orgId, kind, value, onChange }: { orgId: string; kind: 'CU
 
 /** Everyone across every organization: find a person, add them to an organization, change or remove a role, switch their account off. */
 export default function People() {
+  return <div className="page"><PeopleList /></div>
+}
+
+/**
+ * The people list. tenantId: only people in that tenant's projects (tenant page → People), and new memberships only
+ * in those projects (projectIds).
+ */
+export function PeopleList({ tenantId, projectIds }: { tenantId?: string; projectIds?: string[] }) {
   const [q, setQ] = useState('')
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(PAGE)
   useEffect(() => { const t = setTimeout(() => { setQuery(q.trim()); setLimit(PAGE) }, 250); return () => clearTimeout(t) }, [q])
-  const list = useApi<Page>(`/api/platform/people?q=${encodeURIComponent(query)}&limit=${limit}`)
+  const list = useApi<Page>(`/api/platform/people?q=${encodeURIComponent(query)}&limit=${limit}${tenantId ? '&tenantId=' + tenantId : ''}`)
   const orgs = useApi<Org[]>('/api/platform/orgs')
   const [adding, setAdding] = useState<Person | 'new' | null>(null)
   const [editing, setEditing] = useState<{ person: Person; m: Membership } | null>(null)
@@ -47,12 +55,14 @@ export default function People() {
   const [reset, setReset] = useState<{ email: string; path: string; note: string } | null>(null)
   const { run } = useAction()
   const { me } = useSession()
-  if (list.error?.status === 403) return <div className="page"><div className="callout bad"><Icon name="shield" />Platform administrators only.</div></div>
+  if (list.error?.status === 403) return <div className="callout bad"><Icon name="shield" />Platform administrators only.</div>
   const people = list.data?.people ?? []
+  const joinable = (orgs.data ?? []).filter(o => !projectIds || projectIds.includes(o.id))
+  const addButton = <button className="btn primary" onClick={() => setAdding('new')}><Icon name="plus" />Add person</button>
   return (
-    <div className="page">
-      <PageHead title="People" subtitle="Everyone with an account, and the organizations they belong to. Changes apply to their sign-in at once."
-        actions={<button className="btn primary" onClick={() => setAdding('new')}><Icon name="plus" />Add person</button>} />
+    <>
+      {tenantId ? <div className="between"><div><h2>People</h2><p className="faint">Everyone in this tenant's projects. Changes apply to their sign-in at once.</p></div>{addButton}</div>
+        : <PageHead title="People" subtitle="Everyone with an account, and the organizations they belong to. Changes apply to their sign-in at once." actions={addButton} />}
       <section className="card">
         <div className="card-pad row" style={{ gap: 8 }}>
           <input type="search" placeholder="Search by name or email" value={q} onChange={e => setQ(e.target.value)} aria-label="Search people" style={{ maxWidth: 360 }} />
@@ -86,7 +96,7 @@ export default function People() {
         {list.data && people.length < list.data.total && <div className="card-pad"><button type="button" className="btn" onClick={() => setLimit(l => l + PAGE)}>Show more</button></div>}
       </section>
 
-      {adding && <AddPerson person={adding === 'new' ? null : adding} orgs={orgs.data ?? []} onClose={() => setAdding(null)} onDone={list.reload} />}
+      {adding && <AddPerson person={adding === 'new' ? null : adding} orgs={joinable} onClose={() => setAdding(null)} onDone={list.reload} />}
       {editing && <ChangeRole {...editing} onClose={() => setEditing(null)} onDone={list.reload} />}
       {removing && <Confirm danger title={`Remove ${removing.person.name} from ${removing.m.name}?`} confirmLabel="Remove"
         text="They lose access to this organization at once. Their account and other organizations are kept."
@@ -96,7 +106,7 @@ export default function People() {
         text={toggling.disabled ? 'They can sign in again with their organizations and roles as before.' : 'They are signed out everywhere and can\'t sign in. Their organizations, roles and history are kept, so switching the account back on restores them.'}
         onClose={() => setToggling(null)} onConfirm={() => run(() => api(`/api/platform/people/${toggling.id}/status`, { method: 'PUT', body: { disabled: !toggling.disabled } }), 'Updated').then(list.reload)} />}
       {reset && <ResetLinkModal who={reset.email} path={reset.path} note={reset.note} onClose={() => setReset(null)} />}
-    </div>
+    </>
   )
 }
 

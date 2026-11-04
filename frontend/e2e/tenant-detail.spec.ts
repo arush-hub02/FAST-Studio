@@ -25,6 +25,11 @@ test('platform admin opens a tenant and moves through its side tabs', async ({ p
   await nav.getByRole('button', { name: 'Configuration' }).click()
   await expect(page.getByText('Configuration scope')).toBeVisible()
 
+  await nav.getByRole('button', { name: 'People' }).click()
+  await expect(page.getByText("Everyone in this tenant's projects.")).toBeVisible()
+  await expect(page.getByText('owner@aurora.test')).toBeVisible()
+  await expect(page.getByText('admin@platform.test')).toHaveCount(0)   // not in this tenant
+
   await nav.getByRole('button', { name: 'Features' }).click()
   await expect(page.locator('h2', { hasText: 'Project features' })).toBeVisible()
   await expect(page).toHaveURL(/tab=features/)

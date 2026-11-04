@@ -2775,7 +2775,7 @@
       "area": "Multi-tenancy",
       "status": "Built (P2, 2026-11-03)",
       "completed": "2026-11-03",
-      "summary": "Platform administrators see everyone with an account and every organization they belong to, add people to any organization with a role, change or remove roles, and switch an account off or on.",
+      "summary": "Platform administrators see everyone with an account and every organization they belong to, add people to any organization with a role, change or remove roles, and switch an account off or on. The tenant page has the same list for one tenant's projects.",
       "who": [
         "Platform administrators"
       ],
@@ -2881,6 +2881,7 @@
       },
       "steps": [
         "Platform administration → People.",
+        "Or open a tenant → People for the people in that tenant's projects only; new memberships there go to its projects.",
         "Search by name or email.",
         "Add person: email, name, organization, role (built-in or one of that organization’s custom roles). New accounts get a one-time password, shown once and emailed.",
         "Click an organization chip to change the role, or × to remove the person from it.",
@@ -2936,6 +2937,34 @@
             }
           ],
           "caption": "Everyone, their organizations and roles, and account status."
+        },
+        {
+          "id": "tenant-people",
+          "account": "platform",
+          "path": "/platform",
+          "steps": [
+            {
+              "click": {
+                "role": "link",
+                "name": "Manage Aurora Media Network"
+              }
+            },
+            {
+              "click": {
+                "role": "button",
+                "name": "People"
+              }
+            },
+            {
+              "waitFor": {
+                "text": "Everyone in this tenant's projects"
+              }
+            },
+            {
+              "wait": 300
+            }
+          ],
+          "caption": "One tenant's people: only its projects' members, and only its projects to add them to."
         }
       ]
     },

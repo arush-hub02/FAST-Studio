@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-03",
+  "generatedAt": "2026-11-04",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -34753,6 +34753,59 @@
         }
       }
     },
+    "GET /api/platform/people/roles": {
+      "title": "Custom roles for one organization",
+      "category": "Platform: organizations, connectors and media types",
+      "id": "ep-get-api-platform-people-roles",
+      "handler": "PlatformPeopleControllerV1.roles",
+      "tables": {
+        "access_role": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "customRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleServiceV1",
+              "method": "platformAssignableRoles",
+              "layer": "service"
+            },
+            {
+              "class": "AccessRoleRepository",
+              "method": "rolesFor",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlatformPeopleControllerV1",
+              "method": "roles",
+              "layer": "controller"
+            },
+            {
+              "class": "PlatformPeopleServiceV1",
+              "method": "customRoles",
+              "layer": "service"
+            },
+            {
+              "class": "PeopleRepository",
+              "method": "joinableKind",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/platform/permissions": {
       "title": "Add a permission",
       "category": "Platform: tenants, projects and plans",
@@ -41729,7 +41782,8 @@
         "PUT /api/platform/orgs/{orgId}/roles",
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/people",
-        "PUT /api/platform/people/{userId}/memberships/{orgId}"
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "GET /api/platform/people/roles"
       ],
       "write": [
         "PUT /api/orgs/{org}/roles",
@@ -41859,6 +41913,7 @@
         "DELETE /api/platform/people/{userId}/memberships/{orgId}",
         "PUT /api/platform/people/{userId}/memberships/{orgId}",
         "PUT /api/platform/people/{userId}/status",
+        "GET /api/platform/people/roles",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
         "PUT /api/platform/permissions/{key}",

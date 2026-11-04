@@ -49,9 +49,9 @@ public class PlatformPeopleServiceV1 {
         this.tx = tx;
     }
 
-    public Page list(String q, int limit, int offset) {
+    public Page list(String q, UUID tenant, int limit, int offset) {
         int[] total = {0};
-        List<Person> page = system(() -> people.page(q == null ? "" : q.trim(), Math.min(Math.max(limit, 1), 200), Math.max(offset, 0), total));
+        List<Person> page = system(() -> people.page(q == null ? "" : q.trim(), tenant, Math.min(Math.max(limit, 1), 200), Math.max(offset, 0), total));
         return new Page(page, total[0]);
     }
 

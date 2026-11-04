@@ -8,6 +8,7 @@ import type { Configuration, Plan, Project } from '../../shared/configuration/ty
 import { OrgConnectors } from './Connectors'
 import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
 import { TenantMediaEntitlements } from './MediaTypes'
+import { PeopleList } from './People'
 
 // One customer tenant, opened from the Tenants list: side tabs for everything the platform manages for it. Tenant-wide
 // tabs (overview, configuration) and project tabs (features, roles, connectors, media types), which work on the
@@ -15,6 +16,7 @@ import { TenantMediaEntitlements } from './MediaTypes'
 const TABS: { key: string; label: string; icon: string; project: boolean }[] = [
   { key: 'overview', label: 'Overview', icon: 'building', project: false },
   { key: 'configuration', label: 'Configuration', icon: 'sliders', project: false },
+  { key: 'people', label: 'People', icon: 'users', project: false },
   { key: 'features', label: 'Features', icon: 'shield', project: true },
   { key: 'roles', label: 'Roles', icon: 'users', project: true },
   { key: 'connectors', label: 'Connectors', icon: 'link', project: true },
@@ -48,6 +50,7 @@ export default function TenantDetail() {
       <div className="stack" style={{ minWidth: 0 }}>
         {tab.key === 'overview' && <Overview id={tenantId} v={v} reload={view.reload} open={p => go({ tab: 'features', project: p })} />}
         {tab.key === 'configuration' && <Configure id={tenantId} v={v} reload={view.reload} />}
+        {tab.key === 'people' && <section className="card card-pad stack"><PeopleList tenantId={v.tenant.id} projectIds={v.projects.map(p => p.id)} /></section>}
         {tab.project && !projectId && <section className="card card-pad faint">Add a project on the Overview tab first.</section>}
         {tab.key === 'features' && projectId && <ProjectFeatures key={projectId} base={`/api/platform/orgs/${projectId}/project-features`} editable platform />}
         {tab.key === 'roles' && projectId && <ProjectRoles key={projectId} base={`/api/platform/orgs/${projectId}/roles`} editable kind="CUSTOMER" />}

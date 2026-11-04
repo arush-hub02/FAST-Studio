@@ -82,7 +82,7 @@ for (const c of data.categories)
   for (const e of c.endpoints) {
     if (e.noExample) { rows.push(['skip', e, 'no example (signed links / webhooks)']); continue }
     let p = e.path.replace(/\{(\w+)\}/g, (m, k) => (e.params && e.params[k]) || PATH[k] || m)
-    const q = Object.entries(e.query || {}).filter(([, x]) => x !== '').map(([k, x]) => k + '=' + encodeURIComponent(x)).join('&')
+    const q = Object.entries(e.query || {}).filter(([, x]) => x !== '').map(([k, x]) => k + '=' + encodeURIComponent(fill(x))).join('&')
     const url = fill(base + p + (q ? '?' + q : ''))
     const body = e.body === undefined ? undefined : JSON.parse(fill(JSON.stringify(e.body)))
     const auth = e.auth === 'none' ? null : tokenFor(c.id)

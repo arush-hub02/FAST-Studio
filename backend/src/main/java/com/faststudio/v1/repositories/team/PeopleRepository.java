@@ -34,14 +34,19 @@ public class PeopleRepository {
               count(*) over () as total
             from app_user u""";
 
-    /** People whose name or email contains q (blank = everyone), by name; deleted (anonymized) accounts are left out. */
-    public List<Person> page(String q, int limit, int offset, int[] total) {
+    /**
+     * People whose name or email contains q (blank = everyone), by name; deleted (anonymized) accounts are left out.
+     * tenant (optional): only people in one of that customer tenant's projects.
+     */
+    public List<Person> page(String q, UUID tenant, int limit, int offset, int[] total) {
         List<Row> rows = db.sql(SELECT + """
 
                 where u.email not like 'deleted-%@deleted.invalid'
                   and (:q = '' or u.email ilike '%' || :q || '%' or u.name ilike '%' || :q || '%')
+                  and (cast(:t as uuid) is null or exists (select 1 from membership m join organization o on o.id = m.org_id
+                       where m.user_id = u.id and o.tenant_id = cast(:t as uuid)))
                 order by lower(u.name), u.email limit :l offset :off""")
-                .param("q", q).param("l", limit).param("off", offset).query(Row.class).list();
+                .param("q", q).param("t", tenant).param("l", limit).param("off", offset).query(Row.class).list();
         total[0] = rows.isEmpty() ? 0 : rows.getFirst().total();
         return rows.stream().map(this::person).toList();
     }

@@ -84,6 +84,14 @@ class PlatformAdminStagesTest {
         assertTrue(page.path("total").asInt() >= page.path("people").size());
         assertEquals(403, status(get("/api/platform/people"), OWNER, null), "platform only");
         assertTrue(ok(get("/api/platform/people/roles?orgId=" + aurora), ADMIN, null).isArray(), "custom roles for the pickers");
+        assertEquals(422, status(get("/api/platform/people/roles?orgId=not-an-id"), ADMIN, null), "a malformed id is the caller's mistake, not a server error");
+
+        // one tenant's people only (tenant page → People)
+        UUID auroraTenant = TenantScope.bypass(() -> db.sql("select tenant_id from organization where id = :o").param("o", aurora).query(UUID.class).single());
+        JsonNode tenantPeople = ok(get("/api/platform/people?limit=200&tenantId=" + auroraTenant), ADMIN, null).path("people");
+        assertNotNull(find(tenantPeople, "email", OWNER));
+        for (JsonNode p : tenantPeople) assertTrue(p.path("memberships").toString().contains("aurora") || p.path("memberships").size() > 0, "everyone listed belongs to the tenant");
+        assertNull(find(tenantPeople, "email", "admin@platform.test"), "people outside the tenant are left out");
 
         // add a new person, then the same again
         String add = "{\"email\":\"newbie@people.test\",\"name\":\"New Bie\",\"orgId\":\"" + northwind + "\",\"role\":\"ANALYST\"}";

@@ -313,7 +313,7 @@ try {
         -RedirectStandardOutput (Join-Path $runtimeDir 'edge.log') -RedirectStandardError (Join-Path $runtimeDir 'edge-error.log')
     $edgeCreatedAt = (Get-ProcessInfo $edge.Id).CreationDate.ToUniversalTime().ToString('o')
     @{ processId = 0; createdAt = ''; docker = [bool]$Docker; pilot = [bool]$Pilot; edgeProcessId = $edge.Id; edgeCreatedAt = $edgeCreatedAt } | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
-    $deadline = (Get-Date).AddSeconds(90)
+    $deadline = (Get-Date).AddSeconds(240)   # wrangler can take over 90 s to load a large persisted edge folder (2026-11-04)
     # Ready when the Worker answers HTTP (any status) or the port shows as listening; the port list alone can come
     # back empty on some Windows setups while the Worker is already serving (2026-11-01).
     $edgeAnswers = {

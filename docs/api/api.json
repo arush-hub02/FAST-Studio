@@ -2493,7 +2493,7 @@
           "method": "GET",
           "path": "/api/platform/people",
           "title": "List people",
-          "description": "Everyone with an account and every organization they belong to, by name. q filters by name or email; limit (up to 200) and offset page through; total counts all matches.",
+          "description": "Everyone with an account and every organization they belong to, by name. q filters by name or email; limit (up to 200) and offset page through; total counts all matches. tenantId limits the list to one tenant's projects (tenant page → People).",
           "query": {
             "q": "aurora",
             "limit": "50",
@@ -2502,7 +2502,8 @@
           "paramHelp": {
             "q": "Part of a name or email (blank = everyone).",
             "limit": "How many people per page, 1 to 200.",
-            "offset": "How many matches to skip, for the next page."
+            "offset": "How many matches to skip, for the next page.",
+            "tenantId": "Optional: only people in one of this customer tenant's projects (an id from List tenants)."
           }
         },
         {
