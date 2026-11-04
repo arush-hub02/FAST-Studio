@@ -1,5 +1,8 @@
 package com.faststudio.v1.services.connectors;
 
+import com.faststudio.v1.repositories.tenancy.CapabilityRepository;
+import com.faststudio.v1.dto.tenancy.CapabilityDto.Capability;
+import java.util.stream.Stream;
 import com.faststudio.v1.core.auth.Auth;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Audit;
@@ -33,9 +36,11 @@ public class ConnectorAdminServiceV1 {
     private final EdgeClient edge;
     private final EdgePublisher publisher;
     private final Audit audit;
+    private final CapabilityRepository capabilities;
 
     public ConnectorAdminServiceV1(ConnectorRepository repository, AdSourceAdminService adSources, TenantConfigurationServiceV1 configuration,
-                                   EdgeClient edge, EdgePublisher publisher, Audit audit) {
+                                   EdgeClient edge, EdgePublisher publisher, Audit audit, CapabilityRepository capabilities) {
+        this.capabilities = capabilities;
         this.repository = repository;
         this.adSources = adSources;
         this.configuration = configuration;
@@ -64,12 +69,15 @@ public class ConnectorAdminServiceV1 {
             List<String> keys = repository.readyMediaKeys(org);
             var storage = new Storage("Cloudflare R2 (via the edge Worker)", edge.configured(), edge.publicUrl(), keys.size(),
                     keys.stream().filter(publisher::stored).count());
-            // Catalogue = every feature key any plan offers, narrowed to what this tenant's plan includes.
-            String allPlanFeatures = configuration.plans().stream().flatMap(p -> p.features().stream()).distinct().collect(Collectors.joining(","));
-            List<FeatureOption> catalog = configuration.effectiveFeatures(org, allPlanFeatures).stream()
-                    .map(f -> new FeatureOption(f, Arrays.stream(Feature.values()).filter(v -> v.name().equals(f)).map(v -> v.label).findFirst().orElse(f)))
-                    .toList();
-            return new Overview(org, o.name(), configuration.effectiveFeatures(org, o.features()), catalog, adSources.list(org, true), storage);
+            // Catalogue = every feature key any plan offers plus enabled global custom features, narrowed to what the
+            // platform may grant this project; labels come from the features catalogue.
+            Map<String, String> names = TenantScope.bypass(capabilities::global).stream().filter(c -> c.kind().equals("FEATURE"))
+                    .collect(Collectors.toMap(Capability::key, c -> c.builtIn() ? c.description() : c.name()));
+            String candidates = Stream.concat(configuration.plans().stream().flatMap(p -> p.features().stream()), names.keySet().stream())
+                    .distinct().collect(Collectors.joining(","));
+            List<FeatureOption> catalog = configuration.grantableFeatures(org, candidates).stream()
+                    .map(f -> new FeatureOption(f, names.getOrDefault(f, f))).toList();
+            return new Overview(org, o.name(), configuration.grantableFeatures(org, o.features()), catalog, adSources.list(org, true), storage);
         });
     }
 

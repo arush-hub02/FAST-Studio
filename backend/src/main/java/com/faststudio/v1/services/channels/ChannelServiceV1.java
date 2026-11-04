@@ -49,17 +49,21 @@ public class ChannelServiceV1 {
         this.audit = audit;
     }
 
+    /** One read-only transaction: every query shares one connection (one tenant stamp) instead of one per query. */
+    @Transactional(readOnly = true)
     public List<ChannelView> list(Tenant t) {
-        return data.channels(t.orgId()).stream().map(c -> view(t, c)).toList();
+        var assets = data.assets(t.orgId());   // once for every channel's guide and fallback title
+        return data.channels(t.orgId()).stream().map(c -> view(t, c, assets)).toList();
     }
 
+    @Transactional(readOnly = true)
     public ChannelView get(Tenant t, UUID id) {
-        return view(t, data.channel(t.orgId(), id));
+        return view(t, data.channel(t.orgId(), id), data.assets(t.orgId()));
     }
 
-    private ChannelView view(Tenant t, Channel c) {
+    private ChannelView view(Tenant t, Channel c, java.util.Map<UUID, Data.Asset> assets) {
         Instant now = Instant.now();
-        var guide = epg.guide(t.orgId(), c, now.minusSeconds(60), now.plusSeconds(12 * 3600));
+        var guide = epg.guide(t.orgId(), c, now.minusSeconds(60), now.plusSeconds(12 * 3600), assets);
         var cur = guide.stream().filter(Programme::now).findFirst().orElse(null);
         var next = guide.stream().filter(p -> p.start().isAfter(now)).findFirst().orElse(null);
         if (cur == null && c.publishedVersionId() != null) {
@@ -72,15 +76,16 @@ public class ChannelServiceV1 {
                         "Commercial", "AD", "#f59e0b", null, activeBreak.start(), activeBreak.end(), 1, true, null, null, null, null);
         }
         Integer version = c.publishedVersionId() == null ? null : schedules.versionNumber(t.orgId(), c.publishedVersionId());
-        String fallback = c.fallbackAssetId() == null ? null : data.asset(t.orgId(), c.fallbackAssetId()).title();
-        return new ChannelView(c, cur, next, data.coverageEnd(t.orgId(), c.publishedVersionId()), version, readiness(t, c), fallback);
+        Data.Asset fb = c.fallbackAssetId() == null ? null : assets.get(c.fallbackAssetId());
+        String fallback = fb == null ? null : fb.title();
+        Instant end = data.coverageEnd(t.orgId(), c.publishedVersionId());
+        return new ChannelView(c, cur, next, end, version, readiness(c, end), fallback);
     }
 
     /** Plain-language reasons the channel can't go live yet (empty = ready). */
-    private List<String> readiness(Tenant t, Channel c) {
+    private List<String> readiness(Channel c, Instant end) {
         List<String> out = new ArrayList<>();
         if (c.territoryList().isEmpty()) out.add("Choose at least one country where the channel is offered");
-        Instant end = data.coverageEnd(t.orgId(), c.publishedVersionId());
         if (c.publishedVersionId() == null) out.add("Publish a schedule");
         else if (end == null || !end.isAfter(Instant.now())) out.add("The published schedule has nothing from now on — auto-fill and publish");
         return out;
@@ -152,7 +157,7 @@ public class ChannelServiceV1 {
     public ChannelView goLive(Tenant t, UUID id) {
         t.require(Tenant.Perm.SCHEDULE_PUBLISH);
         Channel c = data.channel(t.orgId(), id);
-        List<String> blockers = readiness(t, c);
+        List<String> blockers = readiness(c, data.coverageEnd(t.orgId(), c.publishedVersionId()));
         if (!blockers.isEmpty()) throw new ApiException(HttpStatus.CONFLICT, "NOT_READY", "Not ready to go live: " + String.join("; ", blockers) + ".", blockers);
         setStatus(t, c, "LIVE");
         return get(t, id);

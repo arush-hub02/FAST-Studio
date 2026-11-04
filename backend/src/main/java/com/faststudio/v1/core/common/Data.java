@@ -100,14 +100,21 @@ public class Data {
 
     static final String ENTRY_COLS = "id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership";
 
+    /**
+     * Schedule entries are read hundreds at a time (guides, channel lists, playout), so they are mapped by hand: Spring's
+     * reflection-based record mapper was most of a channel request's CPU time (profiled 2026-11-03).
+     */
+    static final org.springframework.jdbc.core.RowMapper<Entry> ENTRY = (rs, n) -> new Entry(rs.getObject(1, UUID.class), rs.getObject(2, UUID.class),
+            rs.getString(3), rs.getObject(4, UUID.class), rs.getLong(5), rs.getObject(6, OffsetDateTime.class), rs.getObject(7, OffsetDateTime.class), rs.getString(8));
+
     public List<Entry> entries(UUID org, UUID versionId) {
         return db.sql("select " + ENTRY_COLS + " from schedule_entry where org_id = :o and version_id = :v order by start_at")
-                .param("o", org).param("v", versionId).query(Entry.class).list();
+                .param("o", org).param("v", versionId).query(ENTRY).list();
     }
 
     public List<Entry> entries(UUID org, UUID versionId, Instant from, Instant to) {
         return db.sql("select " + ENTRY_COLS + " from schedule_entry where org_id = :o and version_id = :v and end_at > :f and start_at < :t order by start_at")
-                .param("o", org).param("v", versionId).param("f", Times.utc(from)).param("t", Times.utc(to)).query(Entry.class).list();
+                .param("o", org).param("v", versionId).param("f", Times.utc(from)).param("t", Times.utc(to)).query(ENTRY).list();
     }
 
     /** Last instant covered by a version, or null when empty. */

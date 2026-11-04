@@ -33,7 +33,7 @@ public class RemoteSource implements IContentSource {
         } catch (ApiException e) {
             return e.getMessage();
         } catch (IOException e) {
-            return "The remote video could not be reached. Verify the address and try again.";
+            throw new MediaServiceV1.Retryable("The remote video could not be reached. It will be tried again; verify the address if this repeats.");
         }
         String err = encodeUrl(url, out, packager);
         return err == null ? null : "The remote video could not be processed. Verify the source and try again.";

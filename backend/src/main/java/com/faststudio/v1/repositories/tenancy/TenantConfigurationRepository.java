@@ -136,6 +136,26 @@ public class TenantConfigurationRepository {
     // ------------------------------------------------------------------ connector grants (project == null means the tenant scope)
 
     /** TRUE/FALSE when the scope has an explicit setting, null when it inherits. */
+    /** Every stored value of one scope by property key (settings screens read them all at once, not one query per property). */
+    public Map<String, String> values(UUID tenant, UUID project) {
+        var q = project == null
+                ? db.sql("select property_key, value from tenant_property_value where tenant_id = :id").param("id", tenant)
+                : db.sql("select property_key, value from project_property_value where org_id = :id").param("id", project);
+        Map<String, String> out = new java.util.HashMap<>();
+        q.query((rs, n) -> out.put(rs.getString(1), rs.getString(2))).list();
+        return out;
+    }
+
+    /** Every connector switch of one scope by connector key. */
+    public Map<String, Boolean> switches(UUID tenant, UUID project) {
+        var q = project == null
+                ? db.sql("select connector_key, enabled from tenant_connector where tenant_id = :id").param("id", tenant)
+                : db.sql("select connector_key, enabled from project_connector where org_id = :id").param("id", project);
+        Map<String, Boolean> out = new java.util.HashMap<>();
+        q.query((rs, n) -> out.put(rs.getString(1), rs.getBoolean(2))).list();
+        return out;
+    }
+
     public Boolean enabled(UUID tenant, UUID project, String key) {
         var q = project == null
                 ? db.sql("select enabled from tenant_connector where tenant_id = :id and connector_key = :k").param("id", tenant)
@@ -166,6 +186,29 @@ public class TenantConfigurationRepository {
                 left join project_connector pc on pc.org_id = o.id and pc.connector_key = c.key
                 where o.id = :p and coalesce(pc.enabled, true)""")
                 .param("p", project).param("d", driver).query(Integer.class).single() > 0;
+    }
+
+    public boolean connectorCategoryExists(String key) {
+        return db.sql("select count(*) from connector_category where key = :k").param("k", key).query(Integer.class).single() > 0;
+    }
+
+    public String projectFeatures(UUID project) {
+        return db.sql("select features from organization where id = :p").param("p", project).query(String.class).optional().orElse("");
+    }
+
+    /** The project's linked feature keys (organization.features, comma-separated). */
+    public void setProjectFeatures(UUID project, String features) {
+        db.sql("update organization set features = :f where id = :p").param("f", features).param("p", project).update();
+    }
+
+    public boolean connectorEnabled(UUID project, String key) {
+        return db.sql("""
+                select count(*) from organization o join customer_tenant t on t.id = o.tenant_id
+                join tenant_connector tc on tc.tenant_id = t.id and tc.enabled
+                join connector_definition c on c.key = tc.connector_key and c.enabled and c.key = :k
+                left join project_connector pc on pc.org_id = o.id and pc.connector_key = c.key
+                where o.id = :p and coalesce(pc.enabled, true)""")
+                .param("p", project).param("k", key).query(Integer.class).single() > 0;
     }
 
     // --- access checks ---

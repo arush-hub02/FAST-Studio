@@ -50,7 +50,7 @@ class CrossTenantMatrixTest {
     @Autowired Tokens tokens;
     @Autowired @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping mapping;
 
-    record Ids(UUID org, UUID channel, UUID asset, UUID adAsset, UUID campaign, UUID entry, UUID destination, UUID user, UUID alert, UUID link, UUID adSource) {}
+    record Ids(UUID org, UUID channel, UUID asset, UUID adAsset, UUID campaign, UUID entry, UUID destination, UUID user, UUID alert, UUID link, UUID adSource, UUID connection) {}
 
     Ids aurora() {
         return TenantScope.bypass(() -> {
@@ -67,9 +67,17 @@ class CrossTenantMatrixTest {
                     db.sql("select id from app_user where email = 'operator@aurora.test'").query(UUID.class).single(),
                     alert,
                     db.sql("select id from partner_link where owner_org_id = :o limit 1").param("o", org).query(UUID.class).single(),
-                    db.sql("insert into ad_source(org_id, name, kind, position) values (:o, 'Direct-sold campaigns', 'DIRECT', 0) on conflict (org_id) where kind = 'DIRECT' do update set name = excluded.name returning id")
-                            .param("o", org).query(UUID.class).single());
+                    db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('direct', :o, 'Direct-sold campaigns', 1) on conflict (org_id) where connector_key = 'direct' do update set name = excluded.name returning id")
+                            .param("o", org).query(UUID.class).single(),
+                    connection(org));
         });
+    }
+
+    /** A VAST connection of the project (marketplace, V26), so /connectors/{key}/{id} has a real target. */
+    UUID connection(UUID org) {
+        return db.sql("select id from connector_instance where org_id = :o and connector_key = 'vast' limit 1").param("o", org).query(UUID.class).optional()
+                .orElseGet(() -> db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('vast', :o, 'Matrix', 1) returning id")
+                        .param("o", org).query(UUID.class).single());
     }
 
     String snapshot(UUID org) {
@@ -83,8 +91,9 @@ class CrossTenantMatrixTest {
                   union all select id || name from destination where org_id = :o
                   union all select id || status from alert where org_id = :o and dedup_key = 'matrix-test'
                   union all select user_id || role from membership where org_id = :o
-                  union all select id || name || enabled || position from ad_source where org_id = :o
-                  union all select id || status || scopes from partner_link where owner_org_id = :o) x""").param("o", org).query(String.class).single());
+                  union all select id || status || scopes from partner_link where owner_org_id = :o
+                  union all select id || name || enabled || position || managed_by from connector_instance where org_id = :o
+                  union all select instance_id || property_key || value from connector_value where org_id = :o) x""").param("o", org).query(String.class).single());
     }
 
     String fill(String pattern, String org, Ids a) {
@@ -102,6 +111,7 @@ class CrossTenantMatrixTest {
                         case "campaigns" -> a.campaign().toString();
                         case "alerts" -> a.alert().toString();
                         case "ad-sources" -> a.adSource().toString();
+                        case "{key}" -> a.connection().toString();
                         default -> fail("No test value for {id} after /" + prev + " in " + pattern);
                     };
                     case "entryId" -> a.entry().toString();
@@ -110,7 +120,7 @@ class CrossTenantMatrixTest {
                     case "destinationId" -> a.destination().toString();
                     case "userId" -> a.user().toString();
                     case "linkId" -> a.link().toString();
-                    case "key" -> "matrix-property";
+                    case "key" -> prev.equals("connectors") ? "vast" : "matrix-property";
                     default -> fail("No test value for path variable {" + name + "} in " + pattern + " — map it so the matrix covers this endpoint");
                 };
             }

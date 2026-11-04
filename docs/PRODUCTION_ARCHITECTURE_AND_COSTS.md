@@ -1,6 +1,25 @@
 # FAST Studio: production architecture, features and budget
 Prepared 31 October 2026 (Asia/Calcutta).
 
+## Delivery decision changed on 3 November 2026 (supersedes the R2 programme delivery below)
+
+The user decided: **programmes play from Mux delivery; ads and slate are ours.**
+- The viewer's manifest is built from the programme's Mux playback (HLS) manifest. FAST Studio stitches ad and slate segments into it at the breaks.
+- Ads (from Google Ad Manager, other VAST ad servers and direct-sold campaigns) and slate are transcoded by FAST Studio, stored in R2 and delivered by the Cloudflare CDN. This part is unchanged from the current code.
+
+What this changes:
+- Programme segments are no longer copied to R2, so Mux delivery is billed per viewer-minute. The 29 October estimate was roughly $34k/month per 1,000 concurrent viewers.
+- **The budget sections below assume R2 programme delivery and must be re-costed with Mux delivery before they are used.**
+- Ad and slate segments must match the programme's Mux renditions (resolution ladder, codecs, audio, GOP/segment alignment), or players stall at the joins. Proving programme → ad → programme transitions on real Mux assets remains the feasibility gate.
+- Mux signed playback, if enabled, needs its tokens issued per viewer session.
+
+**Any video platform, not only Mux (user, 3 November 2026).** Mux is the first online video platform (OVP). JW Player is next, and any other platform (e.g. Brightcove, Watchity) can follow, or several can be combined in one project.
+- Programme delivery must go through the video-platform adapter (`util/mediaProvider/IMediaProvider`, a connector), never through Mux-specific code. Each adapter gains a "playback manifest" capability: the programme's HLS manifest and its renditions.
+- With combined OVPs, each programme asset records which connection it comes from. The Worker then splices ads and slate into that platform's manifest.
+- Today a project uses only its first library connection (`MediaConnectionService.find`). Combined OVPs need one project to hold several library connections.
+
+This is **planned, not implemented**. Today the Worker builds manifests only over R2 media. The plan is docs/OVP_DELIVERY_PLAN.md.
+
 ## Decision and present position
 
 The intended product is a multi-tenant FAST channel operations and monetization platform: upload a licensed catalogue in bulk, prepare media, schedule linear channels, deliver personalized advertising, distribute approved feeds, and report usage and commercial performance.

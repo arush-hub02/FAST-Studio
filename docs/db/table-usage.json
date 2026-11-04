@@ -42,282 +42,927 @@
     "organization": {
       "feature": "Tenants & configuration",
       "purpose": "Every customer project and every partner organization (plus the hidden platform organization). Almost every other table points here through org_id.",
-      "pages": ["/platform", "/platform/partners", "/:org", "/:org/settings"],
-      "apis": ["GET /api/platform/orgs", "POST /api/platform/orgs", "POST /api/platform/orgs/{id}/status", "GET /api/auth/me"],
-      "watch": ["kind CUSTOMER must have tenant_id; PARTNER and PLATFORM must not (check constraint).", "status SUSPENDED blocks management (403 ORG_SUSPENDED) but channels keep playing.", "slug must be unique: creating a project with a used slug returns 409 SLUG_TAKEN."]
+      "pages": [
+        "/platform",
+        "/platform/partners",
+        "/:org",
+        "/:org/settings"
+      ],
+      "apis": [
+        "GET /api/platform/orgs",
+        "POST /api/platform/orgs",
+        "POST /api/platform/orgs/{id}/status",
+        "GET /api/auth/me"
+      ],
+      "watch": [
+        "kind CUSTOMER must have tenant_id; PARTNER and PLATFORM must not (check constraint).",
+        "status SUSPENDED blocks management (403 ORG_SUSPENDED) but channels keep playing.",
+        "slug must be unique: creating a project with a used slug returns 409 SLUG_TAKEN."
+      ]
     },
     "app_user": {
       "feature": "Accounts & sign-in",
       "purpose": "A person who can sign in. Passwords are stored only as hashes.",
-      "pages": ["/login", "/reset-password", "/:org/team", "/platform"],
-      "apis": ["POST /api/auth/login", "GET /api/auth/me", "POST /api/auth/password", "POST /api/orgs/{org}/members"],
-      "watch": ["email is unique and stored lower-case.", "must_change_password = true forces a new password at next sign-in.", "token_version changes sign everyone out of that account."]
+      "pages": [
+        "/login",
+        "/reset-password",
+        "/:org/team",
+        "/platform",
+        "/platform/people"
+      ],
+      "apis": [
+        "POST /api/auth/login",
+        "GET /api/auth/me",
+        "POST /api/auth/password",
+        "POST /api/orgs/{org}/members",
+        "GET /api/platform/people",
+        "PUT /api/platform/people/{userId}/status"
+      ],
+      "watch": [
+        "email is unique and stored lower-case.",
+        "must_change_password = true forces a new password at next sign-in.",
+        "token_version changes sign everyone out of that account.",
+        "disabled_at set = the account is switched off (V29): sign-in refused, token version reads -1 so every token stops, refresh tokens revoked. Clearing it restores access; memberships are kept."
+      ]
     },
     "membership": {
       "feature": "Accounts & sign-in",
       "purpose": "Who belongs to which project or partner organization, and with which role (plus an optional custom role).",
-      "pages": ["/:org/team", "/platform"],
-      "apis": ["GET /api/orgs/{org}/members", "POST /api/orgs/{org}/members", "PATCH /api/orgs/{org}/members/{userId}", "DELETE /api/orgs/{org}/members/{userId}"],
-      "watch": ["No membership row = the person gets 404 for that organization (on purpose).", "custom_role_key must match an enabled access_role of the same kind, or the member falls back to view-only."]
+      "pages": [
+        "/:org/team",
+        "/platform",
+        "/platform/people"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/members",
+        "POST /api/orgs/{org}/members",
+        "PATCH /api/orgs/{org}/members/{userId}",
+        "DELETE /api/orgs/{org}/members/{userId}",
+        "POST /api/platform/people",
+        "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "DELETE /api/platform/people/{userId}/memberships/{orgId}"
+      ],
+      "watch": [
+        "No membership row = the person gets 404 for that organization (on purpose).",
+        "custom_role_key must match an enabled access_role of the same kind, or the member falls back to view-only.",
+        "Index membership_user (V29) serves the per-person lookups made at every sign-in and in the people list."
+      ]
     },
     "refresh_token": {
       "feature": "Accounts & sign-in",
       "purpose": "Sign-in sessions (refresh tokens, stored as hashes) so the browser stays signed in and can be signed out everywhere.",
-      "pages": ["/login"],
-      "apis": ["POST /api/auth/token/refresh", "POST /api/auth/logout", "POST /api/auth/logout-all", "POST /api/auth/token/switch"],
-      "watch": ["revoked_at or replaced_at set = that session can no longer refresh (user must sign in again)."]
+      "pages": [
+        "/login"
+      ],
+      "apis": [
+        "POST /api/auth/token/refresh",
+        "POST /api/auth/logout",
+        "POST /api/auth/logout-all",
+        "POST /api/auth/token/switch"
+      ],
+      "watch": [
+        "revoked_at or replaced_at set = that session can no longer refresh (user must sign in again)."
+      ]
     },
     "password_reset": {
       "feature": "Accounts & sign-in",
       "purpose": "One-time password reset links (only the hash is kept). Expire after 24 hours.",
-      "pages": ["/reset-password", "/:org/team", "/platform/partners"],
-      "apis": ["POST /api/auth/forgot", "POST /api/auth/reset", "POST /api/orgs/{org}/members/{userId}/password-reset", "POST /api/platform/password-reset"],
-      "watch": ["used_at set or expires_at in the past = 'link expired or already used'."]
+      "pages": [
+        "/reset-password",
+        "/:org/team",
+        "/platform/partners"
+      ],
+      "apis": [
+        "POST /api/auth/forgot",
+        "POST /api/auth/reset",
+        "POST /api/orgs/{org}/members/{userId}/password-reset",
+        "POST /api/platform/password-reset"
+      ],
+      "watch": [
+        "used_at set or expires_at in the past = 'link expired or already used'."
+      ]
     },
     "auth_attempt": {
       "feature": "Accounts & sign-in",
       "purpose": "Rate-limit log: one row per counted sign-in failure, reset-email request or bad partner/personal token, per account (email hash) or client address. Shared by all servers; rows older than a day are deleted hourly.",
-      "pages": ["/login", "/reset-password"],
-      "apis": ["POST /api/auth/login", "POST /api/auth/token", "POST /api/auth/forgot", "POST /oauth/token", "Any call with Authorization: Bearer fsp_…"],
-      "watch": ["429 RATE_LIMITED = too many rows in the window for that bucket (login-email 5/5 min, login-ip 20/15 min, forgot-ip 10/h, client-ip 20/15 min; token-ip is only logged, never blocks).", "To unlock someone early, delete their rows (bucket = limit name + ':' + key)."]
+      "pages": [
+        "/login",
+        "/reset-password"
+      ],
+      "apis": [
+        "POST /api/auth/login",
+        "POST /api/auth/token",
+        "POST /api/auth/forgot",
+        "POST /oauth/token",
+        "Any call with Authorization: Bearer fsp_…"
+      ],
+      "watch": [
+        "429 RATE_LIMITED = too many rows in the window for that bucket (login-email 5/5 min, login-ip 20/15 min, forgot-ip 10/h, client-ip 20/15 min; token-ip is only logged, never blocks).",
+        "To unlock someone early, delete their rows (bucket = limit name + ':' + key)."
+      ]
     },
     "personal_access_token": {
       "feature": "Accounts & sign-in",
       "purpose": "Personal access tokens people create on their profile for scripts and MCP clients: one organization (or the platform), a role ceiling and an optional expiry. Only the token's SHA-256 hash is kept.",
-      "pages": ["/:org (profile, API Tokens tab)", "/platform (profile, API Tokens tab)"],
-      "apis": ["GET /api/auth/personal-tokens", "POST /api/auth/personal-tokens", "DELETE /api/auth/personal-tokens/{id}", "Any call with Authorization: Bearer fsp_…"],
-      "watch": ["401 with a fsp_ token = revoked_at set, expires_at passed, the owner left the organization or is no longer a platform admin.", "org_id null = platform scope (role_key PLATFORM_ADMIN)."]
+      "pages": [
+        "/:org (profile, API Tokens tab)",
+        "/platform (profile, API Tokens tab)"
+      ],
+      "apis": [
+        "GET /api/auth/personal-tokens",
+        "POST /api/auth/personal-tokens",
+        "DELETE /api/auth/personal-tokens/{id}",
+        "Any call with Authorization: Bearer fsp_…"
+      ],
+      "watch": [
+        "401 with a fsp_ token = revoked_at set, expires_at passed, the owner left the organization or is no longer a platform admin.",
+        "org_id null = platform scope (role_key PLATFORM_ADMIN)."
+      ]
     },
     "customer_tenant": {
       "feature": "Tenants & configuration",
       "purpose": "A customer account. Owns one or more projects, has a subscription plan and status.",
-      "pages": ["/platform", "/:org/settings"],
-      "apis": ["GET /api/platform/tenants", "PUT /api/platform/tenants/{tenant}/subscription", "POST /api/platform/tenants/{tenant}/status", "POST /api/platform/tenants/{tenant}/projects"],
-      "watch": ["status SUSPENDED suspends every project of the tenant.", "revision is an edit counter: a stale screen gets 409 STALE_CONFIGURATION."]
+      "pages": [
+        "/platform",
+        "/:org/settings"
+      ],
+      "apis": [
+        "GET /api/platform/tenants",
+        "PUT /api/platform/tenants/{tenant}/subscription",
+        "POST /api/platform/tenants/{tenant}/status",
+        "POST /api/platform/tenants/{tenant}/projects"
+      ],
+      "watch": [
+        "status SUSPENDED suspends every project of the tenant.",
+        "revision is an edit counter: a stale screen gets 409 STALE_CONFIGURATION."
+      ]
     },
     "subscription_plan": {
       "feature": "Tenants & configuration",
       "purpose": "Plans the platform sells: how many projects and channels a tenant may have, and which feature switches are included.",
-      "pages": ["/platform/configuration", "/platform"],
-      "apis": ["GET /api/platform/plans", "PUT /api/platform/plans"],
-      "watch": ["Channel creation fails with 409 PLAN_LIMIT when the tenant uses max_channels across all projects.", "A plan cannot be reduced below a tenant's current usage (409 PLAN_IN_USE)."]
+      "pages": [
+        "/platform/configuration",
+        "/platform"
+      ],
+      "apis": [
+        "GET /api/platform/plans",
+        "PUT /api/platform/plans"
+      ],
+      "watch": [
+        "Channel creation fails with 409 PLAN_LIMIT when the tenant uses max_channels across all projects.",
+        "A plan cannot be reduced below a tenant's current usage (409 PLAN_IN_USE)."
+      ]
     },
     "connector_definition": {
       "feature": "Tenants & configuration",
-      "purpose": "Connectors the platform offers (Mux, VAST, R2, or custom ones).",
-      "pages": ["/platform/configuration"],
-      "apis": ["GET /api/platform/connector-definitions", "PUT /api/platform/connector-definitions"],
-      "watch": ["enabled = false switches the connector off for everyone.", "driver cannot change after creation."]
+      "purpose": "Connectors the platform offers (Mux, VAST, R2, or custom ones), with their marketplace details: status, who may connect them, the permission needed to see them, level and whether a project can add several.",
+      "pages": [
+        "/platform/configuration"
+      ],
+      "apis": [
+        "GET /api/platform/connector-definitions",
+        "PUT /api/platform/connector-definitions",
+        "GET /api/platform/connector-catalogue",
+        "PUT /api/platform/connector-definitions/{key}/details"
+      ],
+      "watch": [
+        "enabled = false switches the connector off for everyone.",
+        "driver cannot change after creation.",
+        "status UNPUBLISHED hides it from every project; UPCOMING shows it but it can't be connected.",
+        "category must be a key in connector_category."
+      ]
     },
     "tenant_connector": {
       "feature": "Tenants & configuration",
       "purpose": "Which connectors the platform granted to each tenant.",
-      "pages": ["/platform", "/:org/settings"],
-      "apis": ["PUT /api/platform/tenants/{tenant}/connectors/{key}"],
-      "watch": ["No row or enabled = false: the tenant's projects cannot use the connector (403 CONNECTOR_DISABLED)."]
+      "pages": [
+        "/platform",
+        "/:org/settings"
+      ],
+      "apis": [
+        "PUT /api/platform/tenants/{tenant}/connectors/{key}"
+      ],
+      "watch": [
+        "No row or enabled = false: the tenant's projects cannot use the connector (403 CONNECTOR_DISABLED)."
+      ]
     },
     "project_connector": {
       "feature": "Tenants & configuration",
       "purpose": "A project's own opt-in/opt-out of a connector its tenant has. No row = follows the tenant.",
-      "pages": ["/:org/settings", "/platform"],
-      "apis": ["PUT /api/orgs/{org}/configuration/connectors/{key}", "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}"],
-      "watch": ["enabled = false here disables e.g. library sync for just this project."]
+      "pages": [
+        "/:org/settings",
+        "/platform"
+      ],
+      "apis": [
+        "PUT /api/orgs/{org}/configuration/connectors/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}"
+      ],
+      "watch": [
+        "enabled = false here disables e.g. library sync for just this project."
+      ]
     },
     "property_definition": {
       "feature": "Tenants & configuration",
       "purpose": "Typed settings the platform defines (custom properties and built-ins like premiere time), with an optional global default.",
-      "pages": ["/platform/configuration", "/:org/settings"],
-      "apis": ["GET /api/platform/property-definitions", "PUT /api/platform/property-definitions"],
-      "watch": ["Built-in keys (programming.premiere_time, programming.weekdays, ads.personalized) cannot be disabled.", "Secret defaults are encrypted and never shown."]
+      "pages": [
+        "/platform/configuration",
+        "/:org/settings"
+      ],
+      "apis": [
+        "GET /api/platform/property-definitions",
+        "PUT /api/platform/property-definitions"
+      ],
+      "watch": [
+        "Built-in keys (programming.premiere_time, programming.weekdays, ads.personalized) cannot be disabled.",
+        "Secret defaults are encrypted and never shown."
+      ]
     },
     "tenant_property_value": {
       "feature": "Tenants & configuration",
       "purpose": "A tenant's value for a property; projects inherit it unless they override.",
-      "pages": ["/:org/settings", "/platform"],
-      "apis": ["PUT /api/orgs/{org}/tenant-settings/properties/{key}", "PUT /api/platform/tenants/{tenant}/properties/{key}"],
-      "watch": ["Values are JSON text (\"20:00\" with quotes for text, true/false for yes/no)."]
+      "pages": [
+        "/:org/settings",
+        "/platform"
+      ],
+      "apis": [
+        "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
+        "PUT /api/platform/tenants/{tenant}/properties/{key}"
+      ],
+      "watch": [
+        "Values are JSON text (\"20:00\" with quotes for text, true/false for yes/no)."
+      ]
     },
     "project_property_value": {
       "feature": "Tenants & configuration",
       "purpose": "A project's own override of a property.",
-      "pages": ["/:org/settings", "/platform"],
-      "apis": ["PUT /api/orgs/{org}/configuration/properties/{key}", "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}"],
-      "watch": ["Delete the row to go back to the tenant/global value."]
+      "pages": [
+        "/:org/settings",
+        "/platform"
+      ],
+      "apis": [
+        "PUT /api/orgs/{org}/configuration/properties/{key}",
+        "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}"
+      ],
+      "watch": [
+        "Delete the row to go back to the tenant/global value."
+      ]
     },
     "access_role": {
       "feature": "Tenants & configuration",
-      "purpose": "Custom roles the platform defines for customer projects or partner organizations, always within a built-in role.",
-      "pages": ["/platform/configuration", "/:org/team"],
-      "apis": ["GET /api/platform/access-roles", "PUT /api/platform/access-roles", "GET /api/orgs/{org}/members/roles"],
-      "watch": ["enabled = false: members with this role can only view."]
+      "purpose": "Custom roles, always within a built-in role (the ceiling): global ones defined by the platform (org_id empty) or a project's own (org_id set, V25). Built-in permissions stay within the ceiling; custom permissions from the catalogue can be added.",
+      "pages": [
+        "/platform/configuration",
+        "/:org/team"
+      ],
+      "apis": [
+        "GET /api/platform/access-roles",
+        "PUT /api/platform/access-roles",
+        "GET /api/orgs/{org}/members/roles",
+        "GET /api/orgs/{org}/roles",
+        "PUT /api/orgs/{org}/roles",
+        "DELETE /api/orgs/{org}/roles/{key}",
+        "PATCH /api/orgs/{org}/members/{userId}"
+      ],
+      "watch": [
+        "enabled = false: members with this role can only view.",
+        "key is unique across global and project roles (409 KEY_TAKEN).",
+        "A project role can't be removed while a member holds it (409 IN_USE).",
+        "Rows with org_id are hidden from other projects by row-level security."
+      ]
+    },
+    "module": {
+      "feature": "Tenants & configuration",
+      "purpose": "Top level of the features and permissions catalogue (e.g. Media, Advertising). The role editor shows one tab per module.",
+      "pages": [
+        "/platform/configuration",
+        "/:org/settings",
+        "/:org/team"
+      ],
+      "apis": [
+        "GET /api/platform/catalogue",
+        "POST /api/platform/modules",
+        "PUT /api/platform/modules/{key}",
+        "DELETE /api/platform/modules/{key}",
+        "GET /api/orgs/{org}/features"
+      ],
+      "watch": [
+        "A module with feature groups can't be removed (409 IN_USE)."
+      ]
+    },
+    "feature_group": {
+      "feature": "Tenants & configuration",
+      "purpose": "A group of features inside a module. Projects search features by group; the role editor shows one tab per group. Unpublished groups are hidden from projects.",
+      "pages": [
+        "/platform/configuration",
+        "/:org/settings",
+        "/:org/team"
+      ],
+      "apis": [
+        "GET /api/platform/catalogue",
+        "POST /api/platform/feature-groups",
+        "PUT /api/platform/feature-groups/{key}",
+        "DELETE /api/platform/feature-groups/{key}",
+        "GET /api/orgs/{org}/features"
+      ],
+      "watch": [
+        "A group with features can't be removed (409 IN_USE).",
+        "published = false: its features aren't offered to projects."
+      ]
+    },
+    "feature_permission": {
+      "feature": "Tenants & configuration",
+      "purpose": "Which permissions each feature uses: how the role editor shows permissions under their feature.",
+      "pages": [
+        "/platform/configuration",
+        "/:org/team"
+      ],
+      "apis": [
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}",
+        "GET /api/platform/catalogue",
+        "GET /api/orgs/{org}/roles"
+      ],
+      "watch": [
+        "Rows go with the feature or permission (on delete cascade).",
+        "Permissions no feature uses appear under \"Other\" in the role editor."
+      ]
     },
     "tenant_settings": {
       "feature": "Media library",
       "purpose": "Per-project media settings: enabled media types, default type and the viewer integration key. (Premiere time, weekdays and personalized ads moved to properties in V15; those columns are kept only for rollback.)",
-      "pages": ["/:org/settings"],
-      "apis": ["GET /api/orgs/{org}/settings", "PUT /api/orgs/{org}/settings", "POST /api/orgs/{org}/settings/viewer-key"],
-      "watch": ["revision mismatch on save = 409 STALE (someone else saved first)."]
+      "pages": [
+        "/:org/settings"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/settings",
+        "PUT /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/viewer-key"
+      ],
+      "watch": [
+        "revision mismatch on save = 409 STALE (someone else saved first)."
+      ]
     },
     "media_type": {
       "feature": "Media library",
       "purpose": "The platform's list of media types (Movie, Episode, Short, Ad, Promo…) and how each is scheduled.",
-      "pages": ["/platform/media-types", "/:org/settings", "/:org/library"],
-      "apis": ["GET /api/platform/media-types", "POST /api/platform/media-types", "PUT /api/platform/orgs/{orgId}/media-types"],
-      "watch": ["A type not enabled for the project gives 'This media type is not enabled for your company.'"]
+      "pages": [
+        "/platform/media-types",
+        "/:org/settings",
+        "/:org/library"
+      ],
+      "apis": [
+        "GET /api/platform/media-types",
+        "POST /api/platform/media-types",
+        "PUT /api/platform/orgs/{orgId}/media-types"
+      ],
+      "watch": [
+        "A type not enabled for the project gives 'This media type is not enabled for your company.'",
+        "asset.media_type no longer has a foreign key to this table (V29): it may also hold a project type key (project_media_type). Keys never collide: the platform refuses a key a project uses and vice versa."
+      ]
     },
     "asset": {
       "feature": "Media library",
       "purpose": "Every video and ad creative of a project: metadata, cue points, processing status and where its media lives.",
-      "pages": ["/:org/library", "/:org/schedule", "/:org/ads", "/:org/rights", "/:org"],
-      "apis": ["GET /api/orgs/{org}/assets", "POST /api/orgs/{org}/assets", "PATCH /api/orgs/{org}/assets/{id}", "POST /api/orgs/{org}/assets/{id}/upload", "POST /api/orgs/{org}/library/sync"],
-      "watch": ["status PROCESSING for a long time = check the app log for ffmpeg errors.", "status FAILED: status_detail says why.", "Episodes must have unique series + season + episode (409 DUPLICATE_EPISODE).", "Archive is blocked while the video is used (409 IN_USE)."]
+      "pages": [
+        "/:org/library",
+        "/:org/schedule",
+        "/:org/ads",
+        "/:org/rights",
+        "/:org"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/library/sync"
+      ],
+      "watch": [
+        "status PROCESSING for a long time = look at its media_job rows (state, attempts, last_error) and the app log for ffmpeg errors.",
+        "status FAILED: status_detail says why.",
+        "Episodes must have unique series + season + episode (409 DUPLICATE_EPISODE).",
+        "Archive is blocked while the video is used (409 IN_USE)."
+      ]
     },
-    "mux_account": {
+    "media_job": {
       "feature": "Media library",
-      "purpose": "A project's video library (Mux) connection. Token values are encrypted and never returned to the browser.",
-      "pages": ["/platform/connectors", "/:org/library"],
-      "apis": ["GET /api/platform/orgs/{orgId}/connectors/mux", "PUT /api/platform/orgs/{orgId}/connectors/mux", "POST /hooks/mux/{org}"],
-      "watch": ["No row = 409 LIBRARY_NOT_CONNECTED on sync.", "webhook_secret missing = Mux webhooks get 404."]
+      "purpose": "Background work on a video (packaging into 5-second segments). Written together with the change that needs it; workers on any server take one row each, keep a lease alive and publish only while their fence still matches.",
+      "pages": [
+        "/:org/library"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/assets/{id}/jobs",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "POST /api/orgs/{org}/library/sync"
+      ],
+      "watch": [
+        "Only one QUEUED/RUNNING/CANCEL_REQUESTED row per video (media_job_one_active); a second enqueue does nothing.",
+        "RUNNING with lease_until in the past = its server stopped; the reaper re-queues it within a minute.",
+        "QUEUED with next_run_at in the future = waiting for a retry (1, 5, 25, 125 minutes); FAILED after max_attempts.",
+        "A project runs at most 2 programme jobs at once (faststudio.media.jobs-per-project); the rest wait.",
+        "Finished rows are deleted after 30 days."
+      ]
+    },
+    "media_connection": {
+      "feature": "Media library",
+      "purpose": "A project's video-library sync state: which provider ('mux' today) and where the library sync stands (checkpoint, counts, start and finish of the last full scan). Since V27 the credentials and the connection check live in the project's connector connection (connector_instance / connector_value, connector 'mux').",
+      "pages": [
+        "/platform/connectors",
+        "/:org/library"
+      ],
+      "apis": [
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/sync",
+        "POST /hooks/mux/{org}"
+      ],
+      "watch": [
+        "No connector connection with a token id and secret = 409 LIBRARY_NOT_CONNECTED on sync.",
+        "The row is created when a connection is first found, so a library connected from the marketplace can sync.",
+        "sync_cursor set while a sync is unfinished: the next run continues from that page. sync_finished_at null = the last full scan hasn't completed."
+      ]
+    },
+    "capability": {
+      "feature": "Tenants & configuration",
+      "purpose": "Features and permissions, global only since V25 (org_id stays empty). A FEATURE belongs to a feature group (group_key), may be default, hidden or beta, and is switched on per project; a PERMISSION is given through roles. Built-in rows mirror what the server enforces. Screens check them with org.has / org.can.",
+      "pages": [
+        "/platform/configuration",
+        "/:org/settings",
+        "/:org/team"
+      ],
+      "apis": [
+        "GET /api/platform/catalogue",
+        "POST /api/platform/features",
+        "PUT /api/platform/features/{key}",
+        "DELETE /api/platform/features/{key}",
+        "POST /api/platform/permissions",
+        "PUT /api/platform/permissions/{key}",
+        "DELETE /api/platform/permissions/{key}",
+        "GET /api/orgs/{org}/features",
+        "PUT /api/orgs/{org}/features/{key}",
+        "GET /api/orgs/{org}/project-details",
+        "PUT /api/platform/orgs/{orgId}/features"
+      ],
+      "watch": [
+        "key is unique across features and permissions (409 KEY_TAKEN).",
+        "built_in rows can't be removed or switched off (409 BUILT_IN); built-in features are switched on per project by the platform only (409 PLATFORM_ONLY).",
+        "A FEATURE is on for a project when organization.features lists it (built-in ones also need the tenant's plan).",
+        "Custom PERMISSION rows go to OWNER/ADMIN and to roles listing them; they grant no server access by themselves."
+      ]
+    },
+    "asset_source": {
+      "feature": "Media library",
+      "purpose": "Which library video each imported video came from (provider + external id) and what the library last said about it (READY, PREPARING, ERRORED, DELETED, MISSING). Separate from our own readiness (asset.status); re-sync updates this row, never the video's own title, episode or rights.",
+      "pages": [
+        "/:org/library"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/library/sync",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /hooks/mux/{org}",
+        "POST /api/orgs/{org}/assets/{id}/upload"
+      ],
+      "watch": [
+        "One row per (project, provider, external id): a library video is never imported twice.",
+        "MISSING = not seen by the last complete full scan; DELETED = the library's webhook said so. The local video and its prepared media stay.",
+        "A local file upload replaces the library source and removes this row.",
+        "Prepare refuses videos whose row isn't READY (NOT_READY_IN_LIBRARY)."
+      ]
     },
     "rights_policy": {
       "feature": "Rights",
       "purpose": "Where (countries) and when (licence window) each video may play, and whether ads are allowed.",
-      "pages": ["/:org/rights", "/:org/library", "/:org/schedule"],
-      "apis": ["PUT /api/orgs/{org}/assets/{id}/rights", "POST /api/orgs/{org}/rights/check"],
-      "watch": ["No row = rights status MISSING; empty allowed_countries = INCOMPLETE.", "valid_until in the past = EXPIRED (schedule validation reports it)."]
+      "pages": [
+        "/:org/rights",
+        "/:org/library",
+        "/:org/schedule"
+      ],
+      "apis": [
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/rights/check"
+      ],
+      "watch": [
+        "No row = rights status MISSING; empty allowed_countries = INCOMPLETE.",
+        "valid_until in the past = EXPIRED (schedule validation reports it)."
+      ]
     },
     "channel": {
       "feature": "Channels & schedules",
       "purpose": "A linear channel of a project: look, countries, ad load, fallback video and which schedule version is on air.",
-      "pages": ["/:org/channels", "/:org/schedule", "/:org/watch", "/:org/guide", "/:org"],
-      "apis": ["GET /api/orgs/{org}/channels", "POST /api/orgs/{org}/channels", "PATCH /api/orgs/{org}/channels/{id}", "POST /api/orgs/{org}/channels/{id}/go-live"],
-      "watch": ["published_version_id empty = nothing published, channel cannot go live.", "status LIVE is required to start playback (409 NOT_LIVE)."]
+      "pages": [
+        "/:org/channels",
+        "/:org/schedule",
+        "/:org/watch",
+        "/:org/guide",
+        "/:org"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/channels",
+        "POST /api/orgs/{org}/channels",
+        "PATCH /api/orgs/{org}/channels/{id}",
+        "POST /api/orgs/{org}/channels/{id}/go-live"
+      ],
+      "watch": [
+        "published_version_id empty = nothing published, channel cannot go live.",
+        "status LIVE is required to start playback (409 NOT_LIVE)."
+      ]
     },
     "schedule_version": {
       "feature": "Channels & schedules",
       "purpose": "Schedule versions of a channel: number 0 is the editable draft, 1..n are published (immutable).",
-      "pages": ["/:org/schedule"],
-      "apis": ["GET /api/orgs/{org}/channels/{id}/schedule", "POST /api/orgs/{org}/channels/{id}/schedule/publish", "POST /api/orgs/{org}/channels/{id}/schedule/restore"],
-      "watch": ["revision is the draft's edit counter: a stale editor gets 412 STALE.", "Exactly one version per channel should have status PUBLISHED."]
+      "pages": [
+        "/:org/schedule"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/channels/{id}/schedule",
+        "POST /api/orgs/{org}/channels/{id}/schedule/publish",
+        "POST /api/orgs/{org}/channels/{id}/schedule/restore"
+      ],
+      "watch": [
+        "revision is the draft's edit counter: a stale editor gets 412 STALE.",
+        "Exactly one version per channel should have status PUBLISHED."
+      ]
     },
     "schedule_entry": {
       "feature": "Channels & schedules",
       "purpose": "Items of a schedule version: programmes and ad breaks with exact start and end times.",
-      "pages": ["/:org/schedule", "/:org/guide", "/:org/watch", "/:org/channels"],
-      "apis": ["POST /api/orgs/{org}/channels/{id}/schedule/autofill", "POST /api/orgs/{org}/channels/{id}/schedule/entries", "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}", "GET /api/orgs/{org}/channels/{id}/epg"],
-      "watch": ["Overlapping entries or gaps are reported by schedule validation, not by the database.", "Times are UTC in the database; the screens show the channel's timezone."]
+      "pages": [
+        "/:org/schedule",
+        "/:org/guide",
+        "/:org/watch",
+        "/:org/channels"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "GET /api/orgs/{org}/channels/{id}/epg"
+      ],
+      "watch": [
+        "Overlapping entries or gaps are reported by schedule validation, not by the database.",
+        "Times are UTC in the database; the screens show the channel's timezone."
+      ]
     },
     "programming_rule": {
       "feature": "Smart programming",
       "purpose": "Rules like 'air series X daily at 20:00 on weekdays, from season 1 episode 1'.",
-      "pages": ["/:org/schedule"],
-      "apis": ["GET /api/orgs/{org}/channels/{id}/programming", "POST /api/orgs/{org}/channels/{id}/programming", "POST /api/orgs/{org}/channels/{id}/programming/generate"],
-      "watch": ["enabled = false pauses the rule; existing placements stay in the draft."]
+      "pages": [
+        "/:org/schedule"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/channels/{id}/programming",
+        "POST /api/orgs/{org}/channels/{id}/programming",
+        "POST /api/orgs/{org}/channels/{id}/programming/generate"
+      ],
+      "watch": [
+        "enabled = false pauses the rule; existing placements stay in the draft."
+      ]
     },
     "programming_occurrence": {
       "feature": "Smart programming",
       "purpose": "Which episode a rule placed on which date, so the next run continues the sequence.",
-      "pages": ["/:org/schedule"],
-      "apis": ["POST /api/orgs/{org}/channels/{id}/programming/generate"],
-      "watch": ["One row per rule and date (primary key): generating the same date twice is refused."]
-    },
-    "ad_source": {
-      "feature": "Advertising",
-      "purpose": "A project's ad demand waterfall: direct-sold campaigns and external VAST ad servers, in order.",
-      "pages": ["/platform/connectors", "/:org/ads"],
-      "apis": ["GET /api/orgs/{org}/ad-sources", "POST /api/platform/orgs/{orgId}/ad-sources", "POST /api/platform/orgs/{orgId}/ad-sources/order"],
-      "watch": ["kind VAST needs a tag_url (check constraint).", "Platform-managed tag URLs are never shown to the project."]
+      "pages": [
+        "/:org/schedule"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/channels/{id}/programming/generate"
+      ],
+      "watch": [
+        "One row per rule and date (primary key): generating the same date twice is refused."
+      ]
     },
     "campaign": {
       "feature": "Advertising",
       "purpose": "Direct-sold ad campaigns: creative, dates, countries, priority, CPM, audiences and frequency cap.",
-      "pages": ["/:org/ads", "/:org/analytics", "/:org"],
-      "apis": ["GET /api/orgs/{org}/campaigns", "POST /api/orgs/{org}/campaigns", "PUT /api/orgs/{org}/campaigns/{id}", "POST /api/orgs/{org}/campaigns/{id}/status"],
-      "watch": ["The creative must be a READY asset of kind AD.", "Only ACTIVE campaigns inside their dates are eligible."]
+      "pages": [
+        "/:org/ads",
+        "/:org/analytics",
+        "/:org"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/campaigns",
+        "POST /api/orgs/{org}/campaigns",
+        "PUT /api/orgs/{org}/campaigns/{id}",
+        "POST /api/orgs/{org}/campaigns/{id}/status"
+      ],
+      "watch": [
+        "The creative must be a READY asset of kind AD.",
+        "Only ACTIVE campaigns inside their dates are eligible."
+      ]
     },
     "ad_decision": {
       "feature": "Advertising",
       "purpose": "The stored ad decision for one viewer session and one ad break, so every request for that break gets the same ads.",
-      "pages": ["/:org/watch"],
-      "apis": ["GET /play/{session}/decisions/{breakId}"],
-      "watch": ["One row per session and break (primary key)."]
+      "pages": [
+        "/:org/watch"
+      ],
+      "apis": [
+        "GET /play/{session}/decisions/{breakId}"
+      ],
+      "watch": [
+        "One row per session and break (primary key)."
+      ]
     },
     "ad_event": {
       "feature": "Advertising",
       "purpose": "Ad delivery events (impression, quartiles, complete, slate) used for analytics and partner delivery reports.",
-      "pages": ["/:org/analytics", "/:org/ads", "/:org/watch", "/:org"],
-      "apis": ["POST /play/{session}/beacons", "GET /api/orgs/{org}/analytics"],
-      "watch": ["A COMPLETE only counts when the IMPRESSION of the same session/break/campaign also exists."]
+      "pages": [
+        "/:org/analytics",
+        "/:org/ads",
+        "/:org/watch",
+        "/:org"
+      ],
+      "apis": [
+        "POST /play/{session}/beacons",
+        "GET /api/orgs/{org}/analytics"
+      ],
+      "watch": [
+        "A COMPLETE only counts when the IMPRESSION of the same session/break/campaign also exists."
+      ]
     },
     "playback_session": {
       "feature": "Playback",
       "purpose": "One row per viewer who started watching a channel: country, destination, ad mode and (with consent) viewer audiences.",
-      "pages": ["/:org/watch", "/:org/analytics", "/:org"],
-      "apis": ["POST /play/sessions", "GET /play/{session}/info", "POST /play/{session}/privacy/contextual"],
-      "watch": ["personalized_until in the past = only contextual ads."]
+      "pages": [
+        "/:org/watch",
+        "/:org/analytics",
+        "/:org"
+      ],
+      "apis": [
+        "POST /play/sessions",
+        "GET /play/{session}/info",
+        "POST /play/{session}/privacy/contextual"
+      ],
+      "watch": [
+        "personalized_until in the past = only contextual ads."
+      ]
     },
     "destination": {
       "feature": "Distribution & partners",
       "purpose": "Where a project's channels are delivered (its own web player or partner TV platforms) and their ad rules.",
-      "pages": ["/:org/distribution", "/:org/partners"],
-      "apis": ["GET /api/orgs/{org}/destinations", "POST /api/orgs/{org}/destinations"],
-      "watch": ["Every project gets a 'Web player' destination when it is created."]
+      "pages": [
+        "/:org/distribution",
+        "/:org/partners"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/destinations",
+        "POST /api/orgs/{org}/destinations"
+      ],
+      "watch": [
+        "Every project gets a 'Web player' destination when it is created."
+      ]
     },
     "publication": {
       "feature": "Distribution & partners",
       "purpose": "Delivery attempts of a channel to a destination, with the result of the pre-flight checks.",
-      "pages": ["/:org/distribution"],
-      "apis": ["POST /api/orgs/{org}/channels/{channelId}/distribute/{destinationId}"],
-      "watch": ["simulated = true: no real partner was contacted."]
+      "pages": [
+        "/:org/distribution"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/channels/{channelId}/distribute/{destinationId}"
+      ],
+      "watch": [
+        "simulated = true: no real partner was contacted."
+      ]
     },
     "partner_link": {
       "feature": "Distribution & partners",
       "purpose": "A project sharing channels and data scopes with a partner organization (invited, active or revoked).",
-      "pages": ["/:org/partners", "/platform/partners"],
-      "apis": ["GET /api/orgs/{org}/partners", "POST /api/orgs/{org}/partners", "POST /api/orgs/{org}/partners/{linkId}/revoke", "POST /api/partners/{partner}/links/{linkId}/accept"],
-      "watch": ["status INVITED: the partner sees nothing until a partner admin accepts.", "Only one non-revoked sharing per project and partner (409 ALREADY_SHARED)."]
+      "pages": [
+        "/:org/partners",
+        "/platform/partners"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/partners",
+        "POST /api/orgs/{org}/partners",
+        "POST /api/orgs/{org}/partners/{linkId}/revoke",
+        "POST /api/partners/{partner}/links/{linkId}/accept"
+      ],
+      "watch": [
+        "status INVITED: the partner sees nothing until a partner admin accepts.",
+        "Only one non-revoked sharing per project and partner (409 ALREADY_SHARED)."
+      ]
     },
     "partner_link_channel": {
       "feature": "Distribution & partners",
       "purpose": "Which channels a sharing includes (only when it is not 'all channels').",
-      "pages": ["/:org/partners"],
-      "apis": ["POST /api/orgs/{org}/partners", "PUT /api/orgs/{org}/partners/{linkId}"],
-      "watch": ["Empty for an 'all channels' sharing."]
+      "pages": [
+        "/:org/partners"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/partners",
+        "PUT /api/orgs/{org}/partners/{linkId}"
+      ],
+      "watch": [
+        "Empty for an 'all channels' sharing."
+      ]
     },
     "api_client": {
       "feature": "Distribution & partners",
       "purpose": "Machine access for partner organizations: a client id and a hashed secret exchanged for short-lived tokens.",
-      "pages": ["/:org/api"],
-      "apis": ["GET /api/partners/{partner}/clients", "POST /api/partners/{partner}/clients", "POST /oauth/token"],
-      "watch": ["revoked_at set = token requests fail with invalid_client."]
+      "pages": [
+        "/:org/api"
+      ],
+      "apis": [
+        "GET /api/partners/{partner}/clients",
+        "POST /api/partners/{partner}/clients",
+        "POST /oauth/token"
+      ],
+      "watch": [
+        "revoked_at set = token requests fail with invalid_client."
+      ]
     },
     "alert": {
       "feature": "Monitoring & audit",
       "purpose": "Problems the platform found (failed deliveries, expiring rights, processing failures…), with a suggested fix.",
-      "pages": ["/:org/monitoring", "/:org"],
-      "apis": ["GET /api/orgs/{org}/alerts", "POST /api/orgs/{org}/alerts/{id}/resolve", "POST /api/orgs/{org}/alerts/scan"],
-      "watch": ["dedup_key keeps one open alert per problem; the scanner re-opens it if the problem is still there."]
+      "pages": [
+        "/:org/monitoring",
+        "/:org"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/alerts",
+        "POST /api/orgs/{org}/alerts/{id}/resolve",
+        "POST /api/orgs/{org}/alerts/scan"
+      ],
+      "watch": [
+        "dedup_key keeps one open alert per problem; the scanner re-opens it if the problem is still there."
+      ]
     },
     "audit_event": {
       "feature": "Monitoring & audit",
       "purpose": "Who changed what and when (and partner reads of shared data). Never edited, only added to.",
-      "pages": ["/:org/monitoring", "/:org"],
-      "apis": ["GET /api/orgs/{org}/audit"],
-      "watch": ["via_org_id is set when a partner organization did the action.", "id is an automatic counter (bigserial)."]
+      "pages": [
+        "/:org/monitoring",
+        "/:org"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/audit"
+      ],
+      "watch": [
+        "via_org_id is set when a partner organization did the action.",
+        "id is an automatic counter (bigserial)."
+      ]
     },
     "email_template": {
       "feature": "Email",
       "purpose": "Platform-edited email texts. No row = the built-in text from the code is used.",
-      "pages": ["/platform/email"],
-      "apis": ["GET /api/platform/email/templates", "PUT /api/platform/email/templates/{key}", "DELETE /api/platform/email/templates/{key}"],
-      "watch": ["Delete the row to go back to the built-in text."]
+      "pages": [
+        "/platform/email"
+      ],
+      "apis": [
+        "GET /api/platform/email/templates",
+        "PUT /api/platform/email/templates/{key}",
+        "DELETE /api/platform/email/templates/{key}"
+      ],
+      "watch": [
+        "Delete the row to go back to the built-in text.",
+        "A project may word some emails itself (project_email_template); without a project row this text (or the built-in one) is used."
+      ]
     },
     "email_message": {
       "feature": "Email",
       "purpose": "Every email the platform sent or tried to send. One-time passwords and links are hidden in the logged copy.",
-      "pages": ["/platform/email"],
-      "apis": ["GET /api/platform/email/messages", "POST /api/platform/email/messages/{id}/retry"],
-      "watch": ["status SAVED = no mail server configured; the email waits in the outbox.", "FAILED with pending_text = can be retried."]
+      "pages": [
+        "/platform/email"
+      ],
+      "apis": [
+        "GET /api/platform/email/messages",
+        "POST /api/platform/email/messages/{id}/retry"
+      ],
+      "watch": [
+        "status SAVED = no mail server configured; the email waits in the outbox.",
+        "FAILED with pending_text = can be retried."
+      ]
+    },
+    "connector_category": {
+      "feature": "Connector marketplace",
+      "purpose": "Groups connectors in the marketplace (Media, Advertising, Storage, Other, or new ones).",
+      "pages": [
+        "/platform/configuration?tab=connectors"
+      ],
+      "apis": [
+        "GET /api/platform/connector-catalogue",
+        "POST /api/platform/connector-categories",
+        "PUT /api/platform/connector-categories/{key}",
+        "DELETE /api/platform/connector-categories/{key}"
+      ],
+      "watch": [
+        "A category used by a connector can't be deleted (409)."
+      ]
+    },
+    "connector_property": {
+      "feature": "Connector marketplace",
+      "purpose": "The fields a connection of a connector holds (e.g. Mux token id and secret). Rows, not code: adapters read values by these keys.",
+      "pages": [
+        "/platform/configuration?tab=connectors"
+      ],
+      "apis": [
+        "GET /api/platform/connector-catalogue",
+        "PUT /api/platform/connector-definitions/{key}/properties/{prop}",
+        "DELETE /api/platform/connector-definitions/{key}/properties/{prop}"
+      ],
+      "watch": [
+        "Encrypted fields have no default.",
+        "Deleting a field or changing its encryption removes stored values for it in every project.",
+        "scope INTERNAL fields are never shown to tenants."
+      ]
+    },
+    "connector_instance": {
+      "feature": "Connector marketplace",
+      "purpose": "One connection of a connector: for a project (org_id) or for the whole platform (org_id empty). Ad servers (direct and vast connectors) can have several; their positions 1..n are the project's ad waterfall, asked in that order.",
+      "pages": [
+        "/platform/configuration?tab=connectors",
+        "/platform/tenants/{id}?tab=connectors",
+        "/:org/settings?tab=connectors",
+        "/platform/connectors",
+        "/:org/ads"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/connectors",
+        "POST /api/orgs/{org}/connectors/{key}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "DELETE /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/platform/orgs/{orgId}/connector-instances",
+        "GET /api/platform/connector-instances",
+        "GET /api/orgs/{org}/ad-sources",
+        "POST /api/orgs/{org}/ad-sources",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "POST /api/platform/orgs/{orgId}/ad-sources/order"
+      ],
+      "watch": [
+        "Row-level security by org_id; platform-level rows need the system login.",
+        "Only one single-instance connection per connector and project (unique index on position 0); only one direct connection per project (connector_instance_one_direct).",
+        "checked_at / check_error: last health check (Mux check button); saving new values clears them.",
+        "The platform-level r2 connection (org_id empty) feeds the edge client (worker_url, edge_secret, public_url); unset fields fall back to faststudio.edge.*.",
+        "managed_by: PLATFORM rows are set up by the platform administrator and read-only for the project; TENANT rows are the project's own ad tags (AD_OWN_TAGS feature).",
+        "Ad waterfall (V28, replaces ad_source): instances whose connector driver is DIRECT or VAST (direct, vast, gam = Google Ad Manager), ordered by position; VAST-driver values tag_url (sealed) and timeout_ms."
+      ]
+    },
+    "connector_value": {
+      "feature": "Connector marketplace",
+      "purpose": "The value of one field of one connection. Encrypted fields are stored sealed (AES-GCM) and never returned.",
+      "pages": [
+        "/platform/configuration?tab=connectors"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/connectors/{key}",
+        "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check"
+      ],
+      "watch": [
+        "org_id is copied from the connection for row-level security.",
+        "A value that can't be opened usually means the secrets key changed.",
+        "V27 copied Mux credentials here from media_connection unchanged (same ciphertext).",
+        "Tenant export leaves out values of encrypted fields."
+      ]
+    },
+    "project_media_type": {
+      "feature": "Media library",
+      "purpose": "A project's own media types (P4), offered next to the platform types it is entitled to.",
+      "pages": [
+        "/:org/settings?tab=media-types",
+        "/:org/library",
+        "/platform/tenants/{id}?tab=media"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/settings",
+        "POST /api/orgs/{org}/settings/media-types",
+        "DELETE /api/orgs/{org}/settings/media-types/{key}",
+        "GET /api/platform/orgs/{orgId}/project-media-types"
+      ],
+      "watch": [
+        "Row-level security by org_id.",
+        "kind is set on insert and never changes.",
+        "Delete is refused (409 IN_USE) while videos use the key; switch it off instead."
+      ]
+    },
+    "project_email_template": {
+      "feature": "Email",
+      "purpose": "A project's own wording of an email sent about it (P5). No row = the platform's wording.",
+      "pages": [
+        "/:org/settings?tab=emails"
+      ],
+      "apis": [
+        "GET /api/orgs/{org}/email-templates",
+        "PUT /api/orgs/{org}/email-templates/{key}",
+        "DELETE /api/orgs/{org}/email-templates/{key}",
+        "POST /api/orgs/{org}/email-templates/{key}/preview"
+      ],
+      "watch": [
+        "Row-level security by org_id.",
+        "Only invitations, password reset/changed, alerts, partner sharing and the footer can be overridden (EmailTemplates.PROJECT_KEYS).",
+        "MailServiceV1.send renders with the project row when the email has an org."
+      ]
     }
   }
 }

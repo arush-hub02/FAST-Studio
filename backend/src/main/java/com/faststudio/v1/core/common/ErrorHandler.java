@@ -41,7 +41,15 @@ public class ErrorHandler {
         return p;
     }
 
-    @ExceptionHandler(NoResourceFoundException.class)
+    /** A path or query value of the wrong type (e.g. not an id) is the caller's mistake, not a server error. */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ProblemDetail mismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException e) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, "Invalid value for " + e.getName() + ".");
+        p.setProperty("code", "VALIDATION");
+        return p;
+    }
+
+        @ExceptionHandler(NoResourceFoundException.class)
     ProblemDetail missing(NoResourceFoundException e) {
         ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Not found");
         p.setProperty("code", "NOT_FOUND");

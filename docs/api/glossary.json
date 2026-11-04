@@ -125,7 +125,19 @@
     "viewerToken": "Signed viewer context from your app's server (for personalized ads). Leave out for contextual ads only.",
     "webhookSecret": "Mux webhook signing secret, to verify deliveries. Blank keeps the stored one.",
     "weekdays": "Days to use: 1 = Monday … 7 = Sunday.",
-    "withBreaks": "true = also insert ad breaks at the video's cue points."
+    "withBreaks": "true = also insert ad breaks at the video's cue points.",
+    "referenceLink": "A web page with the provider's own documentation.",
+    "tier": "FREE or PRO: which subscriptions the connector belongs to.",
+    "tenantUpdate": "Who connects it: ALLOWED (project members with Manage team), NOT_ALLOWED (only the platform) or CONTACT_ACCOUNT_MANAGER (tenants see a note to contact their account manager).",
+    "requiredPermission": "Permission key someone needs to see the connector (empty = everyone in the project).",
+    "level": "PROJECT (each project connects its own) or PLATFORM (one set of values for the whole platform, e.g. R2).",
+    "multiInstance": "true = a project can add several connections (e.g. ad servers, tried in order).",
+    "position": "Order in lists; lower comes first.",
+    "required": "true = a connection is not connected until this has a value (or a default).",
+    "values": "Field key → value. A blank encrypted value keeps the stored one; a blank plain value clears it.",
+    "longDescription": "Longer text shown on the connector's marketplace page.",
+    "logoUrl": "Web address of the connector's logo.",
+    "darkLogoUrl": "Web address of the logo used in dark mode."
   },
   "params": {
     "org": "The project: its short name (e.g. aurora) or ID. You must be a member and your token must be for it.",
@@ -161,6 +173,7 @@
     "exp": "Expiry of the signed link.",
     "sig": "Signature of the signed link.",
     "folder": "Media folder.",
-    "file": "The video file, sent as a multipart form field named file."
+    "file": "The video file, sent as a multipart form field named file.",
+    "prop": "Key of a connector field (e.g. token_secret)."
   }
 }

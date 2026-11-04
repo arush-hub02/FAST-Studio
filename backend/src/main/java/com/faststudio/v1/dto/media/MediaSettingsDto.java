@@ -13,13 +13,17 @@ public final class MediaSettingsDto {
     /** Platform media type; {@code kind} (MOVIE/EPISODE/SHORT/AD) decides scheduling behavior and never changes. */
     public record Type(String key, String label, String kind, boolean enabled) {}
 
+    /** A project's own media type (P4); assets = how many of the project's videos use it (it can't be deleted then). */
+    public record ProjectType(String key, String label, String kind, boolean enabled, int assets) {}
+
     /** Stored {@code tenant_settings} row of a project (V15: premiere/weekdays/personalized are mirrors, not read). */
     public record Row(String enabledTypes, String defaultType, LocalTime premiereTime, String weekdays,
                       boolean personalizedAds, String viewerSecret, int revision) {}
 
     /** Resolved settings shown to the project; the viewer key itself is never returned. */
+    /** types = everything the project can use (the platform's types it is entitled to, then its own); ownTypes = its own, for editing. */
     public record View(List<Type> types, List<String> enabledTypes, String defaultType, String premiereTime,
-                       List<Integer> weekdays, boolean personalizedAds, boolean viewerKeySet, int revision) {}
+                       List<Integer> weekdays, boolean personalizedAds, boolean viewerKeySet, int revision, List<ProjectType> ownTypes) {}
 
     public record TypeRequest(@NotBlank @Pattern(regexp = "[A-Z][A-Z0-9_]{0,39}") String key,
                               @NotBlank @Size(max = 80) String label,

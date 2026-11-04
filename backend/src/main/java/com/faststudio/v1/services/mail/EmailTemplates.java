@@ -158,6 +158,38 @@ public class EmailTemplates {
     public record View(String key, String name, String description, List<String> variables, List<String> required,
                        String subject, String body, boolean customized, OffsetDateTime updatedAt, String defaultSubject, String defaultBody) {}
 
+    /** Emails a project may word its own way (sent about the project). Organization welcome and the test email stay the platform's. */
+    public static final Set<String> PROJECT_KEYS = Set.of("invite_new_user", "invite_existing_user", "password_reset", "password_changed",
+            "alert_raised", "partner_shared", FOOTER);
+
+    /**
+     * Every template as a project gets it: its own version where it has one, otherwise the platform's (or built-in) one.
+     * For a project, customized = it has its own version, and defaultSubject/defaultBody = the platform's version it falls back to.
+     */
+    public List<View> list(UUID org) {
+        List<View> platform = list();
+        if (org == null) return platform;
+        Map<String, Saved> own = new HashMap<>();
+        repository.projectSaved(org).forEach(x -> own.put(x.key(), x));
+        return platform.stream().map(p -> {
+            Saved x = PROJECT_KEYS.contains(p.key()) ? own.get(p.key()) : null;
+            return new View(p.key(), p.name(), p.description(), p.variables(), p.required(), x == null ? p.subject() : x.subject(),
+                    x == null ? p.body() : x.body(), x != null, x == null ? null : x.updatedAt(), p.subject(), p.body());
+        }).toList();
+    }
+
+    public void saveProject(UUID org, String key, String subject, String body, UUID by) {
+        if (!PROJECT_KEYS.contains(key)) throw ApiException.notFound("Email template");
+        List<String> p = problems(key, subject, body);
+        if (!p.isEmpty()) throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "TEMPLATE_INVALID", String.join(" ", p));
+        repository.saveProject(org, key, def(key).subject() == null ? null : subject.strip(), body.strip(), by);
+    }
+
+    public void resetProject(UUID org, String key) {
+        if (!PROJECT_KEYS.contains(key)) throw ApiException.notFound("Email template");
+        repository.deleteProject(org, key);
+    }
+
     public List<View> list() {
         Map<String, Saved> o = new HashMap<>();
         repository.saved().forEach(x -> o.put(x.key(), x));
@@ -204,9 +236,20 @@ public class EmailTemplates {
 
     /** Renders with the saved (or default) template and footer; redact hides one-time secrets for the log. */
     public Rendered render(String key, Map<String, String> vars, String appUrl, boolean redact) {
-        View t = list().stream().filter(v -> v.key().equals(key)).findFirst().orElseThrow(() -> ApiException.notFound("Email template"));
-        View footer = list().stream().filter(v -> v.key().equals(FOOTER)).findFirst().orElseThrow();
-        return render(t.subject(), t.body(), footer.body(), vars, appUrl, redact);
+        Rendered[] r = render(null, key, vars, appUrl, redact);
+        return r[r.length - 1];
+    }
+
+    /**
+     * Renders with the project's version (org set), else the platform's, else the built-in text, and the matching footer.
+     * Returns {real} or {real, redacted}: one template lookup for both versions a sent email needs.
+     */
+    public Rendered[] render(UUID org, String key, Map<String, String> vars, String appUrl, boolean alsoRedacted) {
+        List<View> all = list(org);
+        View t = all.stream().filter(v -> v.key().equals(key)).findFirst().orElseThrow(() -> ApiException.notFound("Email template"));
+        View footer = all.stream().filter(v -> v.key().equals(FOOTER)).findFirst().orElseThrow();
+        Rendered real = render(t.subject(), t.body(), footer.body(), vars, appUrl, false);
+        return alsoRedacted ? new Rendered[]{real, render(t.subject(), t.body(), footer.body(), vars, appUrl, true)} : new Rendered[]{real};
     }
 
     public static Rendered render(String subject, String body, String footer, Map<String, String> vars, String appUrl, boolean redact) {

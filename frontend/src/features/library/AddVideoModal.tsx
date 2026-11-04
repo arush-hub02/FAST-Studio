@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, type AssetView, type MediaSettingsView } from '../../shared/api'
+import { api, type AssetView } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import {
   Dropdown,
@@ -8,10 +8,10 @@ import {
   Icon,
   Modal,
   useAction,
-  useApi,
 } from '../../shared/ui'
 import { DateTimePicker } from '../../shared/components/DateTimePicker'
 import { GenreSelector } from '../../shared/components/GenreSelector'
+import { useProjectMedia } from '../../shared/projectMedia'
 
 const COLOR_PRESETS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#14b8a6']
 
@@ -21,7 +21,7 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
   const org = useOrg()
   const { busy, run } = useAction()
   const [mode, setMode] = useState<'upload' | 'sample'>('upload')
-  const mediaSettings = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const mediaSettings = useProjectMedia()
   const [f, setF] = useState({
     title: '',
     kind: 'MOVIE',

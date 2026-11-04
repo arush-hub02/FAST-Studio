@@ -9,7 +9,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Ad demand connector. A break is filled by working down the tenant's waterfall (ad_source rows, in order); each
+ * Ad demand connector. A break is filled by working down the tenant's waterfall (its direct and vast connector connections, in position order); each
  * source may return spots for at most the time still open, and whatever stays open plays slate.
  * DIRECT = our own direct-sold campaigns; VAST = any external ad server reached through a VAST tag.
  */
@@ -18,7 +18,7 @@ public interface IAdSource {
 
     Fill fill(Config source, Request req);
 
-    /** One ad_source row (or the default direct-sold source when a tenant has configured none). managedBy: PLATFORM or TENANT. */
+    /** One ad-server connection (or the default direct-sold source when a tenant has configured none). managedBy: PLATFORM or TENANT. */
     record Config(UUID id, String name, String kind,
                   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) String tagUrl,
                   int timeoutMs, int position, boolean enabled, String managedBy) {

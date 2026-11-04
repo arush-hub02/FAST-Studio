@@ -35,8 +35,12 @@ public class EpgServiceV1 {
 
     /** Programmes overlapping [from, to): consecutive parts of one video and the mid-roll breaks inside it are merged. */
     public List<Programme> guide(UUID org, Channel ch, Instant from, Instant to) {
+        return ch.publishedVersionId() == null ? List.of() : guide(org, ch, from, to, data.assets(org));
+    }
+
+    /** With the project's videos already loaded (a list of channels loads them once, not once per channel). */
+    public List<Programme> guide(UUID org, Channel ch, Instant from, Instant to, Map<UUID, Asset> assets) {
         if (ch.publishedVersionId() == null) return List.of();
-        Map<UUID, Asset> assets = data.assets(org);
         Instant now = Instant.now();
         List<Programme> out = new ArrayList<>();
         UUID cur = null;

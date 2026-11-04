@@ -64,9 +64,13 @@ for (const f of files) {
 }
 
 // Tables named in SQL: from/join = read; insert into/update/delete from = write.
+// Migrations in version order, following renames (V23: mux_account → media_connection).
 const tableNames = new Set()
-for (const f of fs.readdirSync(path.join(root, 'backend/src/main/resources/db/migration')))
-  for (const m of fs.readFileSync(path.join(root, 'backend/src/main/resources/db/migration', f), 'utf8').matchAll(/create table (?:if not exists )?(\w+)/gi)) tableNames.add(m[1])
+const migrationDir = path.join(root, 'backend/src/main/resources/db/migration')
+const version = f => +(f.match(/^V(\d+)__/) || [0, 0])[1]
+for (const f of fs.readdirSync(migrationDir).filter(f => f.endsWith('.sql')).sort((a, b) => version(a) - version(b)))
+  for (const m of fs.readFileSync(path.join(migrationDir, f), 'utf8').matchAll(/create table (?:if not exists )?(\w+)|alter table (\w+) rename to (\w+)/gi))
+    if (m[1]) tableNames.add(m[1]); else { tableNames.delete(m[2]); tableNames.add(m[3]) }
 function sqlAccess(body, cls) {
   const out = {}
   const add = (t, mode) => { if (tableNames.has(t)) out[t] = out[t] && out[t] !== mode ? 'read+write' : mode }

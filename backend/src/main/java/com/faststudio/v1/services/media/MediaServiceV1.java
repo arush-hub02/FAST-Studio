@@ -1,9 +1,9 @@
 package com.faststudio.v1.services.media;
 
 import com.faststudio.v1.core.common.Times;
-import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.dto.media.AssetDto.ProcessingJob;
 import com.faststudio.v1.repositories.media.AssetRepository;
+import com.faststudio.v1.repositories.media.MediaJobRepository;
 import com.faststudio.v1.services.media.sources.IContentSource;
 
 import org.slf4j.Logger;
@@ -13,8 +13,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,8 +20,6 @@ import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -36,7 +32,7 @@ import java.util.stream.Stream;
  * Layout: media/{key}/{0,1,2}/seg_NNNNN.ts + index.m3u8, media/{key}/master.m3u8, media/{key}/thumb.jpg, where
  * key = {org slug}/{asset id}.{packaging time}: every packaging run gets a fresh key, so the edge can cache
  * segments forever. EdgePublisher copies finished folders to R2.
- * ponytail: in-process job pool; a durable job queue replaces it for production.
+ * Packaging runs as durable jobs (media_job) claimed by {@link com.faststudio.messaging.v1.media.MediaJobObserverV1}.
  */
 @Service
 public class MediaServiceV1 {
@@ -55,16 +51,18 @@ public class MediaServiceV1 {
     private final Path mediaDir, uploadDir;
     private final String configuredFfmpeg;
     private final List<IContentSource> sources;
-    private final ExecutorService pool = Executors.newFixedThreadPool(2);
-    // ad creatives must be ready within seconds (they air from the next break), so they never queue behind programmes
-    private final ExecutorService adPool = Executors.newSingleThreadExecutor();
+    private final MediaJobRepository jobs;
+    // the ffmpeg process of each worker thread, so a cancel or lost lease can kill it
+    private final Map<Thread, Process> running = new ConcurrentHashMap<>();
+    private final Set<Thread> stopped = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> segmentCounts = new ConcurrentHashMap<>();
     private final Map<String, Boolean> ladders = new ConcurrentHashMap<>();
     private volatile String ffmpeg;
 
-    public MediaServiceV1(AssetRepository assets, @Value("${faststudio.data-dir}") String dataDir, @Value("${faststudio.ffmpeg:}") String ffmpeg,
-                        List<IContentSource> sources) {
+    public MediaServiceV1(AssetRepository assets, MediaJobRepository jobs, @Value("${faststudio.data-dir}") String dataDir,
+                          @Value("${faststudio.ffmpeg:}") String ffmpeg, List<IContentSource> sources) {
         this.assets = assets;
+        this.jobs = jobs;
         Path data = Path.of(dataDir).toAbsolutePath().normalize();
         this.mediaDir = data.resolve("media");
         this.uploadDir = data.resolve("uploads");
@@ -130,7 +128,7 @@ public class MediaServiceV1 {
         ladders.remove(key);
     }
 
-    // ---------------------------------------------------------------- jobs
+    // ---------------------------------------------------------------- jobs (durable rows in media_job, run by MediaJobObserverV1)
 
     @EventListener(ApplicationReadyEvent.class)
     @Order(10)
@@ -140,79 +138,85 @@ public class MediaServiceV1 {
             return;
         }
         log.info("Using ffmpeg at {}", ffmpeg);
-        pool.submit(() -> slate(STANDBY, "We'll be right back", "Programming resumes shortly", "0x1e1b4b", "0x4338ca", 60));
-        pool.submit(() -> slate(GEO, "Not available in your region", "This programme isn't licensed where you are watching", "0x3f1d1d", "0x9f1239", 30));
-        // resume jobs interrupted by a restart (system work across tenants)
-        TenantScope.bypass(assets::processingIds).forEach(this::enqueue);
-    }
-
-    /** Queues processing; inside a transaction it waits for the commit so the job can see the new row. */
-    public void enqueue(UUID assetId) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() { submit(assetId); }
-            });
-        } else submit(assetId);
-    }
-
-    /** Conditions an ad creative on its own lane, ahead of any programme packaging. */
-    public void enqueueCreative(UUID assetId) {
-        submit(adPool, assetId);
-    }
-
-    private void submit(UUID assetId) {
-        submit(pool, assetId);
-    }
-
-    private void submit(ExecutorService lane, UUID assetId) {
-        lane.submit(() -> {
-            try {
-                process(assetId);
-            } catch (Exception e) {
-                log.error("processing failed {}", assetId, e);
-                fail(assetId, "Unexpected processing error: " + e.getMessage());
-            }
+        // slates are idempotent start-up work (they check their own files), not jobs
+        Thread.ofPlatform().name("slates").start(() -> {
+            slate(STANDBY, "We'll be right back", "Programming resumes shortly", "0x1e1b4b", "0x4338ca", 60);
+            slate(GEO, "Not available in your region", "This programme isn't licensed where you are watching", "0x3f1d1d", "0x9f1239", 30);
         });
     }
 
-    void process(UUID assetId) throws Exception {
-        // the job only knows the asset id: look it up as the system, then work inside that asset's tenant
-        ProcessingJob j = TenantScope.bypass(() -> assets.job(assetId));
-        if (ffmpeg() == null) {
-            fail(assetId, "ffmpeg is not installed on the server, so the video could not be processed.");
-            return;
-        }
+    /** Queues packaging in the caller's transaction (the job exists exactly when the change commits); duplicates are no-ops. */
+    public void enqueue(UUID org, UUID assetId) { jobs.enqueue(org, assetId, "PROGRAMME"); }
+
+    /** Conditions an ad creative on its own lane, ahead of any programme packaging. */
+    public void enqueueCreative(UUID org, UUID assetId) { jobs.enqueue(org, assetId, "AD"); }
+
+    /** Thrown by a content source when trying again later can help (network, provider not ready). The message is shown to the tenant. */
+    public static class Retryable extends Exception {
+        public Retryable(String message) { super(message); }
+    }
+
+    /** What packaging produced: a new revision for the job to publish, or why not and whether a retry can help. */
+    public record Packaged(String mediaKey, String previousKey, long durationMs, String detail, String error, boolean retry) {
+        public static Packaged failed(String error, boolean retry) { return new Packaged(null, null, 0, null, error, retry); }
+    }
+
+    /**
+     * Packages the asset into a fresh folder, inside its project's scope. Never touches the asset row: the job publishes
+     * the result under its fence, so a worker that lost its job can't replace newer media. Unexpected errors are thrown.
+     */
+    public Packaged pack(UUID org, UUID assetId) throws Exception {
+        ProcessingJob j = assets.job(org, assetId);
+        if (ffmpeg() == null) return Packaged.failed("ffmpeg is not installed on the server, so the video could not be processed.", false);
         IContentSource source = sources.stream().filter(s -> s.handles(j)).findFirst().orElse(null);
-        if (source == null) { fail(assetId, "No content connector can supply this video."); return; }
+        if (source == null) return Packaged.failed("No content connector can supply this video.", false);
         String key = j.slug() + "/" + j.id() + "." + Instant.now().getEpochSecond();
         Path out = mediaDir.resolve(key);
-        if (Files.isDirectory(out.getParent())) {   // half-written folders of runs interrupted by a restart
+        if (Files.isDirectory(out.getParent())) {   // half-written folders of runs that died
             try (Stream<Path> s = Files.list(out.getParent())) {
                 for (Path p : s.filter(p -> p.getFileName().toString().startsWith(j.id() + ".")).toList())
                     if (!mediaDir.resolve(String.valueOf(j.mediaKey())).equals(p)) deleteDir(p);
             }
         }
         Files.createDirectories(out);
-        String err = source.ingest(j, out, this);
-        if (err != null) { deleteDir(out); fail(assetId, err); return; }
-        int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
-        if (full == 0) { deleteDir(out); fail(assetId, "The video is shorter than " + Times.SEG_S + " seconds."); return; }
-        thumbnail(out, full);
-        TenantScope.as(j.orgId(), () -> assets.markReady(j.orgId(), assetId,
-                "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS",
-                full * Times.SEG_MS, key));
-        // ponytail: the previous revision's copy on R2 is left behind; add an R2 lifecycle rule when storage matters
-        if (j.mediaKey() != null && !j.mediaKey().equals(key) && !j.mediaKey().startsWith("_platform/")) {
-            deleteDir(mediaDir.resolve(j.mediaKey()));
-            forget(j.mediaKey());
+        try {
+            String err = source.ingest(j, out, this);
+            if (err != null) { deleteDir(out); return Packaged.failed(err, false); }
+            int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
+            if (full == 0) { deleteDir(out); return Packaged.failed("The video is shorter than " + Times.SEG_S + " seconds.", false); }
+            thumbnail(out, full);
+            log.info("Asset packaged: {} ({} s)", j.title(), full * Times.SEG_S);
+            return new Packaged(key, j.mediaKey(), full * Times.SEG_MS,
+                    "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS", null, false);
+        } catch (Retryable e) {
+            deleteDir(out);
+            return Packaged.failed(e.getMessage(), true);
+        } catch (Exception e) {
+            deleteDir(out);
+            throw e;
         }
-        log.info("Asset ready: {} ({} s)", j.title(), full * Times.SEG_S);
     }
 
-    private void fail(UUID id, String why) {
-        TenantScope.bypass(() -> assets.markFailed(id, why));
+    /** After a publish: the replaced revision's local folder goes. */
+    public void retire(Packaged p) throws IOException {
+        // ponytail: the previous revision's copy on R2 is left behind; add an R2 lifecycle rule when storage matters
+        if (p.previousKey() != null && !p.previousKey().equals(p.mediaKey()) && !p.previousKey().startsWith("_platform/")) discard(p.previousKey());
     }
+
+    /** A revision that was never published (the job was cancelled or taken over). */
+    public void discard(String key) throws IOException {
+        deleteDir(mediaDir.resolve(key));
+        forget(key);
+    }
+
+    /** Kills the ffmpeg run of a worker thread whose job was cancelled or lost; later encodes on it refuse until {@link #release}. */
+    public void stop(Thread worker) {
+        stopped.add(worker);
+        Process p = running.get(worker);
+        if (p != null) p.destroyForcibly();
+    }
+
+    public void release(Thread worker) { stopped.remove(worker); }
 
     // ---------------------------------------------------------------- ffmpeg recipes (drawn on a 1280x720 canvas)
 
@@ -288,9 +292,19 @@ public class MediaServiceV1 {
                     "-f", "hls", "-hls_time", String.valueOf(Times.SEG_S), "-hls_playlist_type", "vod",
                     "-hls_segment_filename", dir.resolve("seg_%05d.ts").toString(), dir.resolve("index.m3u8").toString()));
         }
+        Thread me = Thread.currentThread();
+        if (stopped.contains(me)) return "stopped";
         Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-        String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-        if (!p.waitFor(60, TimeUnit.MINUTES)) { p.destroyForcibly(); return "timed out"; }
+        running.put(me, p);
+        String output;
+        try {
+            if (stopped.contains(me)) p.destroyForcibly();   // stopped while it was starting
+            output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            if (!p.waitFor(60, TimeUnit.MINUTES)) { p.destroyForcibly(); return "timed out"; }
+        } finally {
+            running.remove(me);
+        }
+        if (stopped.contains(me)) return "stopped";
         if (p.exitValue() == 0) return null;
         String[] lines = output.split("\\R");
         return lines.length == 0 ? "exit " + p.exitValue() : lines[lines.length - 1];

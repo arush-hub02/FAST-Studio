@@ -22,7 +22,7 @@ import java.util.*;
 
 /**
  * HTTP client for the Mux video API: catalogue paging, asset detail, direct uploads and master-file access. Knows nothing
- * about where credentials are stored (see MuxConnectionService) or how files are packaged (see MuxSource).
+ * about where credentials are stored (see MediaConnectionService) or how files are packaged (see MuxSource).
  * White-label (HANDOVER §4.5): its errors never name the provider, because they can reach tenants.
  */
 @Component
@@ -62,23 +62,26 @@ public class MuxClientService {
 
     public record Upload(String id, String url) {}
 
-    /** Every asset of the account carrying its tag, page by page (cursor when Mux returns one, else page numbers). */
-    public List<Asset> assets(Account a) throws InterruptedException {
+    /** One listing page: the assets carrying the account's tag, and the checkpoint of the next page (null after the last). */
+    public record Page(List<Asset> assets, String next) {}
+
+    /**
+     * The listing page at a checkpoint: null = the first, "cursor:…" when Mux returned a cursor, else "page:N".
+     * Mux pages by cursor when it can and by page number otherwise; the checkpoint carries whichever it used.
+     */
+    public Page page(Account a, String checkpoint) throws InterruptedException {
+        String cursor = checkpoint != null && checkpoint.startsWith("cursor:") ? checkpoint.substring(7) : null;
+        int page = checkpoint != null && checkpoint.startsWith("page:") ? Integer.parseInt(checkpoint.substring(5)) : 1;
+        JsonNode res = call(a, "GET", "/video/v1/assets?limit=" + PAGE
+                + (cursor == null ? "&page=" + page : "&cursor=" + URLEncoder.encode(cursor, StandardCharsets.UTF_8)), null);
+        JsonNode data = res.path("data");
         List<Asset> out = new ArrayList<>();
-        String cursor = null;
-        for (int page = 1; page <= 1000; page++) {
-            JsonNode res = call(a, "GET", "/video/v1/assets?limit=" + PAGE
-                    + (cursor == null ? "&page=" + page : "&cursor=" + URLEncoder.encode(cursor, StandardCharsets.UTF_8)), null);
-            JsonNode data = res.path("data");
-            for (JsonNode n : data) {
-                Asset x = Asset.of(n);
-                if (x != null && a.includes(x)) out.add(x);
-            }
-            cursor = res.path("next_cursor").asString("");
-            if (cursor.isEmpty()) cursor = null;
-            if (cursor == null && data.size() < PAGE) break;
+        for (JsonNode n : data) {
+            Asset x = Asset.of(n);
+            if (x != null && a.includes(x)) out.add(x);
         }
-        return out;
+        String next = res.path("next_cursor").asString("");
+        return new Page(out, !next.isEmpty() ? "cursor:" + next : data.size() < PAGE ? null : "page:" + (page + 1));
     }
 
     public Asset asset(Account a, String id) throws InterruptedException {

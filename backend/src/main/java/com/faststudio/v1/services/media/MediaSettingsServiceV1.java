@@ -6,6 +6,7 @@ import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.dto.media.MediaSettingsDto.*;
 import com.faststudio.v1.repositories.media.MediaSettingsRepository;
 import com.faststudio.v1.services.tenancy.TenantConfigurationServiceV1;
@@ -50,6 +51,8 @@ public class MediaSettingsServiceV1 {
         var prior = catalog().stream().filter(t -> t.key().equals(r.key())).findFirst();
         if (prior.isPresent() && !prior.get().kind().equals(r.kind()))
             throw ApiException.bad("An existing type's scheduling behavior cannot change. Create another type.");
+        if (prior.isEmpty() && TenantScope.bypass(() -> repository.projectTypeKeyUsed(r.key())))
+            throw ApiException.conflict("KEY_TAKEN", "A project already has its own media type called " + r.key() + ". Choose another identifier.");
         repository.saveType(r.key(), r.label().trim(), r.kind(), r.enabled());
         audit.platform(Auth.userId(), "media-type.save", "media_type", null, r.key());
         return catalog();
@@ -82,14 +85,55 @@ public class MediaSettingsServiceV1 {
 
     public View view(UUID org) {
         List<String> entitled = entitlements(org);
-        List<Type> types = catalog().stream().filter(t -> t.enabled() && entitled.contains(t.key())).toList();
+        List<ProjectType> own = repository.projectTypes(org);
+        List<Type> types = new ArrayList<>(catalog().stream().filter(t -> t.enabled() && entitled.contains(t.key())).toList());
+        own.stream().filter(ProjectType::enabled).forEach(p -> types.add(new Type(p.key(), p.label(), p.kind(), true)));
         Row row = row(org);
         List<String> keys = types.stream().map(Type::key).toList();
         List<String> on = row == null ? keys : Times.codes(row.enabledTypes()).stream().filter(keys::contains).toList();
         String def = row != null && on.contains(row.defaultType()) ? row.defaultType()
                 : on.contains("MOVIE") ? "MOVIE" : on.stream().findFirst().orElse("");
-        return new View(types, on, def, premiereTime(org), days(weekdays(org)), personalizedAds(org),
-                row != null && row.viewerSecret() != null, row == null ? 0 : row.revision());
+        var resolved = configuration.effective(org, List.of(TenantConfigurationServiceV1.PREMIERE_TIME, TenantConfigurationServiceV1.WEEKDAYS,
+                TenantConfigurationServiceV1.PERSONALIZED_ADS));   // one lookup for the three
+        var premiere = resolved.get(TenantConfigurationServiceV1.PREMIERE_TIME);
+        var weekdays = resolved.get(TenantConfigurationServiceV1.WEEKDAYS);
+        var ads = resolved.get(TenantConfigurationServiceV1.PERSONALIZED_ADS);
+        return new View(types, on, def, premiere == null ? "20:00" : premiere.asString(), days(weekdays == null ? "1,2,3,4,5,6,7" : weekdays.asString()),
+                ads != null && ads.asBoolean(),
+                row != null && row.viewerSecret() != null, row == null ? 0 : row.revision(), own);
+    }
+
+    /** Adds or changes one of the project's own media types; its key can't be one of the platform's, and its kind never changes. */
+    @Transactional
+    public View saveProjectType(Tenant t, TypeRequest r) {
+        t.require(Tenant.Perm.TEAM_MANAGE);
+        if (r.kind() == null) throw ApiException.bad("Choose scheduling behavior for this type.");
+        if (catalog().stream().anyMatch(x -> x.key().equals(r.key())))
+            throw ApiException.conflict("KEY_TAKEN", "The platform already has a media type called " + r.key() + ". Choose another identifier.");
+        var prior = repository.projectTypes(t.orgId()).stream().filter(x -> x.key().equals(r.key())).findFirst();
+        if (prior.isPresent() && !prior.get().kind().equals(r.kind()))
+            throw ApiException.bad("An existing type's scheduling behavior cannot change. Create another type.");
+        repository.saveProjectType(t.orgId(), r.key(), r.label().trim(), r.kind(), r.enabled());
+        audit.log(t, "media-type.save", "media_type", null, r.key());
+        return view(t.orgId());
+    }
+
+    /** Deletes one of the project's own types; refused while videos use it (switch it off instead). */
+    @Transactional
+    public View deleteProjectType(Tenant t, String key) {
+        t.require(Tenant.Perm.TEAM_MANAGE);
+        var prior = repository.projectTypes(t.orgId()).stream().filter(x -> x.key().equals(key)).findFirst()
+                .orElseThrow(() -> ApiException.notFound("Media type"));
+        if (prior.assets() > 0) throw ApiException.conflict("IN_USE", prior.assets() + " videos use this type. Switch it off instead, or change those videos first.");
+        repository.deleteProjectType(t.orgId(), key);
+        audit.log(t, "media-type.delete", "media_type", null, key);
+        return view(t.orgId());
+    }
+
+    /** A project's own types as the platform sees them (tenant page, read-only). */
+    public List<ProjectType> projectTypesForPlatform(UUID org) {
+        requireCustomer(org);
+        return TenantScope.as(org, () -> repository.projectTypes(org));
     }
 
     /** Saves the Settings form. Optimistic: {@code expectedRevision} must match. */

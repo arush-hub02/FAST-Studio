@@ -25,7 +25,11 @@ public class TenantDataRepository {
     /** A tenant table and the columns that tie its rows to an organization or the tenant. */
     public record Table(String name, List<String> ownerColumns, List<String> columns) {}
 
-    /** A foreign key between two tables: child.column → parent; nullable says whether it can be cleared first. */
+    /**
+     * A foreign key between two tables: child.column → parent; nullable says whether it can be cleared first.
+     * Cascading keys are never cleared (deleting the parent removes the child; a check such as "only SYNC jobs have
+     * no asset" may forbid null), so they only order the deletion.
+     */
     public record ForeignKey(String child, String column, String parent, boolean nullable) {}
 
     public List<Table> tables() {
@@ -45,7 +49,7 @@ public class TenantDataRepository {
 
     public List<ForeignKey> foreignKeys() {
         return db.sql("""
-                select ch.relname as child, a.attname as "column", pa.relname as parent, not a.attnotnull as nullable
+                select ch.relname as child, a.attname as "column", pa.relname as parent, not a.attnotnull and k.confdeltype <> 'c' as nullable
                 from pg_constraint k join pg_class ch on ch.oid = k.conrelid join pg_class pa on pa.oid = k.confrelid
                 join pg_namespace n on n.oid = ch.relnamespace
                 join pg_attribute a on a.attrelid = k.conrelid and a.attnum = any(k.conkey)
@@ -63,10 +67,16 @@ public class TenantDataRepository {
         return Map.of("tenant", tenant, "orgs", orgs.toArray(new UUID[0]));
     }
 
-    /** The tenant's rows of one table, secret columns left out. */
+    /** Rows never exported because the row itself is a secret: values of encrypted connector fields. */
+    static final Map<String, String> SECRET_ROWS = Map.of("connector_value", """
+            not exists (select 1 from connector_instance i join connector_property p on p.connector_key = i.connector_key and p.key = property_key
+                        where i.id = instance_id and p.encrypted)""");
+
+    /** The tenant's rows of one table, secret columns and secret rows left out. */
     public List<Map<String, Object>> rows(Table t, UUID tenant, List<UUID> orgs) {
         String cols = String.join(", ", t.columns().stream().filter(c -> !SECRET_COLUMNS.contains(c)).map(TenantDataRepository::q).toList());
-        return db.sql("select " + cols + " from " + q(t.name()) + " where " + owned(t)).params(params(tenant, orgs)).query().listOfRows();
+        String secret = SECRET_ROWS.containsKey(t.name()) ? " and " + SECRET_ROWS.get(t.name()) : "";
+        return db.sql("select " + cols + " from " + q(t.name()) + " where " + owned(t) + secret).params(params(tenant, orgs)).query().listOfRows();
     }
 
     /** Clears a nullable reference on the tenant's rows (breaks cycles such as channel ⇄ schedule_version before deleting). */

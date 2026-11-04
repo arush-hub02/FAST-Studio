@@ -62,6 +62,10 @@ class TenantDataTest {
         long auroraAssets = count("select count(*) from asset where org_id = :id", aurora);
         String base = "/api/platform/tenants/" + tenant;
 
+        // a connector connection: the encrypted value must stay out of the export, the plain one goes in
+        sys(() -> { UUID i = db.sql("insert into connector_instance(connector_key, org_id, name, position) values ('mux', :o, 'Mux', 0) returning id").param("o", northwind).query(UUID.class).single();
+            return db.sql("insert into connector_value(instance_id, org_id, property_key, value) values (:i, :o, 'token_secret', 'sealed-marker'), (:i, :o, 'environment', 'env-marker')").param("i", i).param("o", northwind).update(); });
+
         // export: the tenant's rows, its members, and no credentials
         MvcResult ex = call(get(base + "/export"), ADMIN, null);
         assertEquals(200, ex.getResponse().getStatus(), ex.getResponse().getContentAsString());
@@ -69,6 +73,8 @@ class TenantDataTest {
         assertTrue(export.path("tables").has("asset") && export.path("tables").has("channel"), export.path("tables").propertyNames().toString());
         assertTrue(export.path("members").toString().contains("owner@northwind.test"));
         assertFalse(export.toString().contains(aurora.toString()), "nothing of another tenant");
+        assertFalse(export.toString().contains("sealed-marker"), "encrypted connector values are never exported");
+        assertTrue(export.toString().contains("env-marker"), "plain connector values are");
         for (String secret : TenantDataRepositoryColumns.SECRET) assertFalse(export.toString().contains("\"" + secret + "\""), secret);
         assertEquals(403, call(get(base + "/export"), "owner@northwind.test", null).getResponse().getStatus(), "platform only");
 

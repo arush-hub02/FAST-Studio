@@ -20,27 +20,13 @@ public class AssetRepository {
 
     private record Usage(UUID assetId, String channel) {}
 
-    // --- processing (called by the media workers; callers choose the tenant scope) ---
+    // --- processing (called by the media job workers inside the job's project; MediaJobRepository writes the results) ---
 
-    /** Assets left half-processed, e.g. by a restart. */
-    public List<UUID> processingIds() {
-        return db.sql("select id from asset where status = 'PROCESSING' /* all tenants: restart recovery */").query(UUID.class).list();
-    }
-
-    public ProcessingJob job(UUID id) {
+    public ProcessingJob job(UUID org, UUID id) {
         return db.sql("""
                 select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
-                from asset a join organization o on o.id = a.org_id where a.id = :id""")
-                .param("id", id).query(ProcessingJob.class).single();
-    }
-
-    public boolean markReady(UUID org, UUID id, String detail, long durationMs, String mediaKey) {
-        return db.sql("update asset set status='READY', status_detail=:d, duration_ms=:ms, media_key=:k, updated_at=now() where org_id=:o and id=:id")
-                .param("o", org).param("d", detail).param("ms", durationMs).param("k", mediaKey).param("id", id).update() > 0;
-    }
-
-    public boolean markFailed(UUID id, String why) {
-        return db.sql("update asset set status='FAILED', status_detail=:d, updated_at=now() where id=:id /* all tenants: processing worker */").param("d", why).param("id", id).update() > 0;
+                from asset a join organization o on o.id = a.org_id where a.org_id = :o and a.id = :id""")
+                .param("o", org).param("id", id).query(ProcessingJob.class).single();
     }
 
     /** Channels that air each asset in their published schedule from now on. */
@@ -72,8 +58,10 @@ public class AssetRepository {
     /** A local upload replaces a library video as the source (ad creatives keep their ad-server identity). */
     public void markUploaded(UUID org, UUID id) {
         db.sql("""
+                with s as (delete from asset_source where org_id = :o and asset_id = :id returning asset_id)
                 update asset set status = 'PROCESSING', status_detail = 'Uploaded; converting to 5-second HLS segments', generator = null,
-                source_ref = case when source_ref like 'mux%' then null else source_ref end, updated_at = now() where org_id = :o and id = :id""")
+                source_ref = case when source_ref like 'mux%' or exists (select 1 from s) then null else source_ref end, updated_at = now()
+                where org_id = :o and id = :id""")
                 .param("o", org).param("id", id).update();
     }
 
@@ -171,7 +159,7 @@ public class AssetRepository {
     public Optional<UUID> insertLibraryAsset(UUID org, String title, long durationMs, String detail, String cuePoints, String ref) {
         return db.sql("""
                 insert into asset(org_id, title, kind, duration_ms, status, status_detail, cue_points, source_ref)
-                values (:o, :t, 'MOVIE', :ms, 'PROCESSING', :d, :c, :r)
+                values (:o, :t, 'MOVIE', :ms, 'DRAFT', :d, :c, :r)
                 on conflict (org_id, source_ref) where source_ref is not null do nothing returning id""")
                 .param("o", org).param("t", title).param("ms", durationMs).param("d", detail).param("c", cuePoints).param("r", ref)
                 .query(UUID.class).optional();

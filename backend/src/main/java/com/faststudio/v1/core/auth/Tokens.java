@@ -77,7 +77,15 @@ public class Tokens {
 
     public record OrgClaim(UUID id, UUID tenantId, String slug, String kind, String role) {}
 
-    record UserRow(UUID id, String name, String email, boolean platformAdmin, boolean mustChangePassword, int tokenVersion) {}
+    record UserRow(UUID id, String name, String email, boolean platformAdmin, boolean mustChangePassword, int tokenVersion, boolean disabled) {}
+
+    /** The account as it is now; a switched-off account gets no new tokens (sign-in, refresh or personal token). */
+    private UserRow user(UUID userId) {
+        UserRow u = db.sql("select id, name, email, platform_admin, must_change_password, token_version, disabled_at is not null as disabled from app_user where id = :id")
+                .param("id", userId).query(UserRow.class).single();
+        if (u.disabled()) throw new ApiException(HttpStatus.UNAUTHORIZED, "ACCOUNT_DISABLED", "This account is switched off. Ask your platform administrator.");
+        return u;
+    }
 
     /** Every organization the person works in (platform admins also act as the platform organization). */
     public List<OrgClaim> orgs(UUID userId) {
@@ -94,8 +102,7 @@ public class Tokens {
 
     /** Mints an access token from the database as it is now. activeOrg is kept if the person still belongs to it. */
     public Access mint(UUID userId, UUID activeOrg, UUID sid) {
-        UserRow u = db.sql("select id, name, email, platform_admin, must_change_password, token_version from app_user where id = :id")
-                .param("id", userId).query(UserRow.class).single();
+        UserRow u = user(userId);
         List<OrgClaim> orgs = orgs(userId);
         OrgClaim active = orgs.stream().filter(o -> o.id().equals(activeOrg)).findFirst()
                 .orElse(orgs.stream().filter(o -> o.kind().equals("CUSTOMER")).findFirst().orElse(orgs.isEmpty() ? null : orgs.getFirst()));
@@ -181,8 +188,7 @@ public class Tokens {
      * Minted on each use, so a revoked or expired personal token, a removed membership or a changed role applies at once.
      */
     public Access mintPersonal(UUID userId, OrgClaim org, UUID tokenId, String ceiling, Permissions.Effective effective) {
-        UserRow u = db.sql("select id, name, email, platform_admin, must_change_password, token_version from app_user where id = :id")
-                .param("id", userId).query(UserRow.class).single();
+        UserRow u = user(userId);
         Instant now = Instant.now(), exp = now.plus(ACCESS_TTL);
         JwtClaimsSet.Builder c = JwtClaimsSet.builder().issuer(issuer).audience(List.of(AUDIENCE)).subject(userId.toString())
                 .issuedAt(now).notBefore(now).expiresAt(exp).id(UUID.randomUUID().toString())
@@ -244,7 +250,7 @@ public class Tokens {
         long now = System.currentTimeMillis();
         long[] v = versions.get(user);
         if (v != null && now - v[1] < VERSION_CACHE.toMillis()) return (int) v[0];
-        int ver = db.sql("select token_version from app_user where id = :u").param("u", user).query(Integer.class).optional().orElse(-1);
+        int ver = db.sql("select case when disabled_at is null then token_version else -1 end from app_user where id = :u").param("u", user).query(Integer.class).optional().orElse(-1);
         versions.put(user, new long[]{ver, now});
         return ver;
     }

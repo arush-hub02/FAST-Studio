@@ -2,6 +2,7 @@ package com.faststudio.v1.controllers.studio.media;
 
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.dto.media.MediaSettingsDto.SettingsRequest;
+import com.faststudio.v1.dto.media.MediaSettingsDto.TypeRequest;
 import com.faststudio.v1.dto.media.MediaSettingsDto.View;
 import com.faststudio.v1.dto.media.MediaSettingsDto.ViewerKeyRequest;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
@@ -21,6 +22,12 @@ public class MediaSettingsControllerV1 {
 
     @PutMapping
     View save(Tenant t, @Valid @RequestBody SettingsRequest r) { return settings.save(t, r); }
+
+    @PostMapping("/media-types")
+    View saveType(Tenant t, @Valid @RequestBody TypeRequest r) { return settings.saveProjectType(t, r); }
+
+    @DeleteMapping("/media-types/{key}")
+    View deleteType(Tenant t, @PathVariable String key) { return settings.deleteProjectType(t, key); }
 
     @PostMapping("/viewer-key")
     View viewerKey(Tenant t, @Valid @RequestBody ViewerKeyRequest request) { return settings.rotateViewerKey(t, request); }

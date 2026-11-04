@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, type AssetView, type MediaSettingsView } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import { DAYS, ErrorBox, Loading, useAction, useApi } from '../../shared/ui'
+import { useProjectMedia } from '../../shared/projectMedia'
 
 type Rule = { id: string; series: string; startDate: string; endDate: string; premiereTime: string; repeatTime?: string; weekdays: string; startSeason: number; startEpisode: number; loop: boolean; enabled: boolean }
 type Preview = { revision: number; placements: { date: string; title: string; season: number; episode: number; encore: boolean; start: string; end: string }[]; notices: string[] }
@@ -10,7 +11,7 @@ type Props = { channelId: string; timezone: string; revision: number; onChange: 
 
 export function SmartProgramming(props: Props) {
   const org = useOrg()
-  const settings = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const settings = useProjectMedia()
   const assets = useApi<AssetView[]>(`/api/orgs/${org.slug}/assets?kind=EPISODE`)
   const rules = useApi<Rule[]>(`/api/orgs/${org.slug}/channels/${props.channelId}/programming`)
   const error = settings.error ?? assets.error ?? rules.error

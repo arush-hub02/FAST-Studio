@@ -17,7 +17,7 @@ public class AccessRoleControllerV1 {
 
     /** All custom roles plus the permission names a role may include. */
     @GetMapping
-    Map<String, Object> roles() { return Map.of("roles", service.roles(), "permissions", service.catalog()); }
+    Map<String, Object> roles() { return Map.of("roles", service.roles(), "permissions", service.catalog(), "ceilings", service.ceilings()); }
 
     @PutMapping
     Map<String, Object> save(@Valid @RequestBody AccessRoleServiceV1.Role role) {

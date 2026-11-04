@@ -13,6 +13,7 @@ import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.tenancy.TenantConfigurationRepository;
+import com.faststudio.v1.repositories.tenancy.CapabilityRepository;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
 
 import org.springframework.http.HttpStatus;
@@ -60,6 +61,7 @@ public class TenantConfigurationServiceV1 {
     }
 
     private final TenantConfigurationRepository repository;
+    private final CapabilityRepository capabilities;
     private final JsonMapper json;
     private final Secrets secrets;
     private final Audit audit;
@@ -71,9 +73,10 @@ public class TenantConfigurationServiceV1 {
     private record CachedFlag(boolean value, long at) {}
     private final Map<String, CachedFlag> driverCache = new ConcurrentHashMap<>();
 
-    public TenantConfigurationServiceV1(TenantConfigurationRepository repository, JsonMapper json, Secrets secrets,
+    public TenantConfigurationServiceV1(TenantConfigurationRepository repository, CapabilityRepository capabilities, JsonMapper json, Secrets secrets,
                                           Audit audit, Tokens tokens) {
         this.repository = repository;
+        this.capabilities = capabilities;
         this.json = json;
         this.secrets = secrets;
         this.audit = audit;
@@ -202,6 +205,7 @@ public class TenantConfigurationServiceV1 {
         requirePlatform();
         Connector old = connectors().stream().filter(x -> x.key().equals(c.key())).findFirst().orElse(null);
         if (old != null && !old.driver().equals(c.driver())) throw ApiException.bad("A connector's driver cannot change. Create a new definition.");
+        if (!repository.connectorCategoryExists(c.category())) throw ApiException.bad("Unknown connector category " + c.category() + ".");
         repository.saveConnector(c, Objects.toString(c.description(), ""));
         driverCache.clear();
         audit.platform(Auth.userId(), "connector.definition.save", "connector", null, c.key());
@@ -238,17 +242,42 @@ public class TenantConfigurationServiceV1 {
         return value;
     }
 
+    /** Whether a project may use one connector, by its key (e.g. "mux"; a media connection's provider key). Cached like drivers. */
+    public boolean connectorEnabled(UUID project, String key) {
+        String cacheKey = project + ":key:" + key;
+        long now = System.currentTimeMillis();
+        CachedFlag hit = driverCache.get(cacheKey);
+        if (hit != null && now - hit.at() < DRIVER_CACHE_MS) return hit.value();
+        boolean value = TenantScope.bypass(() -> repository.connectorEnabled(project, key));
+        driverCache.put(cacheKey, new CachedFlag(value, now));
+        return value;
+    }
+
     // ------------------------------------------------------------------ plan features and limits
 
-    /** The subset of requested feature keys the project's plan allows. */
+    /**
+     * The features on for a project: its linked keys that may apply (built-in ones only when the tenant's plan includes
+     * them; enabled global custom ones always).
+     */
     public List<String> effectiveFeatures(UUID project, String requested) {
+        return grantableFeatures(project, requested);
+    }
+
+    /** The project's switched-on feature keys as stored (organization.features). */
+    public String projectFeatures(UUID project) {
+        return TenantScope.bypass(() -> repository.projectFeatures(project));
+    }
+
+    /** Requested keys the platform may switch on for a project: built-in ones in the tenant's plan, or enabled global custom ones. */
+    public List<String> grantableFeatures(UUID project, String requested) {
         Plan p = plan(repository.account(repository.tenant(project)).planKey());
-        return Times.codes(requested).stream().filter(p.features()::contains).toList();
+        List<String> global = TenantScope.bypass(() -> capabilities.enabledCustom("FEATURE", null, true));
+        return Times.codes(requested).stream().filter(f -> p.features().contains(f) || global.contains(f)).toList();
     }
 
     /** Like {@link #effectiveFeatures} but rejects keys outside the plan instead of silently dropping them. */
     public List<String> requirePlanFeatures(UUID project, List<String> requested) {
-        List<String> allowed = effectiveFeatures(project, String.join(",", requested));
+        List<String> allowed = grantableFeatures(project, String.join(",", requested));
         List<String> rejected = requested.stream().filter(f -> !allowed.contains(f)).distinct().toList();
         if (!rejected.isEmpty())
             throw ApiException.bad("Not included in this tenant's plan: " + String.join(", ", rejected) + ". Change the plan first.");
@@ -369,10 +398,12 @@ public class TenantConfigurationServiceV1 {
             boolean editable = platform || (project == null ? isTenantOwner(tenant) : isMember(scope, List.of("OWNER", "ADMIN")));
 
             List<EffectiveProperty> properties = new ArrayList<>();
+            Map<String, String> tenantValues = repository.values(tenant, null);
+            Map<String, String> projectValues = project == null ? Map.of() : repository.values(tenant, project);
             for (Definition d : repository.definitions()) {
                 if (!d.enabled() && !platform) continue;
-                String tenantValue = repository.value(tenant, null, d.key());
-                String projectValue = project == null || !d.projectOverride() ? null : repository.value(tenant, project, d.key());
+                String tenantValue = tenantValues.get(d.key());
+                String projectValue = project == null || !d.projectOverride() ? null : projectValues.get(d.key());
                 String value = projectValue != null ? projectValue : tenantValue != null ? tenantValue : d.defaultValue();
                 String source = projectValue != null ? "PROJECT" : tenantValue != null ? "TENANT" : value != null ? "GLOBAL" : "UNSET";
                 boolean overridden = project == null ? tenantValue != null : projectValue != null;
@@ -381,9 +412,11 @@ public class TenantConfigurationServiceV1 {
             }
 
             List<ConnectorState> connectors = new ArrayList<>();
+            Map<String, Boolean> tenantSwitches = repository.switches(tenant, null);
+            Map<String, Boolean> projectSwitches = project == null ? Map.of() : repository.switches(tenant, project);
             for (Connector c : connectors()) {
-                boolean allowed = c.enabled() && Boolean.TRUE.equals(repository.enabled(tenant, null, c.key()));
-                Boolean override = project == null ? null : repository.enabled(tenant, project, c.key());
+                boolean allowed = c.enabled() && Boolean.TRUE.equals(tenantSwitches.get(c.key()));
+                Boolean override = project == null ? null : projectSwitches.get(c.key());
                 connectors.add(new ConnectorState(c, allowed, allowed && !Boolean.FALSE.equals(override), override != null));
             }
 
@@ -422,6 +455,23 @@ public class TenantConfigurationServiceV1 {
      * The value product code should use for a project: project override → tenant value → global default.
      * Returns null when nothing is set. Secret values are opened for server-side use only; never return them to clients.
      */
+    /** effective() for several keys with one lookup of the tenant, the definitions and each scope's values. */
+    public Map<String, JsonNode> effective(UUID project, Collection<String> keys) {
+        return TenantScope.bypass(() -> {
+            UUID tenant = repository.tenant(project);
+            Map<String, String> projectValues = repository.values(tenant, project), tenantValues = repository.values(tenant, null);
+            Map<String, JsonNode> out = new HashMap<>();
+            for (Definition d : repository.definitions()) {
+                if (!keys.contains(d.key())) continue;
+                String value = d.projectOverride() ? projectValues.get(d.key()) : null;
+                if (value == null) value = tenantValues.get(d.key());
+                if (value == null) value = d.defaultValue();
+                if (value != null) out.put(d.key(), json.readTree(d.secret() ? secrets.open(value) : value));
+            }
+            return out;
+        });
+    }
+
     public JsonNode effective(UUID project, String key) {
         return TenantScope.bypass(() -> {
             UUID tenant = repository.tenant(project);

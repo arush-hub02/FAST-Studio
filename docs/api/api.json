@@ -333,6 +333,101 @@
           }
         },
         {
+          "method": "POST",
+          "path": "/api/orgs/{org}/settings/media-types",
+          "title": "Add or change one of the project's own media types",
+          "description": "A type only this project uses, next to the platform's. Its key can't be one of the platform's, and kind (how it schedules) never changes once created. Returns the settings, with the new type in types and ownTypes. Owners and administrators.",
+          "body": {
+            "key": "TRAILER",
+            "label": "Trailer",
+            "kind": "SHORT",
+            "enabled": true
+          },
+          "bodyFields": [
+            {
+              "name": "key",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "capitals, digits and _, e.g. TRAILER",
+                "not a platform type's key"
+              ]
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "up to 80 characters"
+              ]
+            },
+            {
+              "name": "kind",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "one of: MOVIE, EPISODE, SHORT, AD",
+                "can't change later"
+              ]
+            },
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "required": false
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/settings/media-types/{key}",
+          "title": "Delete one of the project's own media types",
+          "params": {
+            "key": "TRAILER"
+          },
+          "description": "Refused with 409 IN_USE while videos use it; switch it off instead."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/email-templates",
+          "title": "The project's emails",
+          "description": "Emails sent about this project (invitations, password reset and change, alerts, partner sharing, footer). customized = the project has its own wording; defaultSubject and defaultBody are the platform's wording it falls back to. Org welcome and test emails stay the platform's."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/email-templates/{key}/preview",
+          "title": "Preview a draft",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Renders the draft with example values and the project's footer, and lists what would stop it saving. Nothing is stored.",
+          "body": {
+            "subject": "Reset your Aurora password",
+            "body": "Hello {{name}},\n\n{{resetUrl}}"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/email-templates/{key}",
+          "title": "Use the project's own wording",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Saved emails about this project use it from now on. Placeholders such as {{name}} are filled in when sent; required ones must stay. Owners and administrators.",
+          "body": {
+            "subject": "Reset your Aurora password",
+            "body": "Hello {{name}},\n\n{{resetUrl}}"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/email-templates/{key}",
+          "title": "Back to the platform's wording",
+          "params": {
+            "key": "password_reset"
+          },
+          "description": "Removes the project's own version."
+        },
+        {
           "method": "GET",
           "path": "/api/orgs/{org}/configuration",
           "title": "Project configuration",
@@ -432,6 +527,111 @@
             "limit": "50"
           },
           "description": "Who did what in the project, newest first."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/features",
+          "title": "Project features",
+          "description": "The modules and published feature groups, the features this project can switch on, which ones it has linked, and the feature and permission identifiers that apply to you now (the same keys as project details)."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/features/{key}",
+          "title": "Switch a feature on for the project",
+          "params": {
+            "key": "CLIPS"
+          },
+          "description": "Links a global feature to the project. Needs TEAM_MANAGE. Subscription (built-in) features are switched on by the platform administrator: 409 PLATFORM_ONLY. Hidden or unknown features: 404."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/features/{key}",
+          "title": "Switch a feature off for the project",
+          "params": {
+            "key": "CLIPS"
+          },
+          "description": "Unlinks a feature. Needs TEAM_MANAGE; subscription features: 409 PLATFORM_ONLY."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/features/defaults",
+          "title": "Add default features",
+          "description": "Switches on every feature marked as default (except subscription features). Needs TEAM_MANAGE."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/roles",
+          "title": "Project roles",
+          "description": "Platform roles (read-only here) and the project's own roles, the permission identifiers a role may list, what each ceiling allows, and the catalogue for the grouped permission editor."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/roles",
+          "title": "Save a project role",
+          "body": {
+            "key": "clip-reviewer",
+            "name": "Clip reviewer",
+            "kind": "CUSTOMER",
+            "baseRole": "ANALYST",
+            "permissions": [
+              "VIEW",
+              "CLIPS_EXPORT"
+            ],
+            "enabled": true,
+            "expectedRevision": 0
+          },
+          "fields": {
+            "key": "Stable role identifier: lower-case letters, digits, \"_\" or \"-\". Unique across the platform.",
+            "baseRole": "Ceiling: the most this role may do (not OWNER, not above your own role).",
+            "permissions": "Permission identifiers: built-in ones within the ceiling, plus custom ones. Must include VIEW.",
+            "expectedRevision": "The revision you edited (0 for a new role); a stale one gets 409."
+          },
+          "description": "Creates or updates a role for this project only; other projects never see it. Needs TEAM_MANAGE. Give it to people on the Team page."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/roles/{key}",
+          "title": "Remove a project role",
+          "params": {
+            "key": "clip-reviewer"
+          },
+          "description": "Removes one of the project's own roles. Refused while anyone has it (409 IN_USE). Needs TEAM_MANAGE."
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/connectors",
+          "title": "Project connector marketplace",
+          "description": "Published connectors this project may use and the caller may see (required permission), with external fields only. Each says whether it is connected, what is missing and whether the caller may connect it."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/connectors/{key}",
+          "title": "Connect a connector",
+          "description": "Only when its rule is ALLOWED and it is AVAILABLE; needs Manage team. External fields only; values are type-checked.",
+          "body": {
+            "name": "Primary",
+            "enabled": true,
+            "values": {
+              "tag_url": "https://ads.example/vast",
+              "timeout_ms": "1500"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orgs/{org}/connectors/{key}/{id}",
+          "title": "Update a connection",
+          "description": "A blank encrypted value keeps the stored one.",
+          "body": {
+            "enabled": false,
+            "values": {}
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/connectors/{key}/{id}",
+          "title": "Remove a connection",
+          "description": "Disconnects it, or removes one ad server of a list."
         }
       ]
     },
@@ -526,6 +726,24 @@
           "description": "Only for videos with status FAILED."
         },
         {
+          "method": "GET",
+          "path": "/api/orgs/{org}/assets/{id}/jobs",
+          "title": "Processing history of a video",
+          "params": {
+            "id": "{{assetId}}"
+          },
+          "description": "The last 10 background jobs of the video, newest first: state (QUEUED, RUNNING, CANCEL_REQUESTED, SUCCEEDED, FAILED, CANCELLED), lane (AD or PROGRAMME), attempt number out of the maximum, the last error in plain words and times. nextRunAt is set while a job waits for its retry."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/assets/{id}/jobs/cancel",
+          "title": "Cancel processing",
+          "params": {
+            "id": "{{assetId}}"
+          },
+          "description": "Stops the video's processing. A queued job is cancelled at once; a running one stops within about 30 seconds. The video goes back to how it was: still READY with its old media (which keeps airing), or DRAFT if it never had media. 409 NOT_PROCESSING when nothing is queued or running."
+        },
+        {
           "method": "POST",
           "path": "/api/orgs/{org}/assets/{id}/archive",
           "title": "Archive a video",
@@ -535,10 +753,27 @@
           "description": "Hides it from the library (never a hard delete). Refused while it airs, is in a draft, is a channel's fallback or an active campaign's creative; the answer lists where."
         },
         {
+          "method": "GET",
+          "path": "/api/orgs/{org}/library",
+          "title": "Connected library status",
+          "description": "Whether a video library is connected and its last check worked, what it can do (CATALOGUE: sync, DIRECT_UPLOAD: upload URLs, SOURCE_FILE: prepare for broadcast, WEBHOOKS: automatic updates) and the sync: state (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen, videos added, pages read, whether the last full scan completed, the last error and when a waiting sync retries. Never names the provider."
+        },
+        {
           "method": "POST",
           "path": "/api/orgs/{org}/library/sync",
-          "title": "Sync from the connected library",
-          "description": "Imports every ready video of the connected library not imported yet; re-running adds nothing twice. Needs the library-sync feature for your project."
+          "title": "Start a library sync",
+          "description": "Starts reading the connected library in the background, page by page, and adds every ready video not imported yet as a Draft (catalogue only: nothing is prepared or paid for). If the library is unreachable the sync waits and continues from the last saved page. A second call while one runs just reports it. The answer is the sync status (see GET …/library). Needs asset editing and the library-sync feature."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/library/prepare",
+          "title": "Prepare library videos for broadcast",
+          "description": "Queues the chosen library videos (1 to 100) for conversion into 5-second segments, which fetches their original files from the library. Each video is checked on its own; the answer says how many were queued and, for the others, why not: NOT_FOUND, NOT_FROM_LIBRARY, ALREADY_READY, ALREADY_PROCESSING, NOT_READY_IN_LIBRARY (the library reports it errored, deleted or missing) or PROCESSING_LIMIT. 409 NOT_SUPPORTED when the connected library can't hand over files. Needs asset editing.",
+          "body": {
+            "assetIds": [
+              "{{assetId}}"
+            ]
+          }
         }
       ]
     },
@@ -834,8 +1069,8 @@
           "description": "Shows which episodes would air when, without saving anything.",
           "body": {
             "series": "Slow Roads",
-            "startDate": "2026-11-02",
-            "endDate": "2026-11-30",
+            "startDate": "2027-01-04",
+            "endDate": "2027-01-31",
             "premiereTime": "20:00",
             "repeatTime": "23:00",
             "weekdays": [
@@ -858,8 +1093,8 @@
           "description": "Saves the rule; generate then writes its episodes into the draft schedule.",
           "body": {
             "series": "Slow Roads",
-            "startDate": "2026-11-02",
-            "endDate": "2026-11-30",
+            "startDate": "2027-01-04",
+            "endDate": "2027-01-31",
             "premiereTime": "20:00",
             "repeatTime": "23:00",
             "weekdays": [
@@ -1635,6 +1870,155 @@
         },
         {
           "method": "GET",
+          "path": "/api/platform/connector-catalogue",
+          "title": "Connector marketplace catalogue",
+          "description": "Categories and every connector with its marketplace details and fields (key, type, required, encrypted, external or internal)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/connector-categories",
+          "title": "Add a connector category",
+          "description": "A marketplace group such as ADS or ANALYTICS.",
+          "body": {
+            "key": "ANALYTICS",
+            "name": "Analytics",
+            "description": "Measurement partners",
+            "position": 5
+          },
+          "fields": {
+            "key": "Capitals, digits and _. Can't change later."
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-categories/{key}",
+          "title": "Edit a connector category",
+          "description": "Name, description and order.",
+          "body": {
+            "name": "Analytics",
+            "description": "Measurement partners",
+            "position": 5
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-categories/{key}",
+          "title": "Delete a connector category",
+          "description": "409 while a connector still uses it."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-definitions/{key}/details",
+          "title": "Marketplace details of a connector",
+          "description": "Status (AVAILABLE, UPCOMING, UNPUBLISHED), who connects it (ALLOWED, NOT_ALLOWED, CONTACT_ACCOUNT_MANAGER), the permission needed to see it, level (PROJECT or PLATFORM), several per project, tier, logos and links.",
+          "body": {
+            "tier": "FREE",
+            "status": "AVAILABLE",
+            "tenantUpdate": "ALLOWED",
+            "requiredPermission": "ADS_EDIT",
+            "level": "PROJECT",
+            "multiInstance": true,
+            "longDescription": "Any VAST 4 ad server."
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-definitions/{key}/properties/{prop}",
+          "title": "Add or change a connector field",
+          "description": "Fields are rows, not code. Changing whether a field is encrypted removes the values stored for it.",
+          "body": {
+            "label": "Token secret",
+            "valueType": "STRING",
+            "required": true,
+            "encrypted": true,
+            "scope": "INTERNAL",
+            "position": 2
+          },
+          "fields": {
+            "valueType": "STRING, NUMBER, BOOLEAN, SELECT (needs options) or URL.",
+            "scope": "EXTERNAL: tenants see and fill it. INTERNAL: platform only.",
+            "encrypted": "Stored sealed and never returned; no default allowed."
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-definitions/{key}/properties/{prop}",
+          "title": "Delete a connector field",
+          "description": "Also removes the values every project stored for it."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/connector-instances",
+          "title": "Platform-level connections",
+          "description": "Connectors with one set of values for the whole platform (R2 storage)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/connector-instances/{key}",
+          "title": "Connect a platform-level connector",
+          "description": "Saves its values; encrypted ones are sealed.",
+          "body": {
+            "values": {
+              "worker_url": "https://edge.example",
+              "edge_secret": "s3cret"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/connector-instances/{key}/{id}",
+          "title": "Update a platform-level connection",
+          "description": "A blank encrypted value keeps the stored one; a blank plain value clears it.",
+          "body": {
+            "values": {
+              "public_url": "https://media.example"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/connector-instances/{key}/{id}",
+          "title": "Disconnect a platform-level connector",
+          "description": "Its values go with it."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/connector-instances",
+          "title": "A project's connections (platform view)",
+          "description": "Every project-level connector with internal fields too, used by the tenant page."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}",
+          "title": "Connect a connector for a project",
+          "description": "The platform can connect any available connector, whatever its tenant rule.",
+          "body": {
+            "values": {
+              "token_id": "abc",
+              "token_secret": "xyz"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+          "title": "Update a project's connection",
+          "description": "Same value rules as above.",
+          "body": {
+            "enabled": true,
+            "values": {
+              "environment": "production"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
+          "title": "Remove a project's connection",
+          "description": "Disconnects it, or removes one ad server from a list."
+        },
+        {
+          "method": "GET",
           "path": "/api/platform/access-roles",
           "title": "List custom roles",
           "description": "Roles beyond the built-in ones, with their permissions."
@@ -1657,6 +2041,230 @@
           "fields": {
             "kind": "CUSTOMER or PARTNER: where the role can be used."
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/catalogue",
+          "title": "Features and permissions catalogue",
+          "description": "Everything in one answer: modules, feature groups, features (with the permissions each uses and the default / hidden / beta flags) and permissions (system or custom). Used by Global configuration and the role editor. Platform administrators only."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/modules",
+          "title": "Add a module",
+          "body": {
+            "key": "STUDIO",
+            "name": "Studio",
+            "description": "Clip and highlight tools",
+            "position": 6,
+            "enabled": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "position": "Order in lists (lower first).",
+            "enabled": "true = in use."
+          },
+          "description": "Adds a module, the top level of the catalogue (e.g. Media). The role editor shows one tab per module. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/modules/{key}",
+          "title": "Change a module",
+          "body": {
+            "key": "STUDIO",
+            "name": "Studio",
+            "description": "Clip and highlight tools",
+            "position": 6,
+            "enabled": true
+          },
+          "params": {
+            "key": "STUDIO"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "position": "Order in lists (lower first).",
+            "enabled": "true = in use."
+          },
+          "description": "Changes a module. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/modules/{key}",
+          "title": "Remove a module",
+          "params": {
+            "key": "STUDIO"
+          },
+          "description": "Removes a module. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/feature-groups",
+          "title": "Add a feature group",
+          "body": {
+            "key": "CLIPS_TOOLS",
+            "moduleKey": "STUDIO",
+            "name": "Clips",
+            "description": "Highlight clips",
+            "position": 1,
+            "published": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "moduleKey": "The module the group belongs to.",
+            "position": "Order in lists (lower first).",
+            "published": "true = offered to projects and shown in the role editor."
+          },
+          "description": "Adds a group of features inside a module. Projects search features by group; the role editor shows one tab per group. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/feature-groups/{key}",
+          "title": "Change a feature group",
+          "body": {
+            "key": "CLIPS_TOOLS",
+            "moduleKey": "STUDIO",
+            "name": "Clips",
+            "description": "Highlight clips",
+            "position": 1,
+            "published": true
+          },
+          "params": {
+            "key": "CLIPS_TOOLS"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "moduleKey": "The module the group belongs to.",
+            "position": "Order in lists (lower first).",
+            "published": "true = offered to projects and shown in the role editor."
+          },
+          "description": "Changes a feature group. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/feature-groups/{key}",
+          "title": "Remove a feature group",
+          "params": {
+            "key": "CLIPS_TOOLS"
+          },
+          "description": "Removes a feature group. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/features",
+          "title": "Add a feature",
+          "body": {
+            "key": "CLIPS",
+            "name": "Clips",
+            "description": "Highlight clips from long videos",
+            "groupKey": "CLIPS_TOOLS",
+            "permissions": [
+              "CLIPS_EXPORT",
+              "ASSETS_EDIT"
+            ],
+            "isDefault": true,
+            "hidden": false,
+            "beta": false,
+            "enabled": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "groupKey": "The feature group.",
+            "permissions": "Permission identifiers this feature uses.",
+            "isDefault": "true = switched on by a project's \"Add default features\".",
+            "hidden": "true = not offered to projects.",
+            "beta": "true = shown as beta.",
+            "enabled": "true = in use (built-in features stay on)."
+          },
+          "description": "Adds a feature: projects switch it on; screens hide its parts when it is off. permissions lists the permissions it uses, which is how the role editor groups them. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/features/{key}",
+          "title": "Change a feature",
+          "body": {
+            "key": "CLIPS",
+            "name": "Clips",
+            "description": "Highlight clips from long videos",
+            "groupKey": "CLIPS_TOOLS",
+            "permissions": [
+              "CLIPS_EXPORT",
+              "ASSETS_EDIT"
+            ],
+            "isDefault": true,
+            "hidden": false,
+            "beta": false,
+            "enabled": true
+          },
+          "params": {
+            "key": "CLIPS"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "groupKey": "The feature group.",
+            "permissions": "Permission identifiers this feature uses.",
+            "isDefault": "true = switched on by a project's \"Add default features\".",
+            "hidden": "true = not offered to projects.",
+            "beta": "true = shown as beta.",
+            "enabled": "true = in use (built-in features stay on)."
+          },
+          "description": "Changes a feature. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/features/{key}",
+          "title": "Remove a feature",
+          "params": {
+            "key": "CLIPS"
+          },
+          "description": "Removes a feature. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/permissions",
+          "title": "Add a permission",
+          "body": {
+            "key": "CLIPS_EXPORT",
+            "name": "Export clips",
+            "description": "May export highlight clips",
+            "category": "Studio",
+            "enabled": true
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "category": "Group shown on screens, e.g. Media (default General).",
+            "enabled": "true = in use (system permissions stay on)."
+          },
+          "description": "Adds a custom permission. Roles give permissions to people; custom ones show or hide things in screens (usually together with a feature) and grant no server access by themselves. 409 KEY_TAKEN if the identifier is used."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/permissions/{key}",
+          "title": "Change a permission",
+          "body": {
+            "key": "CLIPS_EXPORT",
+            "name": "Export clips",
+            "description": "May export highlight clips",
+            "category": "Studio",
+            "enabled": true
+          },
+          "params": {
+            "key": "CLIPS_EXPORT"
+          },
+          "fields": {
+            "key": "Identifier: capitals, digits and underscores, starting with a letter (e.g. CLIPS). Unique; it can't change later (the key in the path must match).",
+            "category": "Group shown on screens, e.g. Media (default General).",
+            "enabled": "true = in use (system permissions stay on)."
+          },
+          "description": "Changes a permission. Built-in entries can be renamed and regrouped but not switched off (409 BUILT_IN)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/permissions/{key}",
+          "title": "Remove a permission",
+          "params": {
+            "key": "CLIPS_EXPORT"
+          },
+          "description": "Removes a permission. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
         }
       ]
     },
@@ -1729,7 +2337,7 @@
           "method": "GET",
           "path": "/api/platform/orgs/{orgId}/connectors/mux",
           "title": "Video library account (Mux)",
-          "description": "Whether it is connected, its environment and tag, and the webhook address to enter in Mux. Never the credentials."
+          "description": "Whether it is connected, its environment and tag, the webhook address to enter in Mux, and the last connection check (healthy null = never checked). Never the credentials."
         },
         {
           "method": "PUT",
@@ -1746,9 +2354,21 @@
         },
         {
           "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connectors/mux/check",
+          "title": "Check the video library connection",
+          "description": "Reads the library with the stored credentials and records the result: healthy true, or false with checkError in plain words. Saving credentials alone never marks a connection as working; new credentials clear the last result."
+        },
+        {
+          "method": "GET",
           "path": "/api/platform/orgs/{orgId}/connectors/mux/sync",
-          "title": "Sync a project's video library",
-          "description": "Imports the ready videos not imported yet; the answer says how many videos were found and added."
+          "title": "A project's library sync status",
+          "description": "State of the latest sync (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen and added, pages read, whether the full scan completed, the last error and when a waiting sync retries."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/orgs/{orgId}/connectors/mux/sync",
+          "title": "Start a project's library sync",
+          "description": "Starts the same background sync as the project's own sync button: new ready videos are added as Drafts, nothing is prepared. The answer is the sync status."
         },
         {
           "method": "GET",
@@ -1864,6 +2484,154 @@
           }
         },
         {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/project-media-types",
+          "title": "A project's own media types",
+          "description": "Types the project created for itself, with how many videos use each (read-only; the project manages them)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people",
+          "title": "List people",
+          "description": "Everyone with an account and every organization they belong to, by name. q filters by name or email; limit (up to 200) and offset page through; total counts all matches. tenantId limits the list to one tenant's projects (tenant page → People).",
+          "query": {
+            "q": "aurora",
+            "limit": "50",
+            "offset": "0"
+          },
+          "paramHelp": {
+            "q": "Part of a name or email (blank = everyone).",
+            "limit": "How many people per page, 1 to 200.",
+            "offset": "How many matches to skip, for the next page.",
+            "tenantId": "Optional: only people in one of this customer tenant's projects (an id from List tenants)."
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/people",
+          "title": "Add a person to an organization",
+          "description": "Creates the account when the email is new (the answer then holds a one-time password) and emails them. The role must fit the organization: customer roles in customer organizations, partner roles in partner ones. 409 when already a member.",
+          "body": {
+            "email": "new.person@example.com",
+            "name": "New Person",
+            "orgId": "00000000-0000-0000-0000-000000000000",
+            "role": "ANALYST"
+          },
+          "bodyFields": [
+            {
+              "name": "email",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "an email address"
+              ]
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "up to 80 characters"
+              ]
+            },
+            {
+              "name": "orgId",
+              "type": "uuid",
+              "required": true,
+              "rules": [
+                "a customer or partner organization"
+              ]
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "OWNER, ADMIN, CONTENT_MANAGER, CHANNEL_OPERATOR, AD_OPS, ANALYST (customer) or PARTNER_ADMIN, PARTNER_VIEWER (partner)"
+              ]
+            },
+            {
+              "name": "customRoleKey",
+              "type": "string",
+              "required": false,
+              "rules": [
+                "an enabled custom role of the organization based on role"
+              ]
+            }
+          ],
+          "fields": {
+            "orgId": "The customer or partner organization to add them to (an id from List organizations).",
+            "customRoleKey": "Optional custom role of that organization that narrows role."
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people/roles",
+          "title": "Custom roles for one organization",
+          "description": "Enabled custom roles of the organization’s kind (global and its own) that can be given with Add person or Change role: send role = baseRole and customRoleKey = key.",
+          "query": {
+            "orgId": "{{orgId}}"
+          },
+          "paramHelp": {
+            "orgId": "The organization the person joins or belongs to."
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/people/{userId}",
+          "title": "One person",
+          "description": "The person and their organizations."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/people/{userId}/memberships/{orgId}",
+          "title": "Change a person's role in an organization",
+          "description": "Applies to their sign-in at once. An organization keeps at least one plain owner (409 LAST_OWNER).",
+          "body": {
+            "role": "AD_OPS"
+          },
+          "bodyFields": [
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "a role of that kind of organization"
+              ]
+            },
+            {
+              "name": "customRoleKey",
+              "type": "string",
+              "required": false
+            }
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/people/{userId}/memberships/{orgId}",
+          "title": "Remove a person from an organization",
+          "description": "Their account and other organizations stay. The last owner can't be removed (409 LAST_OWNER)."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/people/{userId}/status",
+          "title": "Switch an account off or on",
+          "description": "Off: they are signed out everywhere, existing tokens stop at once and they can't sign in (401 ACCOUNT_DISABLED). Organizations, roles and history are kept, so on restores everything. You can't switch off your own account.",
+          "body": {
+            "disabled": true
+          },
+          "bodyFields": [
+            {
+              "name": "disabled",
+              "type": "boolean",
+              "required": true
+            }
+          ],
+          "fields": {
+            "disabled": "true switches the account off, false switches it back on."
+          }
+        },
+        {
           "method": "POST",
           "path": "/api/platform/password-reset",
           "title": "Send someone a password reset",
@@ -1871,6 +2639,81 @@
           "body": {
             "email": "owner@aurora.test"
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/project-features",
+          "title": "A project's features (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "description": "For the tenant detail page: the catalogue (including hidden features), the features this customer project has switched on, and its effective features. Platform administrators only; 404 for partner organizations."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/project-features/{key}",
+          "title": "Switch a feature on for a project (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "CLIPS"
+          },
+          "description": "Switches any enabled feature on for the project, including subscription (built-in) features when the tenant's plan includes them (otherwise 422 \"Not included in this tenant's plan\")."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/project-features/{key}",
+          "title": "Switch a feature off for a project (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "CLIPS"
+          },
+          "description": "Switches a feature off for the project."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/orgs/{orgId}/roles",
+          "title": "A project's roles (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "description": "Platform roles and the project's own roles, what each ceiling allows and the catalogue for the grouped permission editor, for the tenant detail page."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/orgs/{orgId}/roles",
+          "title": "Save a project role (platform)",
+          "params": {
+            "orgId": "{{orgId}}"
+          },
+          "body": {
+            "key": "nw-editor",
+            "name": "Editor",
+            "kind": "CUSTOMER",
+            "baseRole": "CONTENT_MANAGER",
+            "permissions": [
+              "VIEW",
+              "ASSETS_EDIT"
+            ],
+            "enabled": true,
+            "expectedRevision": 0
+          },
+          "fields": {
+            "key": "Stable role identifier: lower-case letters, digits, \"_\" or \"-\". Unique across the platform.",
+            "baseRole": "Ceiling: the most this role may do (not OWNER).",
+            "permissions": "Permission identifiers: built-in ones within the ceiling, plus custom ones. Must include VIEW.",
+            "expectedRevision": "The revision you edited (0 for a new role); a stale one gets 409."
+          },
+          "description": "Creates or updates a role for this customer project only, as the project's own administrators can on its Team page."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/orgs/{orgId}/roles/{key}",
+          "title": "Remove a project role (platform)",
+          "params": {
+            "orgId": "{{orgId}}",
+            "key": "nw-editor"
+          },
+          "description": "Removes one of the project's own roles; refused while anyone has it (409 IN_USE)."
         }
       ]
     },

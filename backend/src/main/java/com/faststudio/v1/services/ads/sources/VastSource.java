@@ -104,7 +104,7 @@ public class VastSource implements IAdSource {
             return new Creative(null, "FAILED", null, 0);
         }
         repository.insertCreative(org, trim(ad.title(), 120), "Creative from " + src.name() + (ad.advertiser().isEmpty() ? "" : " (" + ad.advertiser() + ")"),
-                ad.durationMs(), ad.mediaUrl(), ad.ref()).ifPresent(media::enqueueCreative);
+                ad.durationMs(), ad.mediaUrl(), ad.ref()).ifPresent(id -> media.enqueueCreative(org, id));
         return null;
     }
 

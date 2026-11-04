@@ -1,6 +1,7 @@
 package com.faststudio.v1.controllers.platform.media;
 
 import com.faststudio.v1.dto.media.MediaSettingsDto.Entitlements;
+import com.faststudio.v1.dto.media.MediaSettingsDto.ProjectType;
 import com.faststudio.v1.dto.media.MediaSettingsDto.Type;
 import com.faststudio.v1.dto.media.MediaSettingsDto.TypeRequest;
 import com.faststudio.v1.services.media.MediaSettingsServiceV1;
@@ -26,6 +27,9 @@ public class MediaTypeControllerV1 {
 
     @GetMapping("/orgs/{orgId}/media-types")
     List<String> entitled(@PathVariable UUID orgId) { return settings.entitlementsForPlatform(orgId); }
+
+    @GetMapping("/orgs/{orgId}/project-media-types")
+    List<ProjectType> projectTypes(@PathVariable UUID orgId) { return settings.projectTypesForPlatform(orgId); }
 
     @PutMapping("/orgs/{orgId}/media-types")
     List<String> entitle(@PathVariable UUID orgId, @Valid @RequestBody Entitlements r) { return settings.entitle(orgId, r); }

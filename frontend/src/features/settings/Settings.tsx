@@ -1,22 +1,59 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api, type MediaSettingsView} from '../../shared/api'
 import { useOrg } from '../../app/App'
-import { DAYS, ErrorBox, Loading, PageHead, useAction, useApi } from '../../shared/ui'
+import { DAYS, ErrorBox, Icon, Loading, PageHead, useAction, useApi } from '../../shared/ui'
 import { ConfigurationEditor } from '../../shared/configuration/ConfigurationEditor'
+import { ProjectFeatures } from '../../shared/configuration/Catalogue'
+import { ConnectorPanel } from '../../shared/configuration/ConnectorPanel'
+import { EmailTemplates } from '../../shared/components/EmailTemplates'
+import { ProjectMediaTypes } from './ProjectMediaTypes'
+
+// Project Settings in side tabs (same layout as the platform's tenant page). The tab is in the address (?tab=).
+const TABS = [
+  { key: 'general', label: 'General', icon: 'sliders' },
+  { key: 'features', label: 'Features', icon: 'shield' },
+  { key: 'connectors', label: 'Connectors', icon: 'link' },
+  { key: 'media-types', label: 'Media types', icon: 'film' },
+  { key: 'emails', label: 'Emails', icon: 'mail' },
+]
 
 export default function Settings() {
   const org = useOrg()
-  const view = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
-  const [scope,setScope]=useState('project')
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.find(t => t.key === params.get('tab')) ?? TABS[0]
   return <div className="page stack">
     <PageHead title="Settings" subtitle={`${org.tenantName??org.name} / ${org.name}. Tenant defaults are inherited by its projects.`} />
+    <div className="side-tabs-layout">
+      <nav className="side-tabs card" aria-label="Settings">
+        {TABS.map(t => <button key={t.key} type="button" className={tab.key === t.key ? 'active' : ''} aria-current={tab.key === t.key ? 'page' : undefined}
+          onClick={() => setParams({ tab: t.key }, { replace: true })}><Icon name={t.icon} size={15} /><span>{t.label}</span></button>)}
+      </nav>
+      <div className="stack" style={{ minWidth: 0 }}>
+        {tab.key === 'general' && <General />}
+        {tab.key === 'features' && <ProjectFeatures base={`/api/orgs/${org.slug}/features`} editable={org.can("TEAM_MANAGE")} />}
+        {tab.key === 'connectors' && <ConnectorPanel base={`/api/orgs/${org.slug}/connectors`}
+          intro="Services this project uses. You can connect the ones marked Connect; others are connected by the platform." />}
+        {tab.key === 'media-types' && <ProjectMediaTypes />}
+        {tab.key === 'emails' && <>
+          <p className="faint">How emails about this project are worded. Without your own version, the platform's wording is used.</p>
+          <EmailTemplates base={`/api/orgs/${org.slug}/email-templates`} editable={org.can('TEAM_MANAGE')} inherited="Platform wording" backLabel="Back to the platform's wording" />
+        </>}
+      </div>
+    </div>
+  </div>
+}
+
+function General() {
+  const org = useOrg()
+  const view = useApi<MediaSettingsView>(`/api/orgs/${org.slug}/settings`)
+  const [scope,setScope]=useState('project')
+  return <>
     <div className="row-wrap"><button className={'btn '+(scope==='project'?'primary':'')} aria-pressed={scope==='project'} onClick={()=>setScope('project')}>Project settings</button><button className={'btn '+(scope==='tenant'?'primary':'')} aria-pressed={scope==='tenant'} onClick={()=>setScope('tenant')}>Tenant settings</button></div>
     <ConfigurationEditor key={scope} base={`/api/orgs/${org.slug}/${scope==='project'?'configuration':'tenant-settings'}`} onSaved={org.reloadProject}/>
-    {scope==='project'&&<>
-    {view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
-      <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />}
-    </>}
-  </div>
+    {scope==='project'&&(view.error ? <ErrorBox error={view.error} retry={view.reload} /> : !view.data ? <Loading /> :
+      <SettingsForm key={`${org.slug}:${view.data.revision}`} initial={view.data} reload={view.reload} />)}
+  </>
 }
 
 function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload: () => void }) {
@@ -27,7 +64,7 @@ function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload:
   const editable = org.can('TEAM_MANAGE')
   const base = `/api/orgs/${org.slug}/settings`
   return <>
-    <form className="card card-pad stack" onSubmit={e => { e.preventDefault(); run(() => api(base, { method: 'PUT', body: { ...form, expectedRevision: form.revision } }), 'Settings saved').then(r => { if (r) reload() }) }}>
+    <form className="card card-pad stack" onSubmit={e => { e.preventDefault(); run(() => api(base, { method: 'PUT', body: { ...form, expectedRevision: form.revision } }), 'Settings saved').then(r => { if (r) { reload(); org.reloadProject() } }) }}>
       <fieldset disabled={!editable || busy} className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
         <legend><h2>Media types</h2></legend>
         <p className="faint">The platform owner controls which types your company may use. Disabling a type prevents new use and keeps existing videos and published schedules.</p>
@@ -58,7 +95,7 @@ function SettingsForm({ initial, reload }: { initial: MediaSettingsView; reload:
       <h2>Viewer integration</h2>
       <p>{initial.viewerKeySet ? 'A signing key is configured.' : 'No signing key is configured.'} Keep it only on your viewer application server. Rotating it revokes existing context for future decisions; in-progress breaks retain their committed ads.</p>
       <p className="faint">Generate a random signing key on your viewer application server, then enter it here to configure or rotate the integration. Stored keys cannot be retrieved.</p>
-      <label className="field"><span>Replacement signing key</span><input type="password" autoComplete="new-password" required minLength={32} maxLength={256} pattern="[A-Za-z0-9_-]+" value={key} disabled={busy || !initial.revision} onChange={e => setKey(e.target.value)} /></label>
+      <label className="field"><span>Replacement signing key</span><input type="password" autoComplete="new-password" required minLength={32} maxLength={256} pattern="[A-Za-z0-9_\-]+" value={key} disabled={busy || !initial.revision} onChange={e => setKey(e.target.value)} /></label>
       <button type="submit" className="btn" disabled={busy || !initial.revision || key.length < 32}>Save replacement signing key</button>
       {!initial.revision && <p className="faint">Save tenant settings first.</p>}
     </form>}

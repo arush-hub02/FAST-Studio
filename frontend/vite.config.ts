@@ -9,5 +9,6 @@ export default defineConfig({
     port: 5173,
     proxy: { '/api': backend, '/play': backend, '/media': backend },
   },
-  build: { outDir: '../backend/src/main/resources/static', emptyOutDir: true },
+  // hls.js (593 kB) is already its own chunk, loaded only when a video plays; warn only above it.
+  build: { outDir: '../backend/src/main/resources/static', emptyOutDir: true, chunkSizeWarningLimit: 650 },
 })

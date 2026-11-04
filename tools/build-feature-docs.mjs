@@ -23,7 +23,7 @@ function apiLink(text) {
 /** Width and height of a PNG (from its header), so the page reserves the space before the picture loads. */
 const pngSize = file => { const b = fs.readFileSync(file); return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) } }
 
-const required = ['id', 'title', 'area', 'status', 'completed', 'summary', 'who', 'steps', 'howItWorks', 'optimizations', 'scale', 'rules', 'screenshots']
+const required = ['id', 'title', 'area', 'status', 'completed', 'summary', 'who', 'steps', 'flow', 'howItWorks', 'optimizations', 'scale', 'rules', 'screenshots']
 const ids = new Set()
 const missing = []
 for (const f of data.features) {
@@ -39,6 +39,11 @@ for (const f of data.features) {
     if (!s.exists) missing.push(file)
     else Object.assign(s, pngSize(path.join(dir, 'img', file)))
     delete s.steps; delete s.mask; delete s.target           // recipes are for the screenshot runner, not the page
+  }
+  {   // the animated flow: every step must stand on a known box
+    const nodes = new Set(f.flow.nodes.map(n => n.id))
+    for (const s of f.flow.scenarios.flatMap(x => x.steps))
+      for (const id of [s.at, ...(s.down || [])]) if (!nodes.has(id)) throw new Error(`Feature ${f.id}: flow step names unknown box "${id}"`)
   }
   delete f.cleanup
   f.api = (f.api || []).map(apiLink)
