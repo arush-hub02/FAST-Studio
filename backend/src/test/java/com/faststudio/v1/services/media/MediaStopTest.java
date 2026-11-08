@@ -15,7 +15,7 @@ class MediaStopTest {
     @Test
     void stopKillsTheRunningEncode() throws Exception {
         Path dir = Files.createTempDirectory("fast-stop");
-        MediaServiceV1 media = new MediaServiceV1(null, null, dir.toString(), "", List.of());
+        MediaServiceV1 media = new MediaServiceV1(null, null, dir.toString(), "", List.of(), null);
         assumeTrue(media.ffmpegAvailable(), "needs ffmpeg (frontend/node_modules/ffmpeg-static or PATH)");
         ExecutorService worker = Executors.newSingleThreadExecutor();
         CompletableFuture<Thread> thread = new CompletableFuture<>();

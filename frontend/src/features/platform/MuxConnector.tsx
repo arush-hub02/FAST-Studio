@@ -2,21 +2,21 @@ import { useState } from 'react'
 import { api } from '../../shared/api'
 import { ErrorBox, InfoTip, Loading, fmtDayTime, useAction, useApi } from '../../shared/ui'
 
-// Platform administrator's settings for one company's Mux account (Connectors page). Mux is a content source only:
-// each video is imported once and re-cut into our 5-second segments, viewers never stream from Mux. The company
+// Platform administrator's settings for one company's Mux account (Connectors page). Programmes stream from Mux;
+// the edge splices our ads and slate (R2) into Mux's playlists. Signed playback needs a Mux signing key. The company
 // never sees this; with the LIBRARY_SYNC feature it gets a provider-neutral "sync library" action.
 // Sync runs in the background and resumes after interruptions; it adds videos as Drafts (catalogue only), and the
 // company prepares the ones it wants to air.
 type Account = {
   connected: boolean; tokenId: string | null; environment: string | null; passthroughTag: string | null; webhookSecretSet: boolean; webhookUrl: string
-  checkedAt: string | null; checkError: string | null; healthy: boolean | null
+  checkedAt: string | null; checkError: string | null; healthy: boolean | null; signingKeyId: string | null; signingKeySet: boolean
 }
 type Sync = {
   state: string; videos: number; added: number; pages: number; complete: boolean
   startedAt: string | null; finishedAt: string | null; lastError: string | null; nextRunAt: string | null
 }
 
-const BLANK = { tokenId: '', tokenSecret: '', webhookSecret: '', environment: '', passthroughTag: '' }
+const BLANK = { tokenId: '', tokenSecret: '', webhookSecret: '', environment: '', passthroughTag: '', signingKeyId: '', signingPrivateKey: '' }
 const ACTIVE = ['QUEUED', 'RUNNING', 'CANCEL_REQUESTED']
 const STATE: Record<string, string> = {
   NEVER: 'Never synced', QUEUED: 'Waiting to start', RUNNING: 'Syncing…', CANCEL_REQUESTED: 'Stopping…',
@@ -38,7 +38,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
   if (!account.data) return <Loading rows={1} />
   const a = account.data
   const s = status.data
-  const set = (k: keyof typeof BLANK) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value })
+  const set = (k: keyof typeof BLANK) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value })
 
   const save = () =>
     run(() => api<Account>(base, { method: 'PUT', body: form }), a.connected ? 'Saved' : 'Mux connected')
@@ -55,7 +55,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
       <div className="row" style={{ gap: 8 }}>
         <span className={`badge ${a.connected ? 'ok' : ''}`}>{a.connected ? 'Connected' : 'Not connected'}</span>
         <b>Mux video library</b>
-        <InfoTip text="Imports this company's Mux assets that carry the passthrough tag, and sends its uploads straight to Mux. Each video is converted once into 5-second segments on our own storage, so viewers never stream from Mux. The company only ever sees 'Library', never Mux." />
+        <InfoTip text="Imports this company's Mux assets that carry the passthrough tag, and sends its uploads straight to Mux. Programmes stream from Mux at their own segment lengths; our ads and slate are spliced in at the breaks, and slate plays if Mux can't be reached. The company only ever sees 'Library', never Mux." />
       </div>
 
       {a.connected && !editing && (
@@ -65,6 +65,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
             <span>Environment</span><span>{a.environment || '-'}</span>
             <span>Passthrough tag</span><span className="mono small">{a.passthroughTag || 'none (imports every asset)'}</span>
             <span>Webhook</span><span>{a.webhookSecretSet ? 'Signing secret saved' : "No signing secret: uploads won't turn Ready on their own"}</span>
+            <span>Signed playback</span><span>{a.signingKeySet ? <>Signing key <span className="mono small">{a.signingKeyId}</span> saved</> : 'No signing key: only videos with a public playback ID stream'}</span>
             <span>Connection check</span>
             <span>
               {a.healthy == null ? 'Not checked yet' : a.healthy ? `Works · ${fmtDayTime(a.checkedAt)}` : `Failed · ${fmtDayTime(a.checkedAt)}: ${a.checkError}`}
@@ -81,7 +82,7 @@ export function MuxConnector({ orgId }: { orgId: string }) {
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn" disabled={busy}
-                    onClick={() => { setForm({ ...BLANK, environment: a.environment ?? '', passthroughTag: a.passthroughTag ?? '' }); setEditing(true) }}>Edit</button>
+                    onClick={() => { setForm({ ...BLANK, environment: a.environment ?? '', passthroughTag: a.passthroughTag ?? '', signingKeyId: a.signingKeyId ?? '' }); setEditing(true) }}>Edit</button>
             <button className="btn" disabled={busy} onClick={check}>Check connection</button>
             <button className="btn primary" disabled={busy || active} onClick={sync}>{active ? 'Sync running…' : 'Sync library now'}</button>
           </div>
@@ -104,6 +105,13 @@ export function MuxConnector({ orgId }: { orgId: string }) {
           </div>
           <input className="input mono" type="password" autoComplete="new-password" aria-label="Webhook signing secret"
                  placeholder={a.webhookSecretSet ? 'Webhook signing secret (blank = keep)' : 'Webhook signing secret'} value={form.webhookSecret} onChange={set('webhookSecret')} />
+          <div className="faint small">Signed playback (optional): a Mux signing key, for videos whose playback ID is signed.</div>
+          <div className="row-wrap" style={{ gap: 8 }}>
+            <input className="input mono" style={{ flex: '1 1 180px' }} aria-label="Mux signing key ID"
+                   placeholder="Signing key ID" value={form.signingKeyId} onChange={set('signingKeyId')} />
+            <textarea className="input mono" style={{ flex: '2 1 260px', minHeight: 38 }} aria-label="Mux signing private key" autoComplete="off"
+                      placeholder={a.signingKeySet ? 'Signing private key (blank = keep)' : 'Signing private key (base64, as Mux shows it)'} value={form.signingPrivateKey} onChange={set('signingPrivateKey')} />
+          </div>
           <div className="row" style={{ gap: 8 }}>
             {a.connected && <button className="btn" disabled={busy} onClick={() => { setForm(BLANK); setEditing(false) }}>Cancel</button>}
             <button className="btn primary" disabled={busy || (!a.connected && (!form.tokenId || !form.tokenSecret))} onClick={save}>

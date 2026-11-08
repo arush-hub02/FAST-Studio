@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Hls from 'hls.js'
-import { api, type AssetView } from '../../shared/api'
+import { api, type AssetView, type Streaming } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import {
   Confirm,
@@ -16,6 +16,23 @@ import {
 import { GenreSelector } from '../../shared/components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
 import { useProjectMedia } from '../../shared/projectMedia'
+
+/** How a library video plays: straight from its platform, with our ads and slate spliced in by the edge. */
+function StreamingCard({ s }: { s: Streaming }) {
+  return (
+    <div className="card card-pad stack" data-testid="streaming-card">
+      <h3>Delivery <InfoTip text="Viewers get this programme straight from the video library. Ads (from your ad servers, converted once) and slate are spliced in at the breaks; if the library can't be reached, slate plays." /></h3>
+      {s.problem && <div className="callout warn"><Icon name="alert" /><div>{s.problem}</div></div>}
+      <div className="kv">
+        <span>Streams from</span><b>Video library (not copied)</b>
+        <span>Segments</span><span>{s.segments} of about {s.averageSegmentS.toFixed(1)} s</span>
+        <span>Quality levels</span><span>{s.qualities.length ? s.qualities.map(q => `${q}p`).join(', ') : 'Unknown'}</span>
+        <span>Format</span><span>{s.format === 'FMP4' ? 'fMP4' : 'MPEG-TS'}</span>
+        <span>Playback</span><span>{s.signed ? 'Signed (links expire)' : 'Public'}</span>
+      </div>
+    </div>
+  )
+}
 
 /** Redesigned Asset Drawer with Preview Player, Interactive Cue Timeline, and Easy Ad Insertion */
 export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onClose: () => void; onChange: () => void }) {
@@ -348,6 +365,8 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
                 )}
               </div>
             </div>
+
+            {view.streaming && <StreamingCard s={view.streaming} />}
 
             {a.description && (
               <div className="card card-pad stack">

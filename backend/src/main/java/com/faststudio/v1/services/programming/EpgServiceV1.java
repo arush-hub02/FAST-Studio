@@ -21,16 +21,21 @@ import java.util.*;
 public class EpgServiceV1 {
     private final Data data;
     private final MediaSigner signer;
+    private final com.faststudio.v1.services.media.StreamingServiceV1 streaming;
 
-    public EpgServiceV1(Data data, MediaSigner signer) {
+    public EpgServiceV1(Data data, MediaSigner signer, com.faststudio.v1.services.media.StreamingServiceV1 streaming) {
         this.data = data;
         this.signer = signer;
+        this.streaming = streaming;
     }
 
     /** Guide with signed thumbnail URLs, for the studio's EPG view. */
     public List<Programme> epgWithThumbnails(UUID org, Channel ch, Instant from, Instant to) {
-        return guide(org, ch, from, to).stream()
-                .map(p -> p.mediaKey() == null ? p : p.withThumb(signer.url(p.mediaKey(), "thumb.jpg"))).toList();
+        List<Programme> g = guide(org, ch, from, to);
+        // programmes that stream from the library show the library's still
+        var streams = streaming.streaming(org, g.stream().filter(p -> p.mediaKey() == null && p.assetId() != null).map(Programme::assetId).distinct().toList());
+        return g.stream().map(p -> p.mediaKey() != null ? p.withThumb(signer.url(p.mediaKey(), "thumb.jpg"))
+                : streams.containsKey(p.assetId()) ? p.withThumb(streams.get(p.assetId()).thumbUrl()) : p).toList();
     }
 
     /** Programmes overlapping [from, to): consecutive parts of one video and the mid-roll breaks inside it are merged. */

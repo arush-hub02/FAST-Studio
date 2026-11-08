@@ -80,7 +80,7 @@ public class LibraryServiceV1 {
     public PrepareResult prepare(Tenant t, List<UUID> ids) {
         t.require(Tenant.Perm.ASSETS_EDIT);
         MediaConnectionService.Connection c = connections.connected(t.orgId());
-        providers.require(c.provider(), Capability.SOURCE_FILE);
+        if (!providers.supports(c.provider(), Capability.PLAYBACK)) providers.require(c.provider(), Capability.SOURCE_FILE);   // streams, or is copied
         limits.requireMediaRoom(t.orgId());
         Map<UUID, Candidate> found = new HashMap<>();
         for (Candidate x : sources.candidates(t.orgId(), new LinkedHashSet<>(ids))) found.put(x.id(), x);

@@ -10,6 +10,7 @@ import com.faststudio.v1.dto.media.AssetDto.JobView;
 import com.faststudio.v1.dto.media.LibraryDto.LibraryView;
 import com.faststudio.v1.dto.media.LibraryDto.SyncStatus;
 import com.faststudio.v1.repositories.media.AssetRepository;
+import com.faststudio.v1.repositories.media.AssetSourceRepository;
 import com.faststudio.v1.repositories.media.MediaConnectionRepository;
 import com.faststudio.v1.repositories.media.MediaConnectionRepository.SyncRow;
 import com.faststudio.v1.repositories.media.MediaJobRepository;
@@ -47,10 +48,12 @@ public class MediaSyncServiceV1 {
     private final AssetRepository assets;
     private final TransactionTemplate tx;
     private final Audit audit;
+    private final AssetSourceRepository sources;
 
     public MediaSyncServiceV1(MediaConnectionService connections, MediaConnectionRepository repository, MediaJobRepository jobs,
                               MediaProviderResolverService providers, LibraryServiceV1 library, AssetRules rules, TenantConfigurationServiceV1 configuration,
-                              TenantLimitsService limits, AssetRepository assets, TransactionTemplate tx, Audit audit) {
+                              TenantLimitsService limits, AssetRepository assets, TransactionTemplate tx, Audit audit, AssetSourceRepository sources) {
+        this.sources = sources;
         this.connections = connections;
         this.repository = repository;
         this.jobs = jobs;
@@ -91,9 +94,10 @@ public class MediaSyncServiceV1 {
     /** What the project sees of its library: connected, usable, what it can do, and the sync. Never names the provider. */
     public LibraryView library(Tenant t) {
         MediaConnectionService.Connection c = connections.connection(t.orgId());
-        if (c == null) return new LibraryView(false, null, null, List.of(), status(t.orgId()));
+        if (c == null) return new LibraryView(false, null, null, List.of(), status(t.orgId()), List.of());
         List<String> caps = providers.get(c.provider()).capabilities().stream().map(Enum::name).sorted().toList();
-        return new LibraryView(true, c.checkedAt() == null ? null : c.checkError() == null, c.checkedAt(), caps, status(t.orgId()));
+        return new LibraryView(true, c.checkedAt() == null ? null : c.checkError() == null, c.checkedAt(), caps, status(t.orgId()),
+                sources.waiting(t.orgId(), c.provider()));
     }
 
     /** Queues a full scan from the first page, unless one is already queued or running (then it just reports). */

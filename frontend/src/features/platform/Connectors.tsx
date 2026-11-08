@@ -54,7 +54,7 @@ export function OrgConnectors({ orgId }: { orgId: string }) {
       <div className="grid g2" style={{ gap: 16 }}>
         <div className="card card-pad stack" style={{ gap: 10 }}>
           <h3 style={{ margin: 0, fontSize: 16 }}>Content sources</h3>
-          <p className="faint small" style={{ margin: 0 }}>Where {v.orgName}'s videos come from. Whatever the source, FAST Studio re-cuts them into 5-second segments for playout.</p>
+          <p className="faint small" style={{ margin: 0 }}>Where {v.orgName}'s videos come from. Library videos stream from the library itself; uploads to FAST Studio are cut into 5-second segments. Ads and slate always come from FAST Studio.</p>
           <div className="row" style={{ gap: 8 }}><span className="badge ok">Built in</span> Upload in FAST Studio</div>
           <div className="row" style={{ gap: 8 }}><span className="badge ok">Built in</span> Ad creatives fetched from connected ad servers</div>
           <MuxConnector orgId={orgId} />

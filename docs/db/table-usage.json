@@ -984,6 +984,36 @@
         "Removing or demoting a tenant-wide owner is refused while a project would be left without another owner.",
         "Exported and deleted with the tenant (tenant_id)."
       ]
+    },
+    "asset_playback": {
+      "feature": "Media library",
+      "purpose": "How a library video streams from its platform (V31): playback id, signed or public, container (TS), quality levels and the real length of every segment, read when the video is prepared. Nothing is copied to R2; the edge plays the platform's segments and splices our ads and slate in.",
+      "pages": [
+        "/:org/library"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/library/prepare",
+        "GET /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}"
+      ],
+      "watch": [
+        "segments_ms is the same in every quality level (checked when prepared); duration_ms is their sum, and the asset takes whole 5 s slots in the schedule (the edge fills the rest with slate).",
+        "No URLs or tokens are stored: signed links are made per use from the connection's signing key.",
+        "Read by EdgePublisher for every channel snapshot (only the assets in the window)."
+      ]
+    },
+    "channel_timeline": {
+      "feature": "Live playout",
+      "purpose": "Each channel's segment-numbering anchor (V31): the media sequence number of the segment starting at at_ms. Programmes streaming from their platform have their own segment counts, so numbers can no longer be read off the clock; EdgePublisher moves the anchor forward hour by hour and puts it in the snapshot (t0, seq0).",
+      "pages": [
+        "/:org/channels/{id}"
+      ],
+      "apis": [],
+      "watch": [
+        "Only moves forward (several servers may publish; they compute the same values).",
+        "target_s (EXT-X-TARGETDURATION) never goes down.",
+        "Channels without streaming programmes keep the clock's numbering, as before."
+      ]
     }
   }
 }
