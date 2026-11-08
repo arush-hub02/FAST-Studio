@@ -5,7 +5,7 @@ import { Confirm, fmtDate, Icon, initials, Loading, Modal, PageHead, useAction, 
 import { ResetLinkModal } from '../../shared/components/ResetLinkModal'
 import { ProjectRoles } from '../../shared/configuration/Catalogue'
 
-type Member = { userId: string; name: string; email: string; role: string; createdAt: string; customRoleKey?: string }
+type Member = { userId: string; name: string; email: string; role: string; createdAt: string; customRoleKey?: string; viaTenant?: boolean }
 /** Built-in and custom roles assignable in this organization; the server supplies names and descriptions. */
 function useRoles(slug: string) {
   const view = useApi<{ key: string; name: string; description: string; baseRole: string }[]>(`/api/orgs/${slug}/members/roles`)
@@ -32,15 +32,16 @@ export default function Team() {
               <tbody>{list.data.map(m => (
                 <tr key={m.userId}>
                   <td><div className="row"><div className="avatar" style={{ background: '#6366f1' }}>{initials(m.name)}</div><div><b>{m.name}</b>{m.userId === me?.id && <span className="badge info" style={{ marginLeft: 6 }}>you</span>}<div className="faint">{m.email}</div></div></div></td>
-                  <td>{manage && m.userId !== me?.id ? (
+                  <td>{manage && m.userId !== me?.id && !m.viaTenant ? (
                     <select value={m.customRoleKey??m.role} disabled={busy} style={{ width: 190 }} onChange={e => run(() => api(`/api/orgs/${org.slug}/members/${m.userId}`, { method: 'PATCH', body: { role: roles[e.target.value].baseRole, customRoleKey: roles[e.target.value].baseRole===e.target.value?null:e.target.value } }), 'Role changed').then(list.reload)}>
                       {Object.entries(roles).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}
-                    </select>) : roles[m.customRoleKey??m.role]?.label??m.customRoleKey??m.role}</td>
+                    </select>) : roles[m.customRoleKey??m.role]?.label??m.customRoleKey??m.role}
+                    {m.viaTenant && <div className="faint small" title="Set for every project of your company by the platform administrator">Tenant-wide role</div>}</td>
                   <td className="small">{fmtDate(m.createdAt)}</td>
                   <td>{manage && m.userId !== me?.id && <div className="row-wrap" style={{ justifyContent: 'flex-end' }}>
                     <button className="btn sm ghost" disabled={busy} title="Create a one-time link to set a new password"
                       onClick={() => run(() => api<{ path: string; note: string }>(`/api/orgs/${org.slug}/members/${m.userId}/password-reset`, { method: 'POST' })).then(r => r && setResetLink({ who: m.name, ...r }))}>Reset password</button>
-                    <button className="btn sm ghost danger" onClick={() => setRemoving(m)}>Remove</button></div>}</td>
+                    {!m.viaTenant && <button className="btn sm ghost danger" onClick={() => setRemoving(m)}>Remove</button>}</div>}</td>
                 </tr>
               ))}</tbody></table>
           )}

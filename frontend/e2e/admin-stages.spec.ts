@@ -76,3 +76,39 @@ test('project owner keeps own media types and email wording', async ({ page }) =
   await expect(page.locator('section .badge', { hasText: 'Platform wording' })).toBeVisible()
   expect(errors).toEqual([])
 })
+
+// Tenant-wide role: one role in every project of the tenant; the project's Team page shows it but can't change it.
+test('platform gives a tenant-wide role', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', e => errors.push(e.message))
+  const email = `wide-${Date.now()}@tenant.test`
+  await signIn(page, /Platform Admin/)
+  await page.goto('/platform')
+  await page.getByRole('link', { name: 'Manage Aurora Media Network' }).click()
+  await page.getByRole('navigation', { name: 'Tenant settings' }).getByRole('button', { name: 'People' }).click()
+  await page.getByRole('button', { name: 'Add tenant-wide role' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Email').fill(email)
+  await dialog.getByLabel('Name').fill('E2E Wide')
+  await dialog.getByLabel('Role in every project').selectOption({ label: 'Analyst' })
+  await dialog.getByRole('button', { name: 'Add' }).click()
+  await expect(dialog.getByText('One-time password')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Done' }).click()
+  const row = page.getByRole('row', { name: /E2E Wide/ }).first()
+  await expect(row.getByRole('combobox', { name: 'Tenant-wide role of E2E Wide' })).toHaveValue('ANALYST')
+  await expect(page.getByText('tenant-wide').first()).toBeVisible()   // the people list marks the memberships
+  const tenantPage = page.url()
+
+  await signIn(page, /Asha Rao/)
+  await page.goto('/aurora/team')
+  const member = page.getByRole('row', { name: /E2E Wide/ })
+  await expect(member.getByText('Tenant-wide role')).toBeVisible()
+  await expect(member.getByRole('button', { name: 'Remove' })).toHaveCount(0)
+
+  await signIn(page, /Platform Admin/)
+  await page.goto(tenantPage)
+  await page.getByRole('button', { name: "Remove E2E Wide's tenant-wide role" }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove' }).click()
+  await expect(page.getByRole('combobox', { name: 'Tenant-wide role of E2E Wide' })).toHaveCount(0)
+  expect(errors).toEqual([])
+})

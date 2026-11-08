@@ -29,7 +29,7 @@ public class PeopleRepository {
     private static final String SELECT = """
             select u.id, u.email, u.name, u.platform_admin, u.disabled_at is not null as disabled, u.created_at,
               coalesce((select json_agg(json_build_object('orgId', o.id, 'slug', o.slug, 'name', o.name, 'kind', o.kind,
-                          'role', m.role, 'customRoleKey', m.custom_role_key) order by o.name)
+                          'role', m.role, 'customRoleKey', m.custom_role_key, 'viaTenant', m.via_tenant) order by o.name)
                         from membership m join organization o on o.id = m.org_id where m.user_id = u.id), '[]')::text as memberships,
               count(*) over () as total
             from app_user u""";

@@ -133,6 +133,62 @@ class PlatformAdminStagesTest {
     }
 
     @Test
+    void tenantWideRolesReachEveryProject() throws Exception {
+        UUID aurora = org("aurora");
+        UUID tenant = TenantScope.bypass(() -> db.sql("select tenant_id from organization where id = :o").param("o", aurora).query(UUID.class).single());
+        String base = "/api/platform/tenants/" + tenant + "/members";
+        String email = "wide@tenant.test";
+
+        // a new person gets one role in every project of the tenant
+        JsonNode added = ok(post(base), ADMIN, "{\"email\":\"" + email + "\",\"name\":\"Wide Person\",\"role\":\"ANALYST\"}");
+        assertFalse(added.path("temporaryPassword").isNull());
+        UUID wide = user(email);
+        assertEquals(409, status(post(base), ADMIN, "{\"email\":\"" + email + "\",\"name\":\"x\",\"role\":\"ANALYST\"}"));
+        assertEquals(422, status(post(base), ADMIN, "{\"email\":\"p@tenant.test\",\"name\":\"x\",\"role\":\"PARTNER_ADMIN\"}"));
+        assertEquals("ANALYST", role(aurora, wide));
+        // a new account must change its one-time password first; skip that to use the role
+        TenantScope.bypass(() -> db.sql("update app_user set must_change_password = false where id = :u").param("u", wide).update());
+        assertEquals(200, status(get("/api/orgs/aurora/settings"), email, null), "the role works like a project role");
+
+        // projects added later get it too
+        String project = "{\"name\":\"Aurora Kids\",\"slug\":\"aurora-kids\",\"country\":\"IN\",\"timezone\":\"Asia/Kolkata\",\"ownerUserId\":\"" + user(OWNER) + "\"}";
+        ok(post("/api/platform/tenants/" + tenant + "/projects"), ADMIN, project);
+        UUID kids = org("aurora-kids");
+        assertEquals("ANALYST", role(kids, wide), "a new project gets the tenant-wide role");
+
+        // a project can't change it; the tenant can, and the person's own project role wins
+        assertEquals(409, status(patch("/api/orgs/aurora/members/" + wide), OWNER, "{\"role\":\"AD_OPS\"}"));
+        assertEquals(409, status(delete("/api/orgs/aurora/members/" + wide), OWNER, null));
+        TenantScope.bypass(() -> db.sql("update membership set role = 'CONTENT_MANAGER', via_tenant = false where org_id = :o and user_id = :u")
+                .param("o", kids).param("u", wide).update());
+        JsonNode list = ok(put(base + "/" + wide), ADMIN, "{\"role\":\"AD_OPS\"}");
+        assertEquals("AD_OPS", find(list, "email", email).path("role").asString());
+        assertEquals("AD_OPS", role(aurora, wide));
+        assertEquals("CONTENT_MANAGER", role(kids, wide), "own project role kept");
+        assertTrue(find(ok(get("/api/orgs/aurora/members"), OWNER, null), "email", email).path("viaTenant").asBoolean(), "Team page knows it");
+
+        // removing it keeps the own project role
+        ok(delete(base + "/" + wide), ADMIN, null);
+        assertNull(role(aurora, wide));
+        assertEquals("CONTENT_MANAGER", role(kids, wide));
+
+        // a tenant-wide owner who is the only owner somewhere can't be taken away
+        String sole = "sole@tenant.test";
+        ok(post(base), ADMIN, "{\"email\":\"" + sole + "\",\"name\":\"Sole Owner\",\"role\":\"OWNER\"}");
+        TenantScope.bypass(() -> db.sql("update membership set role = 'ADMIN' where org_id = :o and user_id = :u").param("o", kids).param("u", user(OWNER)).update());
+        assertEquals(409, status(delete(base + "/" + user(sole)), ADMIN, null), "Aurora Kids would have no owner");
+        assertEquals(409, status(put(base + "/" + user(sole)), ADMIN, "{\"role\":\"ADMIN\"}"));
+        TenantScope.bypass(() -> db.sql("update membership set role = 'OWNER' where org_id = :o and user_id = :u").param("o", kids).param("u", user(OWNER)).update());
+        ok(delete(base + "/" + user(sole)), ADMIN, null);
+        assertEquals(403, status(get(base), OWNER, null), "platform only");
+    }
+
+    String role(UUID org, UUID user) {
+        return TenantScope.bypass(() -> db.sql("select role from membership where org_id = :o and user_id = :u").param("o", org).param("u", user)
+                .query(String.class).optional().orElse(null));
+    }
+
+    @Test
     void projectsKeepTheirOwnMediaTypes() throws Exception {
         String base = "/api/orgs/aurora/settings/media-types";
         String trailer = "{\"key\":\"TRAILER\",\"label\":\"Trailer\",\"kind\":\"SHORT\",\"enabled\":true}";

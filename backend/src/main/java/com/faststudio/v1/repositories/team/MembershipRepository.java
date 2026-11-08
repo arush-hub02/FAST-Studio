@@ -48,7 +48,7 @@ public class MembershipRepository {
 
     public List<Member> members(UUID org) {
         return db.sql("""
-                select u.id as user_id, u.name, u.email, m.role, m.created_at, m.custom_role_key
+                select u.id as user_id, u.name, u.email, m.role, m.created_at, m.custom_role_key, m.via_tenant
                 from membership m join app_user u on u.id = m.user_id where m.org_id = :o order by m.role, u.name""")
                 .param("o", org).query(Member.class).list();
     }

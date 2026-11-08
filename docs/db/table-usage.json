@@ -105,7 +105,8 @@
       "watch": [
         "No membership row = the person gets 404 for that organization (on purpose).",
         "custom_role_key must match an enabled access_role of the same kind, or the member falls back to view-only.",
-        "Index membership_user (V29) serves the per-person lookups made at every sign-in and in the people list."
+        "Index membership_user (V29) serves the per-person lookups made at every sign-in and in the people list.",
+        "via_tenant = true: the row comes from a tenant-wide role (tenant_membership); the project Team page and People page refuse to change or remove it (409 TENANT_WIDE)."
       ]
     },
     "refresh_token": {
@@ -962,6 +963,26 @@
         "Row-level security by org_id.",
         "Only invitations, password reset/changed, alerts, partner sharing and the footer can be overridden (EmailTemplates.PROJECT_KEYS).",
         "MailServiceV1.send renders with the project row when the email has an org."
+      ]
+    },
+    "tenant_membership": {
+      "feature": "Accounts & sign-in",
+      "purpose": "A person's tenant-wide role: one built-in role in every project of a customer tenant, including projects added later (V30).",
+      "pages": [
+        "/platform/tenants/{id}?tab=people"
+      ],
+      "apis": [
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "POST /api/platform/tenants/{tenant}/projects"
+      ],
+      "watch": [
+        "The role reaches each project as a membership row with via_tenant = true; sign-in and permissions read memberships only.",
+        "A membership the person has directly (via_tenant = false) is never overwritten or removed by it.",
+        "Removing or demoting a tenant-wide owner is refused while a project would be left without another owner.",
+        "Exported and deleted with the tenant (tenant_id)."
       ]
     }
   }

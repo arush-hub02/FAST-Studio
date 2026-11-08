@@ -36,9 +36,11 @@ public class PlatformPeopleServiceV1 {
     private final Tokens tokens;
     private final Audit audit;
     private final TransactionTemplate tx;
+    private final TenantRoleServiceV1 tenantRoles;
 
     public PlatformPeopleServiceV1(PeopleRepository people, MembershipRepository members, AccessRoleServiceV1 accessRoles, AccountEmailService emails,
-                                   PasswordEncoder encoder, Tokens tokens, Audit audit, TransactionTemplate tx) {
+                                   PasswordEncoder encoder, Tokens tokens, Audit audit, TransactionTemplate tx, TenantRoleServiceV1 tenantRoles) {
+        this.tenantRoles = tenantRoles;
         this.people = people;
         this.members = members;
         this.accessRoles = accessRoles;
@@ -93,6 +95,7 @@ public class PlatformPeopleServiceV1 {
             String kind = people.joinableKind(org).orElseThrow(() -> ApiException.notFound("Organization"));
             Tenant.Role target = role(org, kind, r.role(), r.customRoleKey());
             Tenant.Role current = members.role(org, user).map(Tenant.Role::valueOf).orElseThrow(() -> ApiException.notFound("Membership"));
+            tenantRoles.requireProjectManaged(org, user);
             if (current == Tenant.Role.top(kind) && (target != current || blank(r.customRoleKey()) != null)) lastOwnerGuard(org, kind);
             members.changeRole(org, user, target.name(), blank(r.customRoleKey()));
             tokens.bump(List.of(user));
@@ -106,6 +109,7 @@ public class PlatformPeopleServiceV1 {
         system(() -> tx.execute(s -> {
             String kind = people.joinableKind(org).orElseThrow(() -> ApiException.notFound("Organization"));
             Tenant.Role current = members.role(org, user).map(Tenant.Role::valueOf).orElseThrow(() -> ApiException.notFound("Membership"));
+            tenantRoles.requireProjectManaged(org, user);
             if (current == Tenant.Role.top(kind)) lastOwnerGuard(org, kind);
             members.removeMember(org, user);
             tokens.bump(List.of(user));

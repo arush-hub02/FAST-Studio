@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04",
+  "generatedAt": "2026-11-08",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -36447,6 +36447,658 @@
         }
       }
     },
+    "GET /api/platform/tenants/{tenant}/members": {
+      "title": "Tenant-wide roles",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-get-api-platform-tenants-tenant-members",
+      "handler": "TenantRoleControllerV1.list",
+      "tables": {
+        "app_user": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "list",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "requireTenant",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "tenantExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "list",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "list",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "list",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/platform/tenants/{tenant}/members": {
+      "title": "Give a tenant-wide role",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-post-api-platform-tenants-tenant-members",
+      "handler": "TenantRoleControllerV1.add",
+      "tables": {
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "MembershipRepository",
+              "method": "userByEmail",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "requireTenant",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "tenantExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "email_message": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailMessageRepository",
+              "method": "insertQueued",
+              "layer": "repository"
+            }
+          ]
+        },
+        "email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "saved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "spread",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "spread",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_email_template": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AccountEmailService",
+              "method": "welcome",
+              "layer": "service"
+            },
+            {
+              "class": "MailServiceV1",
+              "method": "send",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "render",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplates",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "EmailTemplateRepository",
+              "method": "projectSaved",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "role",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/platform/tenants/{tenant}/members/{userId}": {
+      "title": "Remove a tenant-wide role",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-delete-api-platform-tenants-tenant-members-userid",
+      "handler": "TenantRoleControllerV1.remove",
+      "tables": {
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "requireTenant",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "tenantExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "withdraw",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "platformOrg",
+              "layer": "core"
+            }
+          ]
+        },
+        "tenant_membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "role",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "PUT /api/platform/tenants/{tenant}/members/{userId}": {
+      "title": "Change a tenant-wide role",
+      "category": "Platform: tenants, projects and plans",
+      "id": "ep-put-api-platform-tenants-tenant-members-userid",
+      "handler": "TenantRoleControllerV1.change",
+      "tables": {
+        "app_user": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "Tokens",
+              "method": "bump",
+              "layer": "core"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "platform",
+              "layer": "core"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "requireTenant",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "tenantExists",
+              "layer": "repository"
+            }
+          ]
+        },
+        "membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "spread",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "spread",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_membership": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantRoleControllerV1",
+              "method": "change",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantRoleServiceV1",
+              "method": "change",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "role",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
     "GET /api/platform/tenants/{tenant}/owners": {
       "title": "Possible project owners",
       "category": "Platform: tenants, projects and plans",
@@ -36717,6 +37369,26 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "plans",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_membership": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "createProject",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "createProject",
+              "layer": "service"
+            },
+            {
+              "class": "TenantRoleRepository",
+              "method": "spreadToProject",
               "layer": "repository"
             }
           ]
@@ -41400,6 +42072,10 @@
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "GET /api/platform/tenants/{tenant}/owners",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
@@ -41427,6 +42103,9 @@
         "PUT /api/platform/people/{userId}/memberships/{orgId}",
         "PUT /api/platform/people/{userId}/status",
         "POST /api/platform/tenants/{tenant}/delete",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "POST /api/platform/tenants/{tenant}/projects",
         "POST /api/platform/tenants/{tenant}/status"
       ]
@@ -41463,7 +42142,8 @@
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
         "POST /api/platform/password-reset",
-        "POST /api/platform/people"
+        "POST /api/platform/people",
+        "POST /api/platform/tenants/{tenant}/members"
       ],
       "write": [
         "DELETE /api/orgs/{org}/email-templates/{key}",
@@ -41490,7 +42170,8 @@
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
         "POST /api/platform/password-reset",
-        "POST /api/platform/people"
+        "POST /api/platform/people",
+        "POST /api/platform/tenants/{tenant}/members"
       ],
       "write": [
         "DELETE /api/platform/email/templates/{key}",
@@ -41512,7 +42193,8 @@
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
         "POST /api/platform/password-reset",
-        "POST /api/platform/people"
+        "POST /api/platform/people",
+        "POST /api/platform/tenants/{tenant}/members"
       ],
       "write": [
         "POST /api/auth/forgot",
@@ -41526,7 +42208,8 @@
         "POST /api/platform/email/test",
         "POST /api/platform/orgs",
         "POST /api/platform/password-reset",
-        "POST /api/platform/people"
+        "POST /api/platform/people",
+        "POST /api/platform/tenants/{tenant}/members"
       ]
     },
     "audit_event": {
@@ -41662,6 +42345,9 @@
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
@@ -41724,6 +42410,10 @@
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "GET /api/platform/tenants/{tenant}/owners",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
@@ -41742,6 +42432,9 @@
         "POST /api/platform/people",
         "DELETE /api/platform/people/{userId}/memberships/{orgId}",
         "PUT /api/platform/people/{userId}/memberships/{orgId}",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "POST /api/platform/tenants/{tenant}/projects"
       ]
     },
@@ -41924,6 +42617,10 @@
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "GET /api/platform/tenants/{tenant}/owners",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
@@ -42021,6 +42718,10 @@
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
         "POST /api/platform/tenants/{tenant}/delete",
         "GET /api/platform/tenants/{tenant}/export",
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
         "GET /api/platform/tenants/{tenant}/owners",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
@@ -43272,6 +43973,20 @@
       "write": [
         "POST /api/orgs/{org}/partners",
         "PUT /api/orgs/{org}/partners/{linkId}"
+      ]
+    },
+    "tenant_membership": {
+      "read": [
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
+        "POST /api/platform/tenants/{tenant}/projects"
+      ],
+      "write": [
+        "POST /api/platform/tenants/{tenant}/members",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}"
       ]
     }
   }

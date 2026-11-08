@@ -34,9 +34,11 @@ public class TeamServiceV1 {
     private final Accounts accounts;
     private final Tokens tokens;
     private final Audit audit;
+    private final TenantRoleServiceV1 tenantRoles;
 
     public TeamServiceV1(MembershipRepository repository, AccountEmailService emails, AccessRoleServiceV1 accessRoles,
-                           PasswordEncoder encoder, Accounts accounts, Tokens tokens, Audit audit) {
+                           PasswordEncoder encoder, Accounts accounts, Tokens tokens, Audit audit, TenantRoleServiceV1 tenantRoles) {
+        this.tenantRoles = tenantRoles;
         this.repository = repository;
         this.emails = emails;
         this.accessRoles = accessRoles;
@@ -90,6 +92,7 @@ public class TeamServiceV1 {
         t.require(Tenant.Perm.TEAM_MANAGE);
         Tenant.Role target = grant(t, r.role(), r.customRoleKey());
         Tenant.Role current = currentRole(t, userId);
+        tenantRoles.requireProjectManaged(t.orgId(), userId);
         ceiling(t, target);
         ceiling(t, current);
         // Moving the last plain owner to another (or a custom) role would leave nobody able to recover the organization.
@@ -106,6 +109,7 @@ public class TeamServiceV1 {
         if (userId.equals(t.userId())) throw ApiException.conflict("SELF", "You can't remove yourself.");
         Tenant.Role current = currentRole(t, userId);
         ceiling(t, current);
+        tenantRoles.requireProjectManaged(t.orgId(), userId);
         if (current == Tenant.Role.top(t.kind())) lastOwnerGuard(t);
         repository.removeMember(t.orgId(), userId);
         tokens.bump(List.of(userId));
