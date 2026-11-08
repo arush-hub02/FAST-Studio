@@ -15,7 +15,9 @@ public interface IMediaProvider {
     Set<Capability> capabilities();
 
     /** Stored credentials, decrypted. scope: the platform-side filter for this project's videos (blank = all). */
-    record Credentials(String id, String secret, String scope) {}
+    record Credentials(String id, String secret, String scope, String signingKeyId, String signingKey) {
+        public Credentials(String id, String secret, String scope) { this(id, secret, scope, null, null); }
+    }
 
     /**
      * A remote video. status: READY, PREPARING, ERRORED or DELETED (what the platform says, not our readiness).

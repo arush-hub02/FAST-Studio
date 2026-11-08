@@ -53,8 +53,11 @@ class MuxTest {
         r.add("spring.datasource.url", () -> "embedded");
         mux = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         mux.createContext("/video/v1/", MuxTest::stub);
+        mux.createContext("/stream/", MuxTest::stream);
         mux.start();
         r.add("faststudio.mux.api-url", () -> "http://127.0.0.1:" + mux.getAddress().getPort());
+        r.add("faststudio.mux.stream-url", () -> "http://127.0.0.1:" + mux.getAddress().getPort() + "/stream");
+        r.add("faststudio.mux.image-url", () -> "http://127.0.0.1:" + mux.getAddress().getPort() + "/image");
     }
 
     @AfterAll
@@ -66,7 +69,8 @@ class MuxTest {
         if (path.equals("/video/v1/uploads")) uploadBody.set(new String(x.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
         String file = path.equals("/video/v1/assets") && q.contains("page=1") ? "assets-page1.json"
                 : path.equals("/video/v1/assets") && q.contains("cursor=eyJwYWdlIjoyfQ") ? "assets-page2.json"
-                : path.equals("/video/v1/uploads") && x.getRequestMethod().equals("POST") ? "upload.json" : null;
+                : path.equals("/video/v1/uploads") && x.getRequestMethod().equals("POST") ? "upload.json"
+                : path.equals("/video/v1/assets/Kp01aBcDeFgH") ? "asset-Kp01aBcDeFgH.json" : null;
         int status = !auth.equals(x.getRequestHeaders().getFirst("Authorization")) ? 401 : file == null ? 404 : 200;
         byte[] b = status == 200 ? MuxTest.class.getResourceAsStream("/mux/" + file).readAllBytes() : "{\"error\":{}}".getBytes();
         x.sendResponseHeaders(status, b.length);
@@ -74,7 +78,37 @@ class MuxTest {
         x.close();
     }
 
+    /** The platform's stream host: a master with two quality levels, each 5 + 5 + 3.857 s (MPEG-TS, complete). */
+    static void stream(HttpExchange x) throws IOException {
+        String path = x.getRequestURI().getPath();
+        String media = """
+                #EXTM3U
+                #EXT-X-TARGETDURATION:6
+                #EXT-X-PLAYLIST-TYPE:VOD
+                #EXTINF:5.000,
+                seg0.ts?sig=a
+                #EXTINF:5.000,
+                seg1.ts?sig=b
+                #EXTINF:3.857,
+                seg2.ts?sig=c
+                #EXT-X-ENDLIST
+                """;
+        String master = """
+                #EXTM3U
+                #EXT-X-STREAM-INF:BANDWIDTH=500000,RESOLUTION=480x270
+                r/270.m3u8?rid=1
+                #EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
+                r/720.m3u8?rid=2
+                """;
+        String body = path.equals("/stream/pB7Hh01ocEanTales.m3u8") ? master : path.startsWith("/stream/r/") ? media : null;
+        byte[] b = (body == null ? "not found" : body).getBytes(StandardCharsets.UTF_8);
+        x.sendResponseHeaders(body == null ? 404 : 200, b.length);
+        x.getResponseBody().write(b);
+        x.close();
+    }
+
     @Autowired MockMvc mvc;
+    @Autowired com.faststudio.v1.util.cloudflare.EdgePublisher publisher;
     @Autowired JdbcClient db;
     @Autowired Tokens tokens;
     @Autowired tools.jackson.databind.json.JsonMapper json;
@@ -167,7 +201,7 @@ class MuxTest {
         assertEquals(409, other.getResponse().getStatus());
         String library = call(get("/api/orgs/" + aurora() + "/assets"), "owner@aurora.test", null).getResponse().getContentAsString();
         String view = call(get("/api/orgs/" + aurora() + "/library"), "owner@aurora.test", null).getResponse().getContentAsString();
-        assertTrue(view.contains("\"connected\":true") && view.contains("SOURCE_FILE") && view.contains("\"state\":\"SUCCEEDED\""), view);
+        assertTrue(view.contains("\"connected\":true") && view.contains("PLAYBACK") && view.contains("\"state\":\"SUCCEEDED\""), view);
         for (String text : List.of(other.getResponse().getContentAsString(), library, view))
             assertFalse(text.toLowerCase().contains("mux"), "white-label: tenants never see the provider: " + text);
     }
@@ -181,7 +215,7 @@ class MuxTest {
         assertEquals(200, u.getResponse().getStatus(), u.getResponse().getContentAsString());
         assertTrue(u.getResponse().getContentAsString().contains("https://storage.googleapis.com/"));
         String sent = uploadBody.get();
-        assertTrue(sent.contains("\"passthrough\":\"fast\"") && sent.contains("\"master_access\":\"temporary\"") && sent.contains("\"cors_origin\":\"http://localhost:8080\""), sent);
+        assertTrue(sent.contains("\"passthrough\":\"fast\"") && sent.contains("\"playback_policy\":[\"public\"]") && sent.contains("\"cors_origin\":\"http://localhost:8080\""), sent);
         assertEquals("mux-upload:Up1oadAbc", sourceRef(asset));
 
         byte[] event = MuxTest.class.getResourceAsStream("/mux/webhook-asset-ready.json").readAllBytes();
@@ -199,13 +233,70 @@ class MuxTest {
         assertEquals(1, libraryRows(org).stream().filter(m -> m.get("source_ref").equals("mux:Up1oadAsset")).count());
         assertEquals("Launch trailer", libraryRows(org).stream().filter(m -> m.get("source_ref").equals("mux:Up1oadAsset")).findFirst().orElseThrow().get("title"));
         String status = TenantScope.bypass(() -> db.sql("select status from asset where id = :id").param("id", asset).query(String.class).single());
-        assertNotEquals("DRAFT", status, "a direct upload prepares at once (it fails here: tests run without ffmpeg)");
+        assertNotEquals("DRAFT", status, "a direct upload prepares at once (here the stub has no such video, so it waits to retry)");
 
         byte[] deleted = new String(event, StandardCharsets.UTF_8).replace("video.asset.ready", "video.asset.deleted").getBytes(StandardCharsets.UTF_8);
         assertEquals(204, hook(org, deleted, sign(HOOK, now, deleted)));
         assertEquals("DELETED", TenantScope.bypass(() -> db.sql("select provider_status from asset_source where asset_id = :id").param("id", asset)
                 .query(String.class).single()), "a video deleted in the library is flagged on its source");
         assertEquals("mux:Up1oadAsset", sourceRef(asset), "the local video stays");
+    }
+
+    @Test @Order(4)
+    void aPreparedLibraryVideoStreamsFromThePlatformWithItsRealSegments() throws Exception {
+        UUID org = aurora();
+        UUID asset = TenantScope.bypass(() -> db.sql("select id from asset where org_id = :o and source_ref = 'mux:Kp01aBcDeFgH'").param("o", org).query(UUID.class).single());
+        MvcResult r = call(post("/api/orgs/" + org + "/library/prepare"), "owner@aurora.test", "{\"assetIds\":[\"" + asset + "\"]}");
+        assertEquals(200, r.getResponse().getStatus(), r.getResponse().getContentAsString());
+        Map<String, Object> row = null;
+        for (int i = 0; i < 100; i++) {
+            row = TenantScope.bypass(() -> db.sql("select status, status_detail, duration_ms, media_key from asset where id = :id").param("id", asset).query().singleRow());
+            if ("READY".equals(row.get("status")) || "FAILED".equals(row.get("status"))) break;
+            Thread.sleep(200);
+        }
+        assertEquals("READY", row.get("status"), String.valueOf(row));
+        assertNull(row.get("media_key"), "nothing is copied to R2");
+        assertEquals(15_000L, ((Number) row.get("duration_ms")).longValue(), "13.857 s takes three 5 s slots");
+        assertTrue(String.valueOf(row.get("status_detail")).startsWith("Streams from the video library: 3 segments"), String.valueOf(row));
+        Map<String, Object> p = TenantScope.bypass(() -> db.sql("select playback_id, signed, format, duration_ms, array_to_string(segments_ms, ',') as seg from asset_playback where asset_id = :id")
+                .param("id", asset).query().singleRow());
+        assertEquals("pB7Hh01ocEanTales", p.get("playback_id"));
+        assertEquals("5000,5000,3857", p.get("seg"));
+        assertEquals("TS", p.get("format"));
+        assertEquals(Boolean.FALSE, p.get("signed"));
+
+        String view = call(get("/api/orgs/" + org + "/assets/" + asset), "owner@aurora.test", null).getResponse().getContentAsString();
+        JsonNode v = json.readTree(view);
+        assertEquals(3, v.path("streaming").path("segments").asInt(), view);
+        assertEquals("[270,720]", v.path("streaming").path("qualities").toString());
+        assertTrue(v.path("previewUrl").asString().endsWith("/stream/pB7Hh01ocEanTales.m3u8"), view);
+        assertTrue(v.path("thumbUrl").asString().contains("/image/pB7Hh01ocEanTales/thumbnail.jpg"), view);
+        assertTrue(v.path("streaming").path("problem").isNull(), view);
+        for (String s : List.of(TOKEN, SECRET, HOOK)) assertFalse(view.contains(s));
+
+        // the channel snapshot lists the programme with its layout, numbering and the platform's playlist URL
+        Map<String, Object> ch = TenantScope.bypass(() -> db.sql("""
+                select c.id, c.slug, e.id as entry from channel c join schedule_entry e on e.org_id = c.org_id and e.version_id = c.published_version_id
+                where c.org_id = :o and e.kind = 'PROGRAM' and e.start_at > now() + interval '2 hours' and e.start_at < now() + interval '40 hours'
+                order by e.start_at limit 1""").param("o", org).query().singleRow());
+        TenantScope.bypass(() -> db.sql("update schedule_entry set asset_id = :a, asset_offset_ms = 0 where id = :e").param("a", asset).param("e", ch.get("entry")).update());
+        UUID channel = (UUID) ch.get("id");
+        var snap = TenantScope.as(org, () -> publisher.snapshot(org, "aurora", channel, Instant.now()));
+        var item = snap.items().stream().filter(i -> i.id().equals(ch.get("entry").toString())).findFirst().orElseThrow();
+        assertEquals(asset.toString(), item.ovp());
+        assertNull(item.key(), "no R2 media key");
+        assertEquals(0, item.i0());
+        assertEquals(3, item.nc());
+        assertNotNull(item.seq());
+        assertEquals(item.n(), 3 + item.fill().length);
+        var o = snap.ovp().get(asset.toString());
+        assertTrue(o.url().endsWith("/stream/pB7Hh01ocEanTales.m3u8"), o.url());
+        assertArrayEquals(new int[]{5000, 5000, 3857}, o.d());
+        assertEquals(snap.t0(), snap.from(), "the hour mark isn't inside the programme, so it is the anchor");
+        assertEquals(1, TenantScope.bypass(() -> db.sql("select count(*) from channel_timeline where channel_id = :c and at_ms = :t")
+                .param("c", channel).param("t", snap.t0()).query(Integer.class).single()), "the anchor is stored");
+        // the same instant again: the same snapshot (numbers don't drift between publishes)
+        assertEquals(json.writeValueAsString(snap), json.writeValueAsString(TenantScope.as(org, () -> publisher.snapshot(org, "aurora", channel, Instant.now()))));
     }
 
     String sourceRef(UUID asset) {

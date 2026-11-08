@@ -650,7 +650,7 @@
             "kind": "",
             "archived": "false"
           },
-          "description": "All videos with status, signed thumbnail/preview links, rights status and where they air. Filter with q (text), kind (MOVIE, EPISODE, SHORT, AD) or archived=true."
+          "description": "All videos with status, signed thumbnail/preview links, rights status and where they air. Filter with q (text), kind (MOVIE, EPISODE, SHORT, AD) or archived=true. A library video that streams from the library has a streaming object (segments, averageSegmentS, qualities as heights, format TS, signed, problem when its URLs can't be made); its thumbUrl and previewUrl then point at the library (signed ones are valid for 6-7 hours)."
         },
         {
           "method": "GET",
@@ -659,7 +659,7 @@
           "params": {
             "id": "{{assetId}}"
           },
-          "description": "The same fields as the list, for one video."
+          "description": "The same fields as the list, for one video. A library video that streams from the library has a streaming object (segments, averageSegmentS, qualities as heights, format TS, signed, problem when its URLs can't be made); its thumbUrl and previewUrl then point at the library (signed ones are valid for 6-7 hours)."
         },
         {
           "method": "POST",
@@ -756,7 +756,7 @@
           "method": "GET",
           "path": "/api/orgs/{org}/library",
           "title": "Connected library status",
-          "description": "Whether a video library is connected and its last check worked, what it can do (CATALOGUE: sync, DIRECT_UPLOAD: upload URLs, SOURCE_FILE: prepare for broadcast, WEBHOOKS: automatic updates) and the sync: state (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen, videos added, pages read, whether the last full scan completed, the last error and when a waiting sync retries. Never names the provider."
+          "description": "Whether a video library is connected and its last check worked, what it can do (CATALOGUE: sync, DIRECT_UPLOAD: upload URLs, SOURCE_FILE: prepare for broadcast, WEBHOOKS: automatic updates) and the sync: state (NEVER, QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED), videos seen, videos added, pages read, whether the last full scan completed, the last error and when a waiting sync retries. Never names the provider. PLAYBACK: its videos stream from the library itself (our ads and slate are spliced in). waiting lists imported videos that are ready in the library but not prepared here yet (Draft or Failed, oldest first, at most 500)."
         },
         {
           "method": "POST",
@@ -768,7 +768,7 @@
           "method": "POST",
           "path": "/api/orgs/{org}/library/prepare",
           "title": "Prepare library videos for broadcast",
-          "description": "Queues the chosen library videos (1 to 100) for conversion into 5-second segments, which fetches their original files from the library. Each video is checked on its own; the answer says how many were queued and, for the others, why not: NOT_FOUND, NOT_FROM_LIBRARY, ALREADY_READY, ALREADY_PROCESSING, NOT_READY_IN_LIBRARY (the library reports it errored, deleted or missing) or PROCESSING_LIMIT. 409 NOT_SUPPORTED when the connected library can't hand over files. Needs asset editing.",
+          "description": "Gets the chosen library videos (1 to 100) ready to air. When the library can stream (PLAYBACK), this reads each video's quality levels and real segment lengths from the library and nothing is copied; otherwise the original file is fetched and converted into 5-second segments. Each video is checked on its own; the answer lists the ones skipped and why (NOT_FOUND, NOT_FROM_LIBRARY, ALREADY_READY, ALREADY_PROCESSING, NOT_READY_IN_LIBRARY, LIMIT).",
           "body": {
             "assetIds": [
               "{{assetId}}"
@@ -2411,19 +2411,25 @@
           "method": "GET",
           "path": "/api/platform/orgs/{orgId}/connectors/mux",
           "title": "Video library account (Mux)",
-          "description": "Whether it is connected, its environment and tag, the webhook address to enter in Mux, and the last connection check (healthy null = never checked). Never the credentials."
+          "description": "Whether it is connected, its environment and tag, the webhook address to enter in Mux, and the last connection check (healthy null = never checked). Never the credentials. signingKeyId and signingKeySet say whether signed playback is set up (the private key itself is never returned)."
         },
         {
           "method": "PUT",
           "path": "/api/platform/orgs/{orgId}/connectors/mux",
           "title": "Connect the video library (Mux)",
-          "description": "Credentials are stored encrypted and never returned. Leave token fields blank to keep the stored ones. passthroughTag: only videos with this tag are imported.",
+          "description": "Credentials are stored encrypted and never returned. Leave token fields blank to keep the stored ones. passthroughTag: only videos with this tag are imported. signingKeyId and signingPrivateKey (optional): a Mux signing key for videos with a signed playback ID; the private key is stored encrypted, and blank keeps the stored one.",
           "body": {
             "tokenId": "PASTE-MUX-TOKEN-ID",
             "tokenSecret": "PASTE-MUX-TOKEN-SECRET",
             "webhookSecret": "PASTE-MUX-WEBHOOK-SECRET",
             "environment": "Production",
-            "passthroughTag": "fast"
+            "passthroughTag": "fast",
+            "signingKeyId": "",
+            "signingPrivateKey": ""
+          },
+          "fields": {
+            "signingKeyId": "Optional: the ID of a Mux signing key, for videos whose playback ID is signed.",
+            "signingPrivateKey": "Optional: that key's private key, base64 as Mux shows it. Stored encrypted, never returned; blank keeps the stored one."
           }
         },
         {

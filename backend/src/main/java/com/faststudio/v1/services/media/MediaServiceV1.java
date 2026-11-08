@@ -52,6 +52,7 @@ public class MediaServiceV1 {
     private final String configuredFfmpeg;
     private final List<IContentSource> sources;
     private final MediaJobRepository jobs;
+    private final StreamingServiceV1 playback;
     // the ffmpeg process of each worker thread, so a cancel or lost lease can kill it
     private final Map<Thread, Process> running = new ConcurrentHashMap<>();
     private final Set<Thread> stopped = ConcurrentHashMap.newKeySet();
@@ -60,8 +61,9 @@ public class MediaServiceV1 {
     private volatile String ffmpeg;
 
     public MediaServiceV1(AssetRepository assets, MediaJobRepository jobs, @Value("${faststudio.data-dir}") String dataDir,
-                          @Value("${faststudio.ffmpeg:}") String ffmpeg, List<IContentSource> sources) {
+                          @Value("${faststudio.ffmpeg:}") String ffmpeg, List<IContentSource> sources, StreamingServiceV1 playback) {
         this.assets = assets;
+        this.playback = playback;
         this.jobs = jobs;
         Path data = Path.of(dataDir).toAbsolutePath().normalize();
         this.mediaDir = data.resolve("media");
@@ -167,6 +169,7 @@ public class MediaServiceV1 {
      */
     public Packaged pack(UUID org, UUID assetId) throws Exception {
         ProcessingJob j = assets.job(org, assetId);
+        if (playback.handles(j)) return playback.resolve(org, j);   // streams from its platform: nothing to convert
         if (ffmpeg() == null) return Packaged.failed("ffmpeg is not installed on the server, so the video could not be processed.", false);
         IContentSource source = sources.stream().filter(s -> s.handles(j)).findFirst().orElse(null);
         if (source == null) return Packaged.failed("No content connector can supply this video.", false);
@@ -205,6 +208,7 @@ public class MediaServiceV1 {
 
     /** A revision that was never published (the job was cancelled or taken over). */
     public void discard(String key) throws IOException {
+        if (key == null) return;   // a streaming video has no folder
         deleteDir(mediaDir.resolve(key));
         forget(key);
     }

@@ -99,8 +99,14 @@ export type Policy = {
   id: string; assetId: string; allowedCountries: string; blockedCountries: string; validFrom?: string; validUntil?: string
   adsAllowed: boolean; notes: string
 }
+/** A library video that streams from its platform: what the drawer shows (the platform is never named). */
+export type Streaming = {
+  segments: number; averageSegmentS: number; qualities: number[]; format: string; signed: boolean
+  thumbUrl?: string | null; playerUrl?: string | null; problem?: string | null
+}
 export type AssetView = {
   asset: Asset; thumbUrl?: string; previewUrl?: string; rights?: Policy; rightsStatus: string; upcomingAirings: number; channels: string[]
+  streaming?: Streaming | null
 }
 export type Channel = {
   id: string; slug: string; name: string; description: string; genre: string; language: string; timezone: string; color: string

@@ -7,6 +7,12 @@ import com.faststudio.v1.core.common.Data.Entry;
 import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
+import com.faststudio.v1.repositories.media.AssetPlaybackRepository;
+import com.faststudio.v1.repositories.playout.ChannelTimelineRepository;
+import com.faststudio.v1.repositories.playout.ChannelTimelineRepository.Anchor;
+import com.faststudio.v1.services.media.MediaConnectionService;
+import com.faststudio.v1.util.mediaProvider.IPlayback;
+import com.faststudio.v1.util.mediaProvider.MediaProviderResolverService;
 import com.faststudio.v1.services.media.MediaServiceV1;
 import com.faststudio.v1.services.media.MediaStore;
 import com.faststudio.v1.services.playout.PlayoutServiceV1;
@@ -32,17 +38,27 @@ import java.util.stream.Stream;
  * 2. publishes each channel's schedule snapshot (next ~48 h, rights pre-evaluated per territory) to KV when it changed.
  * The Worker builds every viewer's live playlist from the snapshot and the clock alone, so viewers never reach this
  * server for playlists or video, and channels keep playing from the last snapshot if this server is down.
+ * Programmes that stream from their platform (asset_playback) are listed with their segment layout and the platform's
+ * playlist URL; the Worker reads those playlists itself ({@link Timeline} has the numbering rules).
  */
 @Component
 public class EdgePublisher {
     private static final Logger log = LoggerFactory.getLogger(EdgePublisher.class);
     static final long REPUBLISH_MS = 10 * 60_000;   // resend unchanged snapshots now and then (e.g. after the Worker's state was reset)
+    static final long HOUR = 3_600_000L, ANCHOR_MAX_AGE = 48 * HOUR;
+    /** Signed platform URLs in a snapshot stay valid this long after the snapshot's window ends. */
+    static final long TOKEN_SLACK_S = 6 * 3600;
 
     private final Data data;
     private final MediaServiceV1 media;
     private final MediaStore store;
     private final EdgeClient edge;
     private final JsonMapper json;
+    private final AssetPlaybackRepository playbacks;
+    private final ChannelTimelineRepository timelines;
+    private final MediaConnectionService connections;
+    private final MediaProviderResolverService providers;
+    private final Map<UUID, Anchor> anchors = new ConcurrentHashMap<>();
     private final Set<String> stored = ConcurrentHashMap.newKeySet();
     private final Map<String, String> sent = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Long> sentAt = new java.util.concurrent.ConcurrentHashMap<>();
@@ -50,7 +66,12 @@ public class EdgePublisher {
     private final Set<UUID> retired = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private boolean warned;
 
-    public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json) {
+    public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json, AssetPlaybackRepository playbacks,
+                         ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers) {
+        this.playbacks = playbacks;
+        this.timelines = timelines;
+        this.connections = connections;
+        this.providers = providers;
         this.data = data;
         this.media = media;
         this.store = store;
@@ -127,12 +148,32 @@ public class EdgePublisher {
 
     public record Fallback(String key, int segments, List<String> allowed, Long validFrom, Long validUntil) {}
 
-    /** One schedule item; times in epoch ms. allowed = channel territories whose licence covers the whole item. */
+    /**
+     * One schedule item; times in epoch ms. allowed = channel territories whose licence covers the whole item.
+     * A programme streaming from its platform has ovp (the asset id, a key of Snapshot.ovp), its first sequence number
+     * and segment count, and its layout (Timeline.Layout: platform segments i0 .. i0+nc-1, the last listed lastMs long
+     * when not 0, then slate segments of the fill lengths); key is then null. Everything else leaves these null.
+     */
     public record Item(String id, String kind, String key, int segments, long offsetMs, long start, long end,
-                       List<String> allowed, String ownership, String scteOut, String scteIn) {}
+                       List<String> allowed, String ownership, String scteOut, String scteIn,
+                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill) {
+        Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn) {
+            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null);
+        }
 
+        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill); }
+    }
+
+    /** A video the edge streams from its platform: master playlist URL (signed when needed), real segment lengths, container. */
+    public record Ovp(String url, int[] d, String fmt) {}
+
+    /**
+     * t0/seq0: a grid point and its media sequence number; numbering runs one per 5 s slot from there, except inside
+     * streaming programmes (their own segment count). target = EXT-X-TARGETDURATION in seconds (never goes down).
+     */
     public record Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs,
-                           long from, long until, List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items) {}
+                           long from, long until, List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items,
+                           long t0, long seq0, int target, Map<String, Ovp> ovp) {}
 
     record ChannelRow(UUID orgId, String orgSlug, UUID channelId) {}
 
@@ -167,7 +208,7 @@ public class EdgePublisher {
         for (ChannelRow r : rows) {
             Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
             Snapshot off = new Snapshot(s.v(), s.org(), s.channel(), "ARCHIVED", s.territories(), s.segMs(), s.from(), s.until(),
-                    s.ladder(), s.standby(), s.geo(), null, List.of());
+                    s.ladder(), s.standby(), s.geo(), null, List.of(), s.t0(), s.seq0(), s.target(), Map.of());
             try {
                 edge.putChannel(off.org(), off.channel(), json.writeValueAsString(off));
             } catch (IOException e) {
@@ -179,31 +220,110 @@ public class EdgePublisher {
         }
     }
 
-    Snapshot snapshot(UUID org, String orgSlug, UUID channelId, Instant now) {
+    public Snapshot snapshot(UUID org, String orgSlug, UUID channelId, Instant now) {
         Channel ch = data.channel(org, channelId);
         List<String> terr = ch.territoryList();
         // hour-aligned window: the snapshot only changes when the schedule does, or once an hour
-        long hour = 3_600_000L, from = Math.floorDiv(now.toEpochMilli(), hour) * hour - hour, until = from + 49 * hour;
+        long from = Math.floorDiv(now.toEpochMilli(), HOUR) * HOUR - HOUR, until = from + 49 * HOUR;
         Map<UUID, Asset> assets = data.assets(org);
         Map<UUID, Rights.Policy> policies = data.policies(org);
+        Anchor prev = anchors.computeIfAbsent(channelId, k -> timelines.get(org, k).orElse(null));
+        // streaming programmes since the anchor change the numbering, so the scan starts there
+        long scanFrom = prev != null && prev.atMs() < from && from - prev.atMs() <= ANCHOR_MAX_AGE ? prev.atMs() : from;
+        // items stay in the snapshot while the channel is off air (the Worker plays standby), so numbering doesn't jump
+        List<Entry> entries = ch.publishedVersionId() == null ? List.of()
+                : data.entries(org, ch.publishedVersionId(), Instant.ofEpochMilli(scanFrom), Instant.ofEpochMilli(until));
+        Map<UUID, AssetPlaybackRepository.Row> streams = playbacks.of(org, entries.stream()
+                .filter(e -> !e.isBreak() && assets.get(e.assetId()) != null && assets.get(e.assetId()).mediaKey() == null)
+                .map(Entry::assetId).distinct().toList());
         List<Item> items = new ArrayList<>();
-        if ("LIVE".equals(ch.status()) && ch.publishedVersionId() != null) {
-            for (Entry e : data.entries(org, ch.publishedVersionId(), Instant.ofEpochMilli(from), Instant.ofEpochMilli(until))) {
-                if (e.isBreak()) {
-                    items.add(new Item(e.id().toString(), e.kind(), null, 0, 0, e.start().toEpochMilli(), e.end().toEpochMilli(), terr,
-                            e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false)));
-                    continue;
-                }
-                Asset a = assets.get(e.assetId());
-                String key = a != null && a.ready() && stored(a.mediaKey()) ? a.mediaKey() : null;   // null: standby plays
-                List<String> ok = a == null ? List.of() : terr.stream()
-                        .filter(c -> Rights.evaluate(policies.get(a.id()), terr, c, e.start(), e.end()).allowed()).toList();
-                items.add(new Item(e.id().toString(), e.kind(), key, key == null ? 0 : media.segments(key), e.assetOffsetMs(),
-                        e.start().toEpochMilli(), e.end().toEpochMilli(), ok, null, null, null));
+        List<Timeline.Span> spans = new ArrayList<>();
+        Map<String, Ovp> ovp = new LinkedHashMap<>();
+        int longest = 0;
+        for (Entry e : entries) {
+            long start = e.start().toEpochMilli(), end = e.end().toEpochMilli();
+            boolean shown = end > from;
+            if (e.isBreak()) {
+                if (shown) items.add(new Item(e.id().toString(), e.kind(), null, 0, 0, start, end, terr,
+                        e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false)));
+                continue;
+            }
+            Asset a = assets.get(e.assetId());
+            AssetPlaybackRepository.Row stream = a != null && a.ready() && a.mediaKey() == null ? streams.get(a.id()) : null;
+            if (stream != null && Timeline.onGrid(start, end)) {
+                int[] seg = stream.playback().segmentsMs();
+                Timeline.Layout l = Timeline.split(seg, e.assetOffsetMs(), end - start);
+                spans.add(new Timeline.Span(start, end, l));
+                if (!shown) continue;
+                longest = Math.max(longest, l.longest(seg));
+                ovp.computeIfAbsent(a.id().toString(), k -> ovpEntry(org, stream, until));
+                items.add(new Item(e.id().toString(), e.kind(), null, 0, e.assetOffsetMs(), start, end, allowed(a, terr, policies, e),
+                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill()));
+                continue;
+            }
+            if (!shown) continue;
+            String key = a != null && a.ready() && stored(a.mediaKey()) ? a.mediaKey() : null;   // null: standby plays
+            items.add(new Item(e.id().toString(), e.kind(), key, key == null ? 0 : media.segments(key), e.assetOffsetMs(), start, end,
+                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null));
+        }
+
+        // numbering anchor: the hour mark, or the start of the streaming programme the hour mark falls into
+        long t0 = from;
+        for (Timeline.Span sp : spans) if (sp.start() < from && sp.end() > from) t0 = sp.start();
+        long seq0;
+        if (prev == null || from - prev.atMs() > ANCHOR_MAX_AGE) seq0 = Timeline.gridSeq(t0);
+        else if (prev.atMs() >= t0) seq0 = prev.seq() - (prev.atMs() - t0) / Times.SEG_MS;
+        else seq0 = Timeline.advance(prev.seq(), prev.atMs(), t0, spans);
+        int target = Math.max(prev == null ? Times.SEG_S : prev.targetS(), Math.max(Times.SEG_S, (int) Math.ceilDiv(longest, 1000)));
+        Anchor next = new Anchor(t0, seq0, target);
+        if (prev == null || t0 > prev.atMs() || target > prev.targetS()) {
+            timelines.save(org, channelId, next);
+            anchors.put(channelId, next);
+        }
+
+        // sequence numbers of the streaming programmes from t0 on; grid slots in between count one each
+        long baseT = t0, baseSeq = seq0;
+        for (int i = 0; i < items.size(); i++) {
+            Item it = items.get(i);
+            if (it.n() == null || it.start() < t0) continue;
+            long seq = baseSeq + (it.start() - baseT) / Times.SEG_MS;
+            items.set(i, it.withSeq(seq));
+            baseT = it.end();
+            baseSeq = seq + it.n();
+        }
+        return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(),
+                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fallback(ch, assets, policies), items, t0, seq0, target, ovp);
+    }
+
+    private static List<String> allowed(Asset a, List<String> terr, Map<UUID, Rights.Policy> policies, Entry e) {
+        return terr.stream().filter(c -> Rights.evaluate(policies.get(a.id()), terr, c, e.start(), e.end()).allowed()).toList();
+    }
+
+    /** The edge's URL and segment lengths for one streaming video. url is null when none can be made (the programme plays slate). */
+    private Ovp ovpEntry(UUID org, AssetPlaybackRepository.Row r, long until) {
+        IPlayback adapter = providers.playback(r.provider());
+        MediaConnectionService.Connection c = connection(org);
+        String url = null;
+        if (adapter != null && c != null && r.provider().equals(c.provider())) {
+            try {
+                url = adapter.streamUrl(c.credentials(), r.playback().playbackId(), r.playback().signed(), until / 1000 + TOKEN_SLACK_S);
+            } catch (com.faststudio.v1.core.common.ApiException e) {
+                log.warn("No stream URL for asset {}: {}", r.assetId(), e.getMessage());
             }
         }
-        return new Snapshot(1, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(),
-                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fallback(ch, assets, policies), items);
+        return new Ovp(url, r.playback().segmentsMs(), r.playback().format());
+    }
+
+    // decrypting a connection for every channel every 5 s isn't needed: a minute is fresh enough
+    private final Map<UUID, Map.Entry<Long, Optional<MediaConnectionService.Connection>>> connectionCache = new ConcurrentHashMap<>();
+
+    private MediaConnectionService.Connection connection(UUID org) {
+        long now = System.currentTimeMillis();
+        var hit = connectionCache.get(org);
+        if (hit != null && hit.getKey() > now) return hit.getValue().orElse(null);
+        Optional<MediaConnectionService.Connection> c = Optional.ofNullable(connections.connection(org));
+        connectionCache.put(org, Map.entry(now + 60_000, c));
+        return c.orElse(null);
     }
 
     private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0); }

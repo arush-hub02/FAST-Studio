@@ -14,14 +14,15 @@ public final class LibraryDto {
 
     /** Blank token id / secrets keep the stored ones. passthroughTag: only Mux assets with exactly this passthrough are imported (blank = all). */
     public record AccountRequest(@Size(max = 200) String tokenId, @Size(max = 500) String tokenSecret, @Size(max = 500) String webhookSecret,
-                                 @Size(max = 120) String environment, @Size(max = 255) String passthroughTag) {}
+                                 @Size(max = 120) String environment, @Size(max = 255) String passthroughTag,
+                                 @Size(max = 120) String signingKeyId, @Size(max = 8000) String signingPrivateKey) {}
 
     /**
      * Never carries a secret. {@code webhookUrl} is what to enter in the Mux environment's webhook settings.
      * healthy: result of the last connection check (null = never checked); checkError says why it failed.
      */
     public record AccountView(boolean connected, String tokenId, String environment, String passthroughTag, boolean webhookSecretSet, String webhookUrl,
-                              OffsetDateTime checkedAt, String checkError, Boolean healthy) {}
+                              OffsetDateTime checkedAt, String checkError, Boolean healthy, String signingKeyId, boolean signingKeySet) {}
 
     /**
      * Where the library sync stands. state: NEVER, QUEUED, RUNNING, CANCEL_REQUESTED, SUCCEEDED, FAILED or CANCELLED
@@ -34,9 +35,10 @@ public final class LibraryDto {
 
     /**
      * The project's view of its connected library: whether one is connected and usable, what it can do (CATALOGUE,
-     * DIRECT_UPLOAD, SOURCE_FILE, WEBHOOKS), the last check and the library sync.
+     * DIRECT_UPLOAD, SOURCE_FILE, WEBHOOKS, PLAYBACK), the last check and the library sync. waiting: imported videos
+     * that are ready in the library but not yet prepared here (Draft or Failed), oldest first, at most 500.
      */
-    public record LibraryView(boolean connected, Boolean healthy, OffsetDateTime checkedAt, List<String> capabilities, SyncStatus sync) {}
+    public record LibraryView(boolean connected, Boolean healthy, OffsetDateTime checkedAt, List<String> capabilities, SyncStatus sync, List<UUID> waiting) {}
 
     /** Library videos to prepare for broadcast (1 to 100). */
     public record PrepareRequest(@NotNull @NotEmpty @Size(max = 100) List<@NotNull UUID> assetIds) {}

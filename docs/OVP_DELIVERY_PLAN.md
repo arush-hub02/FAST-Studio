@@ -1,6 +1,15 @@
 # Programmes from the video platform, ads and slate from us: plan
 
-Status: **planned, nothing built.** Written 3 November 2026 after the user's decision (docs/PRODUCTION_ARCHITECTURE_AND_COSTS.md, top section).
+Status (8 November 2026): **S2-S5 built and tested locally against a stand-in for Mux; not yet run against a real Mux account or on real players** (S1, which needs the user's free Mux account). S6 (JW Player, mixed platforms) and S7 (costs) are not built. Written 3 November 2026 after the user's decision (docs/PRODUCTION_ARCHITECTURE_AND_COSTS.md, top section).
+
+## As built (8 November 2026)
+
+- **S2:** `IPlayback` capability (`util/mediaProvider`), Mux implementation (`MuxProvider.playback`, `util/mediaProvider/Hls`), `asset_playback` (V31). Preparing a library video reads its playlists (`StreamingServiceV1`); nothing is downloaded, and the Mux master-file download path (`MuxSource`) is gone. Uploads straight to FAST Studio still go to R2. One library connection per project (several: with S6).
+- **S3:** the schedule stays on the 5 s grid. A streaming programme occupies whole slots; inside them the edge plays the platform's segments at their real lengths and fills the rest of the slot with slate (`util/cloudflare/Timeline`), so listed lengths always equal the clock. Numbering comes from a per-channel anchor (`channel_timeline`), carried in the snapshot as t0/seq0 plus each programme's seq/n. The Worker (`worker/src/ovp.ts`) reads the platform playlists once per location and quality level (memory, then Cache API), keeps the last good copy on failures, and plays slate for the same lengths when it has none.
+- **S4:** our ads and slate keep our ladder (360p/540p/720p); each of our quality levels takes the platform rendition nearest in height. Platform 1080p needs a 1080p rung for ads and slate (not built). fMP4 platform streams are refused (our ads and slate are MPEG-TS).
+- **S5:** Mux signed playback: optional signing key on the connection (V31 connector fields), RS256 tokens per video (`MuxSigner`), valid until 6 hours after the snapshot window; the library screen gets 6-7 hour links. Tokens are per video, not per viewer.
+- **Screens:** Library page panel (Sync library, Get N ready to stream), Delivery card in the video drawer, signing key fields in the platform Mux form.
+- **Known limits:** viewers' players fetch programme segments from the platform's own domain (stream.mux.com), so the platform is visible in network traffic; a part can lose up to one platform segment at a mid-roll break; DSN memo per Worker isolate (as before).
 
 ## Goal
 
@@ -83,7 +92,7 @@ These decide the design and can't be assumed:
 
 | Stage | Scope |
 | --- | --- |
-| S1 Feasibility spike | One real Mux asset and one JW Player asset: record the facts above; condition one ad and the slate to its ladder; hand-build a spliced playlist and play it in hls.js, iOS Safari and Android TV (ExoPlayer). Output: measurements and a go/no-go per question, written into this file. No product code. |
+| S1 Feasibility spike (needs the user's Mux account) | One real Mux asset and one JW Player asset: record the facts above; condition one ad and the slate to its ladder; hand-build a spliced playlist and play it in hls.js, iOS Safari and Android TV (ExoPlayer). Output: measurements and a go/no-go per question, written into this file. No product code. |
 | S2 Playback in the adapter | `PLAYBACK_MANIFEST` capability and the Mux implementation; library sync stops downloading and packaging OVP programmes into R2 (decision 2); asset source connection; several library connections per project; tests with a fake provider |
 | S3 Snapshot and Worker splicing | Playback references in the snapshot; the Worker reads OVP playlists, builds the variable-duration timeline, splices R2 ads and slate, keeps sequence numbers and markers right, falls back to standby; Worker tests for joins, sequence continuity and outages |
 | S4 Ad and slate conditioning to the OVP ladder | Conditioning reads the channel's playback ladder; container per the S1 result; re-prepare existing creatives and slate |
@@ -97,6 +106,17 @@ These decide the design and can't be assumed:
 2. ~~R2 copies~~ **Decided 3 November 2026: no programme content in R2.** OVP programmes are not downloaded or packaged into R2; if the OVP is down, the channel plays standby slate. Only ads and slate live in R2.
 3. ~~Players~~ **Decided 3 November 2026: web, iOS and one TV.** A channel goes live only after programme → ad → programme joins and quality switching play cleanly in a web player (hls.js), on iOS (Safari/AVPlayer) and on one smart-TV platform. The TV platform is **Android TV** (ExoPlayer/Media3), tested on the Android TV emulator or a stick. S1 tests all three.
 4. ~~Second OVP~~ **Decided 3 November 2026: JW Player, soon.** S1 measures a JW Player asset alongside Mux (segment lengths, format, quality levels, signed URLs), and S2 builds the playback capability for both, so nothing in the design is Mux-shaped. Needs a JW Player property's API credentials and one test asset. If JW Player's segments are longer than 5 s, breaks there move to the nearest JW segment edge.
+
+## Ads and slate at a break (built, unchanged by this plan)
+
+Confirmed with the user on 8 November 2026. This is how breaks already work (`AdDecisionServiceV1`, `VastSource`, `worker/src/playout.ts`):
+- **Ads come straight from the ad server.** For each viewer and break, the ad server's tag (Google Ad Manager or any VAST server) is called live, within its timeout (default 1 s).
+- **Each creative is transcoded by our FFmpeg** into 5 s segments on R2, once per creative. After that, the copy is reused.
+- **Slate covers every gap.** The standby slate from R2 plays when:
+  - the ad server times out, fails or returns no ads (the whole break is slate);
+  - the ads are shorter than the break (slate fills the rest);
+  - the decision isn't ready when the break starts (the whole break is slate, and it never switches to ads halfway).
+- **A creative seen for the first time** isn't converted yet when its break starts, so that break plays slate and the creative airs from the next break. Converting it inside the ~1 s decision window isn't possible.
 
 ## Not affected
 

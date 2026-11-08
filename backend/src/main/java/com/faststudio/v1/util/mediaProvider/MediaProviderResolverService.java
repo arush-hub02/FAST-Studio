@@ -38,7 +38,13 @@ public class MediaProviderResolverService {
             case DIRECT_UPLOAD -> "The connected library doesn't accept direct uploads.";
             case SOURCE_FILE -> "Videos from the connected library can't be prepared for broadcast yet.";
             case WEBHOOKS -> "The connected library doesn't send updates.";
+            case PLAYBACK -> "The connected library can't stream its videos.";
         });
+    }
+
+    /** The provider's playback adapter, or null when it can't stream (its videos are then packaged into our storage). */
+    public IPlayback playback(String key) {
+        return supports(key, Capability.PLAYBACK) && get(key) instanceof IPlayback p ? p : null;
     }
 
     public IDirectUpload directUpload(String key) {

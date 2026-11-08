@@ -22,22 +22,52 @@ import java.util.*;
 
 /**
  * HTTP client for the Mux video API: catalogue paging, asset detail, direct uploads and master-file access. Knows nothing
- * about where credentials are stored (see MediaConnectionService) or how files are packaged (see MuxSource).
+ * about where credentials are stored (see MediaConnectionService) or how its videos play (see MuxProvider).
  * White-label (HANDOVER §4.5): its errors never name the provider, because they can reach tenants.
  */
 @Component
 public class MuxClientService {
     private static final Logger log = LoggerFactory.getLogger(MuxClientService.class);
     static final int PAGE = 100;
-    static final Duration MASTER_WAIT = Duration.ofMinutes(30);
 
     private final JsonMapper json;
     private final String apiUrl;
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+    private final String streamUrl, imageUrl;
+    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NORMAL).build();
 
-    public MuxClientService(JsonMapper json, @Value("${faststudio.mux.api-url:https://api.mux.com}") String apiUrl) {
+    public MuxClientService(JsonMapper json, @Value("${faststudio.mux.api-url:https://api.mux.com}") String apiUrl,
+                            @Value("${faststudio.mux.stream-url:https://stream.mux.com}") String streamUrl,
+                            @Value("${faststudio.mux.image-url:https://image.mux.com}") String imageUrl) {
         this.json = json;
         this.apiUrl = apiUrl.replaceAll("/+$", "");
+        this.streamUrl = streamUrl.replaceAll("/+$", "");
+        this.imageUrl = imageUrl.replaceAll("/+$", "");
+    }
+
+    /** Master playlist of a playback id (with ?token= for signed playback). */
+    public String streamUrl(String playbackId, String token) {
+        return streamUrl + "/" + playbackId + ".m3u8" + (token == null ? "" : "?token=" + token);
+    }
+
+    public String thumbnailUrl(String playbackId, String token) {
+        return imageUrl + "/" + playbackId + "/thumbnail.jpg" + (token == null ? "?width=480" : "?token=" + token);
+    }
+
+    /** A playlist from the stream host. Failures are neutral; the URL (it may carry a token) is never logged. */
+    public String playlist(String url) throws InterruptedException {
+        var req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(15)).GET().build();
+        HttpResponse<String> res;
+        try {
+            res = http.send(req, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            log.warn("Mux playlist fetch failed ({})", e.getClass().getSimpleName());
+            throw unavailable(0);
+        }
+        if (res.statusCode() / 100 != 2) {
+            log.warn("Mux playlist fetch answered {}", res.statusCode());
+            throw unavailable(res.statusCode());
+        }
+        return res.body();
     }
 
     /** A tenant's account, decrypted. tag = the passthrough value marking the tenant's FAST videos (blank = all). */
@@ -47,7 +77,7 @@ public class MuxClientService {
 
     /** The fields we use from a Mux asset object (listings, asset detail and webhook payloads share it). title: trimmed, may be blank. */
     public record Asset(String id, String status, long durationMs, String passthrough, String uploadId, String title,
-                        String masterAccess, String masterStatus, String masterUrl) {
+                        String masterAccess, String masterStatus, String masterUrl, String playbackId, boolean signed) {
         /** Null for anything that isn't a well-formed asset (ids go into API paths and source_ref). */
         public static Asset of(JsonNode n) {
             String id = n.path("id").asString("");
@@ -56,7 +86,17 @@ public class MuxClientService {
             long ms = (long) (n.path("duration").asDouble(0) * 1000) / Times.SEG_MS * Times.SEG_MS;   // whole segments, as packaging keeps
             return new Asset(id, n.path("status").asString(""), ms, n.path("passthrough").asString(""), upload.isEmpty() ? null : upload,
                     n.path("meta").path("title").asString("").trim(),
-                    n.path("master_access").asString("none"), n.path("master").path("status").asString(""), n.path("master").path("url").asString(""));
+                    n.path("master_access").asString("none"), n.path("master").path("status").asString(""), n.path("master").path("url").asString(""),
+                    playback(n, false) != null ? playback(n, false) : playback(n, true), playback(n, false) == null && playback(n, true) != null);
+        }
+
+        /** The first public playback id (signed when signed is true), or null. Ids go into URLs, so only well-formed ones. */
+        static String playback(JsonNode n, boolean signed) {
+            for (JsonNode p : n.path("playback_ids")) {
+                String id = p.path("id").asString("");
+                if (id.matches("[A-Za-z0-9]{1,128}") && p.path("policy").asString("").equals(signed ? "signed" : "public")) return id;
+            }
+            return null;
         }
     }
 
@@ -88,32 +128,14 @@ public class MuxClientService {
         return Asset.of(call(a, "GET", "/video/v1/assets/" + id, null).path("data"));
     }
 
-    /** One-time URL the browser PUTs the file to. The asset it becomes carries the tenant's tag and keeps its master file. */
+    /** One-time URL the browser PUTs the file to. The asset it becomes carries the tenant's tag and a public playback id (it streams from Mux). */
     public Upload upload(Account a, String corsOrigin, String title) throws InterruptedException {
-        Map<String, Object> settings = new LinkedHashMap<>(Map.of("master_access", "temporary", "meta", Map.of("title", title)));
+        Map<String, Object> settings = new LinkedHashMap<>(Map.of("playback_policy", List.of("public"), "meta", Map.of("title", title)));
         if (!a.tag().isEmpty()) settings.put("passthrough", a.tag());
         JsonNode d = call(a, "POST", "/video/v1/uploads", json.writeValueAsString(Map.of("cors_origin", corsOrigin, "new_asset_settings", settings))).path("data");
         String id = d.path("id").asString(""), url = d.path("url").asString("");
         if (!id.matches("[A-Za-z0-9]{1,128}") || !url.startsWith("https://")) throw unavailable(0);
         return new Upload(id, url);
-    }
-
-    /**
-     * Temporary download URL of the asset's original file: requests master access when needed, then waits while Mux
-     * prepares it (and, for a fresh upload, while Mux is still processing the asset). Null if it errored or timed out.
-     * ponytail: polls on a packaging thread; drive it from the video.asset.master.ready webhook if many arrive at once.
-     */
-    public String masterUrl(Account a, String id) throws InterruptedException {
-        long deadline = System.nanoTime() + MASTER_WAIT.toNanos();
-        while (true) {
-            Asset x = asset(a, id);
-            if (x == null || "errored".equals(x.status())) return null;
-            if ("ready".equals(x.masterStatus()) && x.masterUrl().startsWith("https://")) return x.masterUrl();
-            if ("ready".equals(x.status()) && !"temporary".equals(x.masterAccess()))
-                call(a, "PUT", "/video/v1/assets/" + id + "/master-access", "{\"master_access\":\"temporary\"}");
-            if (System.nanoTime() > deadline) return null;
-            Thread.sleep(10_000);
-        }
     }
 
     /** One API call. Failures become neutral, tenant-safe errors; the details stay in the server log. */

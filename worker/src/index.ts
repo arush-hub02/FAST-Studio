@@ -7,14 +7,18 @@
 //   GET  /live/{token}/v{n}.m3u8                    live media playlist of rendition n
 //   GET  /live/{token}/asset-list/{breakId}.json    SGAI: the ads for one break
 //   GET  /live/{token}/slate/{seconds}.m3u8         SGAI: slate padding
+//
+// Programmes that stream from their platform (Mux, ...) are listed with the platform's own segment URLs (ovp.ts);
+// our ads and slate are spliced in between them.
 //   GET  /media/{key}                               packaged media from R2 (production serves R2's own domain)
 //   PUT  /_ingest/media/{key}                       control plane -> R2      (Bearer EDGE_SECRET)
 //   PUT  /_ingest/channels/{org}/{channel}          control plane -> KV      (Bearer EDGE_SECRET)
 
 import {
   type Beacon, type Decided, type Decision, type Session, type Snapshot,
-  assetList, breaksToDecide, masterPlaylist, mediaPlaylist, slatePlaylist,
+  assetList, breaksToDecide, masterPlaylist, mediaPlaylist, slatePlaylist, streamsInWindow,
 } from './playout.ts'
+import * as ovp from './ovp.ts'
 export { BreakDecision } from './decision.ts'
 
 interface Env {
@@ -76,7 +80,13 @@ async function live(req: Request, env: Env, ctx: Ctx, url: URL, token: string, r
     const { now: needed, soon } = breaksToDecide(snap, s, now)
     await Promise.all(needed.map(b => decide(env, s, b.id, true, viewer)))
     soon.forEach(b => ctx.waitUntil(decide(env, s, b.id, false, viewer)))
-    const out = mediaPlaylist(snap, s, variant, now, base, id => decisions.get(`${s.sid}:${id}`), dsnMemo)
+    // platform playlists: wait only the first time; afterwards refresh in the background
+    const streams = streamsInWindow(snap, now)
+    await Promise.all(streams.now.filter(a => !ovp.cached(snap, a, variant)).map(a => ovp.load(snap, a, variant, now)))
+    streams.now.forEach(a => ctx.waitUntil(ovp.load(snap, a, variant, now)))
+    streams.soon.forEach(a => ctx.waitUntil(ovp.load(snap, a, variant, now)))
+    const out = mediaPlaylist(snap, s, variant, now, base, id => decisions.get(`${s.sid}:${id}`), dsnMemo,
+      (asset, rendition, i) => ovp.segmentUrl(snap, asset, rendition, i))
     ctx.waitUntil(report(env, s, out.beacons))
     return playlist(out.text)
   }

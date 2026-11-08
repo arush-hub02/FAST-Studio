@@ -79,7 +79,8 @@ public class MediaConnectionService {
         Found f = find(org);
         if (f == null) return null;
         Map<String, String> v = f.c().values();
-        return new Connection(f.provider(), new Credentials(v.get("token_id"), v.get("token_secret"), Objects.toString(v.get("passthrough_tag"), "")),
+        return new Connection(f.provider(), new Credentials(v.get("token_id"), v.get("token_secret"), Objects.toString(v.get("passthrough_tag"), ""),
+                        v.get("signing_key_id"), v.get("signing_private_key")),
                 f.c().checkedAt(), f.c().checkError(), f.c().id());
     }
 
@@ -108,9 +109,10 @@ public class MediaConnectionService {
         Connection c = connection(org);
         Account a = account(org);
         String hook = appUrl + "/hooks/mux/" + org;
-        if (c == null) return new AccountView(false, null, null, null, false, hook, null, null, null);
+        if (c == null) return new AccountView(false, null, null, null, false, hook, null, null, null, null, false);
         return new AccountView(true, null, a == null ? "" : a.environment(), c.credentials().scope(), a != null && a.webhookSecret() != null, hook,
-                c.checkedAt(), c.checkError(), c.checkedAt() == null ? null : c.checkError() == null);
+                c.checkedAt(), c.checkError(), c.checkedAt() == null ? null : c.checkError() == null,
+                Objects.toString(c.credentials().signingKeyId(), ""), c.credentials().signingKey() != null && !c.credentials().signingKey().isBlank());
     }
 
     /** Stores the account encrypted; a blank token id or secret keeps the stored one. */
@@ -126,6 +128,8 @@ public class MediaConnectionService {
         values.put("webhook_secret", Objects.toString(blankToNull(r.webhookSecret()), ""));
         values.put("environment", env);
         values.put("passthrough_tag", tag);
+        values.put("signing_key_id", Objects.toString(r.signingKeyId(), "").trim());   // signed playback (optional)
+        values.put("signing_private_key", Objects.toString(blankToNull(r.signingPrivateKey()), ""));
         connectors.saveInstance(null, org, MuxProvider.KEY, null, new InstanceRequest(null, null, values));
         audit.platform(Auth.userId(), "platform.mux.update", "organization", org, "environment '" + env + "', passthrough tag '" + tag + "'");
         return view(org);

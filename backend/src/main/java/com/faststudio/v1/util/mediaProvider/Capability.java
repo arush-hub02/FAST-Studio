@@ -9,5 +9,7 @@ public enum Capability {
     /** Hands over a video's original file, so we can prepare it for broadcast ("prepare selected"). */
     SOURCE_FILE,
     /** Sends signed events when a video changes. */
-    WEBHOOKS
+    WEBHOOKS,
+    /** Streams the video itself; the edge splices our ads and slate into its playlists ({@link IPlayback}). */
+    PLAYBACK
 }

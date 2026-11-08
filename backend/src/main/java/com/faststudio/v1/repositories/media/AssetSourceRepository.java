@@ -35,6 +35,14 @@ public class AssetSourceRepository {
                 .param("o", org).param("p", provider).param("x", externalId).update();
     }
 
+    /** Imported videos ready in the library but not prepared here (Draft or Failed), oldest first. */
+    public List<UUID> waiting(UUID org, String provider) {
+        return db.sql("""
+                select a.id from asset a join asset_source s on s.org_id = a.org_id and s.asset_id = a.id
+                where a.org_id = :o and s.provider = :p and s.provider_status = 'READY' and a.status in ('DRAFT', 'FAILED')
+                order by a.created_at limit 500""").param("o", org).param("p", provider).query(UUID.class).list();
+    }
+
     /** What "prepare selected" needs to know per requested asset of the project; unknown ids are simply absent. */
     public record Candidate(UUID id, String status, String provider, String providerStatus) {}
 

@@ -3503,6 +3503,185 @@
           "caption": "Tenant-wide roles above the tenant's people list."
         }
       ]
+    },
+    {
+      "id": "library-streaming",
+      "title": "Programmes stream from the video library",
+      "area": "Media library",
+      "status": "Built (2026-11-08), tested against a stand-in for Mux; not yet run against a real Mux account",
+      "completed": "2026-11-08",
+      "summary": "Library videos (Mux today) play straight from the library at their own segment lengths. FAST Studio splices its own ads (fetched live from your ad servers and converted once into R2) and slate into the live playlist at the breaks. Nothing is copied, and if the library or an ad server can't be reached, slate plays.",
+      "who": [
+        "Platform administrators (connect the library, optional signing key)",
+        "Content managers and owners (sync, get videos ready to stream)",
+        "Viewers (one continuous channel)"
+      ],
+      "flow": {
+        "title": "One live playlist from two sources",
+        "intro": "The boxes are the parts involved; the pill is the video moving through. Pick a situation.",
+        "nodes": [
+          {
+            "id": "lib",
+            "col": 1,
+            "row": 1,
+            "icon": "📚",
+            "label": "Video library",
+            "sub": "Mux"
+          },
+          {
+            "id": "cp",
+            "col": 2,
+            "row": 1,
+            "icon": "⚙️",
+            "label": "Control plane",
+            "sub": "StreamingServiceV1, EdgePublisher"
+          },
+          {
+            "id": "kv",
+            "col": 3,
+            "row": 1,
+            "icon": "🗂️",
+            "label": "Snapshot",
+            "sub": "KV: layout + numbering"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Edge Worker",
+            "sub": "playout.ts, ovp.ts"
+          },
+          {
+            "id": "r2",
+            "col": 2,
+            "row": 2,
+            "icon": "🪣",
+            "label": "R2 + CDN",
+            "sub": "ads and slate"
+          },
+          {
+            "id": "player",
+            "col": 1,
+            "row": 2,
+            "icon": "📺",
+            "label": "Player",
+            "sub": "web, iOS, TV"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Get a library video ready",
+            "steps": [
+              {
+                "at": "lib",
+                "state": "ready in library",
+                "say": "Sync brings the video in as a draft.",
+                "tech": "`POST /api/orgs/{org}/library/sync`"
+              },
+              {
+                "at": "cp",
+                "state": "reading",
+                "say": "\"Get ready to stream\" reads its quality levels and the real length of every segment. Nothing is downloaded.",
+                "tech": "`POST /api/orgs/{org}/library/prepare`"
+              },
+              {
+                "at": "cp",
+                "state": "Ready",
+                "say": "The video is Ready and takes whole 5 s slots in the schedule."
+              }
+            ]
+          },
+          {
+            "name": "A viewer watches",
+            "steps": [
+              {
+                "at": "kv",
+                "state": "published",
+                "say": "The channel snapshot lists the programme's segment layout, its sequence numbers and the library's playlist URL."
+              },
+              {
+                "at": "edge",
+                "state": "reads once",
+                "say": "The edge reads the library's playlist once per location and quality level and reuses it for every viewer."
+              },
+              {
+                "at": "player",
+                "state": "programme",
+                "say": "The player gets the library's own segments at their real lengths…"
+              },
+              {
+                "at": "r2",
+                "state": "ad break",
+                "say": "…then our ads and slate from R2 at the break, with a discontinuity in between."
+              }
+            ]
+          },
+          {
+            "name": "Something is down",
+            "steps": [
+              {
+                "at": "lib",
+                "state": "unreachable",
+                "say": "If the library can't be read, the programme plays slate for the same lengths; numbering doesn't change."
+              },
+              {
+                "at": "r2",
+                "state": "slate",
+                "say": "If an ad server times out, fails or has no ads, the break plays slate."
+              },
+              {
+                "at": "player",
+                "state": "keeps playing",
+                "say": "The channel never stops."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → the company → Connectors → Mux: access token, webhook secret and, for signed playback IDs, a signing key.",
+        "Library → Sync library: library videos arrive as drafts.",
+        "Library → Get N ready to stream. The video drawer's Delivery card shows its segments, quality levels and format.",
+        "Schedule it like any video; ads and slate are spliced in at its breaks."
+      ],
+      "howItWorks": [
+        "StreamingServiceV1.resolve reads the library's HLS playlists through the provider's IPlayback adapter and stores the real segment lengths (asset_playback). All quality levels must share segment boundaries; fMP4 streams are refused for now (our ads and slate are MPEG-TS).",
+        "EdgePublisher lays each programme part out in its 5 s slots (util/cloudflare/Timeline): the library's segments, then slate for the rest of the slot, so listed lengths always add up to the clock.",
+        "Segment numbers come from a per-channel anchor (channel_timeline) and stay identical across snapshots and Worker locations.",
+        "The Worker (ovp.ts) reads the library's master and rendition playlists, picks the rendition nearest each of our quality levels, caches them per location (memory, then the Cache API) and keeps serving the last good copy when a read fails.",
+        "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window."
+      ],
+      "optimizations": [
+        "Library playlists are read once per location, video and quality level and shared by every viewer; viewers fetch video segments from the library's CDN directly.",
+        "A viewer's playlist waits for a library read only the first time; refreshes run in the background.",
+        "Snapshots only load the streaming details of videos in their window; the numbering anchor is written once an hour per channel."
+      ],
+      "scale": [
+        "Edge work per viewer stays a pure function of the snapshot and clock, so any number of Worker locations agree without coordinating.",
+        "Library video traffic is billed by the library (per viewer minute); ads and slate come from R2 with no egress fee."
+      ],
+      "rules": [
+        "Our quality levels are 360p, 540p and 720p; each gets the library rendition nearest in height (1080p from the library needs a 1080p rung for ads and slate first).",
+        "A programme part starts at the library segment boundary before its offset and ends at the one before its end, so mid-roll breaks never repeat or skip content (a part can lose up to one segment).",
+        "Videos stored by FAST Studio (uploads) keep playing from R2 as before."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/library/prepare",
+        "GET /api/orgs/{org}/library",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux"
+      ],
+      "tests": [
+        "MuxTest (prepare → asset_playback → library view → channel snapshot with layout, numbering and URL)",
+        "TimelineTest (layouts and numbering)",
+        "MuxSignerTest (signed playback tokens)",
+        "worker/src/ovp.test.ts (real lengths, numbering across reloads, rendition choice, library unreachable, geo)"
+      ],
+      "docs": [
+        "docs/OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": []
     }
   ]
 }

@@ -16,6 +16,7 @@ import {
 } from '../../shared/ui'
 import { AddVideoModal } from './AddVideoModal'
 import { AssetDrawer } from './AssetDrawer'
+import { LibrarySource } from './LibrarySource'
 import { formatMediaKind, KIND_LABEL } from './mediaKind'
 
 const KINDS = [
@@ -184,6 +185,8 @@ export default function Library() {
           </div>
         }
       />
+
+      <LibrarySource onChanged={list.reload} />
 
       {/* Top High-Level Metric Cards with Explicit Scope Labels */}
       <div className="grid g4 library-kpi-grid">

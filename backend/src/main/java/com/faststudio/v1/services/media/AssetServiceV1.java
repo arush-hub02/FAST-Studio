@@ -46,9 +46,11 @@ public class AssetServiceV1 {
     private final AssetRules rules;
     private final TenantLimitsService limits;
     private final Audit audit;
+    private final StreamingServiceV1 playback;
 
     public AssetServiceV1(Data data, AssetRepository repository, MediaJobRepository jobs, MediaServiceV1 media, MediaSigner signer,
-                            AssetRules rules, TenantLimitsService limits, Audit audit) {
+                            AssetRules rules, TenantLimitsService limits, Audit audit, StreamingServiceV1 playback) {
+        this.playback = playback;
         this.data = data;
         this.repository = repository;
         this.jobs = jobs;
@@ -64,21 +66,24 @@ public class AssetServiceV1 {
     public List<AssetView> list(Tenant t, String q, String kind, boolean archived) {
         Map<UUID, Rights.Policy> policies = data.policies(t.orgId());
         Map<UUID, List<String>> usage = repository.upcomingAirings(t.orgId());
-        return data.assets(t.orgId()).values().stream()
+        Collection<Asset> all = data.assets(t.orgId()).values();
+        Map<UUID, Streaming> streams = playback.streaming(t.orgId(), all.stream().filter(a -> a.mediaKey() == null).map(Asset::id).toList());
+        return all.stream()
                 .filter(a -> archived == a.status().equals("ARCHIVED"))
                 .filter(a -> kind == null || kind.isBlank() || a.kind().equals(kind))
                 .filter(a -> q == null || q.isBlank() || (a.title() + " " + a.genre() + " " + Objects.toString(a.series(), "")).toLowerCase().contains(q.toLowerCase()))
                 .sorted(Comparator.comparing(Asset::createdAt).reversed())
-                .map(a -> view(a, policies.get(a.id()), usage.getOrDefault(a.id(), List.of())))
+                .map(a -> view(a, policies.get(a.id()), usage.getOrDefault(a.id(), List.of()), streams.get(a.id())))
                 .toList();
     }
 
     public AssetView get(Tenant t, UUID id) {
         Asset a = data.asset(t.orgId(), id);
-        return view(a, data.policy(t.orgId(), id), repository.upcomingAirings(t.orgId()).getOrDefault(id, List.of()));
+        return view(a, data.policy(t.orgId(), id), repository.upcomingAirings(t.orgId()).getOrDefault(id, List.of()),
+                a.mediaKey() == null ? playback.streaming(t.orgId(), List.of(id)).get(id) : null);
     }
 
-    private AssetView view(Asset a, Rights.Policy p, List<String> channels) {
+    private AssetView view(Asset a, Rights.Policy p, List<String> channels, Streaming streaming) {
         String status;
         Instant now = Instant.now();
         if (p == null) status = "MISSING";
@@ -87,8 +92,10 @@ public class AssetServiceV1 {
         else if (p.validUntil() != null && p.validUntil().toInstant().isBefore(now.plusSeconds(14 * 86400))) status = "EXPIRING";
         else status = "OK";
         String k = a.mediaKey();
+        if (k == null && streaming != null)
+            return new AssetView(a, streaming.thumbUrl(), streaming.playerUrl(), p, a.kind().equals("AD") ? "N/A" : status, channels.size(), channels, streaming);
         return new AssetView(a, k == null ? null : signer.url(k, "thumb.jpg") + "?v=" + a.updatedAt().toEpochSecond(),
-                k == null ? null : signer.url(k, media.entryPlaylist(k)), p, a.kind().equals("AD") ? "N/A" : status, channels.size(), channels);
+                k == null ? null : signer.url(k, media.entryPlaylist(k)), p, a.kind().equals("AD") ? "N/A" : status, channels.size(), channels, null);
     }
 
     // ------------------------------------------------------------------ writing

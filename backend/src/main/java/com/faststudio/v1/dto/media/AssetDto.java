@@ -26,10 +26,19 @@ public final class AssetDto {
 
     /**
      * An asset as the library shows it: signed thumbnail/preview URLs, its rights policy, a rights status
-     * (OK, EXPIRING, EXPIRED, INCOMPLETE, MISSING or N/A for ads) and the channels it airs on.
+     * (OK, EXPIRING, EXPIRED, INCOMPLETE, MISSING or N/A for ads) and the channels it airs on. streaming is set for a
+     * library video that streams from its platform (then the URLs point there); null for video stored by FAST Studio.
      */
     public record AssetView(Asset asset, String thumbUrl, String previewUrl, Rights.Policy rights, String rightsStatus,
-                            int upcomingAirings, List<String> channels) {}
+                            int upcomingAirings, List<String> channels, Streaming streaming) {}
+
+    /**
+     * What the screens show about a video that streams from its platform: segment count and average length, quality
+     * levels (heights), container, signed or not, its thumbnail and player URLs (signed ones valid for 6-7 hours), and a
+     * problem when those URLs can't be made (connection gone, signing key missing). The platform is never named.
+     */
+    public record Streaming(int segments, double averageSegmentS, List<Integer> qualities, String format, boolean signed,
+                            String thumbUrl, String playerUrl, String problem) {}
 
     /** With {@code sampleSeconds} set, ffmpeg generates a fictional demo video; otherwise the asset waits in DRAFT for an upload. */
     public record CreateRequest(@NotBlank @Size(max = 120) String title, @Size(max = 2000) String description, @NotBlank String kind,

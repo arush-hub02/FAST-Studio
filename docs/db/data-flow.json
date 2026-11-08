@@ -3923,6 +3923,31 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -3939,6 +3964,176 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -4011,6 +4206,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -4052,6 +4277,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "create",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "create",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -4449,6 +4864,31 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -4465,6 +4905,176 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "get",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -4537,6 +5147,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -4578,6 +5218,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -4920,6 +5750,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "archive",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -4976,6 +5836,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "archive",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "archive",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "archive",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "archive",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -5121,6 +6171,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -5162,6 +6242,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "cancel",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "cancel",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -5264,6 +6534,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -5285,6 +6585,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "retry",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "retry",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -5532,6 +7022,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "RightsControllerV1",
+              "method": "putRights",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "putRights",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -5573,6 +7093,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "RightsControllerV1",
+              "method": "putRights",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "putRights",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "RightsControllerV1",
+              "method": "putRights",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "putRights",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "RightsControllerV1",
+              "method": "putRights",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "putRights",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "RightsControllerV1",
+              "method": "putRights",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "putRights",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -5650,6 +7360,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "asset_source": {
           "mode": "read+write",
           "chain": [
@@ -5711,6 +7451,196 @@
             {
               "class": "AssetRepository",
               "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -7867,6 +9797,31 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "epg",
+              "layer": "controller"
+            },
+            {
+              "class": "EpgServiceV1",
+              "method": "epgWithThumbnails",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -7879,6 +9834,176 @@
               "class": "Data",
               "method": "channel",
               "layer": "core"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "epg",
+              "layer": "controller"
+            },
+            {
+              "class": "EpgServiceV1",
+              "method": "epgWithThumbnails",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "epg",
+              "layer": "controller"
+            },
+            {
+              "class": "EpgServiceV1",
+              "method": "epgWithThumbnails",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "epg",
+              "layer": "controller"
+            },
+            {
+              "class": "EpgServiceV1",
+              "method": "epgWithThumbnails",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "epg",
+              "layer": "controller"
+            },
+            {
+              "class": "EpgServiceV1",
+              "method": "epgWithThumbnails",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
+              "layer": "repository"
             }
           ]
         },
@@ -15002,6 +17127,46 @@
       "id": "ep-get-api-orgs-org-library",
       "handler": "LibraryControllerV1.library",
       "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "AssetSourceRepository",
+              "method": "waiting",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_source": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "AssetSourceRepository",
+              "method": "waiting",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_instance": {
           "mode": "read",
           "chain": [
@@ -36162,6 +38327,36 @@
             }
           ]
         },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
         "audit_event": {
           "mode": "write",
           "chain": [
@@ -36207,6 +38402,216 @@
             }
           ]
         },
+        "channel_timeline": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "ChannelTimelineRepository",
+              "method": "get",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ovpEntry",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "connection",
+              "layer": "util"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ovpEntry",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "connection",
+              "layer": "util"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ovpEntry",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "connection",
+              "layer": "util"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
         "customer_tenant": {
           "mode": "read+write",
           "chain": [
@@ -36223,6 +38628,56 @@
             {
               "class": "TenantDataRepository",
               "method": "deleteOrganizationsAndTenant",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ovpEntry",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "connection",
+              "layer": "util"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
               "layer": "repository"
             }
           ]
@@ -42834,7 +45289,17 @@
         "GET /api/orgs/{org}/ad-sources",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ads/simulate",
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/channels/{id}/epg",
         "GET /api/orgs/{org}/connectors",
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
@@ -42864,6 +45329,7 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
@@ -42889,7 +45355,17 @@
       "read": [
         "GET /api/orgs/{org}/ad-sources",
         "POST /api/orgs/{org}/ads/simulate",
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/channels/{id}/epg",
         "GET /api/orgs/{org}/connectors",
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
@@ -42918,6 +45394,7 @@
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
@@ -43048,7 +45525,17 @@
         "POST /api/orgs/{org}/ad-sources",
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/channels/{id}/epg",
         "GET /api/orgs/{org}/connectors",
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
@@ -43074,6 +45561,7 @@
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}"
       ],
       "write": [
@@ -43133,6 +45621,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/stop",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
@@ -43529,6 +46018,52 @@
         "POST /api/orgs/{org}/campaigns/{id}/status"
       ]
     },
+    "asset_playback": {
+      "read": [
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "GET /api/orgs/{org}/channels/{id}/epg",
+        "POST /api/platform/tenants/{tenant}/delete"
+      ],
+      "write": []
+    },
+    "media_connection": {
+      "read": [
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
+      ],
+      "write": [
+        "GET /api/orgs/{org}/assets",
+        "POST /api/orgs/{org}/assets",
+        "GET /api/orgs/{org}/assets/{id}",
+        "PATCH /api/orgs/{org}/assets/{id}",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "POST /api/orgs/{org}/assets/{id}/jobs/cancel",
+        "POST /api/orgs/{org}/assets/{id}/retry",
+        "PUT /api/orgs/{org}/assets/{id}/rights",
+        "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/assets/{id}/upload-url",
+        "GET /api/orgs/{org}/channels/{id}/epg",
+        "GET /api/orgs/{org}/library",
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/library/sync",
+        "GET /api/platform/orgs/{orgId}/connectors/mux",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
+        "POST /api/platform/tenants/{tenant}/delete",
+        "POST /hooks/mux/{org}"
+      ]
+    },
     "project_media_type": {
       "read": [
         "POST /api/orgs/{org}/assets",
@@ -43749,29 +46284,11 @@
     "asset_source": {
       "read": [
         "POST /api/orgs/{org}/assets/{id}/upload",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare"
       ],
       "write": [
         "POST /api/orgs/{org}/assets/{id}/upload",
-        "POST /hooks/mux/{org}"
-      ]
-    },
-    "media_connection": {
-      "read": [
-        "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/assets/{id}/upload-url",
-        "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/prepare",
-        "POST /api/orgs/{org}/library/sync",
-        "GET /api/platform/orgs/{orgId}/connectors/mux",
-        "PUT /api/platform/orgs/{orgId}/connectors/mux",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/check",
-        "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /hooks/mux/{org}"
       ]
     },
@@ -43973,6 +46490,14 @@
       "write": [
         "POST /api/orgs/{org}/partners",
         "PUT /api/orgs/{org}/partners/{linkId}"
+      ]
+    },
+    "channel_timeline": {
+      "read": [
+        "POST /api/platform/tenants/{tenant}/delete"
+      ],
+      "write": [
+        "POST /api/platform/tenants/{tenant}/delete"
       ]
     },
     "tenant_membership": {
