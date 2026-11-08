@@ -11,7 +11,8 @@ public final class PeopleDto {
     private PeopleDto() {}
 
     /** One organization a person belongs to; customRoleKey narrows the built-in role when set. */
-    public record Membership(UUID orgId, String slug, String name, String kind, String role, String customRoleKey) {}
+    /** viaTenant: from a tenant-wide role (changed on the tenant, not per organization). */
+    public record Membership(UUID orgId, String slug, String name, String kind, String role, String customRoleKey, boolean viaTenant) {}
 
     /** A person and every organization they belong to. disabled: the account is switched off. */
     public record Person(UUID id, String email, String name, boolean platformAdmin, boolean disabled, OffsetDateTime createdAt,

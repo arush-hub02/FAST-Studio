@@ -29,8 +29,12 @@ class RowLevelSecurityTest {
     static TenantAwareDataSource pools;
     static JdbcTemplate owner, app;
     static final UUID A = UUID.randomUUID(), B = UUID.randomUUID();
-    /** Tables that carry an organization but are read to establish the tenant, belong to a person, or are the platform mail outbox. */
-    static final List<String> OUTSIDE_RLS = List.of("email_message", "membership", "organization", "personal_access_token");
+    /**
+     * Tables that carry an organization but are read to establish the tenant, belong to a person, or are the platform mail
+     * outbox. tenant_membership (tenant-wide roles, V30) is read and written only by platform administration on the
+     * system login; projects see its effect through membership rows.
+     */
+    static final List<String> OUTSIDE_RLS = List.of("email_message", "membership", "organization", "personal_access_token", "tenant_membership");
 
     @BeforeAll
     static void start() throws Exception {

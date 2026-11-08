@@ -66,6 +66,7 @@ public class TenantConfigurationServiceV1 {
     private final Secrets secrets;
     private final Audit audit;
     private final Tokens tokens;
+    private final com.faststudio.v1.repositories.team.TenantRoleRepository tenantRoles;
 
     // ponytail: per-node 30 s cache for the playback-path connector check; a connector switched off on another
     // app node keeps serving for up to 30 s there. Move to a shared cache if that delay matters.
@@ -74,7 +75,8 @@ public class TenantConfigurationServiceV1 {
     private final Map<String, CachedFlag> driverCache = new ConcurrentHashMap<>();
 
     public TenantConfigurationServiceV1(TenantConfigurationRepository repository, CapabilityRepository capabilities, JsonMapper json, Secrets secrets,
-                                          Audit audit, Tokens tokens) {
+                                          Audit audit, Tokens tokens, com.faststudio.v1.repositories.team.TenantRoleRepository tenantRoles) {
+        this.tenantRoles = tenantRoles;
         this.repository = repository;
         this.capabilities = capabilities;
         this.json = json;
@@ -186,6 +188,8 @@ public class TenantConfigurationServiceV1 {
         // The tenant plan's channel limit is enforced in reserveChannel; every project starts with the owned web player.
         UUID id = repository.insertProject(tenant, request, p.maxChannels());
         tokens.bump(List.of(request.ownerUserId()));
+        List<UUID> gained = tenantRoles.spreadToProject(tenant, id);   // tenant-wide roles reach the new project
+        if (!gained.isEmpty()) tokens.bump(gained);
         audit.platform(Auth.userId(), "project.create", "project", id, request.slug());
         return repository.projects(tenant).stream().filter(x -> x.id().equals(id)).findFirst().orElseThrow();
     }

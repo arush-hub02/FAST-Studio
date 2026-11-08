@@ -12,7 +12,8 @@ public final class TeamDto {
     // ------------------------------------------------------------------ members of one organization
 
     /** A member; {@code customRoleKey} is set when a configurable role narrows the built-in {@code role}. */
-    public record Member(UUID userId, String name, String email, String role, OffsetDateTime createdAt, String customRoleKey) {}
+    /** viaTenant: the role comes from a tenant-wide role and is changed on the tenant, not here. */
+    public record Member(UUID userId, String name, String email, String role, OffsetDateTime createdAt, String customRoleKey, boolean viaTenant) {}
 
     public record InviteRequest(@NotBlank @Email String email, @NotBlank @Size(max = 80) String name,
                                 @NotBlank String role, String customRoleKey) {}

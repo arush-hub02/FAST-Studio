@@ -2265,6 +2265,80 @@
             "key": "CLIPS_EXPORT"
           },
           "description": "Removes a permission. Built-in entries can't be removed (409 BUILT_IN); a module or group still in use can't be removed (409 IN_USE)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/platform/tenants/{tenant}/members",
+          "title": "Tenant-wide roles",
+          "description": "People with one role in every project of the tenant, and how many projects it reaches (a role someone has directly in a project wins there)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/platform/tenants/{tenant}/members",
+          "title": "Give a tenant-wide role",
+          "description": "The role applies in every project of the tenant now and in projects added later. A new email gets an account with a one-time password. 409 when the person already has one.",
+          "body": {
+            "email": "manager@example.com",
+            "name": "Tenant Manager",
+            "role": "ADMIN"
+          },
+          "bodyFields": [
+            {
+              "name": "email",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "an email address"
+              ]
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "up to 80 characters"
+              ]
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "one of: OWNER, ADMIN, CONTENT_MANAGER, CHANNEL_OPERATOR, AD_OPS, ANALYST"
+              ]
+            }
+          ],
+          "fields": {
+            "role": "The built-in role the person gets in every project of the tenant."
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/platform/tenants/{tenant}/members/{userId}",
+          "title": "Change a tenant-wide role",
+          "description": "Applies in every project where the role comes from the tenant. An owner can only be changed while every project keeps another owner (409 LAST_OWNER).",
+          "body": {
+            "role": "CONTENT_MANAGER"
+          },
+          "bodyFields": [
+            {
+              "name": "role",
+              "type": "string",
+              "required": true,
+              "rules": [
+                "one of: OWNER, ADMIN, CONTENT_MANAGER, CHANNEL_OPERATOR, AD_OPS, ANALYST"
+              ]
+            }
+          ],
+          "fields": {
+            "role": "The new role in every project of the tenant."
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/platform/tenants/{tenant}/members/{userId}",
+          "title": "Remove a tenant-wide role",
+          "description": "Removes it from every project; roles the person has directly in a project stay. Refused while it is the only owner of a project (409 LAST_OWNER)."
         }
       ]
     },

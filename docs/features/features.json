@@ -3335,6 +3335,174 @@
         "docs/PROJECT_BOOTSTRAP_SECURITY.md"
       ],
       "screenshots": []
+    },
+    {
+      "id": "tenant-wide-roles",
+      "title": "Tenant-wide roles",
+      "area": "Multi-tenancy",
+      "status": "Built (2026-11-08)",
+      "completed": "2026-11-08",
+      "summary": "Platform administrators give a person one role in every project (organization) of a tenant, including projects added later. A role the person has directly in a project stays as it is there.",
+      "who": [
+        "Platform administrators (give, change, remove)",
+        "Project owners and administrators (see it on the Team page; can not change it there)"
+      ],
+      "flow": {
+        "title": "From one tenant role to every project",
+        "intro": "The boxes are the parts involved; the pill is the role moving through. Pick a situation.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Tenant → People",
+            "sub": "platform administrator"
+          },
+          {
+            "id": "svc",
+            "col": 2,
+            "row": 1,
+            "icon": "⚖️",
+            "label": "Tenant roles",
+            "sub": "TenantRoleServiceV1"
+          },
+          {
+            "id": "tm",
+            "col": 3,
+            "row": 1,
+            "icon": "🗄️",
+            "label": "tenant_membership",
+            "sub": "one row per person"
+          },
+          {
+            "id": "mem",
+            "col": 3,
+            "row": 2,
+            "icon": "🗄️",
+            "label": "membership",
+            "sub": "via_tenant rows"
+          },
+          {
+            "id": "team",
+            "col": 1,
+            "row": 2,
+            "icon": "👥",
+            "label": "Project Team page",
+            "sub": "shows it, read-only"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Give a tenant-wide role",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "Admin",
+                "say": "Add tenant-wide role: email, name, Administrator.",
+                "tech": "`POST /api/platform/tenants/{tenant}/members`"
+              },
+              {
+                "at": "tm",
+                "state": "saved",
+                "say": "The tenant-wide role is stored once."
+              },
+              {
+                "at": "mem",
+                "state": "every project",
+                "say": "A membership marked via_tenant is written in each project where the person has no role of their own."
+              },
+              {
+                "at": "team",
+                "state": "Tenant-wide role",
+                "say": "Each Team page shows it; Remove and the role picker are not offered there."
+              }
+            ]
+          },
+          {
+            "name": "A project is added later",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "new project",
+                "say": "The platform adds a project to the tenant.",
+                "tech": "`POST /api/platform/tenants/{tenant}/projects`"
+              },
+              {
+                "at": "mem",
+                "state": "copied",
+                "say": "Every tenant-wide role is written into the new project at once."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Tenants → Manage a tenant → People.",
+        "Add tenant-wide role: email, name and the role for every project. New accounts get a one-time password.",
+        "Change the role in the list, or Remove it; roles people have directly in a project stay."
+      ],
+      "howItWorks": [
+        "tenant_membership keeps the role; membership rows with via_tenant = true carry it into each project, so sign-in, tokens and permission checks are unchanged.",
+        "Writing the role never overwrites a membership the person has directly; changing it updates only via_tenant rows.",
+        "Adding a project to the tenant copies every tenant-wide role into it (TenantConfigurationServiceV1.createProject).",
+        "The Team page and the platform People page refuse to change or remove a via_tenant row (409 TENANT_WIDE)."
+      ],
+      "optimizations": [
+        "One statement writes or removes the role in all projects of the tenant."
+      ],
+      "scale": [
+        "Fine for tenants with tens of projects."
+      ],
+      "rules": [
+        "Platform administrators only.",
+        "Built-in customer roles only.",
+        "A role the person has directly in a project wins there.",
+        "Every project keeps at least one owner (409 LAST_OWNER)."
+      ],
+      "api": [
+        "GET /api/platform/tenants/{tenant}/members",
+        "POST /api/platform/tenants/{tenant}/members",
+        "PUT /api/platform/tenants/{tenant}/members/{userId}",
+        "DELETE /api/platform/tenants/{tenant}/members/{userId}"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest (tenant-wide roles reach every project, new projects, own roles win, project edits refused, last owner)",
+        "frontend/e2e/admin-stages.spec.ts (platform gives a tenant-wide role)"
+      ],
+      "docs": [
+        "docs/PLATFORM_ADMIN_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "tenant-roles",
+          "account": "platform",
+          "path": "/platform",
+          "steps": [
+            {
+              "click": {
+                "role": "link",
+                "name": "Manage Aurora Media Network"
+              }
+            },
+            {
+              "click": {
+                "role": "button",
+                "name": "People"
+              }
+            },
+            {
+              "waitFor": {
+                "text": "Tenant-wide roles"
+              }
+            },
+            {
+              "wait": 300
+            }
+          ],
+          "caption": "Tenant-wide roles above the tenant's people list."
+        }
+      ]
     }
   ]
 }

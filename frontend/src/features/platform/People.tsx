@@ -4,7 +4,7 @@ import { Confirm, Icon, Loading, Modal, PageHead, useAction, useApi } from '../.
 import { ResetLinkModal } from '../../shared/components/ResetLinkModal'
 import { useSession } from '../../app/App'
 
-type Membership = { orgId: string; slug: string; name: string; kind: 'CUSTOMER' | 'PARTNER'; role: string; customRoleKey: string | null }
+type Membership = { orgId: string; slug: string; name: string; kind: 'CUSTOMER' | 'PARTNER'; role: string; customRoleKey: string | null; viaTenant: boolean }
 type Person = { id: string; email: string; name: string; platformAdmin: boolean; disabled: boolean; createdAt: string; memberships: Membership[] }
 type Page = { people: Person[]; total: number }
 type Org = { id: string; slug: string; name: string; kind: 'CUSTOMER' | 'PARTNER'; status: string }
@@ -76,6 +76,8 @@ export function PeopleList({ tenantId, projectIds }: { tenantId?: string; projec
                 <td><div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
                   {p.memberships.length === 0 && <span className="faint small">No organization</span>}
                   {p.memberships.map(m => (
+                    m.viaTenant ? <span key={m.orgId} className="chip" title="From a tenant-wide role: change it on the tenant page">
+                      {m.name} · {label(m.kind, m.role)} <span className="faint small">tenant-wide</span></span> :
                     <span key={m.orgId} className="chip" style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
                       <button type="button" style={{ background: "none", border: 0, padding: 0, color: "inherit", cursor: "pointer", font: "inherit" }} aria-label={`Change ${p.name}'s role in ${m.name}`} onClick={() => setEditing({ person: p, m })}>
                         {m.name} · {label(m.kind, m.role)}{m.customRoleKey ? ` (${m.customRoleKey})` : ''}
