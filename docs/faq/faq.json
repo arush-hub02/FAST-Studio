@@ -3,26 +3,38 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "ads-slate-separate-r2-only",
+      "asked": "2026-11-09",
+      "question": "Uploads should go to the tenant's connected connector (ask which one when there are several); slate and ads should be separate from media, uploaded only in the Ads section, and stored and served from R2 only.",
+      "short": "Done. The Library holds programmes only and uploads them to the connected video library (you choose when there are several). Ad creatives and your own slate are added under Ads; FAST Studio converts them once, copies them to R2 and then deletes its own copy of the video files, so they are served from R2 only.",
+      "sections": [
+        {
+          "title": "1. Library: programmes only",
+          "html": "<ul><li>Add video offers programme types only (movies, episodes, shorts); ad creatives no longer appear in the Library.</li><li>Uploads go straight to the connected video library; with several, <b>Upload to</b> asks which. The names shown are the ones the platform administrator gave the connections; one still named after its platform shows as \"Video library\", so projects never see the platform's name.</li><li>Platform administrators can add more than one Mux connection to a project in the connector marketplace (tenant page → Connectors).</li></ul>"
+        },
+        {
+          "title": "2. Ads section: creatives and slate",
+          "html": "<ul><li><b>Ad creatives</b>: Add creative (upload or generate), list, and the detail drawer. Campaigns pick their creative from these.</li><li><b>Slate</b>: upload your own short loop (10 to 60 s, no speech). Once converted, your channels show it instead of the platform's \"We'll be right back\" screen, for unfilled ad time, schedule gaps and unreachable programmes. \"Use platform standby\" brings the platform screen back. The region-block screen stays the platform's.</li></ul>"
+        },
+        {
+          "title": "3. R2 only",
+          "html": "<ul><li>FAST Studio converts the ad or slate into the tenant's quality levels (MPEG-TS and fMP4), copies everything to R2, and once R2 confirms both copies it deletes its own video files and the uploaded original.</li><li>It keeps only the playlists and thumbnail (a few KB) as an index: segment counts and quality levels are read from them.</li><li>Channels play ads and slate from R2 through the edge. Previews in the Ads section load the playlists from FAST Studio and the video segments are redirected to the edge (R2).</li><li>The platform's own standby and region-block slates live in R2 only too.</li></ul>"
+        }
+      ]
+    },
+    {
       "id": "library-upload-not-mux",
       "asked": "2026-11-09",
       "question": "I added a video in the Library with Upload, but it did not go to Mux. Where did it go, and how is it playing?",
-      "short": "Library → Add video → Upload sends the file to FAST Studio itself, not to Mux. FAST Studio converts it with FFmpeg into your tenant's quality levels and stores it on its own storage (R2 in the cloud; a local copy of R2 on this machine). The Library player and your channels play it from there. Mux is used only for videos you sync from Mux. Uploading straight to Mux exists on the server but has no button in the Library yet.",
+      "short": "Since 9 November 2026 (later the same day), Library → Add video → Upload sends the file straight to the project's connected video library (Mux today), never through FAST Studio. With more than one library connected you choose which one. Only a project without a video library uploads to FAST Studio. Videos uploaded before this change stay on FAST Studio storage and keep playing from there.",
       "sections": [
         {
-          "title": "1. Where the file goes",
-          "html": "<ol><li><b>Original file</b>: kept on the FAST Studio server under <code>data-pilot/uploads/&lt;project&gt;/&lt;video&gt;/source.mp4</code>.</li><li><b>Converted copy</b>: FFmpeg makes HLS in each quality level of the tenant (one folder per level, 0 = 360p … 5 = 2160p, plus fMP4 copies <code>f0</code>, <code>f1</code> …) under <code>data-pilot/media/&lt;project slug&gt;/&lt;video&gt;.&lt;version&gt;/</code>, with <code>master.m3u8</code> and <code>thumb.jpg</code>.</li><li><b>Edge copy</b>: the same files are copied to the edge storage (R2). On this machine that is the local R2 under <code>data-pilot/edge</code>; in the cloud it is your Cloudflare R2 bucket.</li></ol><p>Nothing is sent to Mux, so the video does not appear in your Mux dashboard.</p>"
+          "title": "1. Where an upload goes now",
+          "html": "<ul><li><b>Project with a video library</b>: the browser sends the file straight to the library (one-time upload link). The library converts it; FAST Studio links the video when it is ready (by webhook, or by checking every 20 seconds when webhooks can't reach the server) and then streams it from the library like a synced video.</li><li><b>Several libraries</b> (e.g. two Mux accounts): Add video shows <b>Upload to</b>; pick one. Each video remembers its library, and sync, streaming and signed links use that one.</li><li><b>No video library</b>: the file goes to FAST Studio, which converts it and keeps it in R2.</li><li><b>Ads and slate</b> are never sent to the video library (see the next question).</li></ul>"
         },
         {
-          "title": "2. How it plays",
-          "html": "<ul><li><b>Library → the video</b>: the player loads <code>master.m3u8</code> from the FAST Studio server through a signed link (<code>/media/s/…</code>) that expires.</li><li><b>Channels (Watch live, partners)</b>: the edge Worker builds the live playlist and serves the video's segments from R2, with ads and slate spliced in at the breaks.</li></ul>"
-        },
-        {
-          "title": "3. Uploaded vs synced from Mux",
-          "html": "<table><tr><th></th><th>Upload in FAST Studio</th><th>Synced from Mux</th></tr><tr><td>Stored</td><td>FAST Studio server + R2</td><td>Mux (not copied)</td></tr><tr><td>Converted by</td><td>FAST Studio (FFmpeg), to the tenant's levels</td><td>Mux, to Mux's levels</td></tr><tr><td>Plays from</td><td>FAST Studio / edge (R2)</td><td>Mux, through the edge playlist</td></tr><tr><td>Cost</td><td>Your server and R2 storage</td><td>Mux encoding, storage and delivery</td></tr></table>"
-        },
-        {
-          "title": "4. Uploading straight to Mux",
-          "html": "<p>The server can already hand the browser a one-time Mux upload link (<code>POST /api/orgs/{org}/assets/{id}/upload-url</code>), but the Library has no \"Upload to Mux\" choice yet, so every upload in Add video goes to FAST Studio. To get a video into Mux today, upload it in the Mux dashboard and use <b>Library → Sync library</b>.</p>"
+          "title": "2. The video you uploaded earlier",
+          "html": "<p>It was uploaded before this change, so it stays where it is: original under <code>data-pilot/uploads/…</code>, converted copy under <code>data-pilot/media/arush-media/…</code> and in R2 (the local stand-in under <code>data-pilot/edge</code>). It keeps playing from there. To move it into Mux, upload the file again with Add video, then archive the old one.</p>"
         }
       ]
     },

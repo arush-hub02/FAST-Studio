@@ -697,7 +697,13 @@
           "params": {
             "id": "{{assetId}}"
           },
-          "description": "A one-time https address to PUT the file to directly (connected video library). The file never passes through our server; when the library has it, conversion starts by itself."
+          "description": "A one-time https address to PUT the programme file to directly (the connected video library). The file never passes through our server. connection: which video library, from uploadTo in GET /api/orgs/{org}/library; required when the project has more than one. Ads and slate are refused (they are uploaded in the Ads section). When the library has the file, FAST Studio links it (webhook, or a check every 20 seconds) and prepares it to stream.",
+          "query": {
+            "connection": "{{connectionId}}"
+          },
+          "paramHelp": {
+            "connection": "Which video library to upload to: an id from uploadTo in GET /api/orgs/{org}/library. Required when the project has more than one."
+          }
         },
         {
           "method": "PATCH",
@@ -774,6 +780,27 @@
               "{{assetId}}"
             ]
           }
+        },
+        {
+          "method": "GET",
+          "path": "/api/orgs/{org}/slate",
+          "title": "List the project's slates",
+          "description": "Slates of the project, newest first. The newest ready one airs on its channels instead of the platform standby screen."
+        },
+        {
+          "method": "POST",
+          "path": "/api/orgs/{org}/slate",
+          "title": "Upload a slate",
+          "form": {
+            "file": "@slate.mp4"
+          },
+          "description": "Multipart field file (MP4, MOV, MKV, WEBM or M4V). Converted once into the tenant quality levels and kept in R2 only; it airs once ready."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/orgs/{org}/slate",
+          "title": "Remove the slate",
+          "description": "Archives the project's slates; its channels show the platform standby screen again."
         }
       ]
     },

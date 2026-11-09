@@ -24,7 +24,6 @@ const KINDS = [
   { key: 'MOVIE', label: 'Movies', icon: 'film' },
   { key: 'EPISODE', label: 'Episodes', icon: 'tv' },
   { key: 'SHORT', label: 'Shorts', icon: 'sliders' },
-  { key: 'AD', label: 'Ad Creatives', icon: 'megaphone' },
 ] as const
 
 export default function Library() {
@@ -50,10 +49,9 @@ export default function Library() {
   }, [processing, list.reload])
 
   const openId = params.get('asset')
-  const open = list.data?.find(a => a.asset.id === openId)
-
-  // Full catalog base (stable)
-  const allAssets = list.data ?? []
+  // The Library holds programmes only; ad creatives live in the Ads section
+  const allAssets = useMemo(() => (list.data ?? []).filter(a => a.asset.kind !== 'AD'), [list.data])
+  const open = allAssets.find(a => a.asset.id === openId)
 
   // Stable catalog-wide total counts (these NEVER drop to 0 when filtering!)
   const totalCatalogCount = allAssets.length
@@ -198,7 +196,7 @@ export default function Library() {
             {isFiltered ? (
               <span className="badge primary sm">Filtered Selection</span>
             ) : (
-              <span className="badge default sm">{countsByKind['AD'] || 0} ads</span>
+              <span className="badge default sm">{countsByKind['EPISODE'] || 0} episodes</span>
             )}
           </div>
           <div>

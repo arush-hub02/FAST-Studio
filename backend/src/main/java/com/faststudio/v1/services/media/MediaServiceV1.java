@@ -126,15 +126,31 @@ public class MediaServiceV1 {
         return hasLadder(mediaKey) ? "master.m3u8" : "index.m3u8";
     }
 
-    /** Number of segments (same in every rendition). */
+    /** Number of segments (same in every rendition), read from the playlist, so it holds after the segments moved to R2 only. */
     public int segments(String mediaKey) {
         return segmentCounts.computeIfAbsent(mediaKey, k -> {
-            try (Stream<Path> s = Files.list(mediaDir.resolve(k).resolve(firstLevelPath(k)))) {
-                return (int) s.filter(p -> p.getFileName().toString().endsWith(".ts")).count();
+            try (Stream<String> s = Files.lines(mediaDir.resolve(k).resolve(firstLevelPath(k) + "index.m3u8"))) {
+                return (int) s.filter(l -> l.startsWith("#EXTINF")).count();
             } catch (IOException e) {
                 return 0;
             }
         });
+    }
+
+    /**
+     * Ads and slate live in R2 only: once R2 holds a folder, the server deletes its video files and keeps only the
+     * playlists and thumbnail (a few KB) as the index that segment counts, quality levels and previews read.
+     * Previews fetch the deleted segments from the edge (MediaFileControllerV1 redirects there).
+     */
+    public void pruneToIndex(String mediaKey) throws IOException {
+        Path dir = mediaDir.resolve(mediaKey);
+        if (!Files.isDirectory(dir)) return;
+        try (Stream<Path> s = Files.walk(dir)) {
+            for (Path p : s.filter(Files::isRegularFile).toList()) {
+                String n = p.getFileName().toString();
+                if (!n.endsWith(".m3u8") && !n.equals("thumb.jpg")) Files.delete(p);
+            }
+        }
     }
 
     private void forget(String key) {

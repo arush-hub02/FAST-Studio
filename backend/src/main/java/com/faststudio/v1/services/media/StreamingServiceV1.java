@@ -44,7 +44,7 @@ public class StreamingServiceV1 {
 
     /** Reads how the video streams and records it; the job then marks the asset ready (no media key: nothing on R2). */
     public Packaged resolve(UUID org, ProcessingJob j) throws InterruptedException {
-        MediaConnectionService.Connection c = connections.connection(org);
+        MediaConnectionService.Connection c = connections.connection(org, j.connectionId());
         if (c == null) return Packaged.failed(MediaConnectionService.NOT_CONNECTED, false);
         String provider = j.sourceRef().substring(0, j.sourceRef().indexOf(':'));
         IPlayback adapter = providers.playback(provider);
@@ -79,13 +79,15 @@ public class StreamingServiceV1 {
     public Map<UUID, Streaming> streaming(UUID org, Collection<UUID> assets) {
         Map<UUID, AssetPlaybackRepository.Row> rows = playbacks.of(org, assets);
         if (rows.isEmpty()) return Map.of();
-        MediaConnectionService.Connection c = connections.connection(org);
+        Map<UUID, MediaConnectionService.Connection> byId = new HashMap<>();
+        for (MediaConnectionService.Connection x : connections.connections(org)) byId.put(x.id(), x);
         long exp = (System.currentTimeMillis() / 3_600_000 + 7) * 3600;   // whole hours, so thumbnails stay cacheable
         Map<UUID, Streaming> out = new HashMap<>();
         for (AssetPlaybackRepository.Row r : rows.values()) {
             Playback p = r.playback();
             IPlayback adapter = providers.playback(r.provider());
             String thumb = null, player = null, problem = null;
+            MediaConnectionService.Connection c = byId.get(r.connectionId());
             if (c == null || adapter == null || !r.provider().equals(c.provider())) problem = "The library connection is gone, so this video can't stream.";
             else {
                 try {

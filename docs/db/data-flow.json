@@ -3988,17 +3988,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4033,17 +4028,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4078,17 +4068,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4123,7 +4108,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -4306,17 +4291,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4356,17 +4336,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4406,17 +4381,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4456,7 +4426,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -4929,17 +4899,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -4974,17 +4939,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5019,17 +4979,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5064,7 +5019,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -5247,17 +5202,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5297,17 +5247,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5347,17 +5292,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5397,7 +5337,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -5865,17 +5805,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5915,17 +5850,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -5965,17 +5895,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6015,7 +5940,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -6271,17 +6196,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6321,17 +6241,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6371,17 +6286,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6421,7 +6331,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -6614,17 +6524,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6664,17 +6569,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6714,17 +6614,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -6764,7 +6659,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -7122,17 +7017,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7172,17 +7062,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7222,17 +7107,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7272,7 +7152,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -7455,6 +7335,36 @@
             }
           ]
         },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_instance": {
           "mode": "read",
           "chain": [
@@ -7469,28 +7379,18 @@
               "layer": "service"
             },
             {
-              "class": "AssetServiceV1",
-              "method": "get",
-              "layer": "service"
-            },
-            {
-              "class": "StreamingServiceV1",
-              "method": "streaming",
+              "class": "MediaConnectionService",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7519,28 +7419,18 @@
               "layer": "service"
             },
             {
-              "class": "AssetServiceV1",
-              "method": "get",
-              "layer": "service"
-            },
-            {
-              "class": "StreamingServiceV1",
-              "method": "streaming",
+              "class": "MediaConnectionService",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7569,28 +7459,18 @@
               "layer": "service"
             },
             {
-              "class": "AssetServiceV1",
-              "method": "get",
-              "layer": "service"
-            },
-            {
-              "class": "StreamingServiceV1",
-              "method": "streaming",
+              "class": "MediaConnectionService",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7601,6 +7481,36 @@
             {
               "class": "ConnectorCatalogueRepository",
               "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -7619,18 +7529,13 @@
               "layer": "service"
             },
             {
-              "class": "AssetServiceV1",
-              "method": "get",
-              "layer": "service"
-            },
-            {
-              "class": "StreamingServiceV1",
-              "method": "streaming",
+              "class": "MediaConnectionService",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -7684,23 +7589,48 @@
               "layer": "service"
             },
             {
-              "class": "TenantLimitsService",
-              "method": "requireMediaRoom",
-              "layer": "service"
-            },
-            {
-              "class": "TenantLimitsService",
-              "method": "limit",
+              "class": "MediaConnectionService",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "effective",
+              "method": "connectorEnabled",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "tenant",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -7825,6 +7755,36 @@
             }
           ]
         },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AssetControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
         "tenant_property_value": {
           "mode": "read",
           "chain": [
@@ -7923,7 +7883,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
@@ -7953,22 +7913,17 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -7998,22 +7953,17 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -8043,22 +7993,17 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -8088,7 +8033,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
@@ -8118,12 +8063,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -8153,7 +8098,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
@@ -8183,7 +8128,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
@@ -8283,7 +8228,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connected",
+              "method": "usable",
               "layer": "service"
             },
             {
@@ -9786,14 +9731,14 @@
               "layer": "service"
             },
             {
-              "class": "EpgServiceV1",
-              "method": "guide",
+              "class": "StreamingServiceV1",
+              "method": "streaming",
               "layer": "service"
             },
             {
-              "class": "Data",
-              "method": "assets",
-              "layer": "core"
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
             }
           ]
         },
@@ -9857,17 +9802,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -9902,17 +9842,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -9947,17 +9882,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -9992,7 +9922,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -17167,6 +17097,36 @@
             }
           ]
         },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_instance": {
           "mode": "read",
           "chain": [
@@ -17182,17 +17142,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17222,17 +17177,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17262,17 +17212,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17283,6 +17228,36 @@
             {
               "class": "ConnectorCatalogueRepository",
               "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -17333,6 +17308,96 @@
             {
               "class": "MediaJobRepository",
               "method": "latestSync",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "LibraryControllerV1",
+              "method": "library",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "library",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
               "layer": "repository"
             }
           ]
@@ -17455,17 +17520,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17500,17 +17560,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17545,17 +17600,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -17620,7 +17670,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -18008,17 +18058,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -18058,17 +18103,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -18108,17 +18148,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -22422,6 +22457,1430 @@
             {
               "class": "MediaSettingsRepository",
               "method": "setViewerSecret",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "DELETE /api/orgs/{org}/slate": {
+      "title": "Remove the slate",
+      "category": "Video library",
+      "id": "ep-delete-api-orgs-org-slate",
+      "handler": "SlateControllerV1.remove",
+      "tables": {
+        "asset": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "slates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "campaign": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "activeCampaignsUsing",
+              "layer": "repository"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
+              "layer": "repository"
+            }
+          ]
+        },
+        "rights_policy": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "policy",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "schedule_version": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "remove",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "archive",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "draftChannelsUsing",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "GET /api/orgs/{org}/slate": {
+      "title": "List the project's slates",
+      "category": "Video library",
+      "id": "ep-get-api-orgs-org-slate",
+      "handler": "SlateControllerV1.list",
+      "tables": {
+        "asset": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "slates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
+              "layer": "repository"
+            }
+          ]
+        },
+        "rights_policy": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "policy",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "list",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "list",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        }
+      }
+    },
+    "POST /api/orgs/{org}/slate": {
+      "title": "Upload a slate",
+      "category": "Video library",
+      "id": "ep-post-api-orgs-org-slate",
+      "handler": "SlateControllerV1.upload",
+      "tables": {
+        "asset": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "insertSlate",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_playback": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "StreamingServiceV1",
+              "method": "streaming",
+              "layer": "service"
+            },
+            {
+              "class": "AssetPlaybackRepository",
+              "method": "of",
+              "layer": "repository"
+            }
+          ]
+        },
+        "asset_source": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "markUploaded",
+              "layer": "repository"
+            }
+          ]
+        },
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_instance": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionRepository",
+              "method": "ensure",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_job": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaServiceV1",
+              "method": "enqueue",
+              "layer": "service"
+            },
+            {
+              "class": "MediaJobRepository",
+              "method": "enqueue",
+              "layer": "repository"
+            }
+          ]
+        },
+        "organization": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "property_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "definitions",
+              "layer": "repository"
+            }
+          ]
+        },
+        "rights_policy": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "policy",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "get",
+              "layer": "service"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "upcomingAirings",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_connector": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "usable",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "connectorEnabled",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "SlateControllerV1",
+              "method": "upload",
+              "layer": "controller"
+            },
+            {
+              "class": "SlateServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "AssetServiceV1",
+              "method": "upload",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "requireMediaRoom",
+              "layer": "service"
+            },
+            {
+              "class": "TenantLimitsService",
+              "method": "limit",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -32230,12 +33689,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "find",
+              "method": "connections",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
+              "class": "MediaConnectionService",
+              "method": "find",
               "layer": "service"
             },
             {
@@ -32270,12 +33729,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "find",
+              "method": "connections",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
+              "class": "MediaConnectionService",
+              "method": "find",
               "layer": "service"
             },
             {
@@ -32310,12 +33769,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "find",
+              "method": "connections",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
+              "class": "MediaConnectionService",
+              "method": "find",
               "layer": "service"
             },
             {
@@ -32346,6 +33805,11 @@
             {
               "class": "MediaConnectionService",
               "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -32583,7 +34047,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "saveInstance",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -32608,27 +34072,7 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "saveInstance",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connectors",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -32653,12 +34097,12 @@
             },
             {
               "class": "ConnectorCatalogueServiceV1",
-              "method": "saveInstance",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -32719,6 +34163,11 @@
             {
               "class": "MediaConnectionService",
               "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -32956,12 +34405,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "find",
+              "method": "connections",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
+              "class": "MediaConnectionService",
+              "method": "find",
               "layer": "service"
             },
             {
@@ -32996,12 +34445,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "find",
+              "method": "connections",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
+              "class": "MediaConnectionService",
+              "method": "find",
               "layer": "service"
             },
             {
@@ -33032,6 +34481,11 @@
             {
               "class": "MediaConnectionService",
               "method": "connection",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -33079,8 +34533,128 @@
       "id": "ep-get-api-platform-orgs-orgid-connectors-mux-sync",
       "handler": "MuxControllerV1.syncStatus",
       "tables": {
-        "media_connection": {
+        "connector_instance": {
           "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "instances",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "properties",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "syncStatus",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "platformStatus",
+              "layer": "service"
+            },
+            {
+              "class": "MediaSyncServiceV1",
+              "method": "status",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "find",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "connections",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "media_connection": {
+          "mode": "read+write",
           "chain": [
             {
               "class": "MuxControllerV1",
@@ -33277,17 +34851,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -33327,17 +34896,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -33377,17 +34941,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -38319,11 +39878,6 @@
               "class": "EdgePublisher",
               "method": "snapshot",
               "layer": "util"
-            },
-            {
-              "class": "Data",
-              "method": "assets",
-              "layer": "core"
             }
           ]
         },
@@ -38462,22 +40016,17 @@
             },
             {
               "class": "EdgePublisher",
-              "method": "connection",
+              "method": "connections",
               "layer": "util"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -38522,22 +40071,17 @@
             },
             {
               "class": "EdgePublisher",
-              "method": "connection",
+              "method": "connections",
               "layer": "util"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -38582,22 +40126,17 @@
             },
             {
               "class": "EdgePublisher",
-              "method": "connection",
+              "method": "connections",
               "layer": "util"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -38662,12 +40201,12 @@
             },
             {
               "class": "EdgePublisher",
-              "method": "connection",
+              "method": "connections",
               "layer": "util"
             },
             {
               "class": "MediaConnectionService",
-              "method": "connection",
+              "method": "connections",
               "layer": "service"
             },
             {
@@ -42116,17 +43655,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "account",
+              "method": "accounts",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -42156,17 +43690,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "account",
+              "method": "accounts",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -42196,17 +43725,12 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "account",
+              "method": "accounts",
               "layer": "service"
             },
             {
               "class": "MediaConnectionService",
               "method": "find",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "connection",
               "layer": "service"
             },
             {
@@ -42236,7 +43760,7 @@
             },
             {
               "class": "MediaConnectionService",
-              "method": "account",
+              "method": "accounts",
               "layer": "service"
             },
             {
@@ -44876,6 +46400,8 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "DELETE /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "POST /api/partners/{partner}/clients",
         "POST /api/partners/{partner}/clients/{clientId}/revoke",
@@ -45117,6 +46643,7 @@
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
         "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "POST /api/orgs/{org}/members",
@@ -45132,6 +46659,7 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/partners/{partner}/links",
@@ -45269,6 +46797,7 @@
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
         "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
@@ -45282,9 +46811,11 @@
         "DELETE /api/orgs/{org}/features/{key}",
         "PUT /api/orgs/{org}/features/{key}",
         "POST /api/orgs/{org}/features/defaults",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/platform/connector-instances",
@@ -45363,6 +46894,7 @@
         "POST /api/orgs/{org}/ad-sources",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
@@ -45371,9 +46903,11 @@
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "GET /api/platform/connector-catalogue",
@@ -45443,6 +46977,9 @@
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "POST /api/platform/connector-categories",
         "PUT /api/platform/connector-categories/{key}",
         "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
@@ -45462,6 +46999,7 @@
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/tenants/{tenant}/delete",
@@ -45508,6 +47046,9 @@
         "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/platform/connector-catalogue",
         "POST /api/platform/connector-categories",
         "PUT /api/platform/connector-categories/{key}",
@@ -45528,6 +47069,7 @@
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
@@ -45679,6 +47221,9 @@
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/platform/connector-instances",
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
@@ -45694,6 +47239,7 @@
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "GET /api/platform/orgs/{orgId}/project-details",
         "POST /api/platform/tenants/{tenant}/delete",
@@ -45766,6 +47312,9 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml",
         "GET /api/platform/orgs",
@@ -45790,6 +47339,8 @@
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "POST /api/orgs/{org}/library/prepare",
+        "DELETE /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
         "POST /hooks/mux/{org}"
       ]
@@ -45810,6 +47361,7 @@
         "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
+        "POST /api/orgs/{org}/slate",
         "POST /api/platform/orgs/{orgId}/ad-sources/test",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /hooks/mux/{org}"
@@ -45860,6 +47412,9 @@
         "PUT /api/orgs/{org}/partners/{linkId}",
         "GET /api/orgs/{org}/project-details",
         "POST /api/orgs/{org}/rights/check",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/partners/{partner}/sources/{owner}/channels",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/breaks",
@@ -45916,6 +47471,9 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/breaks",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg",
         "GET /api/partners/{partner}/sources/{owner}/channels/{channelId}/epg.xml",
@@ -45972,6 +47530,9 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/rights/check",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
@@ -46004,6 +47565,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
+        "DELETE /api/orgs/{org}/slate",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
         "GET /play/{session}/info"
@@ -46023,6 +47585,7 @@
     "tenant_connector": {
       "read": [
         "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
@@ -46031,9 +47594,11 @@
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "POST /api/platform/connector-instances/{key}",
@@ -46062,6 +47627,7 @@
     "project_connector": {
       "read": [
         "POST /api/orgs/{org}/ads/simulate",
+        "POST /api/orgs/{org}/assets/{id}/upload",
         "POST /api/orgs/{org}/assets/{id}/upload-url",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
@@ -46070,9 +47636,11 @@
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
         "PUT /api/orgs/{org}/connectors/{key}/{id}",
+        "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
         "GET /api/orgs/{org}/project-details",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "POST /api/platform/connector-instances/{key}",
@@ -46145,6 +47713,7 @@
         "GET /api/orgs/{org}/analytics",
         "POST /api/orgs/{org}/assets/{id}/archive",
         "GET /api/orgs/{org}/campaigns",
+        "DELETE /api/orgs/{org}/slate",
         "GET /play/{session}/info"
       ],
       "write": [
@@ -46165,6 +47734,9 @@
         "PUT /api/orgs/{org}/assets/{id}/rights",
         "POST /api/orgs/{org}/assets/{id}/upload",
         "GET /api/orgs/{org}/channels/{id}/epg",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "POST /api/platform/tenants/{tenant}/delete"
       ],
       "write": []
@@ -46191,9 +47763,13 @@
         "GET /api/orgs/{org}/library",
         "POST /api/orgs/{org}/library/prepare",
         "POST /api/orgs/{org}/library/sync",
+        "DELETE /api/orgs/{org}/slate",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "GET /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "POST /api/platform/orgs/{orgId}/connectors/mux/check",
+        "GET /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}"
@@ -46248,6 +47824,7 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "PUT /api/platform/connector-definitions",
@@ -46295,6 +47872,7 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "PUT /api/platform/connector-definitions",
@@ -46342,6 +47920,7 @@
         "POST /api/orgs/{org}/settings/media-types",
         "DELETE /api/orgs/{org}/settings/media-types/{key}",
         "POST /api/orgs/{org}/settings/viewer-key",
+        "POST /api/orgs/{org}/slate",
         "GET /api/orgs/{org}/tenant-settings",
         "PUT /api/orgs/{org}/tenant-settings/properties/{key}",
         "POST /api/platform/orgs/{orgId}/connectors/mux/sync",
@@ -46423,10 +48002,12 @@
       "read": [
         "POST /api/orgs/{org}/assets/{id}/upload",
         "GET /api/orgs/{org}/library",
-        "POST /api/orgs/{org}/library/prepare"
+        "POST /api/orgs/{org}/library/prepare",
+        "POST /api/orgs/{org}/slate"
       ],
       "write": [
         "POST /api/orgs/{org}/assets/{id}/upload",
+        "POST /api/orgs/{org}/slate",
         "POST /hooks/mux/{org}"
       ]
     },

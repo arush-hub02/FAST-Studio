@@ -22,7 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -58,49 +60,69 @@ public class MediaConnectionService {
     }
 
     /** A usable connection: which provider, its decrypted credentials, its health check and the connector connection's id. */
-    public record Connection(String provider, Credentials credentials, OffsetDateTime checkedAt, String checkError, UUID id) {}
+    public record Connection(String provider, Credentials credentials, OffsetDateTime checkedAt, String checkError, UUID id, String name) {}
 
-    /** The connector connection of the project's library: the first registered provider it has credentials for. */
+    /** One connector connection of the project's library (a project may have several, e.g. two Mux accounts). */
     private record Found(String provider, ConnectorCatalogueServiceV1.Connection c) {}
 
-    private Found find(UUID org) {
-        for (String key : providers.keys()) {
-            var c = connectors.connection(org, key).filter(x -> x.values().get("token_id") != null && x.values().get("token_secret") != null);
-            if (c.isPresent()) {
-                TenantScope.as(org, () -> { connections.ensure(org, key); return null; });   // sync-state row for this provider
-                return new Found(key, c.get());
-            }
-        }
-        return null;
+    private List<Found> find(UUID org) {
+        List<Found> out = new ArrayList<>();
+        for (String key : providers.keys())
+            for (var c : connectors.connections(org, key))
+                if (c.values().get("token_id") != null && c.values().get("token_secret") != null) {
+                    TenantScope.as(org, () -> { connections.ensure(org, key, c.id()); return null; });   // sync-state row for this connection
+                    out.add(new Found(key, c));
+                }
+        return out;
     }
 
-    /** The project's connection, decrypted, or null when none is set up. */
-    public Connection connection(UUID org) {
-        Found f = find(org);
-        if (f == null) return null;
+    private static Connection of(Found f) {
         Map<String, String> v = f.c().values();
         return new Connection(f.provider(), new Credentials(v.get("token_id"), v.get("token_secret"), Objects.toString(v.get("passthrough_tag"), ""),
-                        v.get("signing_key_id"), v.get("signing_private_key")),
-                f.c().checkedAt(), f.c().checkError(), f.c().id());
+                v.get("signing_key_id"), v.get("signing_private_key")), f.c().checkedAt(), f.c().checkError(), f.c().id(), f.c().name());
     }
 
-    /** The project's Mux account (webhooks, packaging from Mux), or null when it has none. */
-    public Account account(UUID org) {
-        Found f = find(org);
-        if (f == null || !f.provider().equals(MuxProvider.KEY)) return null;
-        Map<String, String> v = f.c().values();
-        return new Account(v.get("token_id"), v.get("token_secret"), v.get("webhook_secret"), Objects.toString(v.get("environment"), ""),
-                Objects.toString(v.get("passthrough_tag"), ""));
+    /** Every library connection of the project, decrypted, in list order (empty when none is set up). */
+    public List<Connection> connections(UUID org) { return find(org).stream().map(MediaConnectionService::of).toList(); }
+
+    /** The project's first connection, decrypted, or null when none is set up (platform administration's single view). */
+    public Connection connection(UUID org) { return connections(org).stream().findFirst().orElse(null); }
+
+    /** One connection of the project by its id, or null when the project has no such connection. */
+    public Connection connection(UUID org, UUID id) {
+        if (id == null) return null;
+        return connections(org).stream().filter(c -> c.id().equals(id)).findFirst().orElse(null);
     }
 
-    /** The project's connection, if its connector is enabled for the project and credentials are configured. */
-    public Connection connected(UUID org) {
-        Connection c = connection(org);
-        if (c == null) throw ApiException.conflict("LIBRARY_NOT_CONNECTED", NOT_CONNECTED);
+    /** The Mux accounts of the project's connections (webhooks verify against each one's secret). */
+    public List<Map.Entry<UUID, Account>> accounts(UUID org) {
+        return find(org).stream().filter(f -> f.provider().equals(MuxProvider.KEY)).map(f -> {
+            Map<String, String> v = f.c().values();
+            return Map.entry(f.c().id(), new Account(v.get("token_id"), v.get("token_secret"), v.get("webhook_secret"),
+                    Objects.toString(v.get("environment"), ""), Objects.toString(v.get("passthrough_tag"), "")));
+        }).toList();
+    }
+
+    /** The project's first Mux account, or null (platform administration's single view). */
+    public Account account(UUID org) { return accounts(org).stream().findFirst().map(Map.Entry::getValue).orElse(null); }
+
+    /** The connections the project may use now: credentials set and the connector enabled for the project. */
+    public List<Connection> usable(UUID org) {
+        return connections(org).stream().filter(c -> configuration.connectorEnabled(org, c.provider())).toList();
+    }
+
+    /** One usable connection (id null: the only one, or the first). Fails clearly when none or that one isn't usable. */
+    public Connection connected(UUID org, UUID id) {
+        List<Connection> all = connections(org);
+        if (all.isEmpty()) throw ApiException.conflict("LIBRARY_NOT_CONNECTED", NOT_CONNECTED);
+        Connection c = id == null ? all.getFirst() : all.stream().filter(x -> x.id().equals(id)).findFirst()
+                .orElseThrow(() -> ApiException.notFound("Library connection"));
         if (!configuration.connectorEnabled(org, c.provider()))
             throw new ApiException(HttpStatus.FORBIDDEN, "CONNECTOR_DISABLED", "The video library connector is disabled for this project.");
         return c;
     }
+
+    public Connection connected(UUID org) { return connected(org, null); }
 
     // ------------------------------------------------------------------ platform administration
 
@@ -130,7 +152,9 @@ public class MediaConnectionService {
         values.put("passthrough_tag", tag);
         values.put("signing_key_id", Objects.toString(r.signingKeyId(), "").trim());   // signed playback (optional)
         values.put("signing_private_key", Objects.toString(blankToNull(r.signingPrivateKey()), ""));
-        connectors.saveInstance(null, org, MuxProvider.KEY, null, new InstanceRequest(null, null, values));
+        // this page edits the project's first Mux connection; more are added in the connector marketplace
+        UUID first = connectors.connections(org, MuxProvider.KEY).stream().findFirst().map(ConnectorCatalogueServiceV1.Connection::id).orElse(null);
+        connectors.saveInstance(null, org, MuxProvider.KEY, first, new InstanceRequest(null, null, values));
         audit.platform(Auth.userId(), "platform.mux.update", "organization", org, "environment '" + env + "', passthrough tag '" + tag + "'");
         return view(org);
     }

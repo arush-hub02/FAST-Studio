@@ -22,7 +22,7 @@ public final class AssetDto {
 
     /** What a processing job needs to know about one asset (looked up within its project). */
     public record ProcessingJob(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs,
-                                String mediaKey, String sourceUrl, String sourceRef) {}
+                                String mediaKey, String sourceUrl, String sourceRef, UUID connectionId) {}
 
     /**
      * An asset as the library shows it: signed thumbnail/preview URLs, its rights policy, a rights status

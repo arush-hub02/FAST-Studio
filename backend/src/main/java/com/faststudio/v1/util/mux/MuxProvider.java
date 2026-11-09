@@ -60,6 +60,18 @@ public class MuxProvider implements IMediaProvider, IDirectUpload, IPlayback {
     }
 
     @Override
+    public RemoteAsset uploaded(Credentials c, String uploadId) throws InterruptedException {
+        MuxClientService.UploadState s = mux.uploadState(account(c), uploadId);
+        if (s.status().equals("errored") || s.status().equals("cancelled") || s.status().equals("timed_out"))
+            return new RemoteAsset("", "ERRORED", null, 0, uploadId);
+        if (s.assetId() == null) return null;
+        MuxClientService.Asset a = mux.asset(account(c), s.assetId());
+        RemoteAsset r = normalize(a);
+        // a fresh asset may not list its upload yet; this one is ours
+        return new RemoteAsset(r.externalId(), r.status(), r.title(), r.durationMs(), uploadId);
+    }
+
+    @Override
     public Playback playback(Credentials c, String externalId) throws InterruptedException {
         MuxClientService.Asset a = mux.asset(account(c), externalId);
         if (a == null || "errored".equals(a.status())) throw ApiException.conflict("VIDEO_ERRORED", "The library couldn't process this video, so it can't stream.");

@@ -32,5 +32,8 @@ public class LibraryControllerV1 {
     PrepareResult prepare(Tenant t, @Valid @RequestBody PrepareRequest r) { return library.prepare(t, r.assetIds()); }
 
     @PostMapping("/assets/{id}/upload-url")
-    Map<String, String> uploadUrl(Tenant t, @PathVariable UUID id) throws InterruptedException { return library.uploadUrl(t, id); }
+    /** connection: which library connection to upload to; may be left out when the project has only one. */
+    Map<String, String> uploadUrl(Tenant t, @PathVariable UUID id, @RequestParam(required = false) UUID connection) throws InterruptedException {
+        return library.uploadUrl(t, id, connection);
+    }
 }

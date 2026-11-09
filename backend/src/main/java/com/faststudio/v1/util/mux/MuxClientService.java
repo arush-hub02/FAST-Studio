@@ -128,6 +128,16 @@ public class MuxClientService {
         return Asset.of(call(a, "GET", "/video/v1/assets/" + id, null).path("data"));
     }
 
+    /** Where a direct upload stands: Mux status (waiting, asset_created, errored, cancelled, timed_out) and its asset, once made. */
+    public record UploadState(String status, String assetId) {}
+
+    public UploadState uploadState(Account a, String uploadId) throws InterruptedException {
+        if (!uploadId.matches("[A-Za-z0-9]{1,128}")) throw unavailable(0);
+        JsonNode d = call(a, "GET", "/video/v1/uploads/" + uploadId, null).path("data");
+        String asset = d.path("asset_id").asString("");
+        return new UploadState(d.path("status").asString(""), asset.matches("[A-Za-z0-9]{1,128}") ? asset : null);
+    }
+
     /** One-time URL the browser PUTs the file to. The asset it becomes carries the tenant's tag and a public playback id (it streams from Mux). */
     public Upload upload(Account a, String corsOrigin, String title, int maxHeight) throws InterruptedException {
         Map<String, Object> settings = new LinkedHashMap<>(Map.of("playback_policy", List.of("public"), "meta", Map.of("title", title)));

@@ -64,6 +64,14 @@ test('SGAI asset list pads with slate so the viewer rejoins live at break end', 
   assert.deepEqual(list.ASSETS.map(a => a.DURATION), [15, 15])
 })
 
+test("a project's own slate pads from its lowest level (it may have no 360p)", async () => {
+  const { slatePlaylist } = await import('./playout.ts')
+  const own: Snapshot = { ...snap, standby: { key: 'acme/slate.1', segments: 2, levels: [2, 3] } }
+  const m = slatePlaylist(own, 10, 'https://m')
+  assert.ok(m.includes('https://m/acme/slate.1/2/seg_00000.ts'), m)
+  assert.ok(!m.includes('/0/seg_'), 'no 360p folder is asked for')
+})
+
 test('quality levels: each channel level uses its folder, or the nearest lower one the media has', async () => {
   const { levelFolder } = await import('./playout.ts')
   assert.equal(levelFolder(3, [0, 1, 2, 3, 4, 5]), 3)

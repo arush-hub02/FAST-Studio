@@ -362,7 +362,7 @@ export function slatePlaylist(snap: Snapshot, seconds: number, base: string) {
   let m = `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:${SEG / 1000}\n#EXT-X-PLAYLIST-TYPE:VOD\n`
   for (let i = 0; i < n; i++) {
     if (i > 0 && i % total === 0) m += '#EXT-X-DISCONTINUITY\n'
-    m += `#EXTINF:${secs(SEG)},\n${base}/${snap.standby.key}/0/seg_${pad(i % total)}.ts\n`
+    m += `#EXTINF:${secs(SEG)},\n${base}/${snap.standby.key}/${levelFolder(0, snap.standby.levels)}/seg_${pad(i % total)}.ts\n`   // a project slate may lack 360p
   }
   return m + '#EXT-X-ENDLIST\n'
 }

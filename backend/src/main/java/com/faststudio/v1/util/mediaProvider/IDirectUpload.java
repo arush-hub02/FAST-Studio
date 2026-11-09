@@ -9,4 +9,10 @@ public interface IDirectUpload {
      * maxHeight: the project's highest quality level, so the platform keeps enough resolution (e.g. 2160 for 4K).
      */
     Upload upload(IMediaProvider.Credentials c, String corsOrigin, String title, int maxHeight) throws InterruptedException;
+
+    /**
+     * The video an upload became, or null while the file hasn't arrived. Status ERRORED when the upload failed or expired.
+     * Lets uploads finish without webhooks.
+     */
+    IMediaProvider.RemoteAsset uploaded(IMediaProvider.Credentials c, String uploadId) throws InterruptedException;
 }

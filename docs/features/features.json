@@ -3930,6 +3930,160 @@
         "docs/html/FAQ.html"
       ],
       "screenshots": []
+    },
+    {
+      "id": "library-uploads-ads-slate",
+      "title": "Uploads to the video library; ads and slate in the Ads section, R2 only",
+      "area": "Media library",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Programme uploads go straight to the project's connected video library (choose one when there are several connections). Ad creatives and the project's own slate are added in the Ads section, converted once by FAST Studio and served from R2 only.",
+      "who": [
+        "Content managers and owners (Library uploads, ad creatives, slate)",
+        "Platform administrators (add several library connections to a project)"
+      ],
+      "flow": {
+        "title": "Where each kind of video goes",
+        "intro": "The boxes are the parts involved; the pill is a file being added.",
+        "nodes": [
+          {
+            "id": "ui",
+            "col": 1,
+            "row": 1,
+            "icon": "🖥️",
+            "label": "Library / Ads",
+            "sub": "Add video, Add creative, Slate"
+          },
+          {
+            "id": "lib",
+            "col": 2,
+            "row": 1,
+            "icon": "📚",
+            "label": "Video library",
+            "sub": "Mux (one or more)"
+          },
+          {
+            "id": "fs",
+            "col": 2,
+            "row": 2,
+            "icon": "🎞️",
+            "label": "FAST Studio",
+            "sub": "FFmpeg, then prune"
+          },
+          {
+            "id": "r2",
+            "col": 3,
+            "row": 2,
+            "icon": "🪣",
+            "label": "R2",
+            "sub": "ads and slate only"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "🌐",
+            "label": "Edge Worker",
+            "sub": "channels"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Programme upload",
+            "steps": [
+              {
+                "at": "ui",
+                "state": "Upload to: Archive",
+                "say": "Add video asks which library when there are several.",
+                "tech": "`POST /api/orgs/{org}/assets/{id}/upload-url?connection={id}`"
+              },
+              {
+                "at": "lib",
+                "state": "converting",
+                "say": "The browser sends the file straight to the library."
+              },
+              {
+                "at": "fs",
+                "state": "linked",
+                "say": "Webhook, or the upload watcher every 20 s, links the library video and prepares it to stream."
+              },
+              {
+                "at": "edge",
+                "state": "streams",
+                "say": "Channels stream it from the library with that connection's links."
+              }
+            ]
+          },
+          {
+            "name": "Slate",
+            "steps": [
+              {
+                "at": "ui",
+                "state": "slate.mp4",
+                "say": "Ads → Slate → Upload slate.",
+                "tech": "`POST /api/orgs/{org}/slate`"
+              },
+              {
+                "at": "fs",
+                "state": "converting",
+                "say": "FFmpeg makes the tenant's quality levels (MPEG-TS + fMP4)."
+              },
+              {
+                "at": "r2",
+                "state": "stored",
+                "say": "Copied to R2; then the server deletes its video files, keeping only playlists."
+              },
+              {
+                "at": "edge",
+                "state": "on air",
+                "say": "The project's channels show this slate instead of the platform standby."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Library → Add video → choose a file; with several video libraries choose one under Upload to → Upload.",
+        "Ads → Ad creatives → Add creative.",
+        "Ads → Slate → Upload slate (a 10 to 60 s loop). \"Use platform standby\" removes it.",
+        "Platform administrators: tenant page → Connectors → Mux → add another connection with its own name and tokens."
+      ],
+      "howItWorks": [
+        "V33: asset.connection_id, media_connection per connection (instance_id), media_job.connection_id for syncs; Mux connector allows several connections.",
+        "MediaConnectionService lists every connection; sync, prepare, streaming, edge links and webhooks use the video's own connection (webhooks find it by the secret that signed them).",
+        "LibraryServiceV1.watchUploads asks the platform where each pending upload went (IDirectUpload.uploaded), so uploads finish without webhooks.",
+        "AssetServiceV1 refuses FAST Studio uploads of programmes when the project has a video library; SlateServiceV1 keeps SLATE assets (hidden from the asset list).",
+        "EdgePublisher prunes ads and slate to their playlists once R2 holds both copies; MediaFileControllerV1 redirects missing segments to the edge; snapshots use the project slate as standby."
+      ],
+      "optimizations": [
+        "Connections cached per project for a minute at the edge publisher.",
+        "Segment counts read from playlists, so pruned media needs no file listing."
+      ],
+      "scale": [
+        "The upload watcher only looks at uploads of the last day that are still waiting.",
+        "R2-only ads and slate keep server disk use flat as creatives grow."
+      ],
+      "rules": [
+        "Ads and slate never go to the video library.",
+        "Projects never see the platform's name: connections named after it show as \"Video library\".",
+        "A new slate airs once converted; until then the previous one (or the platform standby) airs."
+      ],
+      "api": [
+        "GET /api/orgs/{org}/library (uploadTo)",
+        "POST /api/orgs/{org}/assets/{id}/upload-url?connection={id}",
+        "GET/POST/DELETE /api/orgs/{org}/slate",
+        "POST /api/platform/orgs/{orgId}/connector-instances/mux"
+      ],
+      "tests": [
+        "MuxTest.withTwoLibrariesTheUploadGoesToTheChosenOneAndIsLinkedWithoutWebhooks",
+        "MediaPruneTest",
+        "worker playout.test.ts (project slate levels)"
+      ],
+      "docs": [
+        "docs/html/FAQ.html",
+        "docs/OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": []
     }
   ]
 }

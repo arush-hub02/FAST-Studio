@@ -9,6 +9,7 @@ import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.dto.media.AssetDto.JobView;
 import com.faststudio.v1.dto.media.LibraryDto.LibraryView;
 import com.faststudio.v1.dto.media.LibraryDto.SyncStatus;
+import com.faststudio.v1.dto.media.LibraryDto.UploadTarget;
 import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.repositories.media.AssetSourceRepository;
 import com.faststudio.v1.repositories.media.MediaConnectionRepository;
@@ -25,6 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
@@ -93,35 +96,66 @@ public class MediaSyncServiceV1 {
 
     /** What the project sees of its library: connected, usable, what it can do, and the sync. Never names the provider. */
     public LibraryView library(Tenant t) {
-        MediaConnectionService.Connection c = connections.connection(t.orgId());
-        if (c == null) return new LibraryView(false, null, null, List.of(), status(t.orgId()), List.of());
-        List<String> caps = providers.get(c.provider()).capabilities().stream().map(Enum::name).sorted().toList();
-        return new LibraryView(true, c.checkedAt() == null ? null : c.checkError() == null, c.checkedAt(), caps, status(t.orgId()),
-                sources.waiting(t.orgId(), c.provider()));
+        List<MediaConnectionService.Connection> all = connections.connections(t.orgId());
+        if (all.isEmpty()) return new LibraryView(false, null, null, List.of(), status(t.orgId()), List.of(), List.of());
+        MediaConnectionService.Connection c = all.getFirst();
+        List<String> caps = all.stream().flatMap(x -> providers.get(x.provider()).capabilities().stream()).map(Enum::name).distinct().sorted().toList();
+        List<UUID> waiting = all.stream().map(MediaConnectionService.Connection::provider).distinct()
+                .flatMap(p -> sources.waiting(t.orgId(), p).stream()).toList();
+        List<MediaConnectionService.Connection> up = connections.usable(t.orgId()).stream()
+                .filter(x -> providers.supports(x.provider(), Capability.DIRECT_UPLOAD)).toList();
+        // white-label: a connection still named after its platform shows as "Video library"; a name the platform administrator gave shows as is
+        List<UploadTarget> uploadTo = new ArrayList<>();
+        for (int i = 0; i < up.size(); i++) {
+            MediaConnectionService.Connection x = up.get(i);
+            boolean own = x.name() != null && !x.name().isBlank() && !x.name().trim().equalsIgnoreCase(x.provider());
+            uploadTo.add(new UploadTarget(x.id(), own ? x.name().trim() : up.size() == 1 ? "Video library" : "Video library " + (i + 1)));
+        }
+        return new LibraryView(true, c.checkedAt() == null ? null : c.checkError() == null, c.checkedAt(), caps, status(t.orgId()), waiting, uploadTo);
     }
 
-    /** Queues a full scan from the first page, unless one is already queued or running (then it just reports). */
+    /** Queues a full scan of every usable catalogue connection, unless one is already queued or running (then it just reports). */
     private boolean start(UUID org) {
         // same order as before Stage 3: the project's own limits answer first, then the connection
         // ponytail: checked once before the sync, so one sync can go past the media limit; check per video if that matters
         limits.requireMediaRoom(org);
         rules.kindOf(org, "MOVIE");   // library videos arrive as movies; fails clearly if the project has that type switched off
-        MediaConnectionService.Connection c = connections.connected(org);
-        providers.require(c.provider(), Capability.CATALOGUE);
-        return Boolean.TRUE.equals(TenantScope.as(org, () -> tx.execute(s -> {
-            boolean added = jobs.enqueueSync(org);
-            if (added) repository.startSync(org);
-            return added;
-        })));
+        connections.connected(org);   // none, or the connector switched off: a clear error
+        List<MediaConnectionService.Connection> scan = connections.usable(org).stream()
+                .filter(c -> providers.supports(c.provider(), Capability.CATALOGUE)).toList();
+        if (scan.isEmpty()) providers.require(connections.connected(org).provider(), Capability.CATALOGUE);
+        boolean started = false;
+        for (MediaConnectionService.Connection c : scan)
+            started |= Boolean.TRUE.equals(TenantScope.as(org, () -> tx.execute(s -> {
+                boolean added = jobs.enqueueSync(org, c.id());
+                if (added) repository.startSync(org, c.id());
+                return added;
+            })));
+        return started;
     }
 
+    /** The project's sync across its connections: running while any runs; counts added up; finished when every one finished. */
     private SyncStatus status(UUID org) {
         return TenantScope.as(org, () -> {
-            JobView job = jobs.latestSync(org).orElse(null);
-            SyncRow s = repository.sync(org).orElse(null);
-            if (job == null || s == null) return new SyncStatus("NEVER", 0, 0, 0, false, null, null, null, null);
-            return new SyncStatus(job.state(), s.videos(), s.added(), s.pages(), s.finishedAt() != null, s.startedAt(), s.finishedAt(),
-                    job.lastError(), job.nextRunAt());
+            String state = null, error = null;
+            int videos = 0, added = 0, pages = 0;
+            boolean finished = true;
+            OffsetDateTime started = null, done = null, next = null;
+            for (MediaConnectionService.Connection c : connections.connections(org)) {
+                JobView job = jobs.latestSync(org, c.id()).orElse(null);
+                SyncRow s = repository.sync(org, c.id()).orElse(null);
+                if (job == null || s == null) continue;
+                boolean active = job.state().equals("QUEUED") || job.state().equals("RUNNING");
+                if (state == null || active) state = job.state();
+                videos += s.videos(); added += s.added(); pages += s.pages();
+                finished &= s.finishedAt() != null;
+                if (started == null || (s.startedAt() != null && s.startedAt().isBefore(started))) started = s.startedAt();
+                if (s.finishedAt() != null && (done == null || s.finishedAt().isAfter(done))) done = s.finishedAt();
+                if (error == null) error = job.lastError();
+                if (job.nextRunAt() != null) next = job.nextRunAt();
+            }
+            if (state == null) return new SyncStatus("NEVER", 0, 0, 0, false, null, null, null, null);
+            return new SyncStatus(state, videos, added, pages, finished, started, finished ? done : null, error, next);
         });
     }
 
@@ -140,9 +174,9 @@ public class MediaSyncServiceV1 {
      */
     public void run(Claim job, BooleanSupplier stop) throws Exception {
         UUID org = job.orgId();
-        MediaConnectionService.Connection c = connections.connected(org);
+        MediaConnectionService.Connection c = connections.connected(org, job.connectionId());
         IMediaProvider provider = providers.get(c.provider());
-        String next = repository.sync(org).map(SyncRow::cursor).orElse(null);
+        String next = repository.sync(org, c.id()).map(SyncRow::cursor).orElse(null);
         do {
             if (stop.getAsBoolean()) return;
             IMediaProvider.Page page;
@@ -152,7 +186,7 @@ public class MediaSyncServiceV1 {
                 throw new MediaServiceV1.Retryable(e.getMessage());   // tenant-safe already; the scan continues from this page later
             }
             int added = 0;
-            for (RemoteAsset x : page.assets()) if (library.apply(org, c.provider(), x)) added++;
+            for (RemoteAsset x : page.assets()) if (library.apply(org, c, x)) added++;
             next = page.next();
             // ponytail: a crash between the page and its checkpoint re-reads that page; imports are idempotent, only "videos" counts it twice
             if (!repository.checkpoint(job, next, page.assets().size(), added)) return;

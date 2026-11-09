@@ -8,6 +8,7 @@ import {
   Icon,
   Modal,
   useAction,
+  useApi,
 } from '../../shared/ui'
 import { DateTimePicker } from '../../shared/components/DateTimePicker'
 import { GenreSelector } from '../../shared/components/GenreSelector'
@@ -17,11 +18,32 @@ const COLOR_PRESETS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#
 
 /** Redesigned Add Video Modal for Non-Tech Users */
 /** Redesigned Add Video Modal with Simplified Layout & DateTime Scheduling */
-export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone: (id: string) => void }) {
+/** PUTs the file straight to the video library's one-time URL (it never passes through FAST Studio), reporting progress. */
+function putFile(url: string, file: File, onProgress: (pct: number) => void) {
+  return new Promise<void>((resolve, reject) => {
+    const x = new XMLHttpRequest()
+    x.open('PUT', url)
+    x.upload.onprogress = e => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)) }
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`The video library refused the file (${x.status}). Try again.`)))
+    x.onerror = () => reject(new Error('The upload to the video library failed. Check your connection and try again.'))
+    x.send(file)
+  })
+}
+
+/**
+ * scope 'library': programmes. With a connected video library the file goes straight to it (choose one when there
+ * are several); without one, to FAST Studio. scope 'ads': ad creatives, always kept by FAST Studio.
+ */
+export function AddVideoModal({ onClose, onDone, scope = 'library' }: { onClose: () => void; onDone: (id: string) => void; scope?: 'library' | 'ads' }) {
   const org = useOrg()
   const { busy, run } = useAction()
   const [mode, setMode] = useState<'upload' | 'sample'>('upload')
   const mediaSettings = useProjectMedia()
+  const forAds = scope === 'ads'
+  const lib = useApi<{ uploadTo: { id: string; name: string }[] }>(forAds ? null : `/api/orgs/${org.slug}/library`)
+  const targets = lib.data?.uploadTo ?? []
+  const [target, setTarget] = useState('')
+  const [progress, setProgress] = useState<number | null>(null)
   const [f, setF] = useState({
     title: '',
     kind: 'MOVIE',
@@ -36,11 +58,15 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
     color: '#6366f1',
   })
   const [releaseDateTime, setReleaseDateTime] = useState<string>('')
+  // only the types this place adds: ads in the Ads section, everything else in the Library
+  const types = (mediaSettings.data?.types ?? []).filter(t => mediaSettings.data!.enabledTypes.includes(t.key) && (t.kind === 'AD') === forAds)
   useEffect(() => {
     const s = mediaSettings.data
-    const type = s?.types.find(t => t.key === s.defaultType)
-    if (type) setF(f => ({ ...f, mediaType: type.key, kind: type.kind }))
-  }, [mediaSettings.data])
+    const enabled = (s?.types ?? []).filter(t => s!.enabledTypes.includes(t.key) && (t.kind === 'AD') === forAds)
+    const type = enabled.find(t => t.key === s?.defaultType) ?? enabled[0]
+    if (type) setF(f => ({ ...f, mediaType: type.key, kind: type.kind, minutes: type.kind === 'AD' ? 15 : 3 }))
+  }, [mediaSettings.data, forAds])
+  useEffect(() => { if (targets.length === 1) setTarget(targets[0].id) }, [targets.length])   // eslint-disable-line react-hooks/exhaustive-deps
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -63,6 +89,8 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
     if (!mediaSettings.data || !f.mediaType) throw new Error('Wait for your company media settings to load and choose an enabled type.')
     if (!f.title.trim()) throw new Error('Please enter a title for the video.')
     if (mode === 'upload' && !file) throw new Error('Please choose a video file to upload.')
+    const toLibrary = mode === 'upload' && !forAds && targets.length > 0
+    if (toLibrary && !target) throw new Error('Choose the video library to upload to.')
 
     const body = {
       title: f.title.trim(),
@@ -82,7 +110,15 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
 
     const v = await api<AssetView>(`/api/orgs/${org.slug}/assets`, { body })
 
-    if (mode === 'upload' && file) {
+    if (toLibrary && file) {
+      const u = await api<{ url: string }>(`/api/orgs/${org.slug}/assets/${v.asset.id}/upload-url?connection=${target}`, { method: 'POST' })
+      setProgress(0)
+      try {
+        await putFile(u.url, file, setProgress)
+      } finally {
+        setProgress(null)
+      }
+    } else if (mode === 'upload' && file) {
       const form = new FormData()
       form.append('file', file)
       await api(`/api/orgs/${org.slug}/assets/${v.asset.id}/upload`, { form })
@@ -110,12 +146,14 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
     return v.asset.id
   }
 
-  const kindOptions: DropdownOption[] = (mediaSettings.data?.types ?? []).filter(t => mediaSettings.data!.enabledTypes.includes(t.key)).map(t => ({ value: t.key, label: t.label, description: t.kind === 'EPISODE' ? 'Series, season and episode metadata required' : `Scheduling behavior: ${t.kind.toLowerCase()}`, icon: t.kind === 'AD' ? 'megaphone' : t.kind === 'EPISODE' ? 'tv' : 'film' }))
+  const toLibrary = mode === 'upload' && !forAds && targets.length > 0
+  const kindOptions: DropdownOption[] = types.map(t => ({ value: t.key, label: t.label, description: t.kind === 'EPISODE' ? 'Series, season and episode metadata required' : `Scheduling behavior: ${t.kind.toLowerCase()}`, icon: t.kind === 'AD' ? 'megaphone' : t.kind === 'EPISODE' ? 'tv' : 'film' }))
 
   return (
     <Modal
-      title="Add Media to Catalog"
-      subtitle="Upload full media files or generate instant test broadcasts ready for playout."
+      title={forAds ? 'Add ad creative' : 'Add Media to Catalog'}
+      subtitle={forAds ? 'Ad creatives are converted once and kept by FAST Studio for your ad breaks.'
+        : 'Upload full media files or generate instant test broadcasts ready for playout.'}
       onClose={onClose}
       wide
       footer={
@@ -128,10 +166,13 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
             className="btn primary"
             disabled={busy}
             onClick={() =>
-              run(submit, 'Media added — background transcoding started').then(id => id && onDone(id))
+              run(submit, toLibrary ? 'Uploaded to the video library. It becomes ready once the library has converted it.'
+                : 'Media added — background transcoding started').then(id => id && onDone(id))
             }
           >
-            {busy ? (
+            {progress !== null ? (
+              <><span className="spinner" /> Uploading {progress}%</>
+            ) : busy ? (
               <span className="spinner" />
             ) : mode === 'upload' ? (
               <>
@@ -201,7 +242,8 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
               <div className="stack" style={{ alignItems: 'center', gap: 4 }}>
                 <b style={{ fontSize: 14 }}>Click to choose media or drag & drop</b>
                 <span className="faint small">
-                  Supports MP4, MOV, MKV, WebM, and M4V. Auto-converted to broadcast HLS.
+                  {toLibrary ? 'Supports MP4, MOV, MKV, WebM, and M4V. Goes straight to your video library, which converts it.'
+                    : 'Supports MP4, MOV, MKV, WebM, and M4V. Auto-converted to broadcast HLS.'}
                 </span>
                 <div className="row" style={{ gap: 6, marginTop: 6 }}>
                   <span className="chip sm">MP4</span>
@@ -286,6 +328,19 @@ export function AddVideoModal({ onClose, onDone }: { onClose: () => void; onDone
             </div>
           </div>
         )}
+
+        {/* Where a programme upload goes: the project's video library (choose when there are several) */}
+        {toLibrary && (targets.length === 1 ? (
+          <div className="callout" data-testid="upload-target"><Icon name="info" /><div className="small">Uploads to <b>{targets[0].name}</b>.</div></div>
+        ) : (
+          <label className="field" data-testid="upload-target">
+            <span>Upload to <b style={{ color: 'var(--bad)' }}>*</b></span>
+            <select aria-label="Upload to" value={target} onChange={e => setTarget(e.target.value)}>
+              <option value="">Choose a video library…</option>
+              {targets.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </label>
+        ))}
 
         {/* Title & Format Fields */}
         <div className="grid g2">

@@ -113,10 +113,22 @@ public class EdgePublisher {
 
     void syncMedia() throws IOException, InterruptedException {
         List<String> keys = new ArrayList<>(List.of(MediaServiceV1.STANDBY, MediaServiceV1.GEO));
-        keys.addAll(TenantScope.bypass(() -> data.db.sql("select media_key from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
-                .query(String.class).list()));
+        Map<String, Path> r2Only = new HashMap<>();   // ads and slate live in R2 only: key -> the ad's uploaded original (null for slate)
+        r2Only.put(MediaServiceV1.STANDBY, null);
+        r2Only.put(MediaServiceV1.GEO, null);
+        TenantScope.bypass(() -> data.db.sql("select media_key, kind, org_id, id from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
+                .query((rs, n) -> {
+                    String key = rs.getString("media_key");
+                    keys.add(key);
+                    if (rs.getString("kind").equals("AD") || rs.getString("kind").equals("SLATE"))
+                        r2Only.put(key, media.uploadDir(rs.getObject("org_id", UUID.class), rs.getObject("id", UUID.class)));
+                    return key;
+                }).list());
         for (String key : keys) {
-            if (stored.contains(key) && storedFmp4.contains(key)) continue;
+            if (stored.contains(key) && storedFmp4.contains(key)) {
+                if (r2Only.containsKey(key) && pruned.add(key)) prune(key, r2Only.get(key));
+                continue;
+            }
             Path dir = media.mediaDir().resolve(key);
             if (!Files.exists(dir.resolve("master.m3u8"))) continue;   // still being packaged
             try {
@@ -133,6 +145,21 @@ public class EdgePublisher {
                 if (e instanceof java.net.ConnectException || e instanceof java.net.http.HttpConnectTimeoutException) throw e;
                 log.warn("Couldn't copy {} to the edge: {}", key, e.getMessage());   // retried next tick
             }
+        }
+    }
+
+    private final Set<String> pruned = ConcurrentHashMap.newKeySet();
+
+    /** R2 holds both copies: the server keeps only the playlists and thumbnail of this ad or slate, and drops the ad's original. */
+    private void prune(String key, Path original) {
+        try {
+            media.pruneToIndex(key);
+            if (original != null && Files.isDirectory(original))
+                try (Stream<Path> s = Files.walk(original)) { for (Path p : s.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(p); }
+            log.info("{} now lives in R2 only", key);
+        } catch (IOException e) {
+            pruned.remove(key);   // try again next tick
+            log.warn("Couldn't remove the local copy of {}: {}", key, e.getMessage());
         }
     }
 
@@ -324,8 +351,14 @@ public class EdgePublisher {
         if (fmp4) items.replaceAll(it -> it.key() != null && !storedFmp4(it.key()) ? it.withoutMedia() : it);
         Fallback fb = fallback(ch, assets, policies);
         if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
+        // the project's own slate (Ads → Slate) once R2 holds it in this channel's container; else the platform's standby
+        String own = data.db.sql("""
+                select media_key from asset where org_id = :o and kind = 'SLATE' and status = 'READY' and media_key is not null
+                order by updated_at desc limit 1""").param("o", org).query(String.class).optional().orElse(null);
+        Media standby = own != null && stored(own) && (!fmp4 || storedFmp4(own)) && media.segments(own) > 0
+                ? new Media(own, media.segments(own), levels(own)) : platform(MediaServiceV1.STANDBY);
         return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
-                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
+                standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
     }
 
     private static List<String> allowed(Asset a, List<String> terr, Map<UUID, Rights.Policy> policies, Entry e) {
@@ -335,7 +368,7 @@ public class EdgePublisher {
     /** The edge's URL and segment lengths for one streaming video. url is null when none can be made (the programme plays slate). */
     private Ovp ovpEntry(UUID org, AssetPlaybackRepository.Row r, long until) {
         IPlayback adapter = providers.playback(r.provider());
-        MediaConnectionService.Connection c = connection(org);
+        MediaConnectionService.Connection c = connections(org).get(r.connectionId());
         String url = null;
         if (adapter != null && c != null && r.provider().equals(c.provider())) {
             try {
@@ -348,15 +381,17 @@ public class EdgePublisher {
     }
 
     // decrypting a connection for every channel every 5 s isn't needed: a minute is fresh enough
-    private final Map<UUID, Map.Entry<Long, Optional<MediaConnectionService.Connection>>> connectionCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Map.Entry<Long, Map<UUID, MediaConnectionService.Connection>>> connectionCache = new ConcurrentHashMap<>();
 
-    private MediaConnectionService.Connection connection(UUID org) {
+    /** The project's library connections by id. */
+    private Map<UUID, MediaConnectionService.Connection> connections(UUID org) {
         long now = System.currentTimeMillis();
         var hit = connectionCache.get(org);
-        if (hit != null && hit.getKey() > now) return hit.getValue().orElse(null);
-        Optional<MediaConnectionService.Connection> c = Optional.ofNullable(connections.connection(org));
-        connectionCache.put(org, Map.entry(now + 60_000, c));
-        return c.orElse(null);
+        if (hit != null && hit.getKey() > now) return hit.getValue();
+        Map<UUID, MediaConnectionService.Connection> byId = new HashMap<>();
+        for (MediaConnectionService.Connection c : connections.connections(org)) byId.put(c.id(), c);
+        connectionCache.put(org, Map.entry(now + 60_000, byId));
+        return byId;
     }
 
     private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0, levels(key)); }

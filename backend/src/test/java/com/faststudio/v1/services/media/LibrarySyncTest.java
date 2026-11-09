@@ -92,6 +92,7 @@ class LibrarySyncTest {
     @Autowired Tokens tokens;
     @Autowired JsonMapper json;
     @Autowired Secrets secrets;
+    @Autowired MediaConnectionService connections;
     @Autowired MediaJobObserverV1 observer;
     @Autowired LibraryServiceV1 library;
 
@@ -211,7 +212,7 @@ class LibrarySyncTest {
         assertEquals("MISSING", asset("b").get("provider_status"));
         assertEquals("DRAFT", asset("b").get("status"), "the local video stays");
 
-        library.apply(org, "fake", video("a", "DELETED"));
+        library.apply(org, connections.connection(org), video("a", "DELETED"));
         assertEquals("DELETED", asset("a").get("provider_status"));
         assertEquals(2, imported(), "nothing is deleted here");
     }
@@ -221,7 +222,7 @@ class LibrarySyncTest {
         FAKE.caps = EnumSet.of(Capability.CATALOGUE, Capability.SOURCE_FILE);
         FAKE.catalogue = List.of(video("ok", "READY"), video("broken", "READY"), video("aired", "READY"));
         syncOnce();
-        library.apply(org, "fake", video("broken", "ERRORED"));                      // the platform lost it since
+        library.apply(org, connections.connection(org), video("broken", "ERRORED"));                      // the platform lost it since
         TenantScope.bypass(() -> db.sql("update asset set status = 'READY' where org_id = :o and source_ref = 'fake:aired'").param("o", org).update());
         UUID local = TenantScope.bypass(() -> db.sql("insert into asset(org_id, title, kind) values (:o, 'Local', 'MOVIE') returning id")
                 .param("o", org).query(UUID.class).single());

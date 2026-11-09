@@ -185,7 +185,7 @@ export function CampaignModal({
                 Video Creative Asset
               </span>
               <span className="hint" style={{ fontSize: 11 }}>
-                New video files can be ingested via the Media Library
+                New creatives are added under Ads → Ad creatives
               </span>
             </div>
             <Dropdown

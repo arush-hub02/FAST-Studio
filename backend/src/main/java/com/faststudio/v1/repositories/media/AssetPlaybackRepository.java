@@ -24,7 +24,8 @@ public class AssetPlaybackRepository {
         this.json = json;
     }
 
-    public record Row(UUID assetId, String provider, Playback playback) {}
+    /** connectionId: the library connection the video streams from (its credentials sign the links). */
+    public record Row(UUID assetId, String provider, Playback playback, UUID connectionId) {}
 
     public void save(UUID org, UUID asset, String provider, Playback p) {
         db.sql("""
@@ -43,7 +44,10 @@ public class AssetPlaybackRepository {
     public Map<UUID, Row> of(UUID org, Collection<UUID> assets) {
         if (assets.isEmpty()) return Map.of();
         Map<UUID, Row> out = new HashMap<>();
-        db.sql("select asset_id, provider, playback_id, signed, format, renditions, segments_ms from asset_playback where org_id = :o and asset_id in (:ids)")
+        db.sql("""
+                select p.asset_id, p.provider, p.playback_id, p.signed, p.format, p.renditions, p.segments_ms, a.connection_id
+                from asset_playback p join asset a on a.org_id = p.org_id and a.id = p.asset_id
+                where p.org_id = :o and p.asset_id in (:ids)""")
                 .param("o", org).param("ids", assets).query((rs, n) -> row(rs)).list().forEach(r -> out.put(r.assetId(), r));
         return out;
     }
@@ -56,6 +60,6 @@ public class AssetPlaybackRepository {
         int[] seg = new int[boxed.length];
         for (int i = 0; i < seg.length; i++) seg[i] = boxed[i];
         return new Row(rs.getObject("asset_id", UUID.class), rs.getString("provider"), new Playback(rs.getString("playback_id"), rs.getBoolean("signed"),
-                rs.getString("format"), json.readValue(rs.getString("renditions"), RENDITIONS), seg));
+                rs.getString("format"), json.readValue(rs.getString("renditions"), RENDITIONS), seg), rs.getObject("connection_id", UUID.class));
     }
 }

@@ -194,7 +194,7 @@ public class ConnectorCatalogueServiceV1 {
     public List<Map<String, String>> values(UUID org, String key) { return connections(org, key).stream().map(Connection::values).toList(); }
 
     /** An enabled connection as adapters use it: decrypted values by field key (defaults filled in) and its last health check. */
-    public record Connection(UUID id, Map<String, String> values, java.time.OffsetDateTime checkedAt, String checkError) {}
+    public record Connection(UUID id, Map<String, String> values, java.time.OffsetDateTime checkedAt, String checkError, String name) {}
 
     /** A project's (org) or the platform's (org null) enabled connections of a connector, in list order. */
     public List<Connection> connections(UUID org, String key) {
@@ -211,7 +211,7 @@ public class ConnectorCatalogueServiceV1 {
                     PropertyRow p = fields.get(row.propertyKey());
                     if (p != null) v.put(p.key(), p.encrypted() ? secrets.open(row.value()) : row.value());
                 }
-                out.add(new Connection(i.id(), v, i.checkedAt(), i.checkError()));
+                out.add(new Connection(i.id(), v, i.checkedAt(), i.checkError(), i.name()));
             }
             return out;
         });
