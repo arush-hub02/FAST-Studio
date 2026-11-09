@@ -12,6 +12,7 @@ import {
   InfoTip,
   Status,
   useAction,
+  useApi,
 } from '../../shared/ui'
 import { GenreSelector } from '../../shared/components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
@@ -45,6 +46,12 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const [description, setDescription] = useState(a.description)
   const [genre, setGenre] = useState(a.genre)
   const mediaSettings = useProjectMedia()
+  // library videos waiting to be prepared (synced drafts): they need "Get ready", not an upload
+  const library = useApi<{ capabilities: string[]; waiting: string[] }>(`/api/orgs/${org.slug}/library`)
+  const fromLibrary = !!library.data?.waiting.includes(a.id)
+  const streams = !!library.data?.capabilities.includes('PLAYBACK')
+  const prepare = () => run(() => api(`/api/orgs/${org.slug}/library/prepare`, { body: { assetIds: [a.id] } }),
+    streams ? 'Getting it ready to stream' : 'Getting it ready to air').then(() => { library.reload(); onChange() })
   const [mediaType, setMediaType] = useState(a.mediaType)
   const editKind = mediaSettings.data?.types.find(t => t.key === mediaType)?.kind ?? a.kind
   const [series, setSeries] = useState(a.series ?? '')
@@ -288,6 +295,20 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
                       }
                     >
                       <Icon name="refresh" size={14} /> Retry processing
+                    </button>
+                  )}
+                </>
+              ) : fromLibrary ? (
+                <>
+                  <Icon name="film" size={32} />
+                  <b>In your video library</b>
+                  <p className="faint small" style={{ maxWidth: 340 }}>
+                    {streams ? 'Get it ready to stream: FAST Studio reads its quality levels and segments from the library. Nothing is copied.'
+                      : 'Get it ready to air: FAST Studio fetches it once and prepares it for broadcast.'}
+                  </p>
+                  {editable && (
+                    <button type="button" className="btn primary sm" disabled={busy} onClick={prepare}>
+                      <Icon name="play" size={14} /> {streams ? 'Get ready to stream' : 'Get ready to air'}
                     </button>
                   )}
                 </>
