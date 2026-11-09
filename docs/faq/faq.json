@@ -3,6 +3,30 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "see-database-run-queries",
+      "asked": "2026-11-09",
+      "question": "How can I see my database and run manual queries?",
+      "short": "Production on this PC uses a built-in PostgreSQL 14 on 127.0.0.1, port 54339, database postgres, user postgres, no password (it only accepts connections from this PC). Connect any PostgreSQL tool to it, such as DBeaver or pgAdmin, and run queries. Tick \"read-only\" in the tool, because this login can change and delete everything for every tenant. To understand the tables first, open docs/html/visualizeDB.html.",
+      "sections": [
+        {
+          "title": "1. Connection details",
+          "html": "<table><tr><th></th><th>Production (pilot)</th><th>Demo</th></tr><tr><td>Host</td><td>127.0.0.1</td><td>127.0.0.1</td></tr><tr><td>Port</td><td><b>54339</b></td><td>54329</td></tr><tr><td>Database</td><td>postgres</td><td>postgres</td></tr><tr><td>User</td><td>postgres</td><td>postgres</td></tr><tr><td>Password</td><td>none (local connections only)</td><td>none</td></tr><tr><td>Files</td><td>data-pilot/pg</td><td>data/pg</td></tr></table><p>The database runs only while FAST Studio runs (it starts and stops with it). Checked on 9 November 2026: schema version V33.</p>"
+        },
+        {
+          "title": "2. With DBeaver (free, recommended)",
+          "html": "<ol><li>Install DBeaver Community from dbeaver.io.</li><li>Database → New Database Connection → PostgreSQL → Next.</li><li>Host <code>127.0.0.1</code>, Port <code>54339</code>, Database <code>postgres</code>, Username <code>postgres</code>, Password empty.</li><li>On the <b>General</b> page of the connection, tick <b>Read-only connection</b>.</li><li>Test Connection (it downloads the driver the first time), Finish.</li><li>Open postgres → Schemas → public → Tables to browse; SQL Editor → New SQL script to run queries.</li></ol><p>pgAdmin and the VS Code \"PostgreSQL\" extension work with the same details.</p>"
+        },
+        {
+          "title": "3. Useful first queries",
+          "html": "<pre>-- schema version\nselect version, description, installed_on from flyway_schema_history order by installed_rank desc limit 5;\n\n-- projects (tenants' organizations)\nselect id, slug, name, kind from organization order by name;\n\n-- videos of one project, newest first\nselect a.title, a.kind, a.status, a.status_detail, a.media_key, a.source_ref\nfrom asset a join organization o on o.id = a.org_id\nwhere o.slug = 'arush-media' order by a.created_at desc;\n\n-- background jobs that failed\nselect kind, state, last_error, created_at from media_job where state = 'FAILED' order by created_at desc limit 20;</pre><p>More ready-made diagnose queries, every table and what uses it: <a href=\"visualizeDB.html\">Database guide</a>.</p>"
+        },
+        {
+          "title": "4. Be careful",
+          "html": "<ul><li>The <code>postgres</code> login is the database owner: it bypasses tenant isolation (row-level security) and sees and can change every tenant's data. Keep the connection read-only unless you mean to change something.</li><li>Before any manual change, take a backup: <code>tools/backup.ps1 -Pilot</code> (it stops the app for a consistent copy and starts it again).</li><li>Never change tables while FAST Studio is mid-way through a job, and never edit <code>flyway_schema_history</code>.</li><li>Stored credentials (Mux tokens, ad server tags) are encrypted; you will see ciphertext, not the secrets.</li></ul>"
+        }
+      ]
+    },
+    {
       "id": "quality-pick-not-applied",
       "asked": "2026-11-09",
       "question": "I selected another quality in the player but it kept playing its own quality. Why?",
