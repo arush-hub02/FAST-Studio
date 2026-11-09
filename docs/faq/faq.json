@@ -3,6 +3,26 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "r2-manager-ui",
+      "asked": "2026-11-10",
+      "question": "Can I get a UI to manage the local R2, demo and production separately, like the R2 dashboard?",
+      "short": "Yes. Double-click r2.bat (production) or run \"r2.bat demo\". It opens Cloudflare's own Local Explorer, the R2 dashboard of Wrangler, on that environment's local R2: browse folders, upload files, add directories, download, delete (one or many) and see each file's details. \"r2.bat stop\" closes it. Before deleting, \"node tools/r2-local.mjs --usage\" shows which folders a video, ad or slate still uses.",
+      "sections": [
+        {
+          "title": "1. Open it",
+          "html": "<pre>r2.bat          # production (data-pilot\\edge)\nr2.bat demo     # demo (data\\edge)\nr2.bat stop     # close the explorers r2.bat started</pre><ul><li>If FAST Studio is running in that mode, the explorer of its edge opens (port 8787).</li><li>If not, r2.bat starts a browse-only edge for that environment (port 8798 production, 8797 demo; the first start can take a minute). start.bat closes it before starting FAST Studio, so two edges never share the same R2 folder.</li><li>The page also shows the edge's KV (the published channel schedules) and Durable Objects.</li></ul>"
+        },
+        {
+          "title": "2. What you can do",
+          "html": "<ul><li><b>Browse</b>: bucket <code>fast-studio-media</code> → folders <code>_platform/</code> (slates) and one per project → one folder per video, ad or slate.</li><li><b>Upload</b> files into the current folder, or <b>Add directory</b>.</li><li><b>Download</b> or <b>Delete</b> a file from its details page; tick several rows to delete them together.</li><li>Images and videos are not previewed there: open <code>http://127.0.0.1:8787/media/&lt;key&gt;</code> (thumb.jpg in the browser, master.m3u8 in VLC).</li></ul>"
+        },
+        {
+          "title": "3. Before deleting",
+          "html": "<pre>node tools/r2-local.mjs --usage          # production (FAST Studio running in pilot mode)\nnode tools/r2-local.mjs --demo --usage   # demo (FAST Studio running in demo mode)</pre><p>Each folder is marked <b>IN USE</b> (with the video, ad or slate) or <b>unused, safe to delete</b>. Deleting a folder that is in use breaks its playback (ads and slates live in R2 only). On 10 November 2026 production had three unused folders: the old platform slates (<code>_platform/standby-5s</code>, <code>_platform/geo-5s</code>, about 85 MB) and your archived first Big Buck Bunny upload.</p><p>The explorer itself doesn't know what FAST Studio uses, so it can't stop you; check first.</p>"
+        }
+      ]
+    },
+    {
       "id": "view-local-r2",
       "asked": "2026-11-10",
       "question": "How can I view the local R2 assets?",

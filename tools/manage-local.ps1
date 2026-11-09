@@ -302,6 +302,7 @@ try {
     }
     Set-Content -LiteralPath (Join-Path $workerDir '.dev.vars') -Encoding ASCII -Value "EDGE_SECRET=$env:FASTSTUDIO_EDGE_SECRET"
     Stop-Edge $state   # a Worker left over from an interrupted start
+    & (Join-Path $PSScriptRoot 'r2-explorer.ps1') -Env stop -Quiet   # r2.bat edges share the R2 folders: close them first
     if (Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue) {
         throw 'Port 8787 (the local Cloudflare Worker) is occupied by another process; it will not be stopped.'
     }
