@@ -19,6 +19,9 @@ import { GenreSelector } from '../../shared/components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
 import { useProjectMedia } from '../../shared/projectMedia'
 
+/** Status detail of a video whose file went straight to the video library and is still converting there (set by the server). */
+export const UPLOADING_TO_LIBRARY = 'Uploading to the video library'
+
 /** How a library video plays: straight from its platform, with our ads and slate spliced in by the edge. */
 function StreamingCard({ s }: { s: Streaming }) {
   return (
@@ -263,12 +266,20 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
         ) : (
           <div className="thumb library-preview-thumb" style={{ background: a.color || 'var(--surface-3)' }}>
             <div className="stack" style={{ alignItems: 'center', textAlign: 'center', padding: 24, gap: 10 }}>
-              {a.status === 'PROCESSING' ? (
+              {a.status === 'DRAFT' && a.statusDetail === UPLOADING_TO_LIBRARY ? (
                 <>
                   <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
-                  <b>Transcoding Video</b>
+                  <b>Converting in your video library</b>
+                  <p className="faint small" style={{ maxWidth: 340 }}>
+                    The file went straight to your video library, which is converting it. This page updates by itself when it is ready to stream (usually a few minutes).
+                  </p>
+                </>
+              ) : a.status === 'PROCESSING' ? (
+                <>
+                  <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
+                  <b>Getting it ready</b>
                   <p className="faint small" style={{ maxWidth: 320 }}>
-                    Converting video to 640×360 and cutting into 5-second segments for live broadcast.
+                    {a.statusDetail || 'Converting the video and cutting it into 5-second segments for live broadcast.'}
                   </p>
                 </>
               ) : a.status === 'FAILED' ? (

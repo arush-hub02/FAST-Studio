@@ -31,10 +31,18 @@ export default function Player({ src, title, live, poster, onEvent, videoRef, on
   useEffect(() => {
     setErr(null)
     let hooked: Hls | null = null
+    let manual = -1
     const hook = () => {
       const h = media.current?.engine
+      // A quality picked in the menu: Video.js sets hls.js nextLevel, which waits until everything already buffered has
+      // played (a short video never switches). Switch at once instead, as viewers expect.
+      if (h && h === hooked && h.manualLevel !== manual) {
+        manual = h.manualLevel
+        if (manual >= 0 && h.currentLevel !== manual) h.currentLevel = manual
+      }
       if (!h || h === hooked) return
       hooked = h
+      manual = h.manualLevel
       h.on(Hls.Events.INTERSTITIAL_ASSET_STARTED, (_e, d) => cb.current?.({ type: 'interstitial-start', uri: d.asset?.uri }))
       h.on(Hls.Events.INTERSTITIAL_ASSET_ENDED, (_e, d) => cb.current?.({ type: 'interstitial-end', uri: d.asset?.uri }))
       h.on(Hls.Events.LEVEL_SWITCHED, (_e, d) => {

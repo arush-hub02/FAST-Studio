@@ -3,6 +3,30 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "quality-pick-not-applied",
+      "asked": "2026-11-09",
+      "question": "I selected another quality in the player but it kept playing its own quality. Why?",
+      "short": "Fixed. The player changed quality only after everything it had already loaded ahead had played, and a short video is loaded completely at once, so it never changed. Now picking a quality switches at once: the picture changes within the current 5-second segment, and the badge under the player shows the new level.",
+      "sections": [
+        {
+          "title": "Details",
+          "html": "<ul><li>Video.js asks hls.js for the new level as its <i>next</i> level, which waits for the buffered video to run out.</li><li>FAST Studio now switches the level immediately (hls.js <code>currentLevel</code>), which drops what was loaded ahead and loads the chosen level.</li><li><b>Auto</b> goes back to picking by connection speed and player size; a small player starts at a lower level.</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "upload-to-mux-waiting-message",
+      "asked": "2026-11-09",
+      "question": "I uploaded a file to Mux from our platform, but the video still said \"Waiting for Source Video File\". Why?",
+      "short": "The upload had worked: the file went to Mux, and Mux was still converting it. The drawer showed the wrong message for that wait. It now says \"Converting in your video library\", and the Library refreshes by itself until the video is ready (usually a few minutes after the upload).",
+      "sections": [
+        {
+          "title": "What happens after an upload to the video library",
+          "html": "<ol><li>The browser sends the file straight to Mux.</li><li>Mux converts it (a few minutes, longer for long or 4K files). The video shows <b>Converting in your video library</b>.</li><li>FAST Studio checks every 20 seconds (or gets Mux's webhook), links the Mux video, reads its quality levels and segments, and marks it <b>Ready</b>.</li></ol>"
+        }
+      ]
+    },
+    {
       "id": "ads-slate-separate-r2-only",
       "asked": "2026-11-09",
       "question": "Uploads should go to the tenant's connected connector (ask which one when there are several); slate and ads should be separate from media, uploaded only in the Ads section, and stored and served from R2 only.",

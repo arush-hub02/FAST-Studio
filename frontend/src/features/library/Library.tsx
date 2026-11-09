@@ -15,7 +15,7 @@ import {
   useApi,
 } from '../../shared/ui'
 import { AddVideoModal } from './AddVideoModal'
-import { AssetDrawer } from './AssetDrawer'
+import { AssetDrawer, UPLOADING_TO_LIBRARY } from './AssetDrawer'
 import { LibrarySource } from './LibrarySource'
 import { formatMediaKind, KIND_LABEL } from './mediaKind'
 
@@ -39,7 +39,8 @@ export default function Library() {
 
   // Fetch full asset list for the org (stable catalog-wide dataset)
   const list = useApi<AssetView[]>(`/api/orgs/${org.slug}/assets`, [], 0)
-  const processing = list.data?.some(a => a.asset.status === 'PROCESSING')
+  // refresh while anything converts, here or in the video library
+  const processing = list.data?.some(a => a.asset.status === 'PROCESSING' || a.asset.statusDetail === UPLOADING_TO_LIBRARY)
 
   // Auto-refresh when any transcode is in progress
   useEffect(() => {
