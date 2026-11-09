@@ -18,7 +18,18 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid 
 @media (max-width:640px){.flow{flex-direction:column}.flow .arrow{transform:rotate(90deg)}table{display:block;overflow-x:auto}}
 </style></head><body><main>
 <h1>Your questions, answered</h1><p class="intro">Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).</p>
-<nav class="toc"><b>Questions</b><ol><li><a href="#renditions-ours-and-mux">What renditions does our platform support, and which did Mux give?</a></li><li><a href="#mux-video-storage-and-playback">I synced Mux and my video got ready after "transcoding". Where is my video stored in the system, and how is it playing?</a></li></ol></nav>
+<nav class="toc"><b>Questions</b><ol><li><a href="#2k-4k">Do we support 4K or 2K?</a></li><li><a href="#renditions-ours-and-mux">What renditions does our platform support, and which did Mux give?</a></li><li><a href="#mux-video-storage-and-playback">I synced Mux and my video got ready after "transcoding". Where is my video stored in the system, and how is it playing?</a></li></ol></nav>
+
+<article id="2k-4k">
+  <p class="asked">Asked 2026-11-09</p>
+  <h2><a href="#2k-4k">Do we support 4K or 2K?</a></h2>
+  <p class="short"><b>Short answer.</b> Not yet. FAST Studio plays at most 720p today, and your Mux video only has levels up to 1080p. Mux itself can make 2K/2.5K (1440p) and 4K (2160p) levels, but only for videos you upload with a higher resolution tier, which costs more. To play them, FAST Studio would first need 1080p, then 1440p and 2160p levels for its own ads and slate, or accept a lower picture during breaks.</p>
+  
+  <h3>1. What exists today</h3><table><thead><tr><th></th><th>Highest level</th></tr></thead><tbody><tr><td>FAST Studio (uploads, ads, slate, and what the live playlist offers)</td><td>720p</td></tr><tr><td>Your Mux video "Songs Mashup 2010"</td><td>1080p (two bitrates)</td></tr><tr><td>Mux in general, on-demand video</td><td>up to 2160p (4K), if the video is created with a higher <code>max_resolution_tier</code></td></tr></tbody></table>
+<h3>2. Mux and 2K/4K</h3><ul><li>Mux makes 1080p at most unless told otherwise: the default <code>max_resolution_tier</code> is 1080p, so a 4K source still becomes 1080p.</li><li>For 2K/2.5K set <code>"max_resolution_tier": "1440p"</code>, for 4K <code>"2160p"</code>, when the video is created or uploaded. FAST Studio's direct upload doesn't set it today; videos uploaded in the Mux dashboard can.</li><li>Higher tiers cost more for encoding, storage and delivery. It isn't clear that the free plan covers them; check Mux's pricing page before testing.</li></ul>
+<h3>3. What FAST Studio would need</h3><ol><li><b>A 1080p level first</b> for ads, slate and uploads, so viewers get Mux's 1080p without the picture dropping at each break. Moderate work; more conversion time and storage per ad.</li><li><b>For 2K/4K:</b> 1440p/2160p levels for ads and slate as well, or let breaks play at 1080p inside a 4K channel (a visible quality drop at each break, but most ad creatives are 1080p anyway). 4K delivery is roughly 15–25 Mbit/s per viewer, so Mux delivery costs rise accordingly. 4K is often HEVC (H.265), which needs fMP4 (already supported) and players that can decode it; the live playlist would also have to declare HEVC.</li></ol><p>Suggested order: 1080p now, 2K/4K only when a customer asks for it.</p>
+  <p class="related">Related: <a href="FAQ.html#renditions-ours-and-mux">docs/html/FAQ.html#renditions-ours-and-mux</a> · <a href="../../docs/OVP_DELIVERY_PLAN.md">docs/OVP_DELIVERY_PLAN.md</a></p>
+</article>
 
 <article id="renditions-ours-and-mux">
   <p class="asked">Asked 2026-11-09</p>
