@@ -208,22 +208,6 @@ export default function Watch() {
 
   const dest = useMemo(() => dests.data?.destinations.find(d => d.id === destId), [dests.data, destId])
 
-  if (channels.data && live.length === 0) {
-    return (
-      <div className="page">
-        <PageHead title="Watch Live Broadcast" />
-        <div className="card" style={{ padding: 40 }}>
-          <Empty
-            icon="tv"
-            title="No linear channel is broadcasting on air"
-            text="Stage a programming schedule, publish your daypart lineup, and activate Go Live on a channel."
-            action={<Link className="btn primary" to={`${org.base}/channels`}>Manage Linear Channels</Link>}
-          />
-        </div>
-      </div>
-    )
-  }
-
   // Calculate now progress
   const nowPercent = useMemo(() => {
     if (!info?.now) return 0
@@ -240,6 +224,23 @@ export default function Watch() {
     const nowTime = info.serverTime ? new Date(info.serverTime).getTime() : Date.now()
     return Math.max(0, Math.round((e - nowTime) / 1000))
   }, [info?.now, info?.serverTime])
+
+  // after every hook: returning earlier changes the hook count once the channel list loads (React error #300)
+  if (channels.data && live.length === 0) {
+    return (
+      <div className="page">
+        <PageHead title="Watch Live Broadcast" />
+        <div className="card" style={{ padding: 40 }}>
+          <Empty
+            icon="tv"
+            title="No linear channel is broadcasting on air"
+            text="Stage a programming schedule, publish your daypart lineup, and activate Go Live on a channel."
+            action={<Link className="btn primary" to={`${org.base}/channels`}>Manage Linear Channels</Link>}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="page watch-page-container">

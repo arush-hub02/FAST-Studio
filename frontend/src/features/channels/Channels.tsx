@@ -34,11 +34,10 @@ function getPlayoutProgress(start?: string, end?: string, nowMs = Date.now()): n
 }
 
 function ChannelTerritoriesBadge({ codes }: { codes: string[] }) {
-  if (!codes.length) return <span className="faint">none</span>
-
   const [open, setOpen] = useState(false)
   const [placement, setPlacement] = useState<'right' | 'bottom' | 'top' | 'left'>('right')
   const wrapperRef = useRef<HTMLDivElement>(null)
+  if (!codes.length) return <span className="faint">none</span>   // after the hooks (React error #300 otherwise)
 
   const visible = codes.slice(0, 2)
   const remaining = codes.slice(2)
