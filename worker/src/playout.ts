@@ -28,6 +28,8 @@ export type Snapshot = {
   v: number; org: string; channel: string; status: string; territories: string[]; segMs: number
   from: number; until: number; ladder: Rendition[]; standby: Media; geo: Media; fallback: Fallback | null; items: Item[]
   t0?: number; seq0?: number; target?: number; ovp?: Record<string, Ovp>
+  /** TS, or FMP4 when the channel's library programmes stream as fMP4: our media then plays from its fMP4 copies. */
+  fmt?: 'TS' | 'FMP4'
 }
 /** Signed by the control plane when a viewer starts watching (PlaybackController.start). */
 export type Session = {
@@ -39,11 +41,11 @@ export type Decision = { breakMs: number; filledMs: number; slots: Slot[] }
 /** A decision, or 'slate' once a break has started without one (it must never flip to ads mid-break). */
 export type Decided = Decision | 'slate' | undefined
 export type Beacon = { breakId: string; campaignId: string; event: string }
-/** URL of segment i of a streaming video in our rendition `variant`; null while its playlist can't be read. */
-export type OvpSegment = (asset: string, variant: number, i: number) => string | null
+/** Segment i of a streaming video in our rendition `variant`, with its fMP4 init section; null while its playlist can't be read. */
+export type OvpSegment = (asset: string, variant: number, i: number) => { url: string; map?: string } | null
 
 /** One segment: start and duration in ms, the content key (a change means DISCONTINUITY), and where it comes from. */
-type Seg = { key: string; media: string; n: number; start: number; dur: number; url?: string; ad?: { breakId: string; slot: Slot; segs: number } }
+type Seg = { key: string; media: string; n: number; start: number; dur: number; url?: string; map?: string; ad?: { breakId: string; slot: Slot; segs: number } }
 /** A streaming programme in the timeline: its first sequence number, segment count and segment start offsets. */
 export type Span = { item: Item; seq: number; n: number; offs: number[] }
 
@@ -185,9 +187,9 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
     if (!live) return slate(standby(i))
     if (!offered || !e.allowed.includes(s.country)) return slate(geo(i))
     if (k >= (e.nc ?? 0) || !e.ovp) return slate(standby(i))
-    const url = ovpSeg(e.ovp, variant, (e.i0 ?? 0) + k)
-    if (!url) return { ...standby(i), key: 'sbx:' + e.id, start, dur }   // platform unreachable: slate for the whole programme
-    return { key: 'e:' + e.id, media: '', n: k, start, dur, url }
+    const seg = ovpSeg(e.ovp, variant, (e.i0 ?? 0) + k)
+    if (!seg) return { ...standby(i), key: 'sbx:' + e.id, start, dur }   // platform unreachable: slate for the whole programme
+    return { key: 'e:' + e.id, media: '', n: k, start, dur, url: seg.url, map: seg.map }
   }
 
   return { seg, seqAt, at, live, offered, SEG }
@@ -249,7 +251,8 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
   }
   dsnMemo.set(s.sid, [first, dsn])
 
-  let m = `#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
+  const fmp4 = snap.fmt === 'FMP4'
+  let m = `#EXTM3U\n#EXT-X-VERSION:${fmp4 ? 7 : 6}\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
   m += `#EXT-X-MEDIA-SEQUENCE:${first}\n#EXT-X-DISCONTINUITY-SEQUENCE:${dsn}\n`
   m += `## FAST Studio edge playout | channel=${snap.channel} | ad mode=${s.adMode} | markers=${s.markers} | simulated viewer country=${s.country}\n`
   const announced = new Set<string>()
@@ -266,6 +269,7 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
       }
   }
   let prev: Seg = r.seg(first - 1)
+  let lastMap = ''
   for (let i = first; i <= edge; i++) {
     const g = r.seg(i)
     const t = g.start
@@ -273,7 +277,12 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
     if (disc) m += '#EXT-X-DISCONTINUITY\n'
     if (i === first || disc) m += `#EXT-X-PROGRAM-DATE-TIME:${iso(t)}\n`
     if (showMarkers) m += markers(s, r.at, t, prev.start, i === first, announced)
-    m += `#EXTINF:${secs(g.dur)},\n${g.url ?? `${base}/${g.media}/${variant}/seg_${pad(g.n)}.ts`}\n`
+    // fMP4: our media from its fMP4 copy; every source has its own init section, announced again after each switch
+    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/f${variant}/init.mp4` : undefined)
+    if (map && (i === first || disc || map !== lastMap)) m += `#EXT-X-MAP:URI="${map}"\n`
+    if (map) lastMap = map
+    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/f${variant}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${variant}/seg_${pad(g.n)}.ts`)
+    m += `#EXTINF:${secs(g.dur)},\n${uri}\n`
     if (g.ad) {
       const { n } = g, segs = g.ad.segs
       const ev = n === 0 ? 'IMPRESSION' : n === segs - 1 ? 'COMPLETE' : n === Math.floor(segs / 4) ? 'FIRST_QUARTILE'

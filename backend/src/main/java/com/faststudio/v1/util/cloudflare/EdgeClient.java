@@ -79,8 +79,8 @@ public class EdgeClient implements MediaStore {
     public String publicUrl() { return settings().publicUrl(); }
 
     @Override
-    public boolean has(String mediaKey) throws IOException, InterruptedException {
-        var req = HttpRequest.newBuilder(URI.create(settings().url() + "/media/" + mediaKey + "/master.m3u8"))
+    public boolean exists(String path) throws IOException, InterruptedException {
+        var req = HttpRequest.newBuilder(URI.create(settings().url() + "/media/" + path))
                 .method("HEAD", HttpRequest.BodyPublishers.noBody()).timeout(Duration.ofSeconds(10)).build();
         return http.send(req, HttpResponse.BodyHandlers.discarding()).statusCode() == 200;
     }

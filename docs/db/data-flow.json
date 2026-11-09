@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-08",
+  "generatedAt": "2026-11-09",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {

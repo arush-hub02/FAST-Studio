@@ -56,8 +56,6 @@ public class StreamingServiceV1 {
             return Packaged.failed(e.getMessage(), e.status.is5xxServerError());
         }
         if (p == null) return Packaged.failed("The library is still preparing this video. It will be tried again.", true);
-        // ponytail: fMP4 programmes need fMP4 ads and slate too (EXT-X-MAP); add an fMP4 packaging lane when a platform needs it
-        if (p.format().equals("FMP4")) return Packaged.failed("This library video streams as fMP4. Only MPEG-TS streams can carry our ads and slate today.", false);
         if (p.durationMs() < Times.SEG_MS) return Packaged.failed("The video is shorter than " + Times.SEG_S + " seconds.", false);
         for (int d : p.segmentsMs())
             if (d <= 0 || d > MAX_SEGMENT_MS) return Packaged.failed("The library video has a " + d / 1000.0 + " s segment; streaming needs segments of at most "

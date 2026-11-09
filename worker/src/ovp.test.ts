@@ -25,7 +25,8 @@ const snap: Snapshot = {
 }
 const viewer: Session = { sid: 's1', org: 'aurora', channel: 'news', country: 'IN', adMode: 'SSAI', markers: 'CUE_OUT', destKind: 'OWNED_WEB', created: FROM }
 const ad15: Decided = { breakMs: 30_000, filledMs: 15_000, slots: [{ campaignId: 'c1', campaign: 'Glow Cola', mediaKey: 'aurora/ad.1', durationMs: 15_000 }] }
-const mux = (asset: string, v: number, i: number) => `https://cdn.example/${asset}/r${v}/s${i}.ts`
+const muxUrl = (asset: string, v: number, i: number) => `https://cdn.example/${asset}/r${v}/s${i}.ts`
+const mux = (asset: string, v: number, i: number) => ({ url: muxUrl(asset, v, i) })
 const play = (now: number, seg = mux, s = viewer, variant = 0) => mediaPlaylist(snap, s, variant, now, 'https://m', () => ad15, new Map(), seg).text
 
 /** [media sequence, EXTINF ms, uri] of every segment in a playlist. */
@@ -41,8 +42,8 @@ test('platform segments play at their real lengths and the slot ends with slate'
   const segs = parse(play(T + 45_000))
   const prog = segs.filter(s => s[2].startsWith('https://cdn.example/'))
   assert.deepEqual(prog.map(s => s[1]), D)
-  assert.deepEqual(prog.map(s => s[2]), D.map((_, i) => mux('a1', 0, i)))
-  const after = segs[segs.findIndex(s => s[2] === mux('a1', 0, 5)) + 1]
+  assert.deepEqual(prog.map(s => s[2]), D.map((_, i) => muxUrl('a1', 0, i)))
+  const after = segs[segs.findIndex(s => s[2] === muxUrl('a1', 0, 5)) + 1]
   assert.equal(after[1], 1143)
   assert.ok(after[2].includes('standby'))
   assert.ok(segs.some(s => s[2].includes('aurora/ad.1/')), 'our ad follows in the break')
@@ -70,7 +71,7 @@ test('numbering is identical across reloads and the snapshot anchor holds before
 })
 
 test('each quality level gets the matching platform rendition', () => {
-  assert.ok(play(T + 45_000, mux, viewer, 1).includes(mux('a1', 1, 0)))
+  assert.ok(play(T + 45_000, mux, viewer, 1).includes(muxUrl('a1', 1, 0)))
 })
 
 test('platform unreachable: the programme plays slate for the same lengths, numbering unchanged', () => {
@@ -99,5 +100,29 @@ test('platform playlists: renditions, nearest quality and absolute segment URLs'
   assert.equal(pick(v, snap.ladder[0]), 0)
   assert.equal(pick(v, snap.ladder[1]), 1)
   assert.deepEqual(parseMedia('#EXTM3U\n#EXTINF:5,\nseg0.ts?sig=1\n#EXTINF:5,\nhttps://cdn/1.ts\n#EXT-X-ENDLIST', 'https://a.example/r/720.m3u8'),
-    ['https://a.example/r/seg0.ts?sig=1', 'https://cdn/1.ts'])
+    { urls: ['https://a.example/r/seg0.ts?sig=1', 'https://cdn/1.ts'], map: undefined })
+  assert.deepEqual(parseMedia('#EXTM3U\n#EXT-X-MAP:URI="init.mp4?sig=2"\n#EXTINF:5,\nseg0.m4s\n#EXT-X-ENDLIST', 'https://a.example/r/720.m3u8'),
+    { urls: ['https://a.example/r/seg0.m4s'], map: 'https://a.example/r/init.mp4?sig=2' })
+})
+
+test('fMP4 channel: our media from its fMP4 copies, each source announced with its own init section', () => {
+  const fsnap: Snapshot = { ...snap, fmt: 'FMP4', ovp: { a1: { ...snap.ovp!.a1, fmt: 'FMP4' } } }
+  const fmux = (a: string, v: number, i: number) => ({ url: `https://cdn.example/${a}/r${v}/s${i}.m4s`, map: `https://cdn.example/${a}/r${v}/init.mp4` })
+  const t = mediaPlaylist(fsnap, viewer, 0, T + 45_000, 'https://m', () => ad15, new Map(), fmux).text
+  const lines = t.split('\n')
+  assert.ok(t.startsWith('#EXTM3U\n#EXT-X-VERSION:7\n'))
+  assert.ok(!t.includes('.ts\n'), 'no MPEG-TS segment in an fMP4 channel')
+  // every segment comes after a map for its own source
+  let map = ''
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('#EXT-X-MAP:')) map = /URI="([^"]+)"/.exec(lines[i])![1]
+    if (lines[i].startsWith('#EXTINF:')) {
+      const uri = lines[i + 1]
+      assert.ok(map, 'a map before the first segment')
+      assert.equal(map.slice(0, map.lastIndexOf('/')), uri.slice(0, uri.lastIndexOf('/')), `segment ${uri} uses map ${map}`)
+    }
+  }
+  assert.ok(t.includes('#EXT-X-MAP:URI="https://cdn.example/a1/r0/init.mp4"'))
+  assert.ok(t.includes('#EXT-X-MAP:URI="https://m/aurora/ad.1/f0/init.mp4"'))
+  assert.ok(t.includes('https://m/aurora/ad.1/f0/seg_00000.m4s'))
 })

@@ -60,6 +60,7 @@ public class EdgePublisher {
     private final MediaProviderResolverService providers;
     private final Map<UUID, Anchor> anchors = new ConcurrentHashMap<>();
     private final Set<String> stored = ConcurrentHashMap.newKeySet();
+    private final Set<String> storedFmp4 = ConcurrentHashMap.newKeySet();
     private final Map<String, String> sent = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Long> sentAt = new java.util.concurrent.ConcurrentHashMap<>();
     /** Organizations being deleted: never published again, even before their rows are gone. */
@@ -81,6 +82,9 @@ public class EdgePublisher {
 
     /** True once the media folder is on the edge; snapshots and ad decisions only point viewers at stored media. */
     public boolean stored(String mediaKey) { return mediaKey != null && stored.contains(mediaKey); }
+
+    /** True once the media's fMP4 copy is on the edge too (needed on channels whose library programmes stream as fMP4). */
+    public boolean storedFmp4(String mediaKey) { return mediaKey != null && storedFmp4.contains(mediaKey); }
 
     @Scheduled(initialDelay = 3_000, fixedDelay = 5_000)
     public void tick() {
@@ -109,12 +113,19 @@ public class EdgePublisher {
         keys.addAll(TenantScope.bypass(() -> data.db.sql("select media_key from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
                 .query(String.class).list()));
         for (String key : keys) {
-            if (stored.contains(key)) continue;
+            if (stored.contains(key) && storedFmp4.contains(key)) continue;
             Path dir = media.mediaDir().resolve(key);
             if (!Files.exists(dir.resolve("master.m3u8"))) continue;   // still being packaged
             try {
-                if (!store.has(key)) upload(key, dir);
-                stored.add(key);
+                if (!stored.contains(key)) {
+                    if (!store.has(key)) upload(key, dir, false);
+                    stored.add(key);
+                }
+                // the fMP4 copy can arrive later (made at start-up for older media), so it is checked on its own
+                if (Files.exists(dir.resolve(MediaServiceV1.FMP4_MASTER))) {
+                    if (!store.exists(key + "/" + MediaServiceV1.FMP4_MASTER)) upload(key, dir, true);
+                    storedFmp4.add(key);
+                }
             } catch (IOException e) {
                 if (e instanceof java.net.ConnectException || e instanceof java.net.http.HttpConnectTimeoutException) throw e;
                 log.warn("Couldn't copy {} to the edge: {}", key, e.getMessage());   // retried next tick
@@ -122,22 +133,25 @@ public class EdgePublisher {
         }
     }
 
-    private void upload(String key, Path dir) throws IOException, InterruptedException {
+    /** One copy of a media folder: the MPEG-TS renditions, or (fmp4) the fMP4 copy; its master goes last, as the "complete" mark. */
+    private void upload(String key, Path dir, boolean fmp4) throws IOException, InterruptedException {
         List<Path> files;
         try (Stream<Path> s = Files.walk(dir)) {
-            files = s.filter(Files::isRegularFile).sorted().toList();
+            files = s.filter(Files::isRegularFile).filter(f -> isFmp4(rel(dir, f)) == fmp4).sorted().toList();
         }
-        Path master = dir.resolve("master.m3u8");
+        Path master = dir.resolve(fmp4 ? MediaServiceV1.FMP4_MASTER : "master.m3u8");
         for (Path f : files) if (!f.equals(master)) store.put(key + "/" + rel(dir, f), f, type(f));
-        store.put(key + "/master.m3u8", master, type(master));   // last: its presence means "complete"
-        log.info("Copied {} ({} files) to the edge", key, files.size());
+        store.put(key + "/" + master.getFileName(), master, type(master));
+        log.info("Copied {}{} ({} files) to the edge", key, fmp4 ? " (fMP4)" : "", files.size());
     }
+
+    static boolean isFmp4(String rel) { return rel.equals(MediaServiceV1.FMP4_MASTER) || rel.matches("f[0-9]+/.*"); }
 
     static String rel(Path dir, Path f) { return dir.relativize(f).toString().replace('\\', '/'); }
 
     static String type(Path f) {
         String n = f.getFileName().toString();
-        return n.endsWith(".m3u8") ? "application/vnd.apple.mpegurl" : n.endsWith(".ts") ? "video/mp2t" : n.endsWith(".jpg") ? "image/jpeg" : "application/octet-stream";
+        return n.endsWith(".m3u8") ? "application/vnd.apple.mpegurl" : n.endsWith(".ts") ? "video/mp2t" : n.endsWith(".m4s") || n.endsWith(".mp4") ? "video/mp4" : n.endsWith(".jpg") ? "image/jpeg" : "application/octet-stream";
     }
 
     // ------------------------------------------------------------------ schedule snapshots
@@ -161,6 +175,8 @@ public class EdgePublisher {
             this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null);
         }
 
+        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill); }
+
         Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill); }
     }
 
@@ -173,7 +189,7 @@ public class EdgePublisher {
      */
     public record Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs,
                            long from, long until, List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items,
-                           long t0, long seq0, int target, Map<String, Ovp> ovp) {}
+                           long t0, long seq0, int target, Map<String, Ovp> ovp, String fmt) {}
 
     record ChannelRow(UUID orgId, String orgSlug, UUID channelId) {}
 
@@ -208,7 +224,7 @@ public class EdgePublisher {
         for (ChannelRow r : rows) {
             Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
             Snapshot off = new Snapshot(s.v(), s.org(), s.channel(), "ARCHIVED", s.territories(), s.segMs(), s.from(), s.until(),
-                    s.ladder(), s.standby(), s.geo(), null, List.of(), s.t0(), s.seq0(), s.target(), Map.of());
+                    s.ladder(), s.standby(), s.geo(), null, List.of(), s.t0(), s.seq0(), s.target(), Map.of(), s.fmt());
             try {
                 edge.putChannel(off.org(), off.channel(), json.writeValueAsString(off));
             } catch (IOException e) {
@@ -291,8 +307,18 @@ public class EdgePublisher {
             baseT = it.end();
             baseSeq = seq + it.n();
         }
+        // Container of the whole channel: HLS can't switch from fMP4 back to MPEG-TS inside one playlist, so a channel with
+        // fMP4 library programmes plays our media from its fMP4 copies, and anything without one plays slate instead.
+        // ponytail: ad creatives aren't checked for their fMP4 copy here (made at packaging or start-up); check per decision if a 404 shows up
+        boolean fmp4 = ovp.values().stream().anyMatch(o -> "FMP4".equals(o.fmt()))
+                && storedFmp4(MediaServiceV1.STANDBY) && storedFmp4(MediaServiceV1.GEO);
+        String fmt = fmp4 ? "FMP4" : "TS";
+        ovp.replaceAll((k, o) -> o.fmt().equals(fmt) ? o : new Ovp(null, o.d(), o.fmt()));   // the other container plays slate
+        if (fmp4) items.replaceAll(it -> it.key() != null && !storedFmp4(it.key()) ? it.withoutMedia() : it);
+        Fallback fb = fallback(ch, assets, policies);
+        if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
         return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(),
-                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fallback(ch, assets, policies), items, t0, seq0, target, ovp);
+                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
     }
 
     private static List<String> allowed(Asset a, List<String> terr, Map<UUID, Rights.Policy> policies, Entry e) {

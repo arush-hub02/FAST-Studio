@@ -3646,11 +3646,12 @@
         "Schedule it like any video; ads and slate are spliced in at its breaks."
       ],
       "howItWorks": [
-        "StreamingServiceV1.resolve reads the library's HLS playlists through the provider's IPlayback adapter and stores the real segment lengths (asset_playback). All quality levels must share segment boundaries; fMP4 streams are refused for now (our ads and slate are MPEG-TS).",
+        "StreamingServiceV1.resolve reads the library's HLS playlists through the provider's IPlayback adapter and stores the real segment lengths (asset_playback). All quality levels must share segment boundaries; MPEG-TS and fMP4 (CMAF) streams are both accepted.",
         "EdgePublisher lays each programme part out in its 5 s slots (util/cloudflare/Timeline): the library's segments, then slate for the rest of the slot, so listed lengths always add up to the clock.",
         "Segment numbers come from a per-channel anchor (channel_timeline) and stay identical across snapshots and Worker locations.",
         "The Worker (ovp.ts) reads the library's master and rendition playlists, picks the rendition nearest each of our quality levels, caches them per location (memory, then the Cache API) and keeps serving the last good copy when a read fails.",
-        "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window."
+        "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window.",
+        "fMP4 channels: every video, ad and slate FAST Studio packages also gets an fMP4 copy (repackaged, not re-encoded). A channel whose library programmes stream as fMP4 plays all our media from those copies, announcing each source with EXT-X-MAP; media without a copy plays slate."
       ],
       "optimizations": [
         "Library playlists are read once per location, video and quality level and shared by every viewer; viewers fetch video segments from the library's CDN directly.",

@@ -144,6 +144,7 @@ public class MediaServiceV1 {
         Thread.ofPlatform().name("slates").start(() -> {
             slate(STANDBY, "We'll be right back", "Programming resumes shortly", "0x1e1b4b", "0x4338ca", 60);
             slate(GEO, "Not available in your region", "This programme isn't licensed where you are watching", "0x3f1d1d", "0x9f1239", 30);
+            backfillFmp4();
         });
     }
 
@@ -266,7 +267,10 @@ public class MediaServiceV1 {
                     .filter(f -> !f.startsWith("drawtext")).reduce((a, b) -> a + "," + b).orElse("null");
             err = runEncode(inputs, audioMap, plain, out, durationMs, shortest);
         }
-        if (err == null) writeMaster(out);
+        if (err == null) {
+            writeMaster(out);
+            fmp4(out);
+        }
         return err;
     }
 
@@ -312,6 +316,65 @@ public class MediaServiceV1 {
         if (p.exitValue() == 0) return null;
         String[] lines = output.split("\\R");
         return lines.length == 0 ? "exit " + p.exitValue() : lines[lines.length - 1];
+    }
+
+    // ---------------------------------------------------------------- fMP4 copies
+
+    /** Written last in a media folder once its fMP4 copy (f0/, f1/, ...) is complete. */
+    public static final String FMP4_MASTER = "f-master.m3u8";
+
+    public boolean hasFmp4(String mediaKey) { return mediaKey != null && Files.exists(mediaDir.resolve(mediaKey).resolve(FMP4_MASTER)); }
+
+    /**
+     * An fMP4 (CMAF) copy of every rendition, next to the MPEG-TS one: f{v}/init.mp4 + seg_NNNNN.m4s. Needed on channels
+     * whose library programmes stream as fMP4, because HLS can't switch from fMP4 back to TS inside one playlist. A
+     * repackage, not a re-encode: segments already start on keyframes every 5 s, so the boundaries are the same.
+     * Failures only log: the channel then plays slate instead of this media. Returns true when the copy is complete.
+     */
+    public boolean fmp4(Path out) {
+        if (ffmpeg() == null || !Files.isDirectory(out.resolve("0"))) return false;
+        try {
+            for (int i = 0; Files.exists(out.resolve(i + "/index.m3u8")); i++) {
+                Path src = out.resolve(i + "/index.m3u8"), dir = out.resolve("f" + i);
+                deleteDir(dir);
+                Files.createDirectories(dir);
+                Process p = new ProcessBuilder(ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-i", src.toString(), "-map", "0", "-c", "copy",
+                        "-bsf:a", "aac_adtstoasc", "-f", "hls", "-hls_time", String.valueOf(Times.SEG_S), "-hls_playlist_type", "vod",
+                        "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", "init.mp4",
+                        // forward slashes: ffmpeg finds the playlist's folder (where init.mp4 goes) only by '/'
+                        "-hls_segment_filename", slash(dir.resolve("seg_%05d.m4s")), slash(dir.resolve("index.m3u8")))
+                        .directory(dir.toFile()).redirectErrorStream(true).start();
+                String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+                if (!p.waitFor(10, TimeUnit.MINUTES) || p.exitValue() != 0) { log.warn("fMP4 copy of {} failed: {}", out, output); return false; }
+                if (count(out.resolve(String.valueOf(i)), ".ts") != count(dir, ".m4s") || !Files.exists(dir.resolve("init.mp4"))) {
+                    log.warn("fMP4 copy of {} rendition {} has different segment boundaries; not used", out, i);
+                    return false;
+                }
+            }
+            Files.writeString(out.resolve(FMP4_MASTER), masterPlaylist(i -> "f" + i + "/index.m3u8"));
+            return true;
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            log.warn("fMP4 copy of {} failed: {}", out, e.toString());
+            return false;
+        }
+    }
+
+    private static String slash(Path p) { return p.toAbsolutePath().toString().replace('\\', '/'); }
+
+    private static long count(Path dir, String ext) throws IOException {
+        try (Stream<Path> s = Files.list(dir)) { return s.filter(p -> p.getFileName().toString().endsWith(ext)).count(); }
+    }
+
+    /** Media packaged before fMP4 copies existed gets one at start-up (the edge uploads it on its next pass). */
+    void backfillFmp4() {
+        if (!Files.isDirectory(mediaDir)) return;
+        try (Stream<Path> s = Files.walk(mediaDir, 2)) {
+            for (Path dir : s.filter(d -> Files.exists(d.resolve("master.m3u8")) && Files.isDirectory(d.resolve("0")) && !Files.exists(d.resolve(FMP4_MASTER))).toList())
+                if (fmp4(dir)) log.info("Made the fMP4 copy of {}", mediaDir.relativize(dir));
+        } catch (IOException e) {
+            log.warn("fMP4 backfill stopped: {}", e.toString());
+        }
     }
 
     /** VOD master playlist (used by the Library preview and by SGAI ad assets). */
