@@ -3,6 +3,26 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "view-local-r2",
+      "asked": "2026-11-10",
+      "question": "How can I view the local R2 assets?",
+      "short": "On this PC, R2 is Wrangler's local stand-in. It keeps files as blobs plus a SQLite index under data-pilot/edge (production) or data/edge (demo), so they can't be browsed in Explorer. Run node tools/r2-local.mjs to list every folder (one per video, ad or slate) with its size and a link. Each link opens through the local edge at http://127.0.0.1:8787/media/…: images and playlists in the browser, videos in VLC.",
+      "sections": [
+        {
+          "title": "1. List what is stored",
+          "html": "<pre>node tools/r2-local.mjs                 # folders: files, size, date, master playlist link\nnode tools/r2-local.mjs arush-media/    # every file of a project (or any prefix)\nnode tools/r2-local.mjs --demo          # the demo's R2 instead of production's</pre><p>It only reads the index, so it is safe while FAST Studio runs. On 10 November 2026 production held 5 folders, 417 files, about 608 MB: the two platform slates (old and six-level versions) and your uploaded video.</p>"
+        },
+        {
+          "title": "2. Open a file",
+          "html": "<ul><li><b>Thumbnail</b>: open <code>http://127.0.0.1:8787/media/&lt;folder&gt;/thumb.jpg</code> in the browser.</li><li><b>Watch a video, ad or slate</b>: in VLC, Media → Open Network Stream → paste the <code>…/master.m3u8</code> link from the list (Chrome downloads playlists instead of playing them).</li><li><b>One segment</b>: a <code>…/seg_00000.ts</code> link downloads a 5-second piece that VLC plays.</li></ul><p>Folder names: <code>&lt;project slug&gt;/&lt;video id&gt;.&lt;revision&gt;</code>; inside, <code>0</code> … <code>5</code> are the quality levels (360p … 2160p) as MPEG-TS and <code>f0</code> … <code>f5</code> the fMP4 copies. <code>_platform/…</code> are the platform's slates.</p>"
+        },
+        {
+          "title": "3. In the cloud",
+          "html": "<p>With real Cloudflare R2 you browse the same keys in the Cloudflare dashboard (R2 → the bucket <code>fast-studio-media</code> → Objects); download one with <code>npx wrangler r2 object get fast-studio-media/&lt;key&gt; --remote --file out.ts</code>. The edge address replaces 127.0.0.1:8787.</p>"
+        }
+      ]
+    },
+    {
       "id": "see-database-run-queries",
       "asked": "2026-11-09",
       "question": "How can I see my database and run manual queries?",
