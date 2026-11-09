@@ -3,6 +3,30 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "library-upload-not-mux",
+      "asked": "2026-11-09",
+      "question": "I added a video in the Library with Upload, but it did not go to Mux. Where did it go, and how is it playing?",
+      "short": "Library → Add video → Upload sends the file to FAST Studio itself, not to Mux. FAST Studio converts it with FFmpeg into your tenant's quality levels and stores it on its own storage (R2 in the cloud; a local copy of R2 on this machine). The Library player and your channels play it from there. Mux is used only for videos you sync from Mux. Uploading straight to Mux exists on the server but has no button in the Library yet.",
+      "sections": [
+        {
+          "title": "1. Where the file goes",
+          "html": "<ol><li><b>Original file</b>: kept on the FAST Studio server under <code>data-pilot/uploads/&lt;project&gt;/&lt;video&gt;/source.mp4</code>.</li><li><b>Converted copy</b>: FFmpeg makes HLS in each quality level of the tenant (one folder per level, 0 = 360p … 5 = 2160p, plus fMP4 copies <code>f0</code>, <code>f1</code> …) under <code>data-pilot/media/&lt;project slug&gt;/&lt;video&gt;.&lt;version&gt;/</code>, with <code>master.m3u8</code> and <code>thumb.jpg</code>.</li><li><b>Edge copy</b>: the same files are copied to the edge storage (R2). On this machine that is the local R2 under <code>data-pilot/edge</code>; in the cloud it is your Cloudflare R2 bucket.</li></ol><p>Nothing is sent to Mux, so the video does not appear in your Mux dashboard.</p>"
+        },
+        {
+          "title": "2. How it plays",
+          "html": "<ul><li><b>Library → the video</b>: the player loads <code>master.m3u8</code> from the FAST Studio server through a signed link (<code>/media/s/…</code>) that expires.</li><li><b>Channels (Watch live, partners)</b>: the edge Worker builds the live playlist and serves the video's segments from R2, with ads and slate spliced in at the breaks.</li></ul>"
+        },
+        {
+          "title": "3. Uploaded vs synced from Mux",
+          "html": "<table><tr><th></th><th>Upload in FAST Studio</th><th>Synced from Mux</th></tr><tr><td>Stored</td><td>FAST Studio server + R2</td><td>Mux (not copied)</td></tr><tr><td>Converted by</td><td>FAST Studio (FFmpeg), to the tenant's levels</td><td>Mux, to Mux's levels</td></tr><tr><td>Plays from</td><td>FAST Studio / edge (R2)</td><td>Mux, through the edge playlist</td></tr><tr><td>Cost</td><td>Your server and R2 storage</td><td>Mux encoding, storage and delivery</td></tr></table>"
+        },
+        {
+          "title": "4. Uploading straight to Mux",
+          "html": "<p>The server can already hand the browser a one-time Mux upload link (<code>POST /api/orgs/{org}/assets/{id}/upload-url</code>), but the Library has no \"Upload to Mux\" choice yet, so every upload in Add video goes to FAST Studio. To get a video into Mux today, upload it in the Mux dashboard and use <b>Library → Sync library</b>.</p>"
+        }
+      ]
+    },
+    {
       "id": "videojs-player",
       "asked": "2026-11-09",
       "question": "Can we use a JavaScript video player instead of the plain HTML one, with quality selection in the player, the video title on it and more controls, everywhere a video plays?",
