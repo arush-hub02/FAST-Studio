@@ -1,0 +1,44 @@
+{
+  "title": "Your questions, answered",
+  "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
+  "questions": [
+    {
+      "id": "mux-video-storage-and-playback",
+      "asked": "2026-11-09",
+      "question": "I synced Mux and my video got ready after \"transcoding\". Where is my video stored in the system, and how is it playing?",
+      "short": "Your Mux video is stored only in Mux. FAST Studio never downloads or converts it: \"getting it ready\" only reads its playlists and records how it is cut (quality levels and the length of every piece). When someone watches, our edge Worker writes a live playlist that sends the player to Mux for the programme and to our own storage (R2) for ads and slate.",
+      "flow": {
+        "boxes": [
+          ["Mux", "Stores your video and serves its pieces (stream.mux.com / Mux CDN)"],
+          ["FAST Studio server", "Remembers the video's details, the schedule and the ads; never serves video"],
+          ["Edge Worker (Cloudflare)", "Writes each viewer's live playlist every few seconds"],
+          ["R2 storage + CDN", "Our ads and slate, converted once by FFmpeg"],
+          ["Player", "Downloads programme pieces from Mux, ad and slate pieces from R2"]
+        ]
+      },
+      "sections": [
+        {
+          "title": "1. What each step did",
+          "html": "<ol><li><b>Sync</b> asked Mux for its list of videos and added each one to the Library as a <b>Draft</b>. Only a catalogue entry was created: title, length and a link to the Mux video (<code>mux:&lt;Mux asset id&gt;</code>).</li><li><b>Get ready to stream</b> (or <b>Retry processing</b>) is not a transcode for Mux videos, even though the screen used to call it that. FAST Studio asked Mux for the video's playlists and recorded: its playback ID, whether playback is signed, the container (fMP4 in your case), the quality levels (e.g. 360p, 720p) and the exact length of every ~5-second piece. That takes a few seconds and copies nothing. The video is then <b>Ready</b>.</li><li>Your video's Delivery card shows exactly this: <i>Streams from: Video library (not copied)</i>, the number of pieces, the quality levels and the format.</li></ol>"
+        },
+        {
+          "title": "2. Where things are stored",
+          "html": "<table><thead><tr><th>What</th><th>Where</th></tr></thead><tbody><tr><td>The video itself (every quality level, every piece)</td><td><b>Mux only</b>: Mux's storage, delivered by Mux's CDN. Nothing of it is in FAST Studio, R2 or on this PC.</td></tr><tr><td>Its catalogue entry (title, length, licence, ad break points)</td><td>FAST Studio's database: table <code>asset</code>, plus <code>asset_source</code> (which Mux video it is and what Mux last said about it). On this PC the production database is in <code>data-pilot\\pg</code>.</td></tr><tr><td>How it streams (playback ID, signed or not, fMP4/TS, quality levels, piece lengths)</td><td>Same database, table <code>asset_playback</code>. No video addresses or tokens are stored; signed links are made when needed.</td></tr><tr><td>Your Mux access token and signing key</td><td>Same database, encrypted (table <code>connector_value</code>). Never shown again after you save them.</td></tr><tr><td>Ads and slate (\"We'll be right back\", \"Not available in your region\")</td><td>Converted once by FFmpeg into 5-second pieces (MPEG-TS and an fMP4 copy) in <code>data-pilot\\media</code>, then copied to the edge storage: Cloudflare R2 in real hosting, <code>data-pilot\\edge</code> on this PC (the local Worker stands in for R2).</td></tr><tr><td>Videos you upload straight to FAST Studio (not via Mux)</td><td>Converted by FFmpeg like ads, in <code>data-pilot\\media</code> and R2. Only these are stored by FAST Studio.</td></tr><tr><td>The schedule as the edge sees it</td><td>A \"snapshot\" the server sends to the edge every few seconds when something changes (edge key-value storage; <code>data-pilot\\edge</code> on this PC). For your Mux video it holds the Mux playlist address, the piece lengths and where each programme starts and ends.</td></tr></tbody></table>"
+        },
+        {
+          "title": "3. How it plays, step by step",
+          "html": "<ol><li>You schedule the video on a channel, publish and press <b>Go Live</b>. The server writes the channel's snapshot to the edge.</li><li>A viewer opens the channel (Watch live, VLC, Safari, a TV app). They get an address on the <b>edge Worker</b>, not on the FAST Studio server.</li><li>Every few seconds the player asks the Worker for the live playlist. The Worker works it out from the snapshot and the clock: which programme or break is on now.</li><li>For your Mux programme the Worker reads <b>Mux's own playlist</b> once per location and quality level (then reuses it for every viewer) and lists Mux's piece addresses at their real lengths.</li><li>At an ad break it lists <b>our</b> pieces instead: ads chosen live for that viewer (your campaigns first, then ad servers such as Google Ad Manager), and slate for any time no ad fills. A marker (<code>EXT-X-DISCONTINUITY</code>) tells the player the source changes; for fMP4 each source also gets its own start header (<code>EXT-X-MAP</code>).</li><li>The <b>player downloads</b> programme pieces directly from Mux and ad/slate pieces from R2 through Cloudflare's CDN. The FAST Studio server sends no video at all; it only answers \"which ads for this break\".</li><li>If Mux can't be reached, the Worker plays slate for the programme's length and returns to Mux when it can; the channel never stops.</li></ol>"
+        },
+        {
+          "title": "4. See it for yourself",
+          "html": "<ul><li><b>Library → your video → Delivery card</b>: \"Video library (not copied)\", pieces, quality levels, fMP4.</li><li><b>Watch live → Live HLS Manifest Inspector</b>: the playlist the player gets. During the programme the addresses point at Mux; during breaks at the edge (<code>…/media/…</code>), with <code>EXT-X-MAP</code> headers for fMP4.</li><li><b>docs/html/visualizeDB.html</b>: the tables <code>asset</code>, <code>asset_source</code> and <code>asset_playback</code>.</li><li>Folder <code>data-pilot\\media</code>: you will find the slates and any ads or uploads, but no folder for your Mux video.</li></ul>"
+        },
+        {
+          "title": "5. What it means for cost",
+          "html": "<p>Mux bills for viewing minutes of your programmes (its free plan covers 100,000 minutes a month). Ads and slate come from R2, which charges nothing for data sent to viewers. Keeping Mux videos out of R2 was your decision on 3 November 2026 (docs/OVP_DELIVERY_PLAN.md).</p>"
+        }
+      ],
+      "related": ["docs/OVP_DELIVERY_PLAN.md", "docs/html/FEATURES.html", "docs/html/FAST_Studio_Test_Guide.html#tests"]
+    }
+  ]
+}
