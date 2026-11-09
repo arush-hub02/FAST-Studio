@@ -41,6 +41,10 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const a = view.asset
   const { busy, run } = useAction()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const hlsRef = useRef<Hls | null>(null)
+  const [levels, setLevels] = useState<{ i: number; height: number; width: number; bitrate: number; codecs: string }[]>([])
+  const [playing, setPlaying] = useState(-1)
+  const [picked, setPicked] = useState(-1)
   const [activeTab, setActiveTab] = useState<'overview' | 'cues' | 'rights' | 'edit'>('overview')
   const [title, setTitle] = useState(a.title)
   const [description, setDescription] = useState(a.description)
@@ -77,8 +81,15 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
       return
     }
     const hls = new Hls()
+    hlsRef.current = hls
     hls.loadSource(view.previewUrl)
     hls.attachMedia(v)
+    // quality levels of this video, and the one actually playing
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      setLevels(hls.levels.map((l, i) => ({ i, height: l.height, width: l.width, bitrate: l.bitrate, codecs: l.codecSet || l.attrs?.CODECS || '' })))
+      setPicked(-1)
+    })
+    hls.on(Hls.Events.LEVEL_SWITCHED, (_e, d) => setPlaying(d.level))
 
     const onTime = () => setCurrentTimeSec(Math.round(v.currentTime))
     v.addEventListener('timeupdate', onTime)
@@ -86,8 +97,18 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
     return () => {
       v.removeEventListener('timeupdate', onTime)
       hls.destroy()
+      hlsRef.current = null
+      setLevels([])
+      setPlaying(-1)
     }
   }, [view.previewUrl, a.status])
+
+  const choose = (i: number) => {
+    setPicked(i)
+    // -1 = automatic; a fixed level switches at once (the buffer is flushed)
+    if (hlsRef.current) hlsRef.current.currentLevel = i
+  }
+  const playingLevel = levels.find(l => l.i === playing)
 
   const save = (body: object, msg: string) =>
     run(() => api(`/api/orgs/${org.slug}/assets/${a.id}`, { method: 'PATCH', body }), msg).then(onChange)
@@ -164,6 +185,23 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
             <div className="player library-preview-player">
               <video ref={videoRef} controls playsInline />
             </div>
+            {levels.length > 0 && (
+              <div className="row-wrap" data-testid="quality-menu" style={{ gap: 10, alignItems: 'center', marginTop: 8 }}>
+                <label className="row" style={{ gap: 6 }}>
+                  <span className="faint small">Quality</span>
+                  <select aria-label="Playback quality" value={picked} onChange={e => choose(Number(e.target.value))}>
+                    <option value={-1}>Auto{picked === -1 && playingLevel ? ` (${playingLevel.height}p)` : ''}</option>
+                    {[...levels].sort((x, y) => y.height - x.height || y.bitrate - x.bitrate).map(l => (
+                      <option key={l.i} value={l.i}>{l.height}p · {(l.bitrate / 1e6).toFixed(1)} Mbit/s</option>
+                    ))}
+                  </select>
+                </label>
+                <span className="badge" data-testid="quality-playing">
+                  {playingLevel ? `Playing ${playingLevel.height}p · ${playingLevel.width}×${playingLevel.height} · ${(playingLevel.bitrate / 1e6).toFixed(1)} Mbit/s` : 'Starting…'}
+                </span>
+                <span className="faint small">{levels.length} {levels.length === 1 ? 'level' : 'levels'} in this video</span>
+              </div>
+            )}
 
             {/* Interactive Broadcast Breakpoint Scrubber */}
             <div className="library-timeline-panel">

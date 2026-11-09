@@ -54,8 +54,8 @@ public class MuxProvider implements IMediaProvider, IDirectUpload, IPlayback {
     }
 
     @Override
-    public Upload upload(Credentials c, String corsOrigin, String title) throws InterruptedException {
-        MuxClientService.Upload u = mux.upload(account(c), corsOrigin, title);
+    public Upload upload(Credentials c, String corsOrigin, String title, int maxHeight) throws InterruptedException {
+        MuxClientService.Upload u = mux.upload(account(c), corsOrigin, title, maxHeight);
         return new Upload(u.id(), u.url());
     }
 

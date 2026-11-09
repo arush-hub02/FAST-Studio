@@ -66,7 +66,7 @@ public class LibraryServiceV1 {
         IDirectUpload provider = providers.directUpload(c.provider());
         limits.requireMediaRoom(t.orgId());
         limits.requireProcessingSlot(t.orgId());
-        IDirectUpload.Upload u = provider.upload(c.credentials(), appUrl, a.title());
+        IDirectUpload.Upload u = provider.upload(c.credentials(), appUrl, a.title(), media.maxHeight(t.orgId()));
         assets.setUploadReference(t.orgId(), id, c.provider() + "-upload:" + u.id());
         audit.log(t, "asset.upload", "asset", id, a.title() + " (direct upload)");
         return Map.of("url", u.url());

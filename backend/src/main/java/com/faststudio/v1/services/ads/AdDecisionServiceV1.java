@@ -52,9 +52,17 @@ public class AdDecisionServiceV1 {
     }
 
     /** One spot. tracking: delivery event -> ad server URLs to call when it happens (external ads only). */
+    /** levels: the quality-level folders the ad's media has (set when the decision is made; the Worker picks the nearest one). */
     public record Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
-                       String source, Map<String, List<String>> tracking) {
+                       String source, Map<String, List<String>> tracking, List<Integer> levels) {
+        public Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
+                    String source, Map<String, List<String>> tracking) {
+            this(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, null);
+        }
+
         public int segments() { return (int) (durationMs / Times.SEG_MS); }
+
+        Slot withLevels(List<Integer> l) { return new Slot(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, l); }
     }
 
     public record Excluded(String campaign, String reason) {}
@@ -123,7 +131,7 @@ public class AdDecisionServiceV1 {
                     excluded.add(new Excluded(s.campaign(),"Creative has not reached the delivery edge yet"));
                     continue;
                 }
-                slots.add(s);
+                slots.add(s.withLevels(publisher.levels(s.mediaKey())));
                 left -= s.durationMs();
             }
         }

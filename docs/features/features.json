@@ -3683,6 +3683,133 @@
         "docs/OVP_DELIVERY_PLAN.md"
       ],
       "screenshots": []
+    },
+    {
+      "id": "quality-levels",
+      "title": "Quality levels per tenant (360p to 4K)",
+      "area": "Media library",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Platform administrators choose, per tenant, which quality levels its videos, ads and channels use: any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). The video detail player shows the levels a video has, the one playing, and lets you pick one.",
+      "who": [
+        "Platform administrators (choose the levels of a tenant)",
+        "Everyone who opens a video in the Library (quality menu)"
+      ],
+      "flow": {
+        "title": "From a tenant setting to the viewer",
+        "intro": "The boxes are the parts involved; the pill is a video moving through.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Tenant → Configuration",
+            "sub": "platform administrator"
+          },
+          {
+            "id": "enc",
+            "col": 2,
+            "row": 1,
+            "icon": "🎞️",
+            "label": "FFmpeg",
+            "sub": "QualityLevels + MediaServiceV1"
+          },
+          {
+            "id": "r2",
+            "col": 3,
+            "row": 1,
+            "icon": "🪣",
+            "label": "R2",
+            "sub": "one folder per level"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Edge Worker",
+            "sub": "channel levels"
+          },
+          {
+            "id": "player",
+            "col": 1,
+            "row": 2,
+            "icon": "📺",
+            "label": "Player",
+            "sub": "picks a level"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Turn on 1080p",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "720p + 1080p",
+                "say": "Tick the levels and Save quality levels.",
+                "tech": "`PUT /api/platform/tenants/{tenant}/properties/media.quality_levels`"
+              },
+              {
+                "at": "enc",
+                "state": "encoding",
+                "say": "New uploads and ads are converted to exactly those levels."
+              },
+              {
+                "at": "r2",
+                "state": "folders 2, 3",
+                "say": "Each level has its own folder (0 = 360p … 5 = 2160p)."
+              },
+              {
+                "at": "edge",
+                "state": "offers 720p, 1080p",
+                "say": "The tenant's channels offer those levels; older media without 1080p plays its 720p there."
+              },
+              {
+                "at": "player",
+                "state": "Auto / 1080p",
+                "say": "Players pick a level by connection speed, or you pick one in the Library player."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Tenants → the tenant → Configuration → Quality levels.",
+        "Tick the levels and Save. New conversions use them within 30 seconds.",
+        "Library → open a video → the Quality menu under the player shows its levels and which one is playing; pick one or Auto."
+      ],
+      "howItWorks": [
+        "services/media/QualityLevels holds the six levels and reads the tenant property media.quality_levels (default 360p, 540p, 720p; platform administrators only).",
+        "MediaServiceV1 encodes the project's levels in one FFmpeg pass into folders named by level (0 … 5), plus fMP4 copies; slates carry all six.",
+        "EdgePublisher puts the tenant's levels in each channel snapshot and, for every piece of media, the levels it has; the Worker plays the nearest lower level when one is missing.",
+        "Direct uploads to Mux ask for the 1440p or 2160p resolution tier when the tenant uses those levels."
+      ],
+      "optimizations": [
+        "One decode, split into all levels in a single FFmpeg run.",
+        "Levels per project cached for 30 s, so snapshots don't read settings every 5 s."
+      ],
+      "scale": [
+        "Higher levels multiply encoding time and storage (about 8 GB per hour of video at 4K); choose them per tenant."
+      ],
+      "rules": [
+        "Platform administrators only (403 PLATFORM_ONLY for tenant owners).",
+        "Changes apply to new conversions; existing media is not re-encoded.",
+        "A small source is scaled up to every chosen level."
+      ],
+      "api": [
+        "PUT /api/platform/tenants/{tenant}/properties/media.quality_levels",
+        "GET /api/platform/tenants/{tenant}/settings"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest.qualityLevelsArePerTenantAndPlatformOnly",
+        "worker/src/playout.test.ts (quality levels)"
+      ],
+      "docs": [
+        "docs/OVP_DELIVERY_PLAN.md",
+        "docs/html/FAQ.html"
+      ],
+      "screenshots": []
     }
   ]
 }

@@ -19,6 +19,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,6 +73,28 @@ class PlatformAdminStagesTest {
     static JsonNode find(JsonNode array, String field, String value) {
         for (JsonNode n : array) if (n.path(field).asString().equals(value)) return n;
         return null;
+    }
+
+    @Autowired com.faststudio.v1.services.media.QualityLevels qualities;
+
+    @Test
+    void qualityLevelsArePerTenantAndPlatformOnly() throws Exception {
+        UUID aurora = org("aurora");
+        UUID tenant = TenantScope.bypass(() -> db.sql("select tenant_id from organization where id = :o").param("o", aurora).query(UUID.class).single());
+        assertEquals(List.of("360p", "540p", "720p"), qualities.of(aurora).stream().map(com.faststudio.v1.services.media.QualityLevels.Level::name).toList(),
+                "the default until a platform administrator chooses");
+        String path = "/api/platform/tenants/" + tenant + "/properties/media.quality_levels";
+        assertEquals(422, status(put(path), ADMIN, "{\"value\":\"720p,999p\"}"), "only known levels");
+        assertEquals(403, status(put("/api/orgs/aurora/tenant-settings/properties/media.quality_levels"), OWNER, "{\"value\":\"2160p\"}"),
+                "a tenant owner can't raise its own encoding and storage cost");
+        ok(put(path), ADMIN, "{\"value\":\"1080p, 720p,2160p\"}");
+        JsonNode stored = null;
+        for (JsonNode p : ok(get("/api/platform/tenants/" + tenant + "/settings"), ADMIN, null).path("properties"))
+            if (p.path("definition").path("key").asString().equals("media.quality_levels")) stored = p.path("value");
+        assertNotNull(stored);
+        assertEquals(List.of(2, 3, 5), com.faststudio.v1.services.media.QualityLevels.parse(stored.asString()).stream()
+                .map(com.faststudio.v1.services.media.QualityLevels.Level::index).toList(), "lowest first; the folder of each level");
+        ok(put(path), ADMIN, "{\"reset\":true}");
     }
 
     @Test

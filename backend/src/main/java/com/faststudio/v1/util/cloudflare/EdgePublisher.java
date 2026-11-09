@@ -58,6 +58,7 @@ public class EdgePublisher {
     private final ChannelTimelineRepository timelines;
     private final MediaConnectionService connections;
     private final MediaProviderResolverService providers;
+    private final com.faststudio.v1.services.media.QualityLevels qualities;
     private final Map<UUID, Anchor> anchors = new ConcurrentHashMap<>();
     private final Set<String> stored = ConcurrentHashMap.newKeySet();
     private final Set<String> storedFmp4 = ConcurrentHashMap.newKeySet();
@@ -68,7 +69,9 @@ public class EdgePublisher {
     private boolean warned;
 
     public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json, AssetPlaybackRepository playbacks,
-                         ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers) {
+                         ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers,
+                         com.faststudio.v1.services.media.QualityLevels qualities) {
+        this.qualities = qualities;
         this.playbacks = playbacks;
         this.timelines = timelines;
         this.connections = connections;
@@ -156,11 +159,13 @@ public class EdgePublisher {
 
     // ------------------------------------------------------------------ schedule snapshots
 
-    public record Rendition(String name, int width, int height, int bandwidth, String codecs) {}
+    /** One quality level a channel offers; i = its folder in every media folder (QualityLevels.ALL index). */
+    public record Rendition(String name, int width, int height, int bandwidth, String codecs, int i) {}
 
-    public record Media(String key, int segments) {}
+    /** levels: the quality-level folders this media has (the Worker plays the nearest lower one when a channel level is missing). */
+    public record Media(String key, int segments, List<Integer> levels) {}
 
-    public record Fallback(String key, int segments, List<String> allowed, Long validFrom, Long validUntil) {}
+    public record Fallback(String key, int segments, List<String> allowed, Long validFrom, Long validUntil, List<Integer> levels) {}
 
     /**
      * One schedule item; times in epoch ms. allowed = channel territories whose licence covers the whole item.
@@ -170,14 +175,16 @@ public class EdgePublisher {
      */
     public record Item(String id, String kind, String key, int segments, long offsetMs, long start, long end,
                        List<String> allowed, String ownership, String scteOut, String scteIn,
-                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill) {
+                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill, List<Integer> levels) {
         Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn) {
-            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null);
+            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null, null);
         }
 
-        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill); }
+        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, null); }
 
-        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill); }
+        Item withLevels(List<Integer> l) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, l); }
+
+        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill, levels); }
     }
 
     /** A video the edge streams from its platform: master playlist URL (signed when needed), real segment lengths, container. */
@@ -274,13 +281,13 @@ public class EdgePublisher {
                 longest = Math.max(longest, l.longest(seg));
                 ovp.computeIfAbsent(a.id().toString(), k -> ovpEntry(org, stream, until));
                 items.add(new Item(e.id().toString(), e.kind(), null, 0, e.assetOffsetMs(), start, end, allowed(a, terr, policies, e),
-                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill()));
+                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill(), null));
                 continue;
             }
             if (!shown) continue;
             String key = a != null && a.ready() && stored(a.mediaKey()) ? a.mediaKey() : null;   // null: standby plays
             items.add(new Item(e.id().toString(), e.kind(), key, key == null ? 0 : media.segments(key), e.assetOffsetMs(), start, end,
-                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null));
+                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null).withLevels(key == null ? null : levels(key)));
         }
 
         // numbering anchor: the hour mark, or the start of the streaming programme the hour mark falls into
@@ -317,7 +324,7 @@ public class EdgePublisher {
         if (fmp4) items.replaceAll(it -> it.key() != null && !storedFmp4(it.key()) ? it.withoutMedia() : it);
         Fallback fb = fallback(ch, assets, policies);
         if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
-        return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(),
+        return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
                 platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
     }
 
@@ -352,7 +359,10 @@ public class EdgePublisher {
         return c.orElse(null);
     }
 
-    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0); }
+    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0, levels(key)); }
+
+    /** The quality-level folders a stored media folder has (for ad decisions and snapshots). */
+    public List<Integer> levels(String mediaKey) { return media.levels(mediaKey); }
 
     private Fallback fallback(Channel ch, Map<UUID, Asset> assets, Map<UUID, Rights.Policy> policies) {
         Asset fb = ch.fallbackAssetId() == null ? null : assets.get(ch.fallbackAssetId());
@@ -363,10 +373,11 @@ public class EdgePublisher {
         List<String> ok = terr.stream().filter(c -> Rights.evaluate(p, terr, c, null, null).allowed()).toList();
         return new Fallback(fb.mediaKey(), media.segments(fb.mediaKey()), ok,
                 p == null || p.validFrom() == null ? null : p.validFrom().toInstant().toEpochMilli(),
-                p == null || p.validUntil() == null ? null : p.validUntil().toInstant().toEpochMilli());
+                p == null || p.validUntil() == null ? null : p.validUntil().toInstant().toEpochMilli(), levels(fb.mediaKey()));
     }
 
-    private static List<Rendition> ladder() {
-        return MediaServiceV1.LADDER.stream().map(r -> new Rendition(r.name(), r.width(), r.height(), r.bandwidth(), r.codecs())).toList();
+    /** The quality levels a channel offers: its tenant's setting (platform administration → tenant). */
+    private List<Rendition> ladder(UUID org) {
+        return qualities.of(org).stream().map(r -> new Rendition(r.name(), r.width(), r.height(), r.bandwidth(), r.codecs(), r.index())).toList();
     }
 }

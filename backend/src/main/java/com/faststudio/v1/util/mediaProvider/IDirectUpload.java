@@ -4,6 +4,9 @@ package com.faststudio.v1.util.mediaProvider;
 public interface IDirectUpload {
     record Upload(String id, String url) {}
 
-    /** A one-time https URL; the video it becomes carries the connection's scope, so sync and webhooks find it. */
-    Upload upload(IMediaProvider.Credentials c, String corsOrigin, String title) throws InterruptedException;
+    /**
+     * A one-time https URL; the video it becomes carries the connection's scope, so sync and webhooks find it.
+     * maxHeight: the project's highest quality level, so the platform keeps enough resolution (e.g. 2160 for 4K).
+     */
+    Upload upload(IMediaProvider.Credentials c, String corsOrigin, String title, int maxHeight) throws InterruptedException;
 }

@@ -3,6 +3,31 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "quality-levels-per-tenant",
+      "asked": "2026-11-09",
+      "question": "Can every quality level be configured per tenant from platform admin, and how do I see which level is playing in the video detail player?",
+      "short": "Yes. On the tenant page → Configuration → Quality levels, a platform administrator ticks any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). That tenant's uploads and ads are converted to exactly those levels and its channels offer them. In the Library, the video's detail player now has a Quality menu (Auto or a fixed level) and a badge saying which level is playing.",
+      "sections": [
+        {
+          "title": "1. Setting the levels (platform administrators)",
+          "html": "<ol><li>Platform administration → <b>Tenants</b> → the tenant → <b>Configuration</b> (scope: Tenant defaults).</li><li>Tick the levels in <b>Quality levels</b>; the card shows the storage per hour of video at your choice (e.g. about 3.9 GB for 720p + 1080p, about 8 GB for 4K alone).</li><li><b>Save quality levels</b>. New conversions use them within 30 seconds.</li></ol><p>Only platform administrators can change this (a tenant owner gets \"Only the platform administrator may change this setting\"), because higher levels cost encoding time, storage and delivery. The default is 360p, 540p and 720p. It applies to the whole tenant, every project.</p>"
+        },
+        {
+          "title": "2. What changes when you save",
+          "html": "<ul><li><b>Uploads and ads</b> converted after the change get exactly the chosen levels (one folder per level: 0 = 360p … 5 = 2160p) and an fMP4 copy of each. Existing videos are not converted again.</li><li><b>Channels</b> offer the chosen levels. Where a video or ad lacks a level (converted before the change), that level plays its nearest lower one, so nothing breaks.</li><li><b>Slates</b> carry all six levels, so they fit every tenant.</li><li><b>Mux videos</b> keep the levels Mux made; each channel level plays the Mux level nearest in height. Uploads through FAST Studio ask Mux for the 1440p or 2160p tier when the tenant uses those levels (Mux charges more for them).</li><li>A small source (say 720p) is scaled up to every chosen level; it does not gain detail.</li></ul>"
+        },
+        {
+          "title": "3. Seeing and choosing the level in the player",
+          "html": "<ol><li>Library → click a <b>Ready</b> video. Under the player: a <b>Quality</b> menu and a badge.</li><li><b>Auto</b> lets the player choose by connection speed; the menu shows which level Auto picked, e.g. \"Auto (720p)\".</li><li>Pick a level (e.g. \"1080p · 5.8 Mbit/s\") to force it; the badge changes to e.g. \"Playing 1080p · 1920×1080 · 5.8 Mbit/s\" once the switch is done.</li><li>\"2 levels in this video\" tells you how many levels the video actually has; for a Mux video these are Mux's levels.</li></ol>"
+        },
+        {
+          "title": "4. Checked on 9 November 2026",
+          "html": "<p>On a separate production-mode copy: a tenant set to 720p + 1080p; a new video was converted to exactly those (folders 2 and 3, plus fMP4 copies); the player listed both and switched; a live channel offered \"720p, 1080p\" and its 720p and 1080p playlists used folders 2 and 3, every file downloadable.</p>"
+        }
+      ],
+      "related": ["docs/html/FAQ.html#renditions-ours-and-mux", "docs/html/FAQ.html#2k-4k", "docs/html/FEATURES.html"]
+    },
+    {
       "id": "2k-4k",
       "asked": "2026-11-09",
       "question": "Do we support 4K or 2K?",

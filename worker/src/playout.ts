@@ -12,14 +12,17 @@ export const EPOCH = Date.parse('2026-01-01T00:00:00Z')
 export const WINDOW = 12                 // segments in a live playlist
 export const LOOKAHEAD_MS = 30_000       // ad decisions and SGAI interstitials are prepared this far ahead
 
-export type Rendition = { name: string; width: number; height: number; bandwidth: number; codecs: string }
-export type Media = { key: string | null; segments: number }
-export type Fallback = { key: string; segments: number; allowed: string[]; validFrom: number | null; validUntil: number | null }
+/** A quality level the channel offers; i = its folder in every media folder (0 = 360p … 5 = 2160p; missing = position). */
+export type Rendition = { name: string; width: number; height: number; bandwidth: number; codecs: string; i?: number }
+/** levels: the quality-level folders this media has; missing = the classic three (0, 1, 2). */
+export type Media = { key: string | null; segments: number; levels?: number[] | null }
+export type Fallback = { key: string; segments: number; allowed: string[]; validFrom: number | null; validUntil: number | null; levels?: number[] | null }
 export type Item = {
   id: string; kind: 'PROGRAM' | 'AD_BREAK'; key: string | null; segments: number; offsetMs: number
   start: number; end: number; allowed: string[]; ownership: string | null; scteOut: string | null; scteIn: string | null
   // a programme streaming from its platform: asset id (key of Snapshot.ovp), numbering and layout
   ovp?: string | null; seq?: number | null; n?: number | null; i0?: number | null; nc?: number | null; last?: number | null; fill?: number[] | null
+  levels?: number[] | null
 }
 /** A video that streams from its platform: master playlist URL (null = can't be reached), real segment lengths in ms. */
 export type Ovp = { url: string | null; d: number[]; fmt: string }
@@ -36,7 +39,7 @@ export type Session = {
   sid: string; org: string; channel: string; country: string; adMode: 'SSAI' | 'SGAI' | 'PASSTHROUGH'
   markers: 'CUE_OUT' | 'DATERANGE'; destKind: string; created: number
 }
-export type Slot = { campaignId: string; campaign: string; mediaKey: string; durationMs: number }
+export type Slot = { campaignId: string; campaign: string; mediaKey: string; durationMs: number; levels?: number[] | null }
 export type Decision = { breakMs: number; filledMs: number; slots: Slot[] }
 /** A decision, or 'slate' once a break has started without one (it must never flip to ads mid-break). */
 export type Decided = Decision | 'slate' | undefined
@@ -45,7 +48,15 @@ export type Beacon = { breakId: string; campaignId: string; event: string }
 export type OvpSegment = (asset: string, variant: number, i: number) => { url: string; map?: string } | null
 
 /** One segment: start and duration in ms, the content key (a change means DISCONTINUITY), and where it comes from. */
-type Seg = { key: string; media: string; n: number; start: number; dur: number; url?: string; map?: string; ad?: { breakId: string; slot: Slot; segs: number } }
+type Seg = { key: string; media: string; n: number; start: number; dur: number; url?: string; map?: string; levels?: number[] | null; ad?: { breakId: string; slot: Slot; segs: number } }
+
+/** The folder to use for quality level `want` in media that has `levels`: that level, else the nearest lower one, else the lowest. */
+export function levelFolder(want: number, levels?: number[] | null): number {
+  if (!levels?.length) return Math.min(want, 2)   // media from before configurable levels: folders 0, 1, 2
+  let best = -1
+  for (const l of levels) if (l <= want && l > best) best = l
+  return best >= 0 ? best : Math.min(...levels)
+}
 /** A streaming programme in the timeline: its first sequence number, segment count and segment start offsets. */
 export type Span = { item: Item; seq: number; n: number; offs: number[] }
 
@@ -131,7 +142,7 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
 
   const loop = (prefix: string, m: Media, i: number) => {
     const n = Math.max(1, m.segments)
-    return { key: prefix + Math.floor(i / n), media: m.key ?? '', n: ((i % n) + n) % n }
+    return { key: prefix + Math.floor(i / n), media: m.key ?? '', n: ((i % n) + n) % n, levels: m.levels }
   }
   const standby = (i: number) => loop('sb:', snap.standby, i)
   const geo = (i: number) => loop('geo:', snap.geo, i)
@@ -141,7 +152,7 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
     if (!fb || fb.segments < 1 || !fb.allowed.includes(s.country)
       || (fb.validFrom != null && t < fb.validFrom) || (fb.validUntil != null && t + SEG > fb.validUntil)) return standby(i)
     const pos = (t - EPOCH), dur = fb.segments * SEG
-    return { key: 'fb:' + Math.floor(pos / dur), media: fb.key, n: Math.floor((((pos % dur) + dur) % dur) / SEG) }
+    return { key: 'fb:' + Math.floor(pos / dur), media: fb.key, n: Math.floor((((pos % dur) + dur) % dur) / SEG), levels: fb.levels }
   }
 
   /** The segment with sequence number i. */
@@ -163,7 +174,7 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
       if (!e.key) return standby(i)
       if (!e.allowed.includes(s.country)) return geo(i)
       const n = Math.floor((e.offsetMs + t - e.start) / SEG)
-      return n < e.segments ? { key: 'e:' + e.id, media: e.key, n } : standby(i)
+      return n < e.segments ? { key: 'e:' + e.id, media: e.key, n, levels: e.levels } : standby(i)
     }
     const d = s.adMode === 'SSAI' && ours(s, e) ? decided(e.id) : undefined
     if (d && d !== 'slate') {
@@ -172,7 +183,7 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
       for (let k = 0; k < d.slots.length; k++) {
         const slot = d.slots[k]
         if (off < slot.durationMs)
-          return { key: `ad:${e.id}:${k}`, media: slot.mediaKey, n: Math.floor(off / SEG), ad: { breakId: e.id, slot, segs: Math.floor(slot.durationMs / SEG) } }
+          return { key: `ad:${e.id}:${k}`, media: slot.mediaKey, n: Math.floor(off / SEG), levels: slot.levels, ad: { breakId: e.id, slot, segs: Math.floor(slot.durationMs / SEG) } }
         off -= slot.durationMs
       }
     }
@@ -252,6 +263,7 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
   dsnMemo.set(s.sid, [first, dsn])
 
   const fmp4 = snap.fmt === 'FMP4'
+  const level = snap.ladder[variant]?.i ?? variant   // this playlist's quality level (folder index)
   let m = `#EXTM3U\n#EXT-X-VERSION:${fmp4 ? 7 : 6}\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
   m += `#EXT-X-MEDIA-SEQUENCE:${first}\n#EXT-X-DISCONTINUITY-SEQUENCE:${dsn}\n`
   m += `## FAST Studio edge playout | channel=${snap.channel} | ad mode=${s.adMode} | markers=${s.markers} | simulated viewer country=${s.country}\n`
@@ -278,10 +290,12 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
     if (i === first || disc) m += `#EXT-X-PROGRAM-DATE-TIME:${iso(t)}\n`
     if (showMarkers) m += markers(s, r.at, t, prev.start, i === first, announced)
     // fMP4: our media from its fMP4 copy; every source has its own init section, announced again after each switch
-    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/f${variant}/init.mp4` : undefined)
+    // our media: the folder of this channel level, or the nearest lower level the media has
+    const dir = levelFolder(level, g.levels)
+    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/f${dir}/init.mp4` : undefined)
     if (map && (i === first || disc || map !== lastMap)) m += `#EXT-X-MAP:URI="${map}"\n`
     if (map) lastMap = map
-    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/f${variant}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${variant}/seg_${pad(g.n)}.ts`)
+    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/f${dir}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${dir}/seg_${pad(g.n)}.ts`)
     m += `#EXTINF:${secs(g.dur)},\n${uri}\n`
     if (g.ad) {
       const { n } = g, segs = g.ad.segs

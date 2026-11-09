@@ -37,15 +37,13 @@ import java.util.stream.Stream;
 @Service
 public class MediaServiceV1 {
     private static final Logger log = LoggerFactory.getLogger(MediaServiceV1.class);
-    // the cadence is part of the key, so slates are re-made (under a new key) whenever it changes
-    public static final String STANDBY = "_platform/standby-" + Times.SEG_S + "s", GEO = "_platform/geo-" + Times.SEG_S + "s";
+    // the cadence and the set of quality levels are part of the key, so slates are re-made (under a new key) when either changes
+    public static final String STANDBY = "_platform/standby-" + Times.SEG_S + "s-q" + QualityLevels.ALL.size(),
+            GEO = "_platform/geo-" + Times.SEG_S + "s-q" + QualityLevels.ALL.size();
 
-    public record Rendition(String name, int width, int height, int videoKbps, String level, String codecs, int bandwidth) {}
-
-    public static final List<Rendition> LADDER = List.of(
-            new Rendition("360p", 640, 360, 600, "3.0", "avc1.4d401e,mp4a.40.2", 800_000),
-            new Rendition("540p", 960, 540, 1400, "3.1", "avc1.4d401f,mp4a.40.2", 1_700_000),
-            new Rendition("720p", 1280, 720, 2500, "3.1", "avc1.4d401f,mp4a.40.2", 2_900_000));
+    /** The levels the current packaging run encodes (set by pack() from the project's setting; slates use every level). */
+    private static final ThreadLocal<List<QualityLevels.Level>> RUN_LEVELS = new ThreadLocal<>();
+    private static final List<QualityLevels.Level> LEGACY = QualityLevels.ALL.subList(0, 3);
 
     private final AssetRepository assets;
     private final Path mediaDir, uploadDir;
@@ -57,11 +55,14 @@ public class MediaServiceV1 {
     private final Map<Thread, Process> running = new ConcurrentHashMap<>();
     private final Set<Thread> stopped = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> segmentCounts = new ConcurrentHashMap<>();
-    private final Map<String, Boolean> ladders = new ConcurrentHashMap<>();
+    private final Map<String, List<Integer>> levelsOf = new ConcurrentHashMap<>();
+    private final QualityLevels qualities;
     private volatile String ffmpeg;
 
     public MediaServiceV1(AssetRepository assets, MediaJobRepository jobs, @Value("${faststudio.data-dir}") String dataDir,
-                          @Value("${faststudio.ffmpeg:}") String ffmpeg, List<IContentSource> sources, StreamingServiceV1 playback) {
+                          @Value("${faststudio.ffmpeg:}") String ffmpeg, List<IContentSource> sources, StreamingServiceV1 playback,
+                          QualityLevels qualities) {
+        this.qualities = qualities;
         this.assets = assets;
         this.playback = playback;
         this.jobs = jobs;
@@ -99,14 +100,25 @@ public class MediaServiceV1 {
 
     // ---------------------------------------------------------------- layout helpers (used by playout and API)
 
-    /** True when the media folder holds the 3-rendition ladder (vs. a legacy single rendition). */
-    public boolean hasLadder(String mediaKey) {
-        return ladders.computeIfAbsent(mediaKey, k -> Files.isDirectory(mediaDir.resolve(k).resolve("0")));
+    /** The quality levels (QualityLevels.ALL indexes, lowest first) a media folder holds; empty for legacy single-rendition media. */
+    public List<Integer> levels(String mediaKey) {
+        if (mediaKey == null) return List.of();
+        List<Integer> found = levelsOf.computeIfAbsent(mediaKey, k -> QualityLevels.ALL.stream().map(QualityLevels.Level::index)
+                .filter(i -> Files.exists(mediaDir.resolve(k).resolve(i + "/index.m3u8"))).toList());
+        if (found.isEmpty()) levelsOf.remove(mediaKey);   // not packaged yet: look again next time
+        return found;
     }
 
-    /** Folder prefix of rendition v inside the media key ("2/" or "" for legacy single-rendition media). */
-    public String variantPath(String mediaKey, int v) {
-        return hasLadder(mediaKey) ? Math.max(0, Math.min(v, LADDER.size() - 1)) + "/" : "";
+    /** True when the media folder holds quality levels (vs. a legacy single rendition). */
+    public boolean hasLadder(String mediaKey) { return !levels(mediaKey).isEmpty(); }
+
+    /** The project's highest quality level (picture height). */
+    public int maxHeight(UUID org) { return qualities.maxHeight(org); }
+
+    /** Folder prefix of the lowest level inside the media key ("0/", or "" for legacy single-rendition media). */
+    String firstLevelPath(String mediaKey) {
+        List<Integer> l = levels(mediaKey);
+        return l.isEmpty() ? "" : l.getFirst() + "/";
     }
 
     /** The playlist a player should open for this media (master for a ladder, else the single playlist). */
@@ -117,7 +129,7 @@ public class MediaServiceV1 {
     /** Number of segments (same in every rendition). */
     public int segments(String mediaKey) {
         return segmentCounts.computeIfAbsent(mediaKey, k -> {
-            try (Stream<Path> s = Files.list(mediaDir.resolve(k).resolve(variantPath(k, 0)))) {
+            try (Stream<Path> s = Files.list(mediaDir.resolve(k).resolve(firstLevelPath(k)))) {
                 return (int) s.filter(p -> p.getFileName().toString().endsWith(".ts")).count();
             } catch (IOException e) {
                 return 0;
@@ -127,7 +139,7 @@ public class MediaServiceV1 {
 
     private void forget(String key) {
         segmentCounts.remove(key);
-        ladders.remove(key);
+        levelsOf.remove(key);
     }
 
     // ---------------------------------------------------------------- jobs (durable rows in media_job, run by MediaJobObserverV1)
@@ -183,21 +195,26 @@ public class MediaServiceV1 {
             }
         }
         Files.createDirectories(out);
+        List<QualityLevels.Level> levels = qualities.of(org);
+        RUN_LEVELS.set(levels);   // the project's quality levels, read by encode() on this thread
         try {
             String err = source.ingest(j, out, this);
             if (err != null) { deleteDir(out); return Packaged.failed(err, false); }
-            int full = fullSegments(out.resolve("0").resolve("index.m3u8"));
+            int full = fullSegments(out.resolve(levels.getFirst().index() + "/index.m3u8"));
             if (full == 0) { deleteDir(out); return Packaged.failed("The video is shorter than " + Times.SEG_S + " seconds.", false); }
             thumbnail(out, full);
             log.info("Asset packaged: {} ({} s)", j.title(), full * Times.SEG_S);
-            return new Packaged(key, j.mediaKey(), full * Times.SEG_MS,
-                    "Processed: " + full + " segments of " + Times.SEG_S + " s in 3 qualities (360p, 540p, 720p) H.264/AAC, loudness -23 LUFS", null, false);
+            String names = String.join(", ", levels.stream().map(QualityLevels.Level::name).toList());
+            return new Packaged(key, j.mediaKey(), full * Times.SEG_MS, "Processed: " + full + " segments of " + Times.SEG_S + " s in "
+                    + levels.size() + (levels.size() == 1 ? " quality" : " qualities") + " (" + names + ") H.264/AAC, loudness -23 LUFS", null, false);
         } catch (Retryable e) {
             deleteDir(out);
             return Packaged.failed(e.getMessage(), true);
         } catch (Exception e) {
             deleteDir(out);
             throw e;
+        } finally {
+            RUN_LEVELS.remove();
         }
     }
 
@@ -228,6 +245,7 @@ public class MediaServiceV1 {
     private void slate(String key, String title, String subtitle, String c0, String c1, int seconds) {
         Path out = mediaDir.resolve(key);
         if (Files.exists(out.resolve("index.m3u8")) || Files.exists(out.resolve("master.m3u8"))) return;   // legacy or ladder
+        RUN_LEVELS.set(QualityLevels.ALL);   // slates serve every tenant, so they carry every level
         try {
             Files.createDirectories(out);
             String err = encode(List.of("-f", "lavfi", "-i", "gradients=size=1280x720:rate=25:speed=0.004:c0=" + c0 + ":c1=" + c1,
@@ -238,6 +256,8 @@ public class MediaServiceV1 {
             forget(key);
         } catch (Exception e) {
             log.error("slate {} failed", key, e);
+        } finally {
+            RUN_LEVELS.remove();
         }
     }
 
@@ -274,24 +294,28 @@ public class MediaServiceV1 {
         return err;
     }
 
-    /** One decode + filter pass, split into the three renditions, each encoded with the same keyframe/segment cadence. */
+    /**
+     * One decode + filter pass, split into the run's quality levels (folder = level index), each encoded with the same
+     * keyframe/segment cadence. ponytail: a small source is scaled up to every chosen level; cap at the source size if encode time matters.
+     */
     private String runEncode(List<String> inputs, String audioMap, String base, Path out, long durationMs, boolean shortest) throws Exception {
+        List<QualityLevels.Level> ladder = RUN_LEVELS.get() == null ? LEGACY : RUN_LEVELS.get();
         List<String> cmd = new ArrayList<>(List.of(ffmpeg(), "-y", "-hide_banner", "-loglevel", "error"));
         cmd.addAll(inputs);
-        StringBuilder fc = new StringBuilder("[0:v]").append(base).append(",split=").append(LADDER.size());
-        for (int i = 0; i < LADDER.size(); i++) fc.append("[s").append(i).append(']');
-        for (int i = 0; i < LADDER.size(); i++)
-            fc.append(";[s").append(i).append("]scale=").append(LADDER.get(i).width()).append(':').append(LADDER.get(i).height()).append("[v").append(i).append(']');
+        StringBuilder fc = new StringBuilder("[0:v]").append(base).append(",split=").append(ladder.size());
+        for (int i = 0; i < ladder.size(); i++) fc.append("[s").append(i).append(']');
+        for (int i = 0; i < ladder.size(); i++)
+            fc.append(";[s").append(i).append("]scale=").append(ladder.get(i).width()).append(':').append(ladder.get(i).height()).append("[v").append(i).append(']');
         cmd.addAll(List.of("-filter_complex", fc.toString()));
-        for (int i = 0; i < LADDER.size(); i++) {
-            Rendition r = LADDER.get(i);
-            Path dir = Files.createDirectories(out.resolve(String.valueOf(i)));
+        for (int i = 0; i < ladder.size(); i++) {
+            QualityLevels.Level r = ladder.get(i);
+            Path dir = Files.createDirectories(out.resolve(String.valueOf(r.index())));
             cmd.addAll(List.of("-map", "[v" + i + "]", "-map", audioMap));
             if (durationMs > 0) cmd.addAll(List.of("-t", String.valueOf(durationMs / 1000.0)));
             if (shortest) cmd.add("-shortest");
             String gop = String.valueOf(25 * Times.SEG_S);   // 25 fps: exactly one keyframe per segment
             cmd.addAll(List.of(
-                    "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "main", "-level", r.level(), "-pix_fmt", "yuv420p", "-r", "25",
+                    "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "main", "-level", r.h264Level(), "-pix_fmt", "yuv420p", "-r", "25",
                     "-g", gop, "-keyint_min", gop, "-sc_threshold", "0", "-force_key_frames", "expr:gte(t,n_forced*" + Times.SEG_S + ")",
                     "-b:v", r.videoKbps() + "k", "-maxrate", (r.videoKbps() * 11 / 10) + "k", "-bufsize", (r.videoKbps() * 2) + "k",
                     // EBU R128: every programme, ad and slate at the same loudness, so joins don't jump in volume
@@ -332,9 +356,11 @@ public class MediaServiceV1 {
      * Failures only log: the channel then plays slate instead of this media. Returns true when the copy is complete.
      */
     public boolean fmp4(Path out) {
-        if (ffmpeg() == null || !Files.isDirectory(out.resolve("0"))) return false;
+        List<QualityLevels.Level> present = present(out);
+        if (ffmpeg() == null || present.isEmpty()) return false;
         try {
-            for (int i = 0; Files.exists(out.resolve(i + "/index.m3u8")); i++) {
+            for (QualityLevels.Level level : present) {
+                int i = level.index();
                 Path src = out.resolve(i + "/index.m3u8"), dir = out.resolve("f" + i);
                 deleteDir(dir);
                 Files.createDirectories(dir);
@@ -351,7 +377,7 @@ public class MediaServiceV1 {
                     return false;
                 }
             }
-            Files.writeString(out.resolve(FMP4_MASTER), masterPlaylist(i -> "f" + i + "/index.m3u8"));
+            Files.writeString(out.resolve(FMP4_MASTER), masterPlaylist(present, i -> "f" + i + "/index.m3u8"));
             return true;
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -370,32 +396,36 @@ public class MediaServiceV1 {
     void backfillFmp4() {
         if (!Files.isDirectory(mediaDir)) return;
         try (Stream<Path> s = Files.walk(mediaDir, 2)) {
-            for (Path dir : s.filter(d -> Files.exists(d.resolve("master.m3u8")) && Files.isDirectory(d.resolve("0")) && !Files.exists(d.resolve(FMP4_MASTER))).toList())
+            for (Path dir : s.filter(d -> Files.exists(d.resolve("master.m3u8")) && !present(d).isEmpty() && !Files.exists(d.resolve(FMP4_MASTER))).toList())
                 if (fmp4(dir)) log.info("Made the fMP4 copy of {}", mediaDir.relativize(dir));
         } catch (IOException e) {
             log.warn("fMP4 backfill stopped: {}", e.toString());
         }
     }
 
-    /** VOD master playlist (used by the Library preview and by SGAI ad assets). */
-    private static void writeMaster(Path out) throws IOException {
-        Files.writeString(out.resolve("master.m3u8"), masterPlaylist(i -> i + "/index.m3u8"));
+    /** The quality levels a media folder holds (folders "0" … "5" with a playlist), lowest first. */
+    static List<QualityLevels.Level> present(Path out) {
+        return QualityLevels.ALL.stream().filter(l -> Files.exists(out.resolve(l.index() + "/index.m3u8"))).toList();
     }
 
-    public static String masterPlaylist(java.util.function.IntFunction<String> variantUri) {
+    /** VOD master playlist of the levels the folder holds (used by the Library preview and by SGAI ad assets). */
+    private static void writeMaster(Path out) throws IOException {
+        Files.writeString(out.resolve("master.m3u8"), masterPlaylist(present(out), i -> i + "/index.m3u8"));
+    }
+
+    public static String masterPlaylist(List<QualityLevels.Level> levels, java.util.function.IntFunction<String> variantUri) {
         StringBuilder m = new StringBuilder("#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-INDEPENDENT-SEGMENTS\n");
-        for (int i = 0; i < LADDER.size(); i++) {
-            Rendition r = LADDER.get(i);
+        for (QualityLevels.Level r : levels) {
             m.append(String.format(Locale.ROOT, "#EXT-X-STREAM-INF:BANDWIDTH=%d,AVERAGE-BANDWIDTH=%d,RESOLUTION=%dx%d,CODECS=\"%s\",FRAME-RATE=25.000,NAME=\"%s\"\n",
                     r.bandwidth(), r.bandwidth() * 85 / 100, r.width(), r.height(), r.codecs(), r.name()));
-            m.append(variantUri.apply(i)).append('\n');
+            m.append(variantUri.apply(r.index())).append('\n');
         }
         return m.toString();
     }
 
     private void thumbnail(Path out, int segments) throws Exception {
         String seg = String.format("seg_%05d.ts", Math.min(1, segments - 1));
-        Process p = new ProcessBuilder(ffmpeg(), "-y", "-loglevel", "error", "-i", out.resolve(String.valueOf(LADDER.size() - 1)).resolve(seg).toString(),
+        Process p = new ProcessBuilder(ffmpeg(), "-y", "-loglevel", "error", "-i", out.resolve(String.valueOf(present(out).getLast().index())).resolve(seg).toString(),
                 "-frames:v", "1", "-vf", "scale=480:270", out.resolve("thumb.jpg").toString()).redirectErrorStream(true).start();
         p.getInputStream().readAllBytes();
         p.waitFor(60, TimeUnit.SECONDS);

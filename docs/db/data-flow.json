@@ -38722,6 +38722,96 @@
             }
           ]
         },
+        "project_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ladder",
+              "layer": "util"
+            },
+            {
+              "class": "QualityLevels",
+              "method": "of",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
+            }
+          ]
+        },
+        "property_definition": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ladder",
+              "layer": "util"
+            },
+            {
+              "class": "QualityLevels",
+              "method": "of",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "definitions",
+              "layer": "repository"
+            }
+          ]
+        },
         "rights_policy": {
           "mode": "read",
           "chain": [
@@ -38779,6 +38869,51 @@
               "class": "Data",
               "method": "entries",
               "layer": "core"
+            }
+          ]
+        },
+        "tenant_property_value": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "ladder",
+              "layer": "util"
+            },
+            {
+              "class": "QualityLevels",
+              "method": "of",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effective",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "values",
+              "layer": "repository"
             }
           ]
         }
@@ -46121,6 +46256,7 @@
         "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
@@ -46167,6 +46303,7 @@
         "PUT /api/platform/plans",
         "PUT /api/platform/property-definitions",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /api/platform/tenants/{tenant}/projects",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
@@ -46213,6 +46350,7 @@
         "PUT /api/platform/property-definitions",
         "DELETE /api/platform/property-definitions/{key}/default",
         "PUT /api/platform/tenants/{tenant}/connectors/{key}",
+        "POST /api/platform/tenants/{tenant}/delete",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/connectors/{key}",
         "PUT /api/platform/tenants/{tenant}/projects/{project}/properties/{key}",
         "GET /api/platform/tenants/{tenant}/projects/{project}/settings",

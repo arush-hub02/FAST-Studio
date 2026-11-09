@@ -63,3 +63,17 @@ test('SGAI asset list pads with slate so the viewer rejoins live at break end', 
   const list = assetList(snap, snap.items[1], ad15, 'https://m', s => `slate/${s}.m3u8`)
   assert.deepEqual(list.ASSETS.map(a => a.DURATION), [15, 15])
 })
+
+test('quality levels: each channel level uses its folder, or the nearest lower one the media has', async () => {
+  const { levelFolder } = await import('./playout.ts')
+  assert.equal(levelFolder(3, [0, 1, 2, 3, 4, 5]), 3)
+  assert.equal(levelFolder(3, [0, 1, 2]), 2, 'older media without 1080p plays its 720p')
+  assert.equal(levelFolder(1, [2, 3]), 2, 'nothing lower: the lowest it has')
+  assert.equal(levelFolder(5, undefined), 2, 'media from before configurable levels has folders 0-2')
+  const hd: Snapshot = { ...snap, ladder: [{ name: '720p', width: 1280, height: 720, bandwidth: 2900000, codecs: 'x', i: 2 },
+    { name: '1080p', width: 1920, height: 1080, bandwidth: 5800000, codecs: 'x', i: 3 }],
+    items: snap.items.map(e => e.key ? { ...e, levels: [0, 1, 2, 3] } : e) }
+  const t = mediaPlaylist(hd, viewer(), 1, T0 + 100_000, 'https://m', () => ad15, new Map()).text
+  assert.ok(t.includes('https://m/aurora/film.1/3/seg_'), 'programme at 1080p')
+  assert.ok(t.includes('https://m/aurora/ad.1/2/seg_'), 'the ad has no level list here, so 720p')
+})
