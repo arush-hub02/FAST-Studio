@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Hls from 'hls.js'
 import { api, type AssetView, type Streaming } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import {
@@ -13,6 +12,8 @@ import {
   Status,
   useAction,
   useApi,
+  VideoPlayer,
+  type PlayerEvent,
 } from '../../shared/ui'
 import { GenreSelector } from '../../shared/components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
@@ -41,10 +42,8 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const a = view.asset
   const { busy, run } = useAction()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const hlsRef = useRef<Hls | null>(null)
-  const [levels, setLevels] = useState<{ i: number; height: number; width: number; bitrate: number; codecs: string }[]>([])
-  const [playing, setPlaying] = useState(-1)
-  const [picked, setPicked] = useState(-1)
+  // quality level playing now (the player's own menu picks one)
+  const [playingLevel, setPlayingLevel] = useState<PlayerEvent | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'cues' | 'rights' | 'edit'>('overview')
   const [title, setTitle] = useState(a.title)
   const [description, setDescription] = useState(a.description)
@@ -72,43 +71,7 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const editable = org.can('ASSETS_EDIT')
   const durationSec = Math.max(1, Math.round(a.durationMs / 1000))
 
-  // Setup HLS video preview
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v || !view.previewUrl || a.status !== 'READY') return
-    if (!Hls.isSupported()) {
-      v.src = view.previewUrl
-      return
-    }
-    const hls = new Hls()
-    hlsRef.current = hls
-    hls.loadSource(view.previewUrl)
-    hls.attachMedia(v)
-    // quality levels of this video, and the one actually playing
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      setLevels(hls.levels.map((l, i) => ({ i, height: l.height, width: l.width, bitrate: l.bitrate, codecs: l.codecSet || l.attrs?.CODECS || '' })))
-      setPicked(-1)
-    })
-    hls.on(Hls.Events.LEVEL_SWITCHED, (_e, d) => setPlaying(d.level))
-
-    const onTime = () => setCurrentTimeSec(Math.round(v.currentTime))
-    v.addEventListener('timeupdate', onTime)
-
-    return () => {
-      v.removeEventListener('timeupdate', onTime)
-      hls.destroy()
-      hlsRef.current = null
-      setLevels([])
-      setPlaying(-1)
-    }
-  }, [view.previewUrl, a.status])
-
-  const choose = (i: number) => {
-    setPicked(i)
-    // -1 = automatic; a fixed level switches at once (the buffer is flushed)
-    if (hlsRef.current) hlsRef.current.currentLevel = i
-  }
-  const playingLevel = levels.find(l => l.i === playing)
+  const onTime = (sec: number) => setCurrentTimeSec(Math.round(sec))
 
   const save = (body: object, msg: string) =>
     run(() => api(`/api/orgs/${org.slug}/assets/${a.id}`, { method: 'PATCH', body }), msg).then(onChange)
@@ -182,26 +145,16 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
         {/* Built-in Video Player */}
         {a.status === 'READY' ? (
           <div className="library-player-container">
-            <div className="player library-preview-player">
-              <video ref={videoRef} controls playsInline />
+            <div className="library-preview-player">
+              <VideoPlayer src={view.previewUrl} title={a.title} videoRef={videoRef} onTimeUpdate={onTime}
+                onEvent={e => { if (e.type === 'level') setPlayingLevel(e) }} />
             </div>
-            {levels.length > 0 && (
-              <div className="row-wrap" data-testid="quality-menu" style={{ gap: 10, alignItems: 'center', marginTop: 8 }}>
-                <label className="row" style={{ gap: 6 }}>
-                  <span className="faint small">Quality</span>
-                  <select aria-label="Playback quality" value={picked} onChange={e => choose(Number(e.target.value))}>
-                    <option value={-1}>Auto{picked === -1 && playingLevel ? ` (${playingLevel.height}p)` : ''}</option>
-                    {[...levels].sort((x, y) => y.height - x.height || y.bitrate - x.bitrate).map(l => (
-                      <option key={l.i} value={l.i}>{l.height}p · {(l.bitrate / 1e6).toFixed(1)} Mbit/s</option>
-                    ))}
-                  </select>
-                </label>
-                <span className="badge" data-testid="quality-playing">
-                  {playingLevel ? `Playing ${playingLevel.height}p · ${playingLevel.width}×${playingLevel.height} · ${(playingLevel.bitrate / 1e6).toFixed(1)} Mbit/s` : 'Starting…'}
-                </span>
-                <span className="faint small">{levels.length} {levels.length === 1 ? 'level' : 'levels'} in this video</span>
-              </div>
-            )}
+            <div className="row-wrap" style={{ gap: 10, alignItems: 'center', marginTop: 8 }}>
+              <span className="badge" data-testid="quality-playing">
+                {playingLevel ? `Playing ${playingLevel.height}p · ${playingLevel.width}×${playingLevel.height} · ${((playingLevel.bitrate ?? 0) / 1e6).toFixed(1)} Mbit/s` : 'Starting…'}
+              </span>
+              <span className="faint small">Pick a quality with the ⚙ settings button on the player.</span>
+            </div>
 
             {/* Interactive Broadcast Breakpoint Scrubber */}
             <div className="library-timeline-panel">

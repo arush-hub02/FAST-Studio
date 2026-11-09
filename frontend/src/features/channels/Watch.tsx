@@ -78,6 +78,7 @@ export default function Watch() {
   const [session, setSession] = useState<Started | null>(null)
   const [info, setInfo] = useState<Info | null>(null)
   const [adNow, setAdNow] = useState<string | null>(null)
+  const [level, setLevel] = useState<PlayerEvent | null>(null)
   const [tab, setTab] = useState<'what' | 'playlist' | 'health'>('what')
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -184,6 +185,7 @@ export default function Watch() {
 
   // SGAI client interstitial ad beacons
   const onPlayer = useCallback((e: PlayerEvent) => {
+    if (e.type === 'level') { setLevel(e); return }
     if (!session || session.adMode !== 'SGAI' || !e.uri) return
     const key = [...sgaiDecisions.current.keys()].find(k => e.uri!.includes(k))
     const d = key ? sgaiDecisions.current.get(key) : undefined
@@ -471,7 +473,7 @@ export default function Watch() {
                   </div>
 
                   <span className="badge sm" style={{ background: 'rgba(255,255,255,0.1)', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.15)' }}>
-                    1080p60 · AAC
+                    {level ? `${level.height}p · ${((level.bitrate ?? 0) / 1e6).toFixed(1)} Mbit/s` : 'Starting…'}
                   </span>
                   <span className="badge sim sm">
                     {flag(country)} {country}
@@ -482,7 +484,7 @@ export default function Watch() {
               {/* Video Player Display */}
               <div className="watch-player-wrap">
                 {session ? (
-                  <VideoPlayer key={session.sessionId} src={session.playlistUrl} live onEvent={onPlayer} />
+                  <VideoPlayer key={session.sessionId} src={session.playlistUrl} title={channel?.channel.name} live onEvent={onPlayer} />
                 ) : (
                   <div className="player-msg">
                     <div className="stack" style={{ alignItems: 'center', gap: 12 }}>
@@ -522,7 +524,7 @@ export default function Watch() {
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <span className="faint">Delay: ~9s live jitter buffer</span>
-                  <span className="badge sm" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>HLS.js v4</span>
+                  <span className="badge sm" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>Video.js 10 · hls.js</span>
                 </div>
               </div>
             </div>

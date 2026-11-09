@@ -3690,7 +3690,7 @@
       "area": "Media library",
       "status": "Built (2026-11-09)",
       "completed": "2026-11-09",
-      "summary": "Platform administrators choose, per tenant, which quality levels its videos, ads and channels use: any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). The video detail player shows the levels a video has, the one playing, and lets you pick one.",
+      "summary": "Platform administrators choose, per tenant, which quality levels its videos, ads and channels use: any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). Every player has a Quality menu (⚙ Settings) to pick a level or Auto, and the video detail page shows which level is playing.",
       "who": [
         "Platform administrators (choose the levels of a tenant)",
         "Everyone who opens a video in the Library (quality menu)"
@@ -3777,7 +3777,7 @@
       "steps": [
         "Platform administration → Tenants → the tenant → Configuration → Quality levels.",
         "Tick the levels and Save. New conversions use them within 30 seconds.",
-        "Library → open a video → the Quality menu under the player shows its levels and which one is playing; pick one or Auto."
+        "Library → open a video → ⚙ Settings → Quality on the player lists its levels (Auto or one); the badge under the player says which one is playing."
       ],
       "howItWorks": [
         "services/media/QualityLevels holds the six levels and reads the tenant property media.quality_levels (default 360p, 540p, 720p; platform administrators only).",
@@ -3807,6 +3807,126 @@
       ],
       "docs": [
         "docs/OVP_DELIVERY_PLAN.md",
+        "docs/html/FAQ.html"
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "video-player",
+      "title": "Video player (Video.js 10)",
+      "area": "Playback",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Every video in FAST Studio plays in one Video.js 10 player with the title on the video, a quality menu, playback speed, picture-in-picture, fullscreen, casting and keyboard shortcuts.",
+      "who": [
+        "Everyone who plays a video: Library video detail, Watch live, Partner \"Try it as a viewer\""
+      ],
+      "flow": {
+        "title": "From a page to a playing video",
+        "intro": "The boxes are the parts involved; the pill is a viewer pressing play.",
+        "nodes": [
+          {
+            "id": "page",
+            "col": 1,
+            "row": 1,
+            "icon": "🖥️",
+            "label": "Page",
+            "sub": "Library / Watch / Partner"
+          },
+          {
+            "id": "player",
+            "col": 2,
+            "row": 1,
+            "icon": "📺",
+            "label": "Video.js player",
+            "sub": "shared/Player.tsx"
+          },
+          {
+            "id": "hls",
+            "col": 3,
+            "row": 1,
+            "icon": "🧩",
+            "label": "hls.js",
+            "sub": "inside the player"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Edge or library",
+            "sub": "HLS playlists"
+          },
+          {
+            "id": "menu",
+            "col": 1,
+            "row": 2,
+            "icon": "⚙️",
+            "label": "Settings menu",
+            "sub": "Quality, Speed"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Pick 360p",
+            "steps": [
+              {
+                "at": "page",
+                "state": "title",
+                "say": "The page passes the stream address and the title.",
+                "tech": "`<VideoPlayer src title live onEvent />`"
+              },
+              {
+                "at": "player",
+                "state": "loading",
+                "say": "The player is downloaded the first time a video is shown."
+              },
+              {
+                "at": "hls",
+                "state": "Auto (720p)",
+                "say": "hls.js reads the playlist and picks a level by connection speed."
+              },
+              {
+                "at": "edge",
+                "state": "segments",
+                "say": "Segments come from the edge (channels) or the library preview."
+              },
+              {
+                "at": "menu",
+                "state": "360p",
+                "say": "Settings → Quality → 360p pins that level; the badge shows \"Playing 360p\"."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Open a Ready video in the Library, Watch live, or a shared channel's Stream tab on the Partner page.",
+        "Hover the video: the title is top left, the controls along the bottom.",
+        "⚙ Settings → Quality: Auto or a fixed level. ⚙ Settings → Speed for slower or faster playback."
+      ],
+      "howItWorks": [
+        "frontend/src/shared/Player.tsx wraps @videojs/react VideoPlayer + VideoSkin around @videojs/hlsjs-video HlsJsVideo.",
+        "shared/ui.tsx exports VideoPlayer, which loads Player.tsx lazily.",
+        "The player hooks the hls.js instance for HLS interstitials (SGAI ads and beacons on Watch live), the level playing, and fatal errors (retry after 3 s, media recovery)."
+      ],
+      "optimizations": [
+        "Downloaded only when a video is shown (about 250 kB compressed with hls.js).",
+        "One hls.js copy (the one Video.js ships) instead of two."
+      ],
+      "scale": [
+        "Playback runs in the viewer's browser; nothing extra on the server."
+      ],
+      "rules": [
+        "Live channels start muted because browsers block autoplay with sound.",
+        "Quality lists only the levels the stream offers."
+      ],
+      "api": [],
+      "tests": [
+        "frontend e2e (Playwright) suite, 12 tests",
+        "Manual check on a throwaway copy: Library, Watch live, Partner"
+      ],
+      "docs": [
         "docs/html/FAQ.html"
       ],
       "screenshots": []

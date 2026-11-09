@@ -3,10 +3,30 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "videojs-player",
+      "asked": "2026-11-09",
+      "question": "Can we use a JavaScript video player instead of the plain HTML one, with quality selection in the player, the video title on it and more controls, everywhere a video plays?",
+      "short": "Yes, done. Every player in FAST Studio (Library video detail, Watch live, and the Partner page's \"Try it as a viewer\") now uses Video.js 10 with hls.js. It shows the title on the video and has a ⚙ Settings menu with Quality (Auto or a fixed level) and Speed, plus picture-in-picture, fullscreen, casting, volume and keyboard shortcuts.",
+      "sections": [
+        {
+          "title": "1. Where it is used",
+          "html": "<ul><li><b>Library → a Ready video</b>: title = the video's title. Clicking a break in the ad-break timeline still jumps the player there. A badge under it says which level is playing.</li><li><b>Watch live</b>: title = the channel name. The badge above the player now shows the real level playing (it used to show a fixed \"1080p60\").</li><li><b>Partner → a shared channel → Stream → Try it as a viewer</b>: title = the channel name.</li></ul>"
+        },
+        {
+          "title": "2. Controls",
+          "html": "<ul><li>Play/pause, seek bar with time, volume, ⚙ Settings (Quality, Speed), cast, picture-in-picture, fullscreen.</li><li>Quality lists the levels the stream offers (the tenant's quality levels). Auto picks by connection speed and shows the level it picked, e.g. \"Auto (720p)\".</li><li>Keyboard shortcuts for play/pause, seeking, volume, mute and fullscreen.</li><li>Live channels start muted (browsers block sound on autoplay); press the speaker to unmute.</li></ul>"
+        },
+        {
+          "title": "3. How it works",
+          "html": "<ul><li>One shared component, <code>frontend/src/shared/Player.tsx</code>, built from <code>@videojs/react</code> (VideoPlayer + VideoSkin) and <code>@videojs/hlsjs-video</code>. Pages use <code>VideoPlayer</code> from <code>shared/ui.tsx</code>.</li><li>The player is downloaded only when a page shows a video (about 250 kB compressed, including hls.js).</li><li>It keeps what the old player did: HLS interstitial events for client-side ads (SGAI) and their beacons on Watch live, and on a fatal error a \"Playback problem … Retrying…\" badge, a reload after 3 s for network errors, and media-error recovery.</li><li>Safari and iPhone use their own HLS playback through the same player.</li></ul>"
+        }
+      ]
+    },
+    {
       "id": "quality-levels-per-tenant",
       "asked": "2026-11-09",
       "question": "Can every quality level be configured per tenant from platform admin, and how do I see which level is playing in the video detail player?",
-      "short": "Yes. On the tenant page → Configuration → Quality levels, a platform administrator ticks any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). That tenant's uploads and ads are converted to exactly those levels and its channels offer them. In the Library, the video's detail player now has a Quality menu (Auto or a fixed level) and a badge saying which level is playing.",
+      "short": "Yes. On the tenant page → Configuration → Quality levels, a platform administrator ticks any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). That tenant's uploads and ads are converted to exactly those levels and its channels offer them. In the Library, the video's detail player has a Quality menu (⚙ Settings on the player → Quality: Auto or a fixed level) and a badge under it saying which level is playing.",
       "sections": [
         {
           "title": "1. Setting the levels (platform administrators)",
@@ -18,14 +38,18 @@
         },
         {
           "title": "3. Seeing and choosing the level in the player",
-          "html": "<ol><li>Library → click a <b>Ready</b> video. Under the player: a <b>Quality</b> menu and a badge.</li><li><b>Auto</b> lets the player choose by connection speed; the menu shows which level Auto picked, e.g. \"Auto (720p)\".</li><li>Pick a level (e.g. \"1080p · 5.8 Mbit/s\") to force it; the badge changes to e.g. \"Playing 1080p · 1920×1080 · 5.8 Mbit/s\" once the switch is done.</li><li>\"2 levels in this video\" tells you how many levels the video actually has; for a Mux video these are Mux's levels.</li></ol>"
+          "html": "<ol><li>Library → click a <b>Ready</b> video. On the player, <b>⚙ Settings → Quality</b>; under the player, a badge with the level playing.</li><li><b>Auto</b> lets the player choose by connection speed; the menu shows which level Auto picked, e.g. \"Auto (720p)\".</li><li>Pick a level (e.g. \"1080p · 5.8 Mbit/s\") to force it; the badge changes to e.g. \"Playing 1080p · 1920×1080 · 5.8 Mbit/s\" once the switch is done.</li><li>\"2 levels in this video\" tells you how many levels the video actually has; for a Mux video these are Mux's levels.</li></ol>"
         },
         {
           "title": "4. Checked on 9 November 2026",
           "html": "<p>On a separate production-mode copy: a tenant set to 720p + 1080p; a new video was converted to exactly those (folders 2 and 3, plus fMP4 copies); the player listed both and switched; a live channel offered \"720p, 1080p\" and its 720p and 1080p playlists used folders 2 and 3, every file downloadable.</p>"
         }
       ],
-      "related": ["docs/html/FAQ.html#renditions-ours-and-mux", "docs/html/FAQ.html#2k-4k", "docs/html/FEATURES.html"]
+      "related": [
+        "docs/html/FAQ.html#renditions-ours-and-mux",
+        "docs/html/FAQ.html#2k-4k",
+        "docs/html/FEATURES.html"
+      ]
     },
     {
       "id": "2k-4k",
@@ -46,7 +70,10 @@
           "html": "<ol><li><b>A 1080p level first</b> for ads, slate and uploads, so viewers get Mux's 1080p without the picture dropping at each break. Moderate work; more conversion time and storage per ad.</li><li><b>For 2K/4K:</b> 1440p/2160p levels for ads and slate as well, or let breaks play at 1080p inside a 4K channel (a visible quality drop at each break, but most ad creatives are 1080p anyway). 4K delivery is roughly 15–25 Mbit/s per viewer, so Mux delivery costs rise accordingly. 4K is often HEVC (H.265), which needs fMP4 (already supported) and players that can decode it; the live playlist would also have to declare HEVC.</li></ol><p>Suggested order: 1080p now, 2K/4K only when a customer asks for it.</p>"
         }
       ],
-      "related": ["docs/html/FAQ.html#renditions-ours-and-mux", "docs/OVP_DELIVERY_PLAN.md"]
+      "related": [
+        "docs/html/FAQ.html#renditions-ours-and-mux",
+        "docs/OVP_DELIVERY_PLAN.md"
+      ]
     },
     {
       "id": "renditions-ours-and-mux",
@@ -71,7 +98,10 @@
           "html": "<ul><li><b>No 1080p yet.</b> To offer Mux's 1080p, FAST Studio must add a 1080p level for ads and slate (and uploads) first, otherwise the picture would drop at every break. Not built; listed as left in the test guide.</li><li><b>Declared bitrates are ours.</b> The live playlist tells players our figures (e.g. 2.9 Mbit/s for 720p) while Mux's 720p is about 1.5 Mbit/s, so players on slow connections may pick a lower level than they could. Harmless, but could be tuned per channel later.</li><li><b>Codec profile.</b> Ours is H.264 Main; Mux may use High. Players switch at each source change (there is a discontinuity marker), which web, iOS and Android TV players handle; still part of the real-device test.</li></ul>"
         }
       ],
-      "related": ["docs/OVP_DELIVERY_PLAN.md", "docs/html/FAQ.html#mux-video-storage-and-playback"]
+      "related": [
+        "docs/OVP_DELIVERY_PLAN.md",
+        "docs/html/FAQ.html#mux-video-storage-and-playback"
+      ]
     },
     {
       "id": "mux-video-storage-and-playback",
@@ -80,11 +110,26 @@
       "short": "Your Mux video is stored only in Mux. FAST Studio never downloads or converts it: \"getting it ready\" only reads its playlists and records how it is cut (quality levels and the length of every piece). When someone watches, our edge Worker writes a live playlist that sends the player to Mux for the programme and to our own storage (R2) for ads and slate.",
       "flow": {
         "boxes": [
-          ["Mux", "Stores your video and serves its pieces (stream.mux.com / Mux CDN)"],
-          ["FAST Studio server", "Remembers the video's details, the schedule and the ads; never serves video"],
-          ["Edge Worker (Cloudflare)", "Writes each viewer's live playlist every few seconds"],
-          ["R2 storage + CDN", "Our ads and slate, converted once by FFmpeg"],
-          ["Player", "Downloads programme pieces from Mux, ad and slate pieces from R2"]
+          [
+            "Mux",
+            "Stores your video and serves its pieces (stream.mux.com / Mux CDN)"
+          ],
+          [
+            "FAST Studio server",
+            "Remembers the video's details, the schedule and the ads; never serves video"
+          ],
+          [
+            "Edge Worker (Cloudflare)",
+            "Writes each viewer's live playlist every few seconds"
+          ],
+          [
+            "R2 storage + CDN",
+            "Our ads and slate, converted once by FFmpeg"
+          ],
+          [
+            "Player",
+            "Downloads programme pieces from Mux, ad and slate pieces from R2"
+          ]
         ]
       },
       "sections": [
@@ -109,7 +154,11 @@
           "html": "<p>Mux bills for viewing minutes of your programmes (its free plan covers 100,000 minutes a month). Ads and slate come from R2, which charges nothing for data sent to viewers. Keeping Mux videos out of R2 was your decision on 3 November 2026 (docs/OVP_DELIVERY_PLAN.md).</p>"
         }
       ],
-      "related": ["docs/OVP_DELIVERY_PLAN.md", "docs/html/FEATURES.html", "docs/html/FAST_Studio_Test_Guide.html#tests"]
+      "related": [
+        "docs/OVP_DELIVERY_PLAN.md",
+        "docs/html/FEATURES.html",
+        "docs/html/FAST_Studio_Test_Guide.html#tests"
+      ]
     }
   ]
 }
