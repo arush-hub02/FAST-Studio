@@ -1164,6 +1164,8 @@ table.table { width: 100%; border-collapse: collapse; }
 
 .player { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
 .player video { width: 100%; height: 100%; display: block; background: #000; }
+.vjs-player { --media-border-radius: 6px; border-radius: 6px; }
+.watch-player-wrap .vjs-player { --media-border-radius: 0; }
 .player-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; pointer-events: none; gap: 8px; }
 .player-ad { position: absolute; left: 12px; bottom: 54px; background: rgba(245, 158, 11, .95); color: #451a03; font-weight: 700; font-size: 12.5px; padding: 5px 10px; border-radius: 7px; }
 .player-msg { position: absolute; inset: 0; display: grid; place-items: center; color: #e2e8f0; text-align: center; padding: 24px; background: radial-gradient(circle at center, #1e1b4b, #000); }
@@ -3277,7 +3279,7 @@ table.table { width: 100%; border-collapse: collapse; }
 .library-preview-player {
   margin-bottom: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
 }
 .library-preview-thumb {
