@@ -368,15 +368,15 @@
       "id": "ad-delivery-r2-or-direct",
       "asked": "2026-11-10",
       "question": "Can ads be stored in R2 and served, or played directly from Google or another ad server?",
-      "short": "Planned, not built yet. Each ad server connection will get a Delivery setting: Store in R2 and serve (default) or Direct from the ad server, available when the platform switches on the Direct ad delivery feature for the tenant. Direct only works for ads the ad server offers in HLS that fit the channel; MP4-only ads (what Google mainly sends) fall back to Store in R2. Store in R2 also gets a fast first version, so new ads earn money in their first break.",
+      "short": "Built on branch claude/ad-delivery (2026-11-11), tested locally, not yet on the pilot. Each ad server connection has a Delivery setting: Store in R2 and serve (default) or Direct from the ad server, available when the platform switches on the Direct ad delivery feature for the company. Direct plays ads the ad server offers in HLS with 5 s pieces that fit the channel; other ads (MP4 only, which is what Google mainly sends) fall back to Store in R2. Store in R2 now publishes a new creative at one quality level first, so it can air in its first break. Use Test tag to see whether an ad server sends HLS.",
       "sections": [
         {
           "title": "Why not play every ad directly",
-          "html": "<ul><li>A live stream can only include HLS pieces; a plain MP4 file cannot be listed in it. Most VAST answers, Google included, carry MP4, so those ads are prepared and stored in R2.</li><li>A direct ad must match the channel: same piece format, a separate audio track on Mux (fMP4) channels, pieces of 5 s or less, and the declared length. Otherwise it would bring back the gaps and stalls fixed on 2026-11-10.</li><li>If the ad server's CDN fails mid-break, viewers can see a short stall; an R2 ad does not depend on it.</li></ul>"
+          "html": "<ul><li>A live stream can only include HLS pieces; a plain MP4 file cannot be listed in it. Most VAST answers, Google included, carry MP4, so those ads are prepared and stored in R2.</li><li>A direct ad must match the channel: same piece format, a separate audio track on Mux (fMP4) channels, pieces of 5 s (a shorter last piece is dropped, as for our R2 ads), and the declared length. Otherwise it would bring back the gaps and stalls fixed on 2026-11-10.</li><li>If the ad server's CDN fails mid-break, viewers can see a short stall; an R2 ad does not depend on it.</li></ul>"
         },
         {
-          "title": "Today",
-          "html": "<p>Every ad server ad is downloaded once, re-encoded by ffmpeg to the project's quality levels, stored in R2 and stitched in by the edge. Until a new creative is ready its break plays house promos or slate.</p><p>Design: <code>docs/superpowers/specs/2026-11-10-ad-delivery-design.md</code>.</p>"
+          "title": "How to use it",
+          "html": "<ol><li>Platform: Connectors, pick the project, tick the Direct delivery feature.</li><li>In the ad demand waterfall choose Delivery: Direct from the ad server when adding an ad server, or change it in its row.</li><li>Test tag shows each ad as MP4 only, HLS only, or MP4 and HLS.</li></ol><p>Design: <code>docs/superpowers/specs/2026-11-10-ad-delivery-design.md</code>.</p>"
         }
       ]
     }

@@ -162,8 +162,14 @@ public class VastSource implements IAdSource {
         return new Fill(slots, excluded, preparing);
     }
 
-    /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen. */
+    /** Which files the ad server offers for this ad (shown by the tag tester). */
+    public static String files(Ad ad) {
+        return ad.mediaUrl() != null && ad.hlsUrl() != null ? "MP4 and HLS" : ad.hlsUrl() != null ? "HLS only" : "MP4 only";
+    }
+
+    /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen (never for HLS-only ads). */
     public Creative creative(UUID org, Config src, Ad ad) {
+        if (ad.mediaUrl() == null) return new Creative(null, "HLS_ONLY", null, 0);   // nothing for us to prepare
         Optional<Creative> found = repository.creative(org, ad.ref());
         if (found.isPresent()) return found.get();
         try {

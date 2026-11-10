@@ -119,6 +119,21 @@ class VastSourceTest {
     }
 
     @Test
+    void hlsOnlyCreativeIsNeverQueuedForPreparation() {
+        var repository = org.mockito.Mockito.mock(com.faststudio.v1.repositories.ads.AdSourceRepository.class);
+        var source = new VastSource(repository, null, null);
+        var src = new IAdSource.Config(UUID.randomUUID(), "GAM", "VAST", "https://x", 1000, 1, true, "PLATFORM");
+        var ad = new VastSource.Ad("Hls", "GAM", 30_000, null, "GAM|creative:ch", java.util.Map.of(), "https://cdn.example/b/master.m3u8");
+        var c = source.creative(UUID.randomUUID(), src, ad);
+        assertNotNull(c);
+        assertNull(c.mediaKey());
+        org.mockito.Mockito.verify(repository, org.mockito.Mockito.never()).insertCreative(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        assertEquals("MP4 and HLS", VastSource.files(new VastSource.Ad("x", "", 1, "https://a.mp4", "r", java.util.Map.of(), "https://a.m3u8")));
+        assertEquals("HLS only", VastSource.files(ad));
+    }
+
+    @Test
     void adWithNeitherFileIsNotPlayable() throws IOException {
         assertNull(one("<MediaFile type=\"application/javascript\">https://cdn.example/vpaid.js</MediaFile>"));
     }

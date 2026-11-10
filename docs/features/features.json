@@ -3508,7 +3508,7 @@
       "id": "library-streaming",
       "title": "Programmes stream from the video library",
       "area": "Media library",
-      "status": "Built (2026-11-08), tested against a stand-in for Mux; not yet run against a real Mux account",
+      "status": "Built (2026-11-08); plays a real Mux channel on the pilot since 2026-11-10",
       "completed": "2026-11-08",
       "summary": "Library videos (Mux today) play straight from the library at their own segment lengths. FAST Studio splices its own ads (fetched live from your ad servers and converted once into R2) and slate into the live playlist at the breaks. Nothing is copied, and if the library or an ad server can't be reached, slate plays.",
       "who": [
@@ -3689,12 +3689,24 @@
           "account": "owner",
           "path": "/aurora/watch",
           "steps": [
-            { "waitFor": { "text": "Live buffer target · 2.5 segments" } },
-            { "waitFor": { "selector": ".watch-monitor-frame video" } },
-            { "eval": "document.querySelector('video').readyState >= 2 || new Promise((resolve, reject) => { const video = document.querySelector('video'); video.addEventListener('playing', resolve, { once: true }); setTimeout(() => reject(new Error('Watch did not start playback')), 15000); })" }
+            {
+              "waitFor": {
+                "text": "Live buffer target · 2.5 segments"
+              }
+            },
+            {
+              "waitFor": {
+                "selector": ".watch-monitor-frame video"
+              }
+            },
+            {
+              "eval": "document.querySelector('video').readyState >= 2 || new Promise((resolve, reject) => { const video = document.querySelector('video'); video.addEventListener('playing', resolve, { once: true }); setTimeout(() => reject(new Error('Watch did not start playback')), 15000); })"
+            }
           ],
           "target": ".watch-monitor-frame",
-          "mask": ["input[aria-label='Stream link']"],
+          "mask": [
+            "input[aria-label='Stream link']"
+          ],
           "caption": "Watch shows its live buffer target. An external HLS player chooses its own buffer."
         }
       ]
@@ -4325,7 +4337,7 @@
       "id": "tv-style-breaks",
       "title": "TV-style breaks: house promos, exact gaps and smooth slate loops",
       "area": "Ads and playout",
-      "status": "Built (2026-11-10), tested locally; not yet on the running pilot",
+      "status": "Built (2026-11-10), on the running pilot since 2026-11-10",
       "completed": "2026-11-10",
       "summary": "Break time no ad fills plays the channel's own house promos instead of the \"We'll be right back\" slate. When a library programme ends between two 5 s grid points, the gap before the break is a black piece of exactly that length, so players stay on time instead of playing about 5 s of slate and falling behind live at every break. Slates that are not a whole number of 5 s pieces loop only their whole pieces, so unfilled breaks no longer stall at every loop.",
       "who": [
@@ -4457,6 +4469,160 @@
                 "at": "viewer",
                 "state": "PLAYING",
                 "say": "The viewer sees an ad and the channel's own spots, not the standby slate."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ad-delivery",
+      "title": "Ad delivery per ad server: Store in R2 or Direct from the ad server",
+      "area": "Ads and playout",
+      "status": "Built (2026-11-11) on branch claude/ad-delivery, tested locally; not on the running pilot",
+      "completed": "2026-11-11",
+      "summary": "Each ad server connection chooses how its ads reach viewers. Store in R2 and serve (the default) prepares each creative once and plays our copy; a new creative now publishes one quality level first, so it can air in its first break. Direct from the ad server plays the ad server's own HLS straight from its CDN when it fits the channel, with no download or storage; ads that don't fit (MP4 only, other piece lengths or format) fall back to Store in R2. Direct needs the Direct ad delivery feature, which the platform switches on per company.",
+      "who": [
+        "Platform administrators (switch the feature on, set an ad server to Direct)",
+        "Companies with Own ad tags and the feature (their own ad servers)",
+        "Viewers (ads play like the rest of the break)"
+      ],
+      "steps": [
+        "Platform: open Connectors, pick the project and tick \"Ad server connections may play the ad server's own HLS directly (Direct delivery)\".",
+        "In the ad demand waterfall, add an ad server and choose Delivery: Direct from the ad server (or change an existing one in its row).",
+        "Use Test tag to see what the ad server sends: each ad shows MP4 only, HLS only, or MP4 and HLS. Direct needs HLS.",
+        "The waterfall marks Direct connections with a Direct badge."
+      ],
+      "howItWorks": [
+        "For a Direct connection, an ad with an HLS file is checked once (and again after a day): its piece format, separate audio, levels and piece lengths are saved per creative (ad_direct_check). The answer that sees it first uses the R2 path while the check runs.",
+        "An ad plays directly when its format matches the channel (TS or fMP4), fMP4 channels get a separate audio track, every piece but a short last one is 5 s, its length matches the ad server's and it fits the time left. The slot length is its whole 5 s pieces, like R2 ads.",
+        "The edge lists one ad piece per 5 s step, exactly where an R2 ad's piece would go, taking the address from the ad's own playlist (read once per location like a library programme). If that playlist can't be read, those steps play slate.",
+        "Store in R2: a creative from an ad server is encoded at one quality level first (the project's highest at or below 720p), published, then the full ladder is made in the background."
+      ],
+      "optimizations": [
+        "The ad's playlist is read once per location and reused by every viewer, like library programmes.",
+        "Checks run one at a time off the decision path; one in flight per creative."
+      ],
+      "scale": [
+        "Direct ads use the ad server's CDN: no R2 storage or egress for them."
+      ],
+      "rules": [
+        "Direct only with the AD_DIRECT_DELIVERY feature; saving Direct without it is refused (403 FEATURE_OFF), and a saved Direct setting plays as Store in R2 once the feature is switched off.",
+        "Only https HLS addresses play directly; the URL played is always the one in the current answer (ad servers sign URLs per request).",
+        "Competitive separation and the break length apply to Direct ads as to any other."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/ad-sources",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
+        "POST /api/orgs/{org}/ad-sources/test"
+      ],
+      "tests": [
+        "AdDirectDeliverySettingTest: Direct needs the feature (ad sources and connector form), defaults to Store in R2, read as Store once the feature is off; checks are saved and read back.",
+        "DirectAdCheckTest: HLS profile and every fit rule.",
+        "VastDirectPlacementTest: fitting ads become Direct slots; first sight, stale checks, MP4-only and misfits take the R2 path.",
+        "PlaybackDecisionDirectTest: a Direct slot is not cut for lacking an edge copy.",
+        "Worker direct.test.ts: ad server pieces in the 5 s steps, slate when unread or of the other format, audio track, SGAI asset list.",
+        "MediaPruneTest: one level first, then the full ladder.",
+        "e2e ad-delivery.spec.ts: the Delivery choice appears only with the feature.",
+        "Chrome hls.js through a live break with a Direct ad (local): 0 stalls, 0 errors, 0 of 1,960 frames dropped, all 6 ad pieces from the ad server."
+      ],
+      "docs": [
+        "superpowers/specs/2026-11-10-ad-delivery-design.md"
+      ],
+      "screenshots": [],
+      "flow": {
+        "title": "How an ad server's ad reaches the viewer",
+        "intro": "Each ad server connection has a Delivery setting; Direct ads that don't fit take the R2 path.",
+        "nodes": [
+          {
+            "id": "adserver",
+            "col": 1,
+            "row": 1,
+            "icon": "📡",
+            "label": "Ad server",
+            "sub": "VAST answer"
+          },
+          {
+            "id": "control",
+            "col": 2,
+            "row": 1,
+            "icon": "⚙",
+            "label": "Control plane",
+            "sub": "Ad decision"
+          },
+          {
+            "id": "r2",
+            "col": 2,
+            "row": 2,
+            "icon": "🗄",
+            "label": "R2",
+            "sub": "Our prepared copy"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "☁",
+            "label": "Playback edge",
+            "sub": "Builds the playlist"
+          },
+          {
+            "id": "viewer",
+            "col": 4,
+            "row": 1,
+            "icon": "▶",
+            "label": "Viewer",
+            "sub": "Plays the break"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Direct: the ad fits",
+            "steps": [
+              {
+                "at": "adserver",
+                "state": "HLS",
+                "say": "The answer lists the ad as MP4 and HLS."
+              },
+              {
+                "at": "control",
+                "state": "FITS",
+                "say": "Its checked HLS has 5 s TS pieces on a TS channel: a Direct slot of 30 s."
+              },
+              {
+                "at": "edge",
+                "state": "DIRECT",
+                "say": "The playlist lists the ad server's pieces in the break's 5 s steps."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The player fetches the ad from the ad server's CDN; nothing came from R2."
+              }
+            ]
+          },
+          {
+            "name": "Store in R2: a new creative",
+            "steps": [
+              {
+                "at": "adserver",
+                "state": "MP4",
+                "say": "A creative never seen before arrives as MP4."
+              },
+              {
+                "at": "control",
+                "state": "1 LEVEL",
+                "say": "It is encoded at one quality level first and published."
+              },
+              {
+                "at": "r2",
+                "state": "STORED",
+                "say": "Our copy reaches R2 and the edge; the full ladder follows in the background."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The ad airs in its first break instead of slate."
               }
             ]
           }

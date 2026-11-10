@@ -47,7 +47,8 @@ public class AdSourceAdminService {
 
     public record TagTestRequest(@NotBlank @Size(max = 2000) String tagUrl, @Min(100) @Max(5000) int timeoutMs, boolean prepare) {}
 
-    public record TestAd(String title, String advertiser, long durationMs, String mediaUrl, int trackingUrls, String creative) {}
+    /** files: MP4 only, HLS only, or MP4 and HLS (Direct delivery needs HLS). */
+    public record TestAd(String title, String advertiser, long durationMs, String mediaUrl, int trackingUrls, String creative, String files) {}
 
     public record TagTest(String url, long ms, List<TestAd> ads, String error) {}
 
@@ -113,7 +114,9 @@ public class AdSourceAdminService {
                 var c = r.prepare() ? vast.creative(org, src, a) : repository.creative(org, a.ref()).orElse(null);
                 String status = c == null ? (r.prepare() ? "Queued for conditioning" : "New: will be conditioned when first served (or tick 'prepare')")
                         : "READY".equals(c.status()) ? "Ready (conditioned to " + c.durationMs() / 1000 + " s)" : c.status().charAt(0) + c.status().substring(1).toLowerCase();
-                out.add(new TestAd(a.title(), a.advertiser(), a.durationMs(), null, a.tracking().values().stream().mapToInt(List::size).sum(), status));
+                if (a.mediaUrl() == null) status = "HLS only: plays only with Direct delivery";
+                out.add(new TestAd(a.title(), a.advertiser(), a.durationMs(), null, a.tracking().values().stream().mapToInt(List::size).sum(), status,
+                        VastSource.files(a)));
             }
             return new TagTest("[REDACTED]", ms, out, null);
         } catch (ApiException e) {

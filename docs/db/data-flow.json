@@ -3085,6 +3085,56 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -3391,6 +3441,66 @@
             {
               "class": "AdSourceRepository",
               "method": "channelSlugOfBreak",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -44692,6 +44802,61 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "beacon",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "beacon",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -45371,6 +45536,61 @@
             {
               "class": "CampaignRepository",
               "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "decision",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
               "layer": "repository"
             }
           ]
@@ -47413,6 +47633,7 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "POST /api/orgs/{org}/ads/simulate",
         "GET /api/orgs/{org}/connectors",
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
@@ -47459,7 +47680,9 @@
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
-        "PUT /api/platform/permissions/{key}"
+        "PUT /api/platform/permissions/{key}",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "POST /api/platform/features",
@@ -47477,6 +47700,7 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "POST /api/orgs/{org}/ads/simulate",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",

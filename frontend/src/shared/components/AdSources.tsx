@@ -9,7 +9,7 @@ import { ErrorBox, InfoTip, Loading, useAction, useApi } from '../ui'
 type Source = { id: string | null; name: string; kind: 'DIRECT' | 'VAST'; tagUrl: string | null; timeoutMs: number; position: number; enabled: boolean; managedBy: 'PLATFORM' | 'TENANT'; delivery?: Delivery }
 type Delivery = 'STORE_R2' | 'DIRECT'
 const DELIVERY: Record<Delivery, string> = { STORE_R2: 'Store in R2 and serve', DIRECT: 'Direct from the ad server' }
-type TestAd = { title: string; advertiser: string; durationMs: number; mediaUrl: string; trackingUrls: number; creative: string }
+type TestAd = { title: string; advertiser: string; durationMs: number; mediaUrl: string; trackingUrls: number; creative: string; files?: string }
 type TagTest = { url: string; ms: number; ads: TestAd[]; error: string | null }
 
 const MACROS = '[POD_DURATION] [CHANNEL_ID] [DEVICE_ID] [CLIENT_IP] [USER_AGENT] [COUNTRY] [CONTENT_GENRE] [CACHEBUSTER]'
@@ -120,7 +120,7 @@ export function AdSources({ base, mode, canAddOwn = false, canDirect = false }: 
                 : <div><b>{test.ads.length} ad(s) in {test.ms} ms</b>{test.ads.length === 0 && ' (no fill: the tag works but returned nothing)'}</div>}
               {test.ads.map((a, i) => (
                 <div key={i} style={{ marginTop: 6 }}>
-                  {a.title} · {Math.round(a.durationMs / 1000)} s{a.advertiser && ` · ${a.advertiser}`} · {a.trackingUrls} tracking URLs · <i>{a.creative}</i>
+                  {a.title} · {Math.round(a.durationMs / 1000)} s{a.advertiser && ` · ${a.advertiser}`}{a.files && ` · ${a.files}`} · {a.trackingUrls} tracking URLs · <i>{a.creative}</i>
                 </div>
               ))}
               <div className="faint mono" style={{ marginTop: 6, wordBreak: 'break-all' }}>{test.url}</div>
