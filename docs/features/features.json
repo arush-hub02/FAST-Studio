@@ -4308,11 +4308,11 @@
     },
     {
       "id": "tv-style-breaks",
-      "title": "TV-style breaks: house promos and exact gaps",
+      "title": "TV-style breaks: house promos, exact gaps and smooth slate loops",
       "area": "Ads and playout",
       "status": "Built (2026-11-10), tested locally; not yet on the running pilot",
       "completed": "2026-11-10",
-      "summary": "Break time no ad fills plays the channel's own house promos instead of the \"We'll be right back\" slate. When a library programme ends between two 5 s grid points, the gap before the break is a black piece of exactly that length, so players stay on time instead of playing about 5 s of slate and falling behind live at every break.",
+      "summary": "Break time no ad fills plays the channel's own house promos instead of the \"We'll be right back\" slate. When a library programme ends between two 5 s grid points, the gap before the break is a black piece of exactly that length, so players stay on time instead of playing about 5 s of slate and falling behind live at every break. Slates that are not a whole number of 5 s pieces loop only their whole pieces, so unfilled breaks no longer stall at every loop.",
       "who": [
         "Ad managers with Ads edit (mark a campaign as a house promo)",
         "Viewers (no slate flash, no drift at breaks)"
@@ -4325,7 +4325,8 @@
       "howItWorks": [
         "The ad decision works down the waterfall as before (direct-sold campaigns, then ad servers). Time still open afterwards is filled with active house promos for the viewer's country, rotating and repeating, at no CPM. Only time no promo fits plays the standby slate.",
         "While a paid ad is still being prepared before the break, the time stays open so the retry can still place it; promos are added when the decision becomes final.",
-        "Streaming programmes have their own segment lengths (Mux: 5 s pieces and a shorter last one). When a programme part ends before its 5 s slot does, the snapshot lists the gap length. The control plane makes a black, silent piece of that many frames once (every quality level, MPEG-TS and fMP4 with its own audio) and copies it to the edge; the Worker then plays it for the gap."
+        "Streaming programmes have their own segment lengths (Mux: 5 s pieces and a shorter last one). When a programme part ends before its 5 s slot does, the snapshot lists the gap length. The control plane makes a black, silent piece of that many frames once (every quality level, MPEG-TS and fMP4 with its own audio) and copies it to the edge; the Worker then plays it for the gap.",
+        "Standby, region slate and fallback loop their leading whole 5 s pieces only (MediaServiceV1.fullSegments); a project slate of 12.3 s loops its first 10 s."
       ],
       "optimizations": [
         "Black pieces are made once per length (nearest frame at 25 fps) and shared by every channel and viewer; distinct lengths are few.",
@@ -4348,7 +4349,9 @@
         "MediaPruneTest: a black filler is one piece of exactly the asked frames at every level, with an audio track (runs ffmpeg).",
         "MuxTest: a 13.857 s programme in a 15 s slot asks for the 1.143 s black piece.",
         "Worker ovp.test.ts: the gap plays the black piece of its length, after a discontinuity.",
-        "Splice check in Chrome (hls.js) with real Mux pieces and our ad: the old cut-off slate piece played 5 s of slate for a 0.714 s gap; an exact piece played on time with no stalls."
+        "Splice check in Chrome (hls.js) with real Mux pieces and our ad: the old cut-off slate piece played 5 s of slate for a 0.714 s gap; an exact piece played on time with no stalls.",
+        "MediaPruneTest: a slate of 5 + 5 + 2.32 s loops two pieces.",
+        "Live pilot probe (hls.js, Watch settings): before the loop fix, stalls at the end of every slate loop in an unfilled break."
       ],
       "docs": [
         "OVP_DELIVERY_PLAN.md"
