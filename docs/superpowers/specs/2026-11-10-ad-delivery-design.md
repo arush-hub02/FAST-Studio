@@ -60,13 +60,14 @@ The user wants both delivery ways available, chosen per ad server connection and
 2. **Fit rules** (all must hold, per channel format):
    - container matches the channel (TS channel: TS pieces; fMP4 channel: fMP4 pieces);
    - fMP4 channels: a separate audio rendition;
-   - every piece ≤ 5 s (the timeline step);
+   - its pieces are 5 s each (±0.1 s), like our R2 ads; a shorter last piece is dropped, exactly as R2 ads drop
+     their short tail (`fullSegments`), so the slot length is the whole pieces × 5 s (amended 2026-11-10: inside a
+     break the edge swaps one ad piece per 5 s step; variable piece lengths would need breaks rebuilt like spans);
    - total length within 0.5 s of the VAST duration and ≤ time left in the break.
-3. **Worker playlist**: a DIRECT slot is laid out like a streamed Mux programme: read the ad's master with the
-   existing OVP reader (cached per URL for the break), pick per channel level the nearest variant (highest at or
-   below the level, else lowest above), list its pieces with their real durations and absolute URLs (`EXT-X-MAP` for
-   fMP4), DISCONTINUITY before and after, audio pieces in the audio playlist on fMP4 channels, and the remainder to the
-   next 5 s step as an exact black filler. SGAI interstitial asset lists use the ad's HLS URL.
+3. **Worker playlist**: a DIRECT slot fills the same 5 s steps an R2 ad does: read the ad's master with the existing
+   OVP reader (cached per URL), pick per channel level the nearest variant (`ovp.pick`), and list piece n of that
+   variant (absolute URL, `EXT-X-MAP` for fMP4) in step n, DISCONTINUITY before and after as for R2 ads, and on
+   fMP4 channels the ad's audio piece n in the audio playlist. Pieces not yet read play slate. SGAI interstitial asset lists use the ad's HLS URL.
 4. **Tracking**: impression and quartile beacons fire as today (Worker, when the viewer loads the ad's pieces).
 5. **Failure**: if reading the ad's HLS fails when the playlist is built, the Worker plays the slot as slate. Once a
    playlist is out it can't be changed: an ad CDN failure mid-break shows as a short stall (accepted risk).
@@ -81,7 +82,7 @@ nearest lower level (existing behaviour).
 
 ## Out of scope
 
-- Player-side ads (IMA SDK); converting MP4 for direct play (that is Store in R2); changing the 5 s timeline step;
+- Ads with pieces other than 5 s (they use Store in R2); player-side ads (IMA SDK); converting MP4 for direct play (that is Store in R2); changing the 5 s timeline step;
   swapping an ad after its playlist was served.
 
 ## Testing
