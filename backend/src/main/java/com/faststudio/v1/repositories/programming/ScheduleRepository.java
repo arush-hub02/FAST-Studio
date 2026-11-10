@@ -64,10 +64,18 @@ public class ScheduleRepository {
     public void insertEntries(UUID org, UUID version, List<Planner.Item> items) {
         for (Planner.Item it : items)
             db.sql("""
-                    insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership)
-                    values (:o, :v, :k, :a, :off, :s, :e, :own)""")
+                    insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, slate_only)
+                    values (:o, :v, :k, :a, :off, :s, :e, :own, :slate)""")
                     .param("o", org).param("v", version).param("k", it.kind()).param("a", it.assetId()).param("off", it.offsetMs())
-                    .param("s", Times.utc(it.start())).param("e", Times.utc(it.end())).param("own", it.ownership()).update();
+                    .param("s", Times.utc(it.start())).param("e", Times.utc(it.end())).param("own", it.ownership()).param("slate", it.slateOnly()).update();
+    }
+
+    public boolean setBreakFill(UUID org, UUID version, UUID entry, boolean slateOnly, Instant now) {
+        return db.sql("""
+                update schedule_entry set slate_only = :slate where org_id = :o and version_id = :v and id = :id
+                  and kind = 'AD_BREAK' and start_at > :now""")
+                .param("slate", slateOnly).param("o", org).param("v", version).param("id", entry)
+                .param("now", Times.utc(now)).update() == 1;
     }
 
     /** Deletes entries starting at or after {@code from}; returns how many. */
@@ -93,8 +101,8 @@ public class ScheduleRepository {
     /** Copies every entry of one version into another (publish, restore). */
     public void copyEntries(UUID org, UUID fromVersion, UUID toVersion) {
         db.sql("""
-                insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, rule_id, rule_date)
-                select org_id, :to, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, rule_id, rule_date from schedule_entry
+                insert into schedule_entry(org_id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, rule_id, rule_date, slate_only)
+                select org_id, :to, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, rule_id, rule_date, slate_only from schedule_entry
                 where org_id = :o and version_id = :from""").param("to", toVersion).param("o", org).param("from", fromVersion).update();
     }
 }

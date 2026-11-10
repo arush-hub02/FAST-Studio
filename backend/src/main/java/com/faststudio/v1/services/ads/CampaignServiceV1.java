@@ -90,7 +90,8 @@ public class CampaignServiceV1 {
                 .filter(e -> e.isBreak() && e.end().isAfter(now)).findFirst()
                 .orElseThrow(() -> ApiException.conflict("NO_BREAKS", "No upcoming ad breaks in the published schedule."));
         String programme = b.assetId() == null ? "Between programmes" : "Inside \"" + data.asset(t.orgId(), b.assetId()).title() + "\"";
-        var d = decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
+        var d = b.slateOnly() ? AdDecisionServiceV1.slateOnly(b.id(), b.durationMs())
+                : decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
         return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, AdDecisionView.from(d), true);
     }
 }

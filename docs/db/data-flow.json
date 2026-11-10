@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09",
+  "generatedAt": "2026-11-10",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -2965,7 +2965,7 @@
             },
             {
               "class": "AdSourceRepository",
-              "method": "decision",
+              "method": "saveDecision",
               "layer": "repository"
             }
           ]
@@ -12307,6 +12307,104 @@
             {
               "class": "ScheduleServiceV1",
               "method": "remove",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "bump",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "draft",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}": {
+      "title": "Change how a break is filled",
+      "category": "Schedule and EPG",
+      "id": "ep-patch-api-orgs-org-channels-id-schedule-entries-entryid",
+      "handler": "ScheduleControllerV1.setBreakFill",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setBreakFill",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setBreakFill",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setBreakFill",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setBreakFill",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "bump",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "channel",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setBreakFill",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setBreakFill",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleRepository",
+              "method": "setBreakFill",
+              "layer": "repository"
+            }
+          ]
+        },
+        "schedule_version": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setBreakFill",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setBreakFill",
               "layer": "service"
             },
             {
@@ -39878,6 +39976,11 @@
               "class": "EdgePublisher",
               "method": "snapshot",
               "layer": "util"
+            },
+            {
+              "class": "Data",
+              "method": "assets",
+              "layer": "core"
             }
           ]
         },
@@ -40408,6 +40511,36 @@
               "class": "Data",
               "method": "entries",
               "layer": "core"
+            }
+          ]
+        },
+        "schedule_version": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "TenantAdminControllerV1",
+              "method": "delete",
+              "layer": "controller"
+            },
+            {
+              "class": "TenantDataService",
+              "method": "delete",
+              "layer": "service"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "takeOffAir",
+              "layer": "util"
+            },
+            {
+              "class": "EdgePublisher",
+              "method": "snapshot",
+              "layer": "util"
+            },
+            {
+              "class": "AssetRepository",
+              "method": "slateKeys",
+              "layer": "repository"
             }
           ]
         },
@@ -43913,7 +44046,7 @@
             },
             {
               "class": "AdSourceRepository",
-              "method": "decision",
+              "method": "saveDecision",
               "layer": "repository"
             }
           ]
@@ -44556,7 +44689,7 @@
             },
             {
               "class": "AdSourceRepository",
-              "method": "decision",
+              "method": "saveDecision",
               "layer": "repository"
             }
           ]
@@ -45175,7 +45308,7 @@
       "handler": "PlaybackControllerV1.info",
       "tables": {
         "ad_decision": {
-          "mode": "read+write",
+          "mode": "read",
           "chain": [
             {
               "class": "PlaybackControllerV1",
@@ -45189,12 +45322,12 @@
             },
             {
               "class": "PlayoutServiceV1",
-              "method": "decision",
+              "method": "savedDecision",
               "layer": "service"
             },
             {
               "class": "AdDecisionServiceV1",
-              "method": "decide",
+              "method": "saved",
               "layer": "service"
             },
             {
@@ -45205,7 +45338,7 @@
           ]
         },
         "ad_event": {
-          "mode": "read+write",
+          "mode": "read",
           "chain": [
             {
               "class": "PlaybackControllerV1",
@@ -45284,166 +45417,6 @@
             }
           ]
         },
-        "connector_definition": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
-        "connector_property": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
-        "connector_value": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "waterfall",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "waterfall",
-              "layer": "repository"
-            }
-          ]
-        },
-        "customer_tenant": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
         "destination": {
           "mode": "read",
           "chain": [
@@ -45465,41 +45438,6 @@
             {
               "class": "PlaybackRepository",
               "method": "session",
-              "layer": "repository"
-            }
-          ]
-        },
-        "organization": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "personalizedAds",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effective",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "tenant",
               "layer": "repository"
             }
           ]
@@ -45529,116 +45467,6 @@
             }
           ]
         },
-        "project_connector": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
-        "project_property_value": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "personalizedAds",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effective",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "values",
-              "layer": "repository"
-            }
-          ]
-        },
-        "property_definition": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "personalizedAds",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effective",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "definitions",
-              "layer": "repository"
-            }
-          ]
-        },
         "rights_policy": {
           "mode": "read",
           "chain": [
@@ -45653,18 +45481,8 @@
               "layer": "service"
             },
             {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
+              "class": "PlaybackServiceV1",
+              "method": "currentRights",
               "layer": "service"
             },
             {
@@ -45696,116 +45514,6 @@
               "class": "Data",
               "method": "entries",
               "layer": "core"
-            }
-          ]
-        },
-        "schedule_version": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "AdSourceRepository",
-              "method": "channelSlugOfBreak",
-              "layer": "repository"
-            }
-          ]
-        },
-        "tenant_connector": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "decide",
-              "layer": "service"
-            },
-            {
-              "class": "AdDecisionServiceV1",
-              "method": "compute",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "driverEnabled",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "driverEnabled",
-              "layer": "repository"
-            }
-          ]
-        },
-        "tenant_property_value": {
-          "mode": "read",
-          "chain": [
-            {
-              "class": "PlaybackControllerV1",
-              "method": "info",
-              "layer": "controller"
-            },
-            {
-              "class": "PlaybackServiceV1",
-              "method": "info",
-              "layer": "service"
-            },
-            {
-              "class": "PlayoutServiceV1",
-              "method": "decision",
-              "layer": "service"
-            },
-            {
-              "class": "MediaSettingsServiceV1",
-              "method": "personalizedAds",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationServiceV1",
-              "method": "effective",
-              "layer": "service"
-            },
-            {
-              "class": "TenantConfigurationRepository",
-              "method": "values",
-              "layer": "repository"
             }
           ]
         }
@@ -46371,6 +46079,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -46751,7 +46460,6 @@
         "POST /oauth/token",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info",
         "POST /play/sessions"
       ],
       "write": [
@@ -46853,8 +46561,7 @@
         "POST /api/platform/tenants/{tenant}/status",
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "POST /api/platform/tenants/{tenant}/delete",
@@ -46945,8 +46652,7 @@
         "POST /api/platform/tenants/{tenant}/status",
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "PUT /api/platform/connector-definitions",
@@ -47005,8 +46711,7 @@
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "POST /api/orgs/{org}/ad-sources",
@@ -47074,8 +46779,7 @@
         "POST /api/platform/tenants/{tenant}/delete",
         "POST /hooks/mux/{org}",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "DELETE /api/platform/connector-definitions/{key}/properties/{prop}",
@@ -47402,6 +47106,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -47491,6 +47196,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore"
       ]
@@ -47505,8 +47211,7 @@
       "write": [
         "POST /api/orgs/{org}/ads/simulate",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ]
     },
     "rights_policy": {
@@ -47562,13 +47267,14 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
         "DELETE /api/orgs/{org}/slate",
+        "POST /api/platform/tenants/{tenant}/delete",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "POST /api/orgs/{org}/channels",
@@ -47578,6 +47284,7 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore"
       ]
@@ -47619,8 +47326,7 @@
         "POST /api/platform/tenants/{tenant}/status",
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": []
     },
@@ -47661,8 +47367,7 @@
         "POST /api/platform/tenants/{tenant}/status",
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": []
     },
@@ -47704,8 +47409,7 @@
       ],
       "write": [
         "POST /play/{session}/beacons",
-        "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info"
+        "GET /play/{session}/decisions/{breakId}"
       ]
     },
     "campaign": {
@@ -47844,7 +47548,6 @@
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info",
         "POST /play/sessions"
       ],
       "write": []
@@ -47892,7 +47595,6 @@
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info",
         "POST /play/sessions"
       ],
       "write": []
@@ -47939,7 +47641,6 @@
         "PUT /api/platform/tenants/{tenant}/subscription",
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}",
-        "GET /play/{session}/info",
         "POST /play/sessions"
       ],
       "write": [

@@ -600,6 +600,8 @@ export default function Schedule() {
                     busy={busy}
                     issues={v.issues.filter(i => i.entryId === sel.id)}
                     onReplace={() => setReplaceEntry(sel)}
+                    onBreakFill={editable && sel.kind === 'AD_BREAK' && Date.parse(sel.startAt) > liveTimeMs
+                      ? slateOnly => edit(`entries/${sel.id}`, { slateOnly }, 'PATCH') : undefined}
                     onDelete={() => {
                       edit(`entries/${sel.id}`, null, 'DELETE')
                       setSelected(null)

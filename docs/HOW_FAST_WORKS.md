@@ -121,8 +121,8 @@ Ad-insertion mode is configured per **destination**, not per channel. One channe
 
 1. Player requests `/live/{signed session token}/v2.m3u8` from the Worker.
 2. The stitcher builds the virtual-linear window (§2.1) and sees an upcoming break (`brk-7f3a-1`, 120 s).
-3. About 30 s before the break it asks the control plane for a decision, once per session per break. The control plane works down the tenant's waterfall of ad connectors (direct-sold campaigns, then each external VAST ad server within its timeout). VAST requests carry macros: device IP, user agent, consent and allowed identifiers.
-4. The ADS returns VAST. The stitcher keeps only creatives that are already re-cut to the 5 s ladder (a new one is queued and airs from the next break), and fits them to 120 s, for example 30 + 30 + 15 + 30 = 105 s plus 15 s of slate.
+3. Up to 60 s before the break it asks the control plane for a decision in the background. An empty decision waiting for creative preparation can retry before the break. The control plane works down the tenant's waterfall of ad connectors (direct-sold campaigns, then each external VAST ad server within its timeout). VAST requests carry macros: device IP, user agent, consent and allowed identifiers.
+4. The ADS returns VAST. The stitcher keeps only creatives that are already re-cut to the 5 s ladder (an unseen creative is queued and can air once it reaches the edge in the format the channel uses), and fits them to 120 s, for example 30 + 30 + 15 + 30 = 105 s plus 15 s of slate.
 5. The stitcher swaps slate segments for ad segments one for one, with `#EXT-X-DISCONTINUITY` at each join. The segment count never changes, so the media sequence stays put and the stitcher keeps no per-viewer timeline.
 6. When an ad segment enters the viewer's playlist window, the Worker reports the impression or quartile and the control plane fires that ad's VAST tracking URLs once.
 7. **Fallbacks:** ADS timeout, empty VAST or malformed XML each mean house ad or slate. The break never runs longer than 120 s.

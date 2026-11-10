@@ -1,7 +1,7 @@
 // Run: npm test (Node 22+ strips the types itself)
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { type Decided, type Session, type Snapshot, EPOCH, assetList, mediaPlaylist } from './playout.ts'
+import { type Decided, type Session, type Snapshot, EPOCH, assetList, breaksToDecide, mediaPlaylist } from './playout.ts'
 
 const SEG = 5000
 const T0 = EPOCH + 1000 * SEG
@@ -84,4 +84,21 @@ test('quality levels: each channel level uses its folder, or the nearest lower o
   const t = mediaPlaylist(hd, viewer(), 1, T0 + 100_000, 'https://m', () => ad15, new Map()).text
   assert.ok(t.includes('https://m/aurora/film.1/3/seg_'), 'programme at 1080p')
   assert.ok(t.includes('https://m/aurora/ad.1/2/seg_'), 'the ad has no level list here, so 720p')
+})
+
+test('slate-only breaks keep the splice markers but skip ad requests and creative segments', () => {
+  const slateOnly: Snapshot = { ...snap, items: snap.items.map(item => item.id === 'b1' ? { ...item, slateOnly: true } : item) }
+  assert.equal(breaksToDecide(snap, viewer(), T0 + 20_000).soon.length, 1)
+  assert.deepEqual(breaksToDecide(slateOnly, viewer(), T0 + 20_000), { now: [], soon: [] })
+  assert.deepEqual(breaksToDecide(slateOnly, viewer(), T0 + 65_000), { now: [], soon: [] })
+  const result = mediaPlaylist(slateOnly, viewer(), 0, T0 + 100_000, 'https://m', () => ad15, new Map())
+  assert.match(result.text, /#EXT-X-CUE-OUT:DURATION=30.000/)
+  assert.equal(segs(result.text).filter(uri => uri.includes('standby')).length, 6)
+  assert.equal(result.beacons.length, 0)
+})
+
+test('an empty ad-server decision fills the complete break with slate', () => {
+  const result = play(T0 + 100_000, { breakMs: 30_000, filledMs: 0, slots: [] })
+  assert.equal(segs(result.text).filter(uri => uri.includes('standby')).length, 6)
+  assert.equal(result.beacons.length, 0)
 })

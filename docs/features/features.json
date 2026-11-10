@@ -3628,7 +3628,7 @@
               {
                 "at": "r2",
                 "state": "slate",
-                "say": "If an ad server times out, fails or has no ads, the break plays slate."
+                "say": "If an ad server times out, fails or has no eligible creative by the break, the player sees slate."
               },
               {
                 "at": "player",
@@ -3651,11 +3651,11 @@
         "Segment numbers come from a per-channel anchor (channel_timeline) and stay identical across snapshots and Worker locations.",
         "The Worker (ovp.ts) reads the library's master and rendition playlists, picks the rendition nearest each of our quality levels, caches them per location (memory, then the Cache API) and keeps serving the last good copy when a read fails.",
         "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window.",
-        "fMP4 channels: every video, ad and slate FAST Studio packages also gets an fMP4 copy (repackaged, not re-encoded). A channel whose library programmes stream as fMP4 plays all our media from those copies, announcing each source with EXT-X-MAP; media without a copy plays slate."
+        "fMP4 channels: every video, ad and slate FAST Studio packages also gets an fMP4 copy (repackaged, not re-encoded). A channel whose library programmes stream as fMP4 plays all our media from those copies, announcing each source with EXT-X-MAP; media without a matching copy plays slate. The edge can still read older muxed fMP4 packages during an upgrade."
       ],
       "optimizations": [
         "Library playlists are read once per location, video and quality level and shared by every viewer; viewers fetch video segments from the library's CDN directly.",
-        "A viewer's playlist waits for a library read only the first time; refreshes run in the background.",
+        "A viewer's playlist waits for a library read only the first time. Ad decisions are prefetched up to 60 seconds before an SSAI break. An empty decision waiting for a creative can retry before the break.",
         "Snapshots only load the streaming details of videos in their window; the numbering anchor is written once an hour per channel."
       ],
       "scale": [
@@ -4020,7 +4020,7 @@
               {
                 "at": "ui",
                 "state": "slate.mp4",
-                "say": "Ads → Slate → Upload slate.",
+                "say": "Ads → Slate → Upload slate, then choose Live when ready or Next schedule publish.",
                 "tech": "`POST /api/orgs/{org}/slate`"
               },
               {
@@ -4036,7 +4036,7 @@
               {
                 "at": "edge",
                 "state": "on air",
-                "say": "The project's channels show this slate instead of the platform standby."
+                "say": "The new slate appears once ready. If deferred, each channel waits for its next schedule publish. Existing live segments keep their URLs."
               }
             ]
           }
@@ -4045,7 +4045,7 @@
       "steps": [
         "Library → Add video → choose a file; with several video libraries choose one under Upload to → Upload.",
         "Ads → Ad creatives → Add creative.",
-        "Ads → Slate → Upload slate (a 10 to 60 s loop). \"Use platform standby\" removes it.",
+        "Ads → Slate → Upload slate (a 10 to 60 s loop). Choose Live when ready or Next schedule publish. \"Use platform standby\" removes it.",
         "Platform administrators: tenant page → Connectors → Mux → add another connection with its own name and tokens."
       ],
       "howItWorks": [
@@ -4053,7 +4053,7 @@
         "MediaConnectionService lists every connection; sync, prepare, streaming, edge links and webhooks use the video's own connection (webhooks find it by the secret that signed them).",
         "LibraryServiceV1.watchUploads asks the platform where each pending upload went (IDirectUpload.uploaded), so uploads finish without webhooks.",
         "AssetServiceV1 refuses FAST Studio uploads of programmes when the project has a video library; SlateServiceV1 keeps SLATE assets (hidden from the asset list).",
-        "EdgePublisher prunes ads and slate to their playlists once R2 holds both copies; MediaFileControllerV1 redirects missing segments to the edge; snapshots use the project slate as standby."
+        "EdgePublisher prunes ads and slate to their playlists once R2 holds both copies; MediaFileControllerV1 redirects missing segments to the edge; snapshots use the latest slate whose media is ready at the edge. On a running channel, a slate update takes effect on future segments after a short propagation window."
       ],
       "optimizations": [
         "Connections cached per project for a minute at the edge publisher.",
@@ -4066,7 +4066,7 @@
       "rules": [
         "Ads and slate never go to the video library.",
         "Projects never see the platform's name: connections named after it show as \"Video library\".",
-        "A new slate airs once converted; until then the previous one (or the platform standby) airs."
+        "A new slate airs after it reaches the edge and the update has time to propagate. The previous slate remains in playlists for segments already issued. A deferred slate also waits for each channel to publish a schedule after the upload."
       ],
       "api": [
         "GET /api/orgs/{org}/library (uploadTo)",
@@ -4077,13 +4077,175 @@
       "tests": [
         "MuxTest.withTwoLibrariesTheUploadGoesToTheChosenOneAndIsLinkedWithoutWebhooks",
         "MediaPruneTest",
+        "ProgrammingFeaturesTest.slateCanWaitForEachChannelsNextSchedule",
         "worker playout.test.ts (project slate levels)"
       ],
       "docs": [
         "docs/html/FAQ.html",
         "docs/OVP_DELIVERY_PLAN.md"
       ],
-      "screenshots": []
+      "screenshots": [
+        {
+          "id": "activation",
+          "account": "owner",
+          "path": "/aurora/ads",
+          "steps": [{ "click": { "role": "button", "name": "Upload slate" } }],
+          "target": "[role=dialog]",
+          "caption": "Choose when the new slate applies to each channel."
+        }
+      ]
+    },
+    {
+      "id": "schedule-break-fill",
+      "title": "Choose how a scheduled ad break is filled",
+      "area": "Programming",
+      "status": "Built",
+      "completed": "2026-11-10",
+      "summary": "Scheduled ad breaks try the project’s ad sources by default. Operators can choose Slate only for a specific upcoming break and publish that choice with the schedule.",
+      "who": [
+        "Operators with Schedule edit",
+        "Users with Schedule publish to apply the draft"
+      ],
+      "steps": [
+        "Open Schedule and select a channel.",
+        "Choose Add Ad Break, or select an upcoming break in the draft timeline.",
+        "Under Break fill, choose Ads first or Slate only. Insert a new break or let the edit save to the draft.",
+        "Publish the draft when it is ready to go on air."
+      ],
+      "howItWorks": [
+        "The break stores one fill choice in its schedule version. New and existing breaks use Ads first unless an operator chooses Slate only.",
+        "The Worker starts the ad decision ahead of an Ads first break. It uses the configured ad-source order and plays slate in unfilled slots.",
+        "For Slate only, the Worker keeps the scheduled duration and skips ad requests. SSAI and pass-through still carry their SCTE-35 markers."
+      ],
+      "optimizations": [
+        "Slate-only breaks use media already packaged at the edge and skip the ad decision request."
+      ],
+      "scale": [
+        "The setting is carried with the existing schedule snapshot. Each viewer of a slate-only break uses the same shared media objects."
+      ],
+      "rules": [
+        "Only an upcoming break in the draft can be edited. Publishing applies the choice to the live schedule.",
+        "The setting controls FAST Studio’s fill. A distributor can still use its own inventory according to the destination rules."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}"
+      ],
+      "tests": [
+        "ProgrammingFeaturesTest verifies the default, permissions, draft revision and publish behavior.",
+        "Worker playout.test.ts verifies that slate-only breaks keep their markers and skip ads."
+      ],
+      "docs": [
+        "HOW_FAST_WORKS.md",
+        "OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "add-break",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Add Ad Break"
+              }
+            }
+          ],
+          "target": "[role=dialog]",
+          "caption": "Ads first is selected when the operator adds a break."
+        }
+      ],
+      "flow": {
+        "title": "Follow the fill choice from the draft to the viewer",
+        "intro": "A published break keeps the choice saved in its schedule version.",
+        "nodes": [
+          {
+            "id": "schedule",
+            "col": 1,
+            "row": 1,
+            "icon": "🗓",
+            "label": "Schedule",
+            "sub": "Operator draft"
+          },
+          {
+            "id": "version",
+            "col": 2,
+            "row": 1,
+            "icon": "🗄",
+            "label": "Published version",
+            "sub": "Saved break fill"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "⚙",
+            "label": "Playback edge",
+            "sub": "Builds the live playlist"
+          },
+          {
+            "id": "viewer",
+            "col": 4,
+            "row": 1,
+            "icon": "▶",
+            "label": "Viewer",
+            "sub": "Plays the break"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Ads first",
+            "steps": [
+              {
+                "at": "schedule",
+                "state": "ADS FIRST",
+                "say": "The operator keeps the default for this break."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing carries that choice into the live schedule."
+              },
+              {
+                "at": "edge",
+                "state": "DECIDING",
+                "say": "The edge asks the configured ad sources and fills any remaining time with slate."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The viewer receives one continuous break in the live playlist."
+              }
+            ]
+          },
+          {
+            "name": "Slate only",
+            "steps": [
+              {
+                "at": "schedule",
+                "state": "SLATE ONLY",
+                "say": "The operator chooses Slate only for an upcoming break."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing applies that choice to the live schedule."
+              },
+              {
+                "at": "edge",
+                "state": "SLATE",
+                "say": "The edge skips ad requests and uses slate for the whole break."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The break plays for its scheduled duration and the programme resumes."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

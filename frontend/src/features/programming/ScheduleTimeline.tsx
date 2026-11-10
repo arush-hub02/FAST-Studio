@@ -9,6 +9,7 @@ import {
   InfoTip,
 } from '../../shared/ui'
 import { type AssetRef, ZOOM } from './scheduleShared'
+import { BreakFillField } from './ProgramModal'
 
 export function Timeline({
   entries,
@@ -206,6 +207,7 @@ export function Selected({
   issues,
   onDelete,
   onReplace,
+  onBreakFill,
   onClose,
 }: {
   e: Entry
@@ -216,6 +218,7 @@ export function Selected({
   issues: Issue[]
   onDelete: () => void
   onReplace?: () => void
+  onBreakFill?: (slateOnly: boolean) => void
   onClose: () => void
 }) {
   const isBreak = e.kind === 'AD_BREAK'
@@ -251,6 +254,10 @@ export function Selected({
             <span>
               {e.ownership === 'DISTRIBUTOR' ? 'Distribution Platform (Partner Monetization)' : 'Owned & Operated (Channel SSAI)'}
             </span>
+            {!onBreakFill && (<>
+              <span>Break fill</span>
+              <span>{e.slateOnly ? 'Slate only' : 'Ads first'}</span>
+            </>)}
             <span>SCTE-35 Marker</span>
             <span className="mono" style={{ fontSize: 11 }}>
               {e.ownership === 'DISTRIBUTOR' ? '0x36 Distributor Opportunity' : '0x34 Provider Opportunity'}
@@ -265,6 +272,8 @@ export function Selected({
           </>
         )}
       </div>
+
+      {onBreakFill && <BreakFillField slateOnly={!!e.slateOnly} onChange={onBreakFill} disabled={busy} />}
 
       {issues.map((i, n) => (
         <div key={n} className={`callout ${i.severity === 'ERROR' ? 'bad' : 'warn'}`}>

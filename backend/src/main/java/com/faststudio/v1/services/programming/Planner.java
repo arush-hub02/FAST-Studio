@@ -20,7 +20,11 @@ public final class Planner {
     public record Issue(String severity, String code, String message, UUID entryId, String hint, Instant at) {}
 
     /** A planned row before it is stored. */
-    public record Item(String kind, UUID assetId, long offsetMs, Instant start, Instant end, String ownership) {}
+    public record Item(String kind, UUID assetId, long offsetMs, Instant start, Instant end, String ownership, boolean slateOnly) {
+        public Item(String kind, UUID assetId, long offsetMs, Instant start, Instant end, String ownership) {
+            this(kind, assetId, offsetMs, start, end, ownership, false);
+        }
+    }
 
     public record Plan(List<Item> items, List<String> notices, Instant end) {}
 

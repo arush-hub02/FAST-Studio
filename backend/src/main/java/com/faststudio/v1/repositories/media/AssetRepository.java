@@ -174,17 +174,31 @@ public class AssetRepository {
     }
 
     /** A new project slate waiting for its file (it never appears in the Library or in schedules). */
-    public UUID insertSlate(UUID org) {
+    public UUID insertSlate(UUID org, boolean nextSchedule) {
         return db.sql("""
-                insert into asset(org_id, title, kind, status, status_detail, genre, color)
-                values (:o, 'Slate', 'SLATE', 'DRAFT', 'Waiting for the file', 'Slate', '#1e1b4b') returning id""")
-                .param("o", org).query(UUID.class).single();
+                insert into asset(org_id, title, kind, status, status_detail, genre, color, slate_next_schedule)
+                values (:o, 'Slate', 'SLATE', 'DRAFT', 'Waiting for the file', 'Slate', '#1e1b4b', :deferred) returning id""")
+                .param("o", org).param("deferred", nextSchedule).query(UUID.class).single();
     }
 
+    public record Slate(UUID id, boolean nextSchedule) {}
+
     /** The project's slates that aren't archived, newest first. */
-    public List<UUID> slates(UUID org) {
-        return db.sql("select id from asset where org_id = :o and kind = 'SLATE' and status <> 'ARCHIVED' order by created_at desc")
-                .param("o", org).query(UUID.class).list();
+    public List<Slate> slates(UUID org) {
+        return db.sql("""
+                select id, slate_next_schedule as next_schedule from asset
+                where org_id = :o and kind = 'SLATE' and status <> 'ARCHIVED' order by created_at desc, id""")
+                .param("o", org).query(Slate.class).list();
+    }
+
+    /** A deferred slate is eligible only after this channel publishes a schedule after the upload. */
+    public List<String> slateKeys(UUID org, UUID publishedVersion) {
+        return db.sql("""
+                select media_key from asset
+                where org_id = :o and kind = 'SLATE' and status = 'READY' and media_key is not null
+                  and (not slate_next_schedule or created_at <= (
+                    select published_at from schedule_version where org_id = :o and id = :v))
+                order by created_at desc, id""").param("o", org).param("v", publishedVersion).query(String.class).list();
     }
 
     /** A direct upload not yet linked to its library video. */

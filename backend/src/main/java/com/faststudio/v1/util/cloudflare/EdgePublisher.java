@@ -8,6 +8,7 @@ import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.media.AssetPlaybackRepository;
+import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.repositories.playout.ChannelTimelineRepository;
 import com.faststudio.v1.repositories.playout.ChannelTimelineRepository.Anchor;
 import com.faststudio.v1.services.media.MediaConnectionService;
@@ -55,6 +56,7 @@ public class EdgePublisher {
     private final EdgeClient edge;
     private final JsonMapper json;
     private final AssetPlaybackRepository playbacks;
+    private final AssetRepository assetRepository;
     private final ChannelTimelineRepository timelines;
     private final MediaConnectionService connections;
     private final MediaProviderResolverService providers;
@@ -70,9 +72,11 @@ public class EdgePublisher {
 
     public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json, AssetPlaybackRepository playbacks,
                          ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers,
+                         AssetRepository assetRepository,
                          com.faststudio.v1.services.media.QualityLevels qualities) {
         this.qualities = qualities;
         this.playbacks = playbacks;
+        this.assetRepository = assetRepository;
         this.timelines = timelines;
         this.connections = connections;
         this.providers = providers;
@@ -225,16 +229,16 @@ public class EdgePublisher {
      */
     public record Item(String id, String kind, String key, int segments, long offsetMs, long start, long end,
                        List<String> allowed, String ownership, String scteOut, String scteIn,
-                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill, List<Integer> levels) {
-        Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn) {
-            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null, null);
+                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill, List<Integer> levels, boolean slateOnly) {
+        Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn, boolean slateOnly) {
+            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null, null, slateOnly);
         }
 
-        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, null); }
+        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, null, slateOnly); }
 
-        Item withLevels(List<Integer> l) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, l); }
+        Item withLevels(List<Integer> l) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, l, slateOnly); }
 
-        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill, levels); }
+        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill, levels, slateOnly); }
     }
 
     /** A video the edge streams from its platform: master playlist URL (signed when needed), real segment lengths, container. */
@@ -318,7 +322,7 @@ public class EdgePublisher {
             boolean shown = end > from;
             if (e.isBreak()) {
                 if (shown) items.add(new Item(e.id().toString(), e.kind(), null, 0, 0, start, end, terr,
-                        e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false)));
+                        e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false), e.slateOnly()));
                 continue;
             }
             Asset a = assets.get(e.assetId());
@@ -331,13 +335,13 @@ public class EdgePublisher {
                 longest = Math.max(longest, l.longest(seg));
                 ovp.computeIfAbsent(a.id().toString(), k -> ovpEntry(org, stream, until));
                 items.add(new Item(e.id().toString(), e.kind(), null, 0, e.assetOffsetMs(), start, end, allowed(a, terr, policies, e),
-                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill(), null));
+                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill(), null, false));
                 continue;
             }
             if (!shown) continue;
             String key = a != null && a.ready() && stored(a.mediaKey()) ? a.mediaKey() : null;   // null: standby plays
             items.add(new Item(e.id().toString(), e.kind(), key, key == null ? 0 : media.segments(key), e.assetOffsetMs(), start, end,
-                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null).withLevels(key == null ? null : levels(key)));
+                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null, false).withLevels(key == null ? null : levels(key)));
         }
 
         // numbering anchor: the hour mark, or the start of the streaming programme the hour mark falls into
@@ -366,7 +370,6 @@ public class EdgePublisher {
         }
         // Container of the whole channel: HLS can't switch from fMP4 back to MPEG-TS inside one playlist, so a channel with
         // fMP4 library programmes plays our media from its fMP4 copies, and anything without one plays slate instead.
-        // ponytail: ad creatives aren't checked for their fMP4 copy here (made at packaging or start-up); check per decision if a 404 shows up
         boolean fmp4 = ovp.values().stream().anyMatch(o -> "FMP4".equals(o.fmt()))
                 && storedFmp4(MediaServiceV1.STANDBY) && storedFmp4(MediaServiceV1.GEO);
         String fmt = fmp4 ? "FMP4" : "TS";
@@ -375,12 +378,11 @@ public class EdgePublisher {
         Fallback fb = fallback(ch, assets, policies);
         if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
         // the project's own slate (Ads → Slate) once R2 holds it in this channel's container; else the platform's standby
-        String own = data.db.sql("""
-                select media_key from asset where org_id = :o and kind = 'SLATE' and status = 'READY' and media_key is not null
-                order by updated_at desc limit 1""").param("o", org).query(String.class).optional().orElse(null);
-        Media standby = own != null && stored(own) && (!fmp4 || storedFmp4(own)) && media.segments(own) > 0
+        String own = assetRepository.slateKeys(org, ch.publishedVersionId()).stream()
+                .filter(k -> stored(k) && (!fmp4 || storedFmp4(k)) && media.segments(k) > 0).findFirst().orElse(null);
+        Media standby = own != null
                 ? new Media(own, media.segments(own), levels(own)) : platform(MediaServiceV1.STANDBY);
-        return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
+        return new Snapshot(3, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
                 standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
     }
 

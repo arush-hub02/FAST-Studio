@@ -107,16 +107,18 @@ These decide the design and can't be assumed:
 3. ~~Players~~ **Decided 3 November 2026: web, iOS and one TV.** A channel goes live only after programme → ad → programme joins and quality switching play cleanly in a web player (hls.js), on iOS (Safari/AVPlayer) and on one smart-TV platform. The TV platform is **Android TV** (ExoPlayer/Media3), tested on the Android TV emulator or a stick. S1 tests all three.
 4. ~~Second OVP~~ **Decided 3 November 2026: JW Player, soon.** S1 measures a JW Player asset alongside Mux (segment lengths, format, quality levels, signed URLs), and S2 builds the playback capability for both, so nothing in the design is Mux-shaped. Needs a JW Player property's API credentials and one test asset. If JW Player's segments are longer than 5 s, breaks there move to the nearest JW segment edge.
 
-## Ads and slate at a break (built, unchanged by this plan)
+## Ads and slate at a break
 
 Confirmed with the user on 8 November 2026. This is how breaks already work (`AdDecisionServiceV1`, `VastSource`, `worker/src/playout.ts`):
-- **Ads come straight from the ad server.** For each viewer and break, the ad server's tag (Google Ad Manager or any VAST server) is called live, within its timeout (default 1 s).
+- **Ads come straight from the ad server.** For each viewer and break, the ad server's tag (Google Ad Manager or any VAST server) is called within its timeout (default 1 s). SSAI starts the decision in the background up to 60 seconds before the break.
 - **Each creative is transcoded by our FFmpeg** into 5 s segments on R2, once per creative. After that, the copy is reused.
 - **Slate covers every gap.** The standby slate from R2 plays when:
   - the ad server times out, fails or returns no ads (the whole break is slate);
   - the ads are shorter than the break (slate fills the rest);
   - the decision isn't ready when the break starts (the whole break is slate, and it never switches to ads halfway).
-- **A creative seen for the first time** isn't converted yet when its break starts, so that break plays slate and the creative airs from the next break. Converting it inside the ~1 s decision window isn't possible.
+- **A creative seen for the first time** is queued. An otherwise empty prefetch retries while it is being prepared, so the ad can air in that break if it reaches R2 in time. Once the break starts, its decision is fixed.
+
+- **Slate changes** take effect on future segments after a 60-second propagation window. Live when ready uses the slate as soon as its media is available. Next schedule publish also requires each channel to publish a schedule after the upload. Older fMP4 snapshots use their muxed R2 files during an upgrade. New snapshots advertise separate audio and video only after those copies are ready.
 
 ## Not affected
 

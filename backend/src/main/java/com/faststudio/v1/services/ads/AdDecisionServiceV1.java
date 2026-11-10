@@ -67,7 +67,11 @@ public class AdDecisionServiceV1 {
 
     public record Excluded(String campaign, String reason) {}
 
-    public record Decision(UUID breakId, long breakMs, List<Slot> slots, long filledMs, List<Excluded> excluded, String summary) {}
+    public record Decision(UUID breakId, long breakMs, List<Slot> slots, long filledMs, List<Excluded> excluded, String summary, boolean preparing) {
+        public Decision(UUID breakId, long breakMs, List<Slot> slots, long filledMs, List<Excluded> excluded, String summary) {
+            this(breakId, breakMs, slots, filledMs, excluded, summary, false);
+        }
+    }
 
     public Decision decide(UUID org, UUID sessionId, UUID breakId, Instant breakStart, long breakMs, UUID programmeAssetId, String country) {
         return decide(org, sessionId, breakId, breakStart, breakMs, programmeAssetId, country, IAdSource.Viewer.NONE);
@@ -75,17 +79,34 @@ public class AdDecisionServiceV1 {
 
     public Decision decide(UUID org, UUID sessionId, UUID breakId, Instant breakStart, long breakMs, UUID programmeAssetId, String country,
                            IAdSource.Viewer viewer) {
+        return decide(org, sessionId, breakId, breakStart, breakMs, programmeAssetId, country, viewer, false);
+    }
+
+    public Decision decide(UUID org, UUID sessionId, UUID breakId, Instant breakStart, long breakMs, UUID programmeAssetId, String country,
+                           IAdSource.Viewer viewer, boolean prefetch) {
         if (sessionId == null) return compute(org, null, breakId, breakStart, breakMs, programmeAssetId, country, viewer);
         return transactions.execute(tx -> {
             // Serialize reservations across sessions of the same permitted viewer, including other server instances.
             String key = org + ":" + (viewer.key() == null ? sessionId : viewer.key());
             repository.lockDecisions(key);
-            Optional<String> prior = repository.decision(org, sessionId, breakId);
-            if(prior.isPresent()) return json.readValue(prior.get(),Decision.class);
+            Optional<Decision> prior = saved(org, sessionId, breakId);
+            if (prior.isPresent()) return prior.get();
             Decision result = compute(org,sessionId,breakId,breakStart,breakMs,programmeAssetId,country,viewer);
+            if (result.preparing()) {
+                if (prefetch && breakStart.isAfter(Instant.now())) return result;
+                result = new Decision(result.breakId(), result.breakMs(), result.slots(), result.filledMs(), result.excluded(), result.summary());
+            }
             repository.saveDecision(org, sessionId, breakId, json.writeValueAsString(result));
             return result;
         });
+    }
+
+    public static Decision slateOnly(UUID breakId, long breakMs) {
+        return new Decision(breakId, breakMs, List.of(), 0, List.of(), "Slate only, as configured in the schedule.");
+    }
+
+    public Optional<Decision> saved(UUID org, UUID sessionId, UUID breakId) {
+        return repository.decision(org, sessionId, breakId).map(body -> json.readValue(body, Decision.class));
     }
 
     /** The tenant's waterfall in order; without configuration, direct-sold campaigns only. */
@@ -117,6 +138,7 @@ public class AdDecisionServiceV1 {
         List<Slot> slots = new ArrayList<>();
         List<Excluded> excluded = new ArrayList<>();
         Set<String> advertisers = new HashSet<>();
+        boolean preparing = false;
         long left = breakMs;
         for (IAdSource.Config src : waterfall(org)) {
             IAdSource impl = sources.get(src.kind());
@@ -125,10 +147,12 @@ public class AdDecisionServiceV1 {
             if (left < Times.SEG_MS) break;
             var fill = impl.fill(src, new IAdSource.Request(org, sessionId, breakId, at, breakMs, left, country, channel, genre, programmeAssetId, viewer, advertisers));
             excluded.addAll(fill.excluded());
+            preparing |= fill.preparing();
             for (Slot s : fill.slots()) {
                 if (s.durationMs() > left || s.durationMs() < Times.SEG_MS) continue;   // never overfill
                 if (!publisher.stored(s.mediaKey())) {
                     excluded.add(new Excluded(s.campaign(),"Creative has not reached the delivery edge yet"));
+                    preparing = true;
                     continue;
                 }
                 slots.add(s.withLevels(publisher.levels(s.mediaKey())));
@@ -138,6 +162,6 @@ public class AdDecisionServiceV1 {
         long filled = breakMs - left;
         String summary = slots.isEmpty() ? "Unfilled: no eligible ads. The standby slate plays for the whole break."
                 : "Filled " + filled / 1000 + " of " + breakMs / 1000 + " s with " + slots.size() + " ad(s)" + (left > 0 ? "; slate covers the last " + left / 1000 + " s." : ".");
-        return new Decision(breakId, breakMs, slots, filled, excluded, summary);
+        return new Decision(breakId, breakMs, slots, filled, excluded, summary, filled == 0 && preparing);
     }
 }

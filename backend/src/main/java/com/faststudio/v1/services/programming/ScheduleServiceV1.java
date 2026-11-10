@@ -66,7 +66,7 @@ public class ScheduleServiceV1 {
 
     /** Comparable fingerprint of a version's entries (used to show "unpublished changes"). */
     private static List<String> signature(List<Entry> es) {
-        return es.stream().map(e -> e.kind() + e.assetId() + e.assetOffsetMs() + e.start() + e.end() + e.ownership()).toList();
+        return es.stream().map(e -> e.kind() + e.assetId() + e.assetOffsetMs() + e.start() + e.end() + e.ownership() + e.slateOnly()).toList();
     }
 
     // ------------------------------------------------------------------ draft edits
@@ -109,7 +109,7 @@ public class ScheduleServiceV1 {
             int secs = (int) (Times.snapMs((r.seconds() == null ? ch.breakSeconds() : r.seconds()) * 1000L) / 1000);
             if (secs <= 0) throw ApiException.bad("Break length must be at least " + Times.SEG_S + " seconds");
             UUID inside = existing.stream().filter(e -> !e.isBreak() && e.end().equals(start)).map(Entry::assetId).findFirst().orElse(null);
-            items = List.of(new Planner.Item("AD_BREAK", inside, 0, start, start.plusSeconds(secs), "PROVIDER"));
+            items = List.of(new Planner.Item("AD_BREAK", inside, 0, start, start.plusSeconds(secs), "PROVIDER", Boolean.TRUE.equals(r.slateOnly())));
         } else {
             Asset a = data.asset(t.orgId(), r.assetId());
             settings.require(t.orgId(), a.mediaType());
@@ -132,6 +132,17 @@ public class ScheduleServiceV1 {
         repository.insertEntries(t.orgId(), draft.id(), items);
         audit.log(t, "schedule.add", "channel", id, r.kind() + " at " + start);
         return new EditResult(draft.revision() + 1, List.of("Added at " + Planner.fmt(start, ch.timezone()) + ". Check the issues list before publishing."));
+    }
+
+    @Transactional
+    public EditResult setBreakFill(Tenant t, UUID id, UUID entryId, BreakFillRequest r) {
+        t.require(Tenant.Perm.SCHEDULE_EDIT);
+        Version draft = bump(t, id, r.expectedRevision());
+        if (!repository.setBreakFill(t.orgId(), draft.id(), entryId, r.slateOnly(), Instant.now()))
+            throw ApiException.notFound("Upcoming draft ad break");
+        String fill = r.slateOnly() ? "Slate only" : "Ads first";
+        audit.log(t, "schedule.break-fill", "channel", id, fill);
+        return new EditResult(draft.revision() + 1, List.of(fill + " saved to draft. Publish to apply it."));
     }
 
     private static Map<Long, Long> adSecondsPerHour(List<Entry> existing) {

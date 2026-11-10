@@ -144,7 +144,7 @@ class CrossTenantMatrixTest {
                  "expectedRevision":0,"country":"IN","title":"x","name":"x","kind":"MOVIE","advertiser":"x","description":"x",
                  "startsAt":"2026-01-01T00:00:00Z","endsAt":"2027-01-01T00:00:00Z","priority":5,"cpm":1,"status":"PAUSED",
                  "resolution":"x","email":"x@matrix.test","role":"ANALYST","versionNumber":1,"allowedCountries":["WW"],
-                 "adsAllowed":true,"seconds":30,"hours":1,"territories":["IN"],"adMode":"SSAI","markerFormat":"DATERANGE",
+                 "adsAllowed":true,"slateOnly":true,"seconds":30,"hours":1,"territories":["IN"],"adMode":"SSAI","markerFormat":"DATERANGE",
                  "maxAdSecondsPerHour":600,"note":"x"}""".formatted(a.asset(), a.channel(), a.adAsset(), a.asset(), a.asset());
         List<String> leaks = new ArrayList<>(), aurora = List.of(a.org().toString(), a.channel().toString(), a.asset().toString(),
                 a.adAsset().toString(), a.campaign().toString(), a.entry().toString(), a.destination().toString(), a.alert().toString(), "Aurora Media");

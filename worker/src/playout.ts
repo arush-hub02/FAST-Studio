@@ -16,6 +16,8 @@ export const LOOKAHEAD_MS = 30_000       // ad decisions and SGAI interstitials 
 export type Rendition = { name: string; width: number; height: number; bandwidth: number; codecs: string; i?: number }
 /** levels: the quality-level folders this media has; missing = the classic three (0, 1, 2). */
 export type Media = { key: string | null; segments: number; levels?: number[] | null }
+export type SlateChange = { at: number; media: Media }
+export type Fmp4Layout = 'split' | 'muxed'
 export type Fallback = { key: string; segments: number; allowed: string[]; validFrom: number | null; validUntil: number | null; levels?: number[] | null }
 export type Item = {
   id: string; kind: 'PROGRAM' | 'AD_BREAK'; key: string | null; segments: number; offsetMs: number
@@ -23,6 +25,7 @@ export type Item = {
   // a programme streaming from its platform: asset id (key of Snapshot.ovp), numbering and layout
   ovp?: string | null; seq?: number | null; n?: number | null; i0?: number | null; nc?: number | null; last?: number | null; fill?: number[] | null
   levels?: number[] | null
+  slateOnly?: boolean
 }
 /** A video that streams from its platform: master playlist URL (null = can't be reached), real segment lengths in ms. */
 export type Ovp = { url: string | null; d: number[]; fmt: string }
@@ -33,6 +36,8 @@ export type Snapshot = {
   t0?: number; seq0?: number; target?: number; ovp?: Record<string, Ovp>
   /** TS, or FMP4 when the channel's library programmes stream as fMP4: our media then plays from its fMP4 copies. */
   fmt?: 'TS' | 'FMP4'
+  fmp4Layout?: Fmp4Layout
+  slateChanges?: SlateChange[]
 }
 /** Signed by the control plane when a viewer starts watching (PlaybackController.start). */
 export type Session = {
@@ -60,6 +65,13 @@ export function levelFolder(want: number, levels?: number[] | null): number {
 /** A streaming programme in the timeline: its first sequence number, segment count and segment start offsets. */
 export type Span = { item: Item; seq: number; n: number; offs: number[] }
 
+export const fmp4Layout = (snap: Snapshot): Fmp4Layout | undefined =>
+  snap.fmt === 'FMP4' ? snap.fmp4Layout ?? 'split' : undefined
+
+function standbyAt(snap: Snapshot, time: number): Media {
+  return snap.slateChanges?.findLast(change => change.at <= time)?.media ?? snap.standby
+}
+
 const pad = (n: number) => String(n).padStart(5, '0')
 const iso = (t: number) => new Date(t).toISOString()
 const secs = (ms: number) => (ms / 1000).toFixed(3)
@@ -67,7 +79,7 @@ const secs = (ms: number) => (ms / 1000).toFixed(3)
 export function masterPlaylist(snap: Snapshot): string {
   let m = '#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-INDEPENDENT-SEGMENTS\n'
   // fMP4 channels carry audio as its own track (a.m3u8), the way fMP4 platforms deliver it; video playlists are video only
-  const split = snap.fmt === 'FMP4'
+  const split = fmp4Layout(snap) === 'split'
   if (split) m += '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aud",NAME="Audio",DEFAULT=YES,AUTOSELECT=YES,CHANNELS="2",URI="a.m3u8"\n'
   snap.ladder.forEach((r, i) => {
     m += `#EXT-X-STREAM-INF:BANDWIDTH=${r.bandwidth},AVERAGE-BANDWIDTH=${Math.floor(r.bandwidth * 85 / 100)},RESOLUTION=${r.width}x${r.height},CODECS="${r.codecs}",FRAME-RATE=25.000,NAME="${r.name}"${split ? ',AUDIO="aud"' : ''}\nv${i}.m3u8\n`
@@ -76,7 +88,7 @@ export function masterPlaylist(snap: Snapshot): string {
 }
 
 /** True when this viewer's destination gets our ads in this break (vs. the platform filling it). */
-export const ours = (s: Session, brk: Item) => s.destKind === 'OWNED_WEB' || brk.ownership === 'PROVIDER'
+export const ours = (s: Session, brk: Item) => !brk.slateOnly && (s.destKind === 'OWNED_WEB' || brk.ownership === 'PROVIDER')
 
 const timelines = new WeakMap<Snapshot, { t0: number; seq0: number; spans: Span[] }>()
 
@@ -147,13 +159,16 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
     const n = Math.max(1, m.segments)
     return { key: prefix + Math.floor(i / n), media: m.key ?? '', n: ((i % n) + n) % n, levels: m.levels }
   }
-  const standby = (i: number) => loop('sb:', snap.standby, i)
+  const standby = (i: number, t: number) => {
+    const media = standbyAt(snap, t)
+    return loop('sb:' + media.key + ':', media, i)
+  }
   const geo = (i: number) => loop('geo:', snap.geo, i)
 
   function fallback(i: number, t: number) {
     const fb = snap.fallback
     if (!fb || fb.segments < 1 || !fb.allowed.includes(s.country)
-      || (fb.validFrom != null && t < fb.validFrom) || (fb.validUntil != null && t + SEG > fb.validUntil)) return standby(i)
+      || (fb.validFrom != null && t < fb.validFrom) || (fb.validUntil != null && t + SEG > fb.validUntil)) return standby(i, t)
     const pos = (t - EPOCH), dur = fb.segments * SEG
     return { key: 'fb:' + Math.floor(pos / dur), media: fb.key, n: Math.floor((((pos % dur) + dur) % dur) / SEG), levels: fb.levels }
   }
@@ -169,15 +184,15 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
 
   /** A grid slot: R2 programmes, ad breaks, fallback and standby, exactly as before streaming programmes existed. */
   function grid(i: number, t: number): Omit<Seg, 'start' | 'dur'> {
-    if (!live) return standby(i)
+    if (!live) return standby(i, t)
     if (!offered) return geo(i)   // channel not offered here: no programmes, no ads, no markers
     const e = at(t)
     if (!e) return fallback(i, t)
     if (e.kind === 'PROGRAM') {
-      if (!e.key) return standby(i)
+      if (!e.key) return standby(i, t)
       if (!e.allowed.includes(s.country)) return geo(i)
       const n = Math.floor((e.offsetMs + t - e.start) / SEG)
-      return n < e.segments ? { key: 'e:' + e.id, media: e.key, n, levels: e.levels } : standby(i)
+      return n < e.segments ? { key: 'e:' + e.id, media: e.key, n, levels: e.levels } : standby(i, t)
     }
     const d = s.adMode === 'SSAI' && ours(s, e) ? decided(e.id) : undefined
     if (d && d !== 'slate') {
@@ -190,7 +205,7 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
         off -= slot.durationMs
       }
     }
-    return standby(i)
+    return standby(i, t)
   }
 
   /** Segment k of a streaming programme: the platform's segment, or slate (filler, off air, geo, platform unreachable). */
@@ -198,11 +213,11 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
     const e = sp.item, k = i - sp.seq
     const start = e.start + sp.offs[k], dur = sp.offs[k + 1] - sp.offs[k]
     const slate = (g: { key: string; media: string; n: number }) => ({ ...g, start, dur })
-    if (!live) return slate(standby(i))
+    if (!live) return slate(standby(i, start))
     if (!offered || !e.allowed.includes(s.country)) return slate(geo(i))
-    if (k >= (e.nc ?? 0) || !e.ovp) return slate(standby(i))
+    if (k >= (e.nc ?? 0) || !e.ovp) return slate(standby(i, start))
     const seg = ovpSeg(e.ovp, variant, (e.i0 ?? 0) + k)
-    if (!seg) return { ...standby(i), key: 'sbx:' + e.id, start, dur }   // platform unreachable: slate for the whole programme
+    if (!seg) return { ...standby(i, start), start, dur }   // platform unreachable: slate for the whole programme
     return { key: 'e:' + e.id, media: '', n: k, start, dur, url: seg.url, map: seg.map }
   }
 
@@ -224,7 +239,7 @@ export function breaksToDecide(snap: Snapshot, s: Session, now: number) {
   for (const e of snap.items) {
     if (e.kind !== 'AD_BREAK' || !ours(s, e)) continue
     if (e.start < edgeT && e.end > firstT) now_.push(e)
-    else if (e.start >= edgeT && e.start < edgeT + LOOKAHEAD_MS) soon.push(e)
+    else if (e.start >= edgeT && e.start < edgeT + 60_000) soon.push(e)
   }
   return { now: now_, soon }
 }
@@ -266,10 +281,10 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
   }
   dsnMemo.set(memoKey, [first, dsn])
 
-  const fmp4 = snap.fmt === 'FMP4'
+  const layout = fmp4Layout(snap)
   const audio = variant < 0                          // the audio track of an fMP4 channel: same timeline, audio segments
   const level = snap.ladder[variant]?.i ?? variant   // this playlist's quality level (folder index)
-  let m = `#EXTM3U\n#EXT-X-VERSION:${fmp4 ? 7 : 6}\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
+  let m = `#EXTM3U\n#EXT-X-VERSION:${layout ? 7 : 6}\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
   m += `#EXT-X-MEDIA-SEQUENCE:${first}\n#EXT-X-DISCONTINUITY-SEQUENCE:${dsn}\n`
   m += `## FAST Studio edge playout | channel=${snap.channel} | ad mode=${s.adMode} | markers=${s.markers} | simulated viewer country=${s.country}\n`
   const announced = new Set<string>()
@@ -297,11 +312,11 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
     // fMP4: our media from its fMP4 copy; every source has its own init section, announced again after each switch
     // our media: the folder of this channel level, or the nearest lower level the media has
     const dir = levelFolder(level, g.levels)
-    const fdir = audio ? 'a' : 'v' + dir   // fMP4 copies: video only in v{level}/, the audio track in a/
-    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/${fdir}/init.mp4` : undefined)
+    const fdir = audio ? 'a' : (layout === 'muxed' ? 'f' : 'v') + dir   // fMP4 copies: video only in v{level}/, the audio track in a/
+    const map = g.map ?? (layout && !g.url ? `${base}/${g.media}/${fdir}/init.mp4` : undefined)
     if (map && (i === first || disc || map !== lastMap)) m += `#EXT-X-MAP:URI="${map}"\n`
     if (map) lastMap = map
-    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/${fdir}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${dir}/seg_${pad(g.n)}.ts`)
+    const uri = g.url ?? (layout ? `${base}/${g.media}/${fdir}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${dir}/seg_${pad(g.n)}.ts`)
     m += `#EXTINF:${secs(g.dur)},\n${uri}\n`
     if (g.ad && !audio) {
       const { n } = g, segs = g.ad.segs
@@ -362,13 +377,14 @@ export function assetList(snap: Snapshot, brk: Item, d: Decided, base: string, s
 }
 
 /** VOD slate of the given length (SGAI padding), looping the standby clip. */
-export function slatePlaylist(snap: Snapshot, seconds: number, base: string) {
-  const SEG = snap.segMs, total = Math.max(1, snap.standby.segments)
+export function slatePlaylist(snap: Snapshot, seconds: number, base: string, now = Date.now()) {
+  const slate = standbyAt(snap, now)
+  const SEG = snap.segMs, total = Math.max(1, slate.segments)
   const n = Math.max(1, Math.floor(Math.min(seconds, 600) * 1000 / SEG))
   let m = `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:${SEG / 1000}\n#EXT-X-PLAYLIST-TYPE:VOD\n`
   for (let i = 0; i < n; i++) {
     if (i > 0 && i % total === 0) m += '#EXT-X-DISCONTINUITY\n'
-    m += `#EXTINF:${secs(SEG)},\n${base}/${snap.standby.key}/${levelFolder(0, snap.standby.levels)}/seg_${pad(i % total)}.ts\n`   // a project slate may lack 360p
+    m += `#EXTINF:${secs(SEG)},\n${base}/${slate.key}/${levelFolder(0, slate.levels)}/seg_${pad(i % total)}.ts\n`   // a project slate may lack 360p
   }
   return m + '#EXT-X-ENDLIST\n'
 }

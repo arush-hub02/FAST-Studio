@@ -5,6 +5,7 @@ import com.faststudio.v1.core.tenant.Tenant;
 import com.faststudio.v1.dto.programming.ScheduleDto.*;
 import com.faststudio.v1.services.programming.EpgServiceV1;
 import com.faststudio.v1.services.programming.ScheduleServiceV1;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,11 @@ public class ScheduleControllerV1 {
 
     @PostMapping("/schedule/entries")
     EditResult add(Tenant t, @PathVariable UUID id, @RequestBody AddRequest r) { return schedule.add(t, id, r); }
+
+    @PatchMapping("/schedule/entries/{entryId}")
+    EditResult setBreakFill(Tenant t, @PathVariable UUID id, @PathVariable UUID entryId, @Valid @RequestBody BreakFillRequest r) {
+        return schedule.setBreakFill(t, id, entryId, r);
+    }
 
     @DeleteMapping("/schedule/entries/{entryId}")
     EditResult remove(Tenant t, @PathVariable UUID id, @PathVariable UUID entryId, @RequestParam int expectedRevision,

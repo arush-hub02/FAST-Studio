@@ -2,7 +2,7 @@ package com.faststudio.v1.services.media;
 
 import com.faststudio.v1.core.common.Audit;
 import com.faststudio.v1.core.tenant.Tenant;
-import com.faststudio.v1.dto.media.AssetDto.AssetView;
+import com.faststudio.v1.dto.media.AssetDto.SlateView;
 import com.faststudio.v1.repositories.media.AssetRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * The project's own slate (Ads → Slate): the video its channels show while nothing else can air, instead of the
  * platform's standby screen. Uploaded to FAST Studio, converted once into the tenant's quality levels and kept in R2 only.
- * A new upload takes over once it is ready; removing it brings back the platform standby.
+ * A new upload takes over when ready, either live or after the channel next publishes its schedule.
  */
 @Service
 public class SlateServiceV1 {
@@ -29,17 +29,18 @@ public class SlateServiceV1 {
     }
 
     /** The project's slates, newest first (the newest ready one airs). */
-    public List<AssetView> list(Tenant t) {
-        return assets.slates(t.orgId()).stream().map(id -> assetService.get(t, id)).toList();
+    public List<SlateView> list(Tenant t) {
+        return assets.slates(t.orgId()).stream()
+                .map(slate -> new SlateView(assetService.get(t, slate.id()), slate.nextSchedule())).toList();
     }
 
-    public AssetView upload(Tenant t, MultipartFile file) throws IOException {
+    public SlateView upload(Tenant t, MultipartFile file, boolean nextSchedule) throws IOException {
         t.require(Tenant.Perm.ASSETS_EDIT);
-        UUID id = assets.insertSlate(t.orgId());
+        UUID id = assets.insertSlate(t.orgId(), nextSchedule);
         try {
-            AssetView v = assetService.upload(t, id, file);
-            audit.log(t, "slate.upload", "asset", id, "project slate uploaded");
-            return v;
+            var view = assetService.upload(t, id, file);
+            audit.log(t, "slate.upload", "asset", id, nextSchedule ? "apply on next schedule publish" : "apply live");
+            return new SlateView(view, nextSchedule);
         } catch (IOException | RuntimeException e) {
             assets.archive(t.orgId(), id);   // a refused file leaves no half-made slate behind
             throw e;
@@ -49,7 +50,7 @@ public class SlateServiceV1 {
     /** Removes every project slate: channels go back to the platform's standby screen. */
     public void remove(Tenant t) {
         t.require(Tenant.Perm.ASSETS_EDIT);
-        for (UUID id : assets.slates(t.orgId())) assetService.archive(t, id);
+        for (var slate : assets.slates(t.orgId())) assetService.archive(t, slate.id());
         audit.log(t, "slate.remove", "asset", null, "back to the platform standby");
     }
 }

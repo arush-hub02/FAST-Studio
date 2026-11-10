@@ -322,6 +322,23 @@ export function ProgramModal({
   )
 }
 
+export function BreakFillField({ slateOnly, onChange, disabled }: {
+  slateOnly: boolean
+  onChange: (slateOnly: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <label className="field">
+      <span>Break fill</span>
+      <select value={slateOnly ? 'slate' : 'ads'} onChange={e => onChange(e.target.value === 'slate')} disabled={disabled}>
+        <option value="ads">Ads first</option>
+        <option value="slate">Slate only</option>
+      </select>
+      <small className="faint">Ads first tries your configured ad sources. Slate covers any unfilled time.</small>
+    </label>
+  )
+}
+
 export function BreakModal({
   v,
   busy,
@@ -334,12 +351,13 @@ export function BreakModal({
   onSubmit: (b: object) => void
 }) {
   const [seconds, setSeconds] = useState(String(v.channel.breakSeconds || 90))
+  const [slateOnly, setSlateOnly] = useState(false)
   const [start, setStart] = useState('')
 
   return (
     <Modal
       title="Add Commercial Ad Break"
-      subtitle="Reserve broadcast airtime for dynamic SSAI programmatic ads."
+      subtitle="Reserve airtime and choose how FAST Studio fills the break."
       onClose={onClose}
       footer={
         <>
@@ -354,6 +372,7 @@ export function BreakModal({
               onSubmit({
                 kind: 'AD_BREAK',
                 seconds: Number(seconds),
+                slateOnly,
                 startAt: start ? new Date(start).toISOString() : undefined,
               })
             }
@@ -373,14 +392,16 @@ export function BreakModal({
         />
       </div>
 
+      <BreakFillField slateOnly={slateOnly} onChange={setSlateOnly} disabled={busy} />
+
       <StartPicker value={start} onChange={setStart} tz={v.channel.timezone} />
 
       <div className="callout sim" style={{ borderRadius: 10, padding: '12px 14px' }}>
         <Icon name="megaphone" size={16} />
         <div style={{ fontSize: 12.5, lineHeight: 1.45 }}>
-          <b>{seconds}s Ad Pod ({Math.max(1, Math.round(Number(seconds) / 30))} dynamic spots)</b>
+          <b>{seconds}s Break · {slateOnly ? 'Slate only' : 'Ads first'}</b>
           <p style={{ margin: '3px 0 0', color: 'var(--text-2)' }}>
-            Inserts SCTE-35 splice out/in markers for server-side dynamic ad insertion. Unfilled inventory safely plays the fallback channel slate.
+            SCTE-35 markers signal the start and end of the break.
           </p>
         </div>
       </div>

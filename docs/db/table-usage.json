@@ -423,7 +423,7 @@
     },
     "asset": {
       "feature": "Media library",
-      "purpose": "Every video and ad creative of a project: metadata, cue points, processing status and where its media lives.",
+      "purpose": "Project videos, ad creatives and slate. Tracks processing, where media lives, and whether a slate waits for the next schedule publish.",
       "pages": [
         "/:org/library",
         "/:org/schedule",
@@ -436,6 +436,8 @@
         "POST /api/orgs/{org}/assets",
         "PATCH /api/orgs/{org}/assets/{id}",
         "POST /api/orgs/{org}/assets/{id}/upload",
+        "GET /api/orgs/{org}/slate",
+        "POST /api/orgs/{org}/slate",
         "POST /api/orgs/{org}/library/sync"
       ],
       "watch": [
@@ -594,7 +596,7 @@
     },
     "schedule_entry": {
       "feature": "Channels & schedules",
-      "purpose": "Items of a schedule version: programmes and ad breaks with exact start and end times.",
+      "purpose": "Items in a schedule version, with exact airtimes for programmes and the fill choice for ad breaks.",
       "pages": [
         "/:org/schedule",
         "/:org/guide",
@@ -604,6 +606,7 @@
       "apis": [
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "GET /api/orgs/{org}/channels/{id}/epg"
       ],

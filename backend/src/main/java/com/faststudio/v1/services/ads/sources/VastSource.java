@@ -30,8 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Ad connector for any external ad server that speaks VAST (Google Ad Manager / IMA tags, SpringServe, FreeWheel,
  * a tenant's own tag). Fills in the tag's macros, follows wrappers, and maps each returned creative to a copy we
- * re-cut into 5 s segments. A creative seen for the first time can't air yet (conditioning takes seconds, the
- * decision window is about one): it is queued, this break falls through, and it plays from the next break on.
+ * re-cut into 5 s segments. An unseen creative is queued and is eligible once conditioning and edge upload finish.
  */
 @Component
 public class VastSource implements IAdSource {
@@ -71,15 +70,17 @@ public class VastSource implements IAdSource {
             return new Fill(slots, excluded);
         }
         if (ads.isEmpty()) excluded.add(new AdDecisionServiceV1.Excluded(src.name(), "No fill: the ad server returned no playable ads"));
+        boolean preparing = false;
         long left = req.remainingMs();
         for (Ad ad : ads) {
             String label = src.name() + ": " + ad.title();
             Creative c = creative(req.org(), src, ad);
-            if (c == null || !"READY".equals(c.status()) || c.mediaKey() == null)
-                excluded.add(new AdDecisionServiceV1.Excluded(label, c != null && "FAILED".equals(c.status())
-                        ? "The creative file couldn't be converted for playout"
-                        : "Creative is being prepared for playout (first time seen); it airs from the next break"));
-            else if (c.durationMs() > left)
+            if (c == null || !"READY".equals(c.status()) || c.mediaKey() == null) {
+                boolean pending = c == null || "PROCESSING".equals(c.status());
+                preparing |= pending;
+                excluded.add(new AdDecisionServiceV1.Excluded(label, pending
+                        ? "Creative is being prepared for playout" : "The creative file is unavailable for playout"));
+            } else if (c.durationMs() > left)
                 excluded.add(new AdDecisionServiceV1.Excluded(label, c.durationMs() / 1000 + " s ad doesn't fit the " + left / 1000 + " s left"));
             else if (!ad.advertiser().isEmpty() && req.advertisers().contains(ad.advertiser()))
                 excluded.add(new AdDecisionServiceV1.Excluded(label, "Same advertiser already in this break (competitive separation)"));
@@ -90,7 +91,7 @@ public class VastSource implements IAdSource {
                 left -= c.durationMs();
             }
         }
-        return new Fill(slots, excluded);
+        return new Fill(slots, excluded, preparing);
     }
 
     /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen. */

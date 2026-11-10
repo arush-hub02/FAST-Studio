@@ -36,10 +36,28 @@
       "help": "From List channels"
     },
     {
+      "key": "breakId",
+      "label": "Published break ID",
+      "value": "PASTE-PUBLISHED-BREAK-ID",
+      "help": "Break ID from viewer session info"
+    },
+    {
+      "key": "breakEntryId",
+      "label": "Draft break ID",
+      "value": "PASTE-DRAFT-BREAK-ID",
+      "help": "ID of an upcoming AD_BREAK from the draft schedule"
+    },
+    {
       "key": "channelSlug",
       "label": "Channel short name",
       "value": "PASTE-CHANNEL-SLUG",
       "help": "The channel slug, for viewer playback"
+    },
+    {
+      "key": "connectionId",
+      "label": "Video library connection ID",
+      "value": "",
+      "help": "Optional with one library. Use an uploadTo id from List connected video library."
     },
     {
       "key": "assetId",
@@ -785,16 +803,17 @@
           "method": "GET",
           "path": "/api/orgs/{org}/slate",
           "title": "List the project's slates",
-          "description": "Slates of the project, newest first. The newest ready one airs on its channels instead of the platform standby screen."
+          "description": "Project slates, newest first, including whether each upload is set to wait for the next schedule publish. Each channel uses its newest eligible slate when ready."
         },
         {
           "method": "POST",
           "path": "/api/orgs/{org}/slate",
           "title": "Upload a slate",
           "form": {
-            "file": "@slate.mp4"
+            "file": "@slate.mp4",
+            "nextSchedule": "false"
           },
-          "description": "Multipart field file (MP4, MOV, MKV, WEBM or M4V). Converted once into the tenant quality levels and kept in R2 only; it airs once ready."
+          "description": "Multipart field file (MP4, MOV, MKV, WEBM or M4V). Converted once into the tenant quality levels and kept in R2. By default the slate switches live after it is ready and the edge update propagates. Set nextSchedule=true to wait for each channel to publish a schedule after this upload."
         },
         {
           "method": "DELETE",
@@ -951,7 +970,7 @@
           "params": {
             "id": "{{channelId}}"
           },
-          "description": "kind PROGRAM with an assetId (and withBreaks to insert ad breaks at its cue points) or AD_BREAK with seconds. startAt omitted = after the last entry. Times snap to 5 seconds.",
+          "description": "kind PROGRAM with an assetId (and withBreaks to insert ad breaks at its cue points) or AD_BREAK with seconds and optional slateOnly (default false, try the ad sources before using slate). startAt omitted = after the last entry. Times snap to 5 seconds.",
           "body": {
             "expectedRevision": 0,
             "kind": "PROGRAM",
@@ -961,6 +980,14 @@
           "fields": {
             "kind": "PROGRAM (a video) or AD_BREAK."
           }
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+          "title": "Change how a break is filled",
+          "params": { "id": "{{channelId}}", "entryId": "{{breakEntryId}}" },
+          "description": "For an upcoming ad break in the draft, set slateOnly true to play slate throughout or false to try the project’s configured ad sources first. Requires Schedule edit and the current draft revision. Publish the draft to apply the change. Returns 404 for past, published or non-break entries and 412 for a stale revision.",
+          "body": { "expectedRevision": 0, "slateOnly": true }
         },
         {
           "method": "DELETE",
@@ -1585,7 +1612,7 @@
           "params": {
             "session": "{{sessionId}}"
           },
-          "description": "What is on now and next for this session, and whether it may play in the viewer's country."
+          "description": "What is on now and next for this session, and whether it may play in the viewer's country. The ad overlay shows decisions already saved for this session."
         },
         {
           "method": "GET",
@@ -1594,9 +1621,9 @@
           "auth": "none",
           "params": {
             "session": "{{sessionId}}",
-            "breakId": "PASTE-BREAK-ID"
+            "breakId": "{{breakId}}"
           },
-          "description": "Which ads fill this break for this viewer (SGAI players ask this; with SSAI the stream already contains them)."
+          "description": "Returns the selected ads and the quality levels available for each creative. The edge uses X-Ad-Prefetch: true for early requests. A 202 means an otherwise empty decision is waiting for creative preparation and can be retried before the break. A regular request finalizes the decision."
         },
         {
           "method": "POST",

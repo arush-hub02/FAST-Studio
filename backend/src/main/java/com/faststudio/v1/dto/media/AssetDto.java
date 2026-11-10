@@ -1,6 +1,7 @@
 package com.faststudio.v1.dto.media;
 
 import com.faststudio.v1.core.common.Data.Asset;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.faststudio.v1.services.rights.Rights;
 import jakarta.validation.constraints.*;
 
@@ -31,6 +32,8 @@ public final class AssetDto {
      */
     public record AssetView(Asset asset, String thumbUrl, String previewUrl, Rights.Policy rights, String rightsStatus,
                             int upcomingAirings, List<String> channels, Streaming streaming) {}
+
+    public record SlateView(@JsonUnwrapped AssetView view, boolean nextSchedule) {}
 
     /**
      * What the screens show about a video that streams from its platform: segment count and average length, quality

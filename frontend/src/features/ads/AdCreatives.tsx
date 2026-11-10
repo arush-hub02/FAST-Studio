@@ -1,30 +1,40 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, type AssetView } from '../../shared/api'
 import { useOrg } from '../../app/App'
-import { Empty, fmtDur, Icon, InfoTip, Status, useAction, useApi, VideoPlayer } from '../../shared/ui'
+import { Empty, fmtDur, Icon, InfoTip, Modal, Status, useAction, useApi, VideoPlayer } from '../../shared/ui'
 import { AddVideoModal } from '../library/AddVideoModal'
 import { AssetDrawer } from '../library/AssetDrawer'
 
-/** The project's own slate: what its channels show while nothing else can air (instead of the platform standby screen). */
+type SlateView = AssetView & { nextSchedule?: boolean }
+
+/** The project's own slate for unfilled ad time and other gaps. */
 export function AdSlate() {
   const org = useOrg()
-  const list = useApi<AssetView[]>(`/api/orgs/${org.slug}/slate`, [], 0)
+  const list = useApi<SlateView[]>(`/api/orgs/${org.slug}/slate`, [], 0)
   const { busy, run } = useAction()
-  const file = useRef<HTMLInputElement>(null)
+  const [adding, setAdding] = useState(false)
   const slates = list.data ?? []
-  const airing = slates.find(s => s.asset.status === 'READY')
+  const ready = slates.find(s => s.asset.status === 'READY')
   const newest = slates[0]
   const processing = newest && newest.asset.status !== 'READY' ? newest : null
+
   useEffect(() => {
     if (!processing || processing.asset.status === 'FAILED') return
     const t = setInterval(list.reload, 4000)
     return () => clearInterval(t)
   }, [processing, list.reload])
-  const upload = (f: File) => {
+
+  const upload = async (file: File, nextSchedule: boolean) => {
     const form = new FormData()
-    form.append('file', f)
-    run(() => api(`/api/orgs/${org.slug}/slate`, { form }), 'Slate uploaded. It airs once it is converted.').then(() => list.reload())
+    form.append('file', file)
+    form.append('nextSchedule', String(nextSchedule))
+    const result = await run(() => api<SlateView>(`/api/orgs/${org.slug}/slate`, { form }), nextSchedule
+      ? 'Slate queued for the next schedule publish.' : 'Slate uploaded. It will switch live once ready.')
+    if (result) {
+      setAdding(false)
+      list.reload()
+    }
   }
   const remove = () => run(() => api(`/api/orgs/${org.slug}/slate`, { method: 'DELETE' }), 'Back to the platform standby screen').then(() => list.reload())
   const canEdit = org.can('ASSETS_EDIT')
@@ -34,25 +44,55 @@ export function AdSlate() {
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: 0 }}>Slate <InfoTip text="Shown on your channels when nothing else can air: unfilled ad time, gaps in the schedule, or when a programme can't be reached. Converted once into your quality levels and kept in R2 only." /></h3>
         {canEdit && <div className="row" style={{ gap: 8 }}>
-          <input ref={file} type="file" accept="video/*,.mkv,.m4v" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />
-          <button type="button" className="btn primary sm" disabled={busy} onClick={() => file.current?.click()}><Icon name="upload" size={14} />{airing ? 'Replace slate' : 'Upload slate'}</button>
+          <button type="button" className="btn primary sm" disabled={busy} onClick={() => setAdding(true)}><Icon name="upload" size={14} />{ready ? 'Replace slate' : 'Upload slate'}</button>
           {slates.length > 0 && <button type="button" className="btn sm" disabled={busy} onClick={remove}>Use platform standby</button>}
         </div>}
       </div>
       {!list.data ? <span className="faint small">Loading…</span> : (
         <div className="grid g2" style={{ alignItems: 'start' }}>
           <div>
-            {airing?.previewUrl ? <VideoPlayer src={airing.previewUrl} title="Your slate" />
+            {ready?.previewUrl ? <VideoPlayer src={ready.previewUrl} title="Your slate" />
               : <div className="player-msg" style={{ position: 'relative', aspectRatio: '16 / 9', borderRadius: 6 }}><div>Platform standby screen<div className="faint small">"We'll be right back"</div></div></div>}
           </div>
           <div className="stack small" style={{ gap: 6 }}>
-            <div><b>On air:</b> {airing ? `your slate (${fmtDur(airing.asset.durationMs)})` : 'the platform standby screen'}</div>
+            <div><b>Latest ready slate:</b> {ready ? fmtDur(ready.asset.durationMs) : 'Platform standby'}</div>
+            {newest && <div><b>Apply:</b> {newest.nextSchedule ? 'Next schedule publish' : 'Live when ready'}</div>}
             {processing && <div className="row" style={{ gap: 6 }}><Status value={processing.asset.status} /><span className="faint">{processing.asset.statusDetail}</span></div>}
             <div className="faint">Use a short loop (10 to 60 seconds) without speech. It is stretched or looped to fill any gap.</div>
           </div>
         </div>
       )}
+      {adding && <SlateUploadModal busy={busy} onClose={() => setAdding(false)} onSubmit={upload} />}
     </div>
+  )
+}
+
+function SlateUploadModal({ busy, onClose, onSubmit }: {
+  busy: boolean
+  onClose: () => void
+  onSubmit: (file: File, nextSchedule: boolean) => void
+}) {
+  const [file, setFile] = useState<File>()
+  const [nextSchedule, setNextSchedule] = useState(false)
+  return (
+    <Modal title="Upload a slate" subtitle="Choose when channels start using this slate." onClose={onClose} footer={<>
+      <button type="button" className="btn" onClick={onClose} disabled={busy}>Cancel</button>
+      <button type="button" className="btn primary" disabled={busy || !file}
+        onClick={() => file && onSubmit(file, nextSchedule)}>Upload slate</button>
+    </>}>
+      <label className="field">
+        <span>Slate video</span>
+        <input type="file" accept="video/*,.mkv,.m4v" onChange={e => setFile(e.target.files?.[0])} disabled={busy} />
+      </label>
+      <label className="field">
+        <span>Apply slate</span>
+        <select value={nextSchedule ? 'next' : 'live'} onChange={e => setNextSchedule(e.target.value === 'next')} disabled={busy}>
+          <option value="live">Live when ready</option>
+          <option value="next">Next schedule publish</option>
+        </select>
+        <small className="faint">The current slate continues until the new video is ready. Next schedule publish also waits for each channel to publish after this upload.</small>
+      </label>
+    </Modal>
   )
 }
 

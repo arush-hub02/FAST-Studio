@@ -5,6 +5,8 @@ import com.faststudio.v1.core.common.Data.Entry;
 import com.faststudio.v1.core.common.Data.Version;
 import com.faststudio.v1.services.programming.Planner;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +33,9 @@ public final class ScheduleDto {
     public record EditResult(int revision, List<String> notices) {}
 
     /** kind AD_BREAK adds a break; otherwise a programme (by default with its mid-roll breaks). */
-    public record AddRequest(int expectedRevision, String kind, UUID assetId, Instant startAt, Integer seconds, Boolean withBreaks) {}
+    public record AddRequest(int expectedRevision, String kind, UUID assetId, Instant startAt, Integer seconds, Boolean withBreaks, Boolean slateOnly) {}
+
+    public record BreakFillRequest(int expectedRevision, @NotNull Boolean slateOnly) {}
 
     public record RevisionRequest(int expectedRevision) {}
 

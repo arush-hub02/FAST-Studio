@@ -84,7 +84,7 @@ public class PlaybackRepository {
 
     /** An ad break of this channel in any published (number > 0) schedule version. */
     public Optional<Entry> publishedBreak(UUID org, UUID channel, UUID breakId) {
-        return db.sql("select e.id,e.version_id,e.kind,e.asset_id,e.asset_offset_ms,e.start_at,e.end_at,e.ownership from schedule_entry e join schedule_version v on v.org_id=e.org_id and v.id=e.version_id where e.org_id=:o and e.id=:id and e.kind='AD_BREAK' and v.channel_id=:ch and v.number>0")
+        return db.sql("select e.id,e.version_id,e.kind,e.asset_id,e.asset_offset_ms,e.start_at,e.end_at,e.ownership,e.slate_only from schedule_entry e join schedule_version v on v.org_id=e.org_id and v.id=e.version_id where e.org_id=:o and e.id=:id and e.kind='AD_BREAK' and v.channel_id=:ch and v.number>0")
                 .param("o", org).param("id", breakId).param("ch", channel).query(Entry.class).optional();
     }
 
