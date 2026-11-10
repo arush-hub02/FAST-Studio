@@ -671,7 +671,7 @@ export default function Ads() {
       <AdSlate />
 
       {(org.features.includes('AD_WATERFALL_VIEW') || org.features.includes('AD_OWN_TAGS')) && (
-        <AdSources base={`/api/orgs/${org.slug}/ad-sources`} mode="company" canAddOwn={org.features.includes('AD_OWN_TAGS') && org.can('ADS_EDIT')} />
+        <AdSources base={`/api/orgs/${org.slug}/ad-sources`} mode="company" canAddOwn={org.features.includes('AD_OWN_TAGS') && org.can('ADS_EDIT')} canDirect={org.features.includes('AD_DIRECT_DELIVERY')} />
       )}
 
       {/* Broadcast SSAI Decision Simulator Modal */}
