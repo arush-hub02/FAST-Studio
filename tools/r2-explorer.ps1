@@ -1,8 +1,8 @@
 # Opens Cloudflare's Local Explorer on the local R2 of production (data-pilot\edge) or the demo (data\edge):
 # browse folders, upload, add directories, download, delete, object details (the R2 dashboard, locally).
-#   r2.bat            production        r2.bat demo        demo        r2.bat stop        close explorers started here
+#   pilot-r2.bat (production) or demo-r2.bat; to close the explorers started here: powershell tools\r2-explorer.ps1 -Env stop
 # If that environment's edge is running (FAST Studio started), its explorer on port 8787 is used. Otherwise a
-# browse-only edge for it starts on port 8798 (production) or 8797 (demo); start.bat closes it before starting.
+# browse-only edge for it starts on port 8798 (production) or 8797 (demo); start.bat, demo-start.bat and pilot-start.bat close it before starting.
 param([ValidateSet('prod', 'production', 'pilot', 'demo', 'stop')][string]$Env = 'prod', [switch]$Quiet)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
