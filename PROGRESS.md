@@ -1,7 +1,7 @@
 # FAST Studio progress and continuation plan
 
-Last updated: 2026-11-10 22:20, Asia/Calcutta (UTC+05:30).
-Updated by: Claude, browser checks, e2e and the Watch buffer screenshot (local commits on main, not pushed).
+Last updated: 2026-11-10 23:00, Asia/Calcutta (UTC+05:30).
+Updated by: Claude, ad delivery design spec (local commit, not pushed).
 
 **Read AGENTS.md before working. Update this file before handing off.** This is the shared checkpoint for agents; it is not a production-readiness certificate. Read the relevant detailed plan before implementing its next stage.
 
@@ -30,6 +30,7 @@ Keep one row per agent/task. Add your own row before implementation. Paths must 
 
 | Agent / session | Task | Branch / worktree | Affected paths | Status | Next checkpoint |
 | --- | --- | --- | --- | --- | --- |
+| Claude / 2026-11-10 ad delivery per ad server | Store in R2 or Direct from the ad server per VAST connection (feature AD_DIRECT_DELIVERY), fast first version for new creatives | main / D:/Fast Product | docs/superpowers/specs/2026-11-10-ad-delivery-design.md; planned: VastSource, AdDecisionServiceV1 slots, MediaServiceV1 creative conditioning, worker playout/ovp, connector migration, Ads/connector UI | Design approved; spec written, not implemented | User reviews the spec; then the implementation plan |
 | Claude / 2026-11-10 TV-style breaks and Watch takeover | Took over Codex's Watch delay and frame-skip task at the user's request; house promos fill unsold break time instead of the standby slate; frame-rate check between Mux programmes and our ads | claude/tv-seamless / D:/Fast Product-tv (from codex/live-slate-vast-fix d5f87bc) | backend V36, campaign repository/DTO, DirectSoldSource, AdDecisionServiceV1; frontend Ads campaign form, shared Player, Watch; tests; generated docs; PROGRESS.md | Merged into main as 82d5007 with user approval (branch CI 42830972453 and main CI 42831607456 green); pilot runs from D:/Fast Product-tv since 2026-11-10 18:44 IST | Browser-check the Ads House promo box; e2e |
 | Codex / pilot rollout | Apply tested build a195305 to the existing local pilot | codex/live-slate-vast-fix / D:/Fast Product-live-slate-fix | Local runtime, preserved pilot data and backup, PROGRESS.md | Completed on pilot, running a195305 | Use the patched worktree for the next local start or stop |
 | Codex / 2026-11-10 Schedule workspace | Drag ready programmes into the draft, reschedule a placement and its mid-rolls, and configure ad stitching at draft or programme scope | codex/live-slate-vast-fix / D:/Fast Product-live-slate-fix | ScheduleControllerV1, ScheduleDto, ScheduleRepository, ScheduleServiceV1, frontend programming, tests and generated docs | Completed locally after 09f5f46 | Applied locally. See the pilot rollout handoff below. |

@@ -363,6 +363,22 @@
           "html": "<ul><li><a href=\"https://docs.oracle.com/en-us/iaas/Content/FreeTier/resourceref.htm\" target=\"_blank\" rel=\"noopener\">Oracle Cloud Always Free resources (official: 2 OCPU / 12 GB Arm, 200 GB, 10 TB, idle rules)</a></li><li><a href=\"https://www.oracle.com/cloud/free/\" target=\"_blank\" rel=\"noopener\">Oracle Cloud Free Tier sign-up</a></li><li><a href=\"https://braindetox.kr/en/posts/oracle_always_free_tier_reduced_2026.html\" target=\"_blank\" rel=\"noopener\">Report on the 2026 Oracle free Arm cut (third party)</a></li><li><a href=\"https://www.hetzner.com/cloud/cost-optimized/\" target=\"_blank\" rel=\"noopener\">Hetzner Cost-Optimized servers (CX23 / CAX11)</a></li><li><a href=\"https://www.hetzner.com/cloud/regular-performance/\" target=\"_blank\" rel=\"noopener\">Hetzner Regular Performance servers</a></li><li><a href=\"https://valebyte.com/en/vps/india/\" target=\"_blank\" rel=\"noopener\">VPS listings in India, including OVHcloud Mumbai (third party)</a></li><li><a href=\"https://www.ovhcloud.com/en-in/vps/\" target=\"_blank\" rel=\"noopener\">OVHcloud VPS</a></li><li><a href=\"https://github.com/zonkyio/embedded-postgres-binaries\" target=\"_blank\" rel=\"noopener\">Embedded PostgreSQL binaries (Arm builds exist as separate artifacts)</a></li><li><a href=\"https://www.mux.com/pricing\" target=\"_blank\" rel=\"noopener\">Mux pricing</a></li><li><a href=\"https://developers.cloudflare.com/workers/platform/pricing/\" target=\"_blank\" rel=\"noopener\">Cloudflare Workers, KV and Durable Objects pricing and free limits</a></li><li><a href=\"https://developers.cloudflare.com/r2/pricing/\" target=\"_blank\" rel=\"noopener\">Cloudflare R2 pricing and free tier</a></li><li><a href=\"https://developers.cloudflare.com/workers/wrangler/commands/#deploy\" target=\"_blank\" rel=\"noopener\">Wrangler deploy command</a></li><li><a href=\"https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/\" target=\"_blank\" rel=\"noopener\">Cloudflare Tunnel (put a server online without opening ports)</a></li><li><a href=\"https://developers.cloudflare.com/registrar/\" target=\"_blank\" rel=\"noopener\">Cloudflare Registrar (buy a domain)</a></li></ul><p>Cost model for a real audience: <code>docs/PRODUCTION_ARCHITECTURE_AND_COSTS.md</code>.</p>"
         }
       ]
+    },
+    {
+      "id": "ad-delivery-r2-or-direct",
+      "asked": "2026-11-10",
+      "question": "Can ads be stored in R2 and served, or played directly from Google or another ad server?",
+      "short": "Planned, not built yet. Each ad server connection will get a Delivery setting: Store in R2 and serve (default) or Direct from the ad server, available when the platform switches on the Direct ad delivery feature for the tenant. Direct only works for ads the ad server offers in HLS that fit the channel; MP4-only ads (what Google mainly sends) fall back to Store in R2. Store in R2 also gets a fast first version, so new ads earn money in their first break.",
+      "sections": [
+        {
+          "title": "Why not play every ad directly",
+          "html": "<ul><li>A live stream can only include HLS pieces; a plain MP4 file cannot be listed in it. Most VAST answers, Google included, carry MP4, so those ads are prepared and stored in R2.</li><li>A direct ad must match the channel: same piece format, a separate audio track on Mux (fMP4) channels, pieces of 5 s or less, and the declared length. Otherwise it would bring back the gaps and stalls fixed on 2026-11-10.</li><li>If the ad server's CDN fails mid-break, viewers can see a short stall; an R2 ad does not depend on it.</li></ul>"
+        },
+        {
+          "title": "Today",
+          "html": "<p>Every ad server ad is downloaded once, re-encoded by ffmpeg to the project's quality levels, stored in R2 and stitched in by the edge. Until a new creative is ready its break plays house promos or slate.</p><p>Design: <code>docs/superpowers/specs/2026-11-10-ad-delivery-design.md</code>.</p>"
+        }
+      ]
     }
   ]
 }
