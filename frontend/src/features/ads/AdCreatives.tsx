@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { api, type AssetView } from '../../shared/api'
 import { useOrg } from '../../app/App'
 import { Empty, fmtDur, Icon, InfoTip, Modal, Status, useAction, useApi, VideoPlayer } from '../../shared/ui'
-import { AddVideoModal } from '../library/AddVideoModal'
-import { AssetDrawer } from '../library/AssetDrawer'
+import { AddVideoModal } from '../../shared/media/AddVideoModal'
+import { AssetDrawer } from '../../shared/media/AssetDrawer'
 
 type SlateView = AssetView & { nextSchedule?: boolean }
 

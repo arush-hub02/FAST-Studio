@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type AssetView, type Streaming } from '../../shared/api'
+import { api, type AssetView, type Streaming } from '../api'
 import { useOrg } from '../../app/App'
 import {
   Confirm,
@@ -14,10 +14,10 @@ import {
   useApi,
   VideoPlayer,
   type PlayerEvent,
-} from '../../shared/ui'
-import { GenreSelector } from '../../shared/components/GenreSelector'
+} from '../ui'
+import { GenreSelector } from '../components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
-import { useProjectMedia } from '../../shared/projectMedia'
+import { useProjectMedia } from '../projectMedia'
 
 /** Status detail of a video whose file went straight to the video library and is still converting there (set by the server). */
 export const UPLOADING_TO_LIBRARY = 'Uploading to the video library'

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, type AssetView } from '../../shared/api'
+import { api, type AssetView } from '../api'
 import { useOrg } from '../../app/App'
 import {
   Dropdown,
@@ -9,10 +9,10 @@ import {
   Modal,
   useAction,
   useApi,
-} from '../../shared/ui'
-import { DateTimePicker } from '../../shared/components/DateTimePicker'
-import { GenreSelector } from '../../shared/components/GenreSelector'
-import { useProjectMedia } from '../../shared/projectMedia'
+} from '../ui'
+import { DateTimePicker } from '../components/DateTimePicker'
+import { GenreSelector } from '../components/GenreSelector'
+import { useProjectMedia } from '../projectMedia'
 
 const COLOR_PRESETS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#14b8a6']
 

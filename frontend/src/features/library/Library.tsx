@@ -14,10 +14,10 @@ import {
   Status,
   useApi,
 } from '../../shared/ui'
-import { AddVideoModal } from './AddVideoModal'
-import { AssetDrawer, UPLOADING_TO_LIBRARY } from './AssetDrawer'
+import { AddVideoModal } from '../../shared/media/AddVideoModal'
+import { AssetDrawer, UPLOADING_TO_LIBRARY } from '../../shared/media/AssetDrawer'
 import { LibrarySource } from './LibrarySource'
-import { formatMediaKind, KIND_LABEL } from './mediaKind'
+import { formatMediaKind, KIND_LABEL } from '../../shared/media/mediaKind'
 
 const KINDS = [
   { key: '', label: 'All Catalog', icon: 'film' },
