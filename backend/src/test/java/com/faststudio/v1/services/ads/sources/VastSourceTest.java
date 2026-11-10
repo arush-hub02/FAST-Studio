@@ -69,6 +69,60 @@ class VastSourceTest {
         assertEquals("GAM|ad:a", VastSource.ref(a, VastSource.first(a, "InLine"), VastSource.first(a, "Linear"), "u"));
     }
 
+    static VastSource.Ad one(String mediaFiles) throws IOException {
+        String xml = """
+                <VAST version="4.0"><Ad id="h"><InLine><AdSystem>GAM</AdSystem><AdTitle>Hls</AdTitle>
+                  <Creatives><Creative id="ch"><Linear><Duration>00:00:30</Duration><MediaFiles>%s</MediaFiles></Linear></Creative></Creatives>
+                </InLine></Ad></VAST>""".formatted(mediaFiles);
+        Element ad = VastSource.ads(VastSource.parse(xml.getBytes(StandardCharsets.UTF_8))).getFirst();
+        return VastSource.toAd(ad, VastSource.first(ad, "InLine"), java.util.Map.of());
+    }
+
+    @Test
+    void hlsMediaFileIsReadBesideMp4() throws IOException {
+        var ad = one("""
+                <MediaFile type="video/mp4" height="720">https://cdn.example/a.mp4</MediaFile>
+                <MediaFile type="application/x-mpegURL">https://cdn.example/a/master.m3u8</MediaFile>""");
+        assertEquals("https://cdn.example/a.mp4", ad.mediaUrl());
+        assertEquals("https://cdn.example/a/master.m3u8", ad.hlsUrl());
+    }
+
+    @Test
+    void hlsOnlyAdIsKeptWithoutMp4() throws IOException {
+        var ad = one("<MediaFile type=\"application/vnd.apple.mpegurl\">https://cdn.example/b/master.m3u8</MediaFile>");
+        assertNotNull(ad);
+        assertNull(ad.mediaUrl());
+        assertEquals("https://cdn.example/b/master.m3u8", ad.hlsUrl());
+        assertEquals("GAM|creative:ch", ad.ref(), "keyed by the creative, not the HLS address");
+    }
+
+    @Test
+    void plainHttpHlsIsIgnored() throws IOException {
+        var ad = one("""
+                <MediaFile type="video/mp4" height="720">https://cdn.example/a.mp4</MediaFile>
+                <MediaFile type="application/x-mpegURL">http://cdn.example/a/master.m3u8</MediaFile>""");
+        assertNull(ad.hlsUrl());
+    }
+
+    @Test
+    void hlsOnlyAdUnderStoreIsExcludedWithoutPreparing() {
+        var repository = org.mockito.Mockito.mock(com.faststudio.v1.repositories.ads.AdSourceRepository.class);
+        var source = new VastSource(repository, null);
+        var src = new IAdSource.Config(UUID.randomUUID(), "GAM", "VAST", "https://x", 1000, 1, true, "PLATFORM");
+        var req = new IAdSource.Request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), Instant.now(), 60_000, 60_000, "IN",
+                "ch", "", null, IAdSource.Viewer.NONE, new HashSet<>());
+        var ad = new VastSource.Ad("Hls", "GAM", 30_000, null, "GAM|creative:ch", java.util.Map.of(), "https://cdn.example/b/master.m3u8");
+        var fill = source.place(src, req, List.of(ad));
+        assertTrue(fill.slots().isEmpty());
+        assertEquals("No MP4 file to prepare", fill.excluded().getFirst().reason());
+        org.mockito.Mockito.verifyNoInteractions(repository);
+    }
+
+    @Test
+    void adWithNeitherFileIsNotPlayable() throws IOException {
+        assertNull(one("<MediaFile type=\"application/javascript\">https://cdn.example/vpaid.js</MediaFile>"));
+    }
+
     @Test
     void durations() {
         assertEquals(30_000, VastSource.duration("00:00:30.000"));

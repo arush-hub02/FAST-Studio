@@ -56,7 +56,12 @@ public class VastSource implements IAdSource {
 
     /** One linear ad from a VAST response; tracking = our event -> URLs to call when it happens. */
     /** One linear ad. ref = its stable identity (creative URLs are often signed per request, so they can't be). */
-    public record Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking) {}
+    /** mediaUrl = the progressive MP4 we prepare (null when the ad only offers HLS); hlsUrl = its HLS for Direct delivery, if any. */
+    public record Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking, String hlsUrl) {
+        public Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking) {
+            this(title, advertiser, durationMs, mediaUrl, ref, tracking, null);
+        }
+    }
 
     @Override
     public Fill fill(Config src, Request req) {
@@ -69,11 +74,22 @@ public class VastSource implements IAdSource {
             excluded.add(new AdDecisionServiceV1.Excluded(src.name(), "No answer: " + reason(e)));
             return new Fill(slots, excluded);
         }
+        return place(src, req, ads);
+    }
+
+    /** Turns an ad server's answer into slots for the time still open. */
+    Fill place(Config src, Request req, List<Ad> ads) {
+        List<AdDecisionServiceV1.Slot> slots = new ArrayList<>();
+        List<AdDecisionServiceV1.Excluded> excluded = new ArrayList<>();
         if (ads.isEmpty()) excluded.add(new AdDecisionServiceV1.Excluded(src.name(), "No fill: the ad server returned no playable ads"));
         boolean preparing = false;
         long left = req.remainingMs();
         for (Ad ad : ads) {
             String label = src.name() + ": " + ad.title();
+            if (ad.mediaUrl() == null) {
+                excluded.add(new AdDecisionServiceV1.Excluded(label, "No MP4 file to prepare"));
+                continue;
+            }
             Creative c = creative(req.org(), src, ad);
             if (c == null || !"READY".equals(c.status()) || c.mediaKey() == null) {
                 boolean pending = c == null || "PROCESSING".equals(c.status());
@@ -135,15 +151,34 @@ public class VastSource implements IAdSource {
                 continue;
             }
             if (inline == null) continue;
-            Element linear = first(inline, "Linear");
-            String mediaUrl = linear == null ? null : pickMedia(linear);
-            long dur = linear == null ? 0 : duration(text(linear, "Duration"));
-            if (mediaUrl == null || dur <= 0) continue;   // not a playable linear video ad (e.g. VPAID only)
-            String advertiser = !text(inline, "Advertiser").isEmpty() ? text(inline, "Advertiser") : text(inline, "AdSystem");
-            out.add(new Ad(text(inline, "AdTitle").isEmpty() ? "Untitled ad" : text(inline, "AdTitle"), advertiser, dur, mediaUrl,
-                    ref(ad, inline, linear, mediaUrl), tracking));
+            Ad a = toAd(ad, inline, tracking);
+            if (a != null) out.add(a);
         }
         return out;
+    }
+
+    /** The playable linear ad of an InLine, or null (no MP4 or HLS file, e.g. VPAID only, or no duration). */
+    static Ad toAd(Element ad, Element inline, Map<String, List<String>> tracking) {
+        Element linear = first(inline, "Linear");
+        if (linear == null) return null;
+        String mediaUrl = pickMedia(linear), hlsUrl = pickHls(linear);
+        long dur = duration(text(linear, "Duration"));
+        if ((mediaUrl == null && hlsUrl == null) || dur <= 0) return null;
+        String advertiser = !text(inline, "Advertiser").isEmpty() ? text(inline, "Advertiser") : text(inline, "AdSystem");
+        return new Ad(text(inline, "AdTitle").isEmpty() ? "Untitled ad" : text(inline, "AdTitle"), advertiser, dur, mediaUrl,
+                ref(ad, inline, linear, mediaUrl != null ? mediaUrl : hlsUrl), tracking, hlsUrl);
+    }
+
+    /** The ad's HLS file (https only: viewers fetch it straight from the ad server), or null. */
+    static String pickHls(Element linear) {
+        NodeList files = linear.getElementsByTagName("MediaFile");
+        for (int i = 0; i < files.getLength(); i++) {
+            Element f = (Element) files.item(i);
+            String type = f.getAttribute("type").toLowerCase(Locale.ROOT), url = f.getTextContent().trim();
+            if ((type.equals("application/x-mpegurl") || type.equals("application/vnd.apple.mpegurl")) && url.regionMatches(true, 0, "https://", 0, 8))
+                return url;
+        }
+        return null;
     }
 
     /** Stable creative identity: ad system + UniversalAdId, else the creative's ad id or id, else the ad id, else the file path. */
