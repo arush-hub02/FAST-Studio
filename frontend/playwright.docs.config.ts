@@ -6,5 +6,6 @@ export default defineConfig({
   timeout: 180_000,
   workers: 1,
   reporter: 'list',
-  use: { baseURL: process.env.DOCS_BASE_URL ?? 'http://localhost:8080' },
+  // Installed Chrome: Playwright's own Chromium cannot decode H.264, so Watch shots never start playback.
+  use: { channel: 'chrome', baseURL: process.env.DOCS_BASE_URL ?? 'http://localhost:8080' },
 })
