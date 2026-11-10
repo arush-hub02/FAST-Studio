@@ -66,8 +66,11 @@ const secs = (ms: number) => (ms / 1000).toFixed(3)
 
 export function masterPlaylist(snap: Snapshot): string {
   let m = '#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-INDEPENDENT-SEGMENTS\n'
+  // fMP4 channels carry audio as its own track (a.m3u8), the way fMP4 platforms deliver it; video playlists are video only
+  const split = snap.fmt === 'FMP4'
+  if (split) m += '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aud",NAME="Audio",DEFAULT=YES,AUTOSELECT=YES,CHANNELS="2",URI="a.m3u8"\n'
   snap.ladder.forEach((r, i) => {
-    m += `#EXT-X-STREAM-INF:BANDWIDTH=${r.bandwidth},AVERAGE-BANDWIDTH=${Math.floor(r.bandwidth * 85 / 100)},RESOLUTION=${r.width}x${r.height},CODECS="${r.codecs}",FRAME-RATE=25.000,NAME="${r.name}"\nv${i}.m3u8\n`
+    m += `#EXT-X-STREAM-INF:BANDWIDTH=${r.bandwidth},AVERAGE-BANDWIDTH=${Math.floor(r.bandwidth * 85 / 100)},RESOLUTION=${r.width}x${r.height},CODECS="${r.codecs}",FRAME-RATE=25.000,NAME="${r.name}"${split ? ',AUDIO="aud"' : ''}\nv${i}.m3u8\n`
   })
   return m
 }
@@ -251,7 +254,8 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
   const edge = r.seqAt(now) - 1                     // newest segment that has fully "aired"
   const first = edge - WINDOW + 1
   const origin = r.seqAt(s.created) - WINDOW
-  const memo = dsnMemo.get(s.sid)
+  const memoKey = variant < 0 ? s.sid + ':a' : s.sid   // the audio track counts its own content changes
+  const memo = dsnMemo.get(memoKey)
   const startIdx = memo && memo[0] <= first && memo[0] >= origin ? memo[0] : Math.max(Math.min(origin, first), first - 20_000)
   let dsn = memo && startIdx === memo[0] ? memo[1] : 0
   let prevKey = r.seg(startIdx).key
@@ -260,16 +264,17 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
     if (k !== prevKey) dsn++
     prevKey = k
   }
-  dsnMemo.set(s.sid, [first, dsn])
+  dsnMemo.set(memoKey, [first, dsn])
 
   const fmp4 = snap.fmt === 'FMP4'
+  const audio = variant < 0                          // the audio track of an fMP4 channel: same timeline, audio segments
   const level = snap.ladder[variant]?.i ?? variant   // this playlist's quality level (folder index)
   let m = `#EXTM3U\n#EXT-X-VERSION:${fmp4 ? 7 : 6}\n#EXT-X-TARGETDURATION:${Math.max(SEG / 1000, snap.target ?? 0)}\n#EXT-X-INDEPENDENT-SEGMENTS\n`
   m += `#EXT-X-MEDIA-SEQUENCE:${first}\n#EXT-X-DISCONTINUITY-SEQUENCE:${dsn}\n`
   m += `## FAST Studio edge playout | channel=${snap.channel} | ad mode=${s.adMode} | markers=${s.markers} | simulated viewer country=${s.country}\n`
   const announced = new Set<string>()
   const beacons: Beacon[] = []
-  const showMarkers = r.live && r.offered
+  const showMarkers = r.live && r.offered && !audio   // markers, interstitials and delivery counts ride on the video playlists
   // SGAI: announce upcoming breaks ahead of the live edge so the player can fetch the ad list
   // before it reaches the break (players stall if an interstitial first appears at its own start).
   if (showMarkers && s.adMode === 'SGAI') {
@@ -292,12 +297,13 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
     // fMP4: our media from its fMP4 copy; every source has its own init section, announced again after each switch
     // our media: the folder of this channel level, or the nearest lower level the media has
     const dir = levelFolder(level, g.levels)
-    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/f${dir}/init.mp4` : undefined)
+    const fdir = audio ? 'a' : 'v' + dir   // fMP4 copies: video only in v{level}/, the audio track in a/
+    const map = g.map ?? (fmp4 && !g.url ? `${base}/${g.media}/${fdir}/init.mp4` : undefined)
     if (map && (i === first || disc || map !== lastMap)) m += `#EXT-X-MAP:URI="${map}"\n`
     if (map) lastMap = map
-    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/f${dir}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${dir}/seg_${pad(g.n)}.ts`)
+    const uri = g.url ?? (fmp4 ? `${base}/${g.media}/${fdir}/seg_${pad(g.n)}.m4s` : `${base}/${g.media}/${dir}/seg_${pad(g.n)}.ts`)
     m += `#EXTINF:${secs(g.dur)},\n${uri}\n`
-    if (g.ad) {
+    if (g.ad && !audio) {
       const { n } = g, segs = g.ad.segs
       const ev = n === 0 ? 'IMPRESSION' : n === segs - 1 ? 'COMPLETE' : n === Math.floor(segs / 4) ? 'FIRST_QUARTILE'
         : n === Math.floor(segs / 2) ? 'MIDPOINT' : n === Math.floor(3 * segs / 4) ? 'THIRD_QUARTILE' : null

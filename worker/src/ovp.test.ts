@@ -123,6 +123,30 @@ test('fMP4 channel: our media from its fMP4 copies, each source announced with i
     }
   }
   assert.ok(t.includes('#EXT-X-MAP:URI="https://cdn.example/a1/r0/init.mp4"'))
-  assert.ok(t.includes('#EXT-X-MAP:URI="https://m/aurora/ad.1/f0/init.mp4"'))
-  assert.ok(t.includes('https://m/aurora/ad.1/f0/seg_00000.m4s'))
+  assert.ok(t.includes('#EXT-X-MAP:URI="https://m/aurora/ad.1/v0/init.mp4"'), 'our media: its video-only copy')
+  assert.ok(t.includes('https://m/aurora/ad.1/v0/seg_00000.m4s'))
+})
+
+test('fMP4 channel: a separate audio track with the platform audio and our audio, on the same timeline', async () => {
+  const { masterPlaylist } = await import('./playout.ts')
+  const { AUDIO, parseAudio } = await import('./ovp.ts')
+  const fsnap: Snapshot = { ...snap, fmt: 'FMP4', ovp: { a1: { ...snap.ovp!.a1, fmt: 'FMP4' } } }
+  const master = masterPlaylist(fsnap)
+  assert.ok(master.includes('#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aud"') && master.includes('URI="a.m3u8"'), master)
+  assert.ok(master.split('\n').filter(l => l.startsWith('#EXT-X-STREAM-INF')).every(l => l.includes('AUDIO="aud"')))
+  assert.ok(!masterPlaylist(snap).includes('TYPE=AUDIO'), 'MPEG-TS channels keep audio inside the video segments')
+
+  const fmux = (a: string, v: number, i: number) => v === AUDIO
+    ? { url: `https://cdn.example/${a}/audio/s${i}.m4s`, map: `https://cdn.example/${a}/audio/init.mp4` }
+    : { url: `https://cdn.example/${a}/r${v}/s${i}.m4s`, map: `https://cdn.example/${a}/r${v}/init.mp4` }
+  const at = T + 45_000
+  const video = mediaPlaylist(fsnap, viewer, 0, at, 'https://m', () => ad15, new Map(), fmux).text
+  const audio = mediaPlaylist(fsnap, viewer, AUDIO, at, 'https://m', () => ad15, new Map(), fmux).text
+  assert.ok(audio.includes('https://cdn.example/a1/audio/s0.m4s'), 'the platform audio during the programme')
+  assert.ok(audio.includes('https://m/aurora/ad.1/a/seg_00000.m4s') && audio.includes('https://m/aurora/ad.1/a/init.mp4'), 'our audio during the ad')
+  const lens = (t: string) => t.split('\n').filter(l => l.startsWith('#EXTINF') || l.startsWith('#EXT-X-MEDIA-SEQUENCE') || l === '#EXT-X-DISCONTINUITY')
+  assert.deepEqual(lens(audio), lens(video), 'audio and video list the same numbers, lengths and switches')
+  assert.ok(!audio.includes('CUE-OUT') && !audio.includes('DATERANGE'), 'markers only on the video playlists')
+  assert.equal(parseAudio('#EXTM3U\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="x",DEFAULT=YES,URI="aud/lo.m3u8"\n', 'https://p.example/m/master.m3u8'), 'https://p.example/m/aud/lo.m3u8')
+  assert.equal(parseAudio('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nv.m3u8\n', 'https://p.example/m.m3u8'), null)
 })

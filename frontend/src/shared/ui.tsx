@@ -356,8 +356,10 @@ export function Countries({ codes, bad }: { codes: string[]; bad?: boolean }) {
 // ---------------------------------------------------------------- video
 
 export type PlayerEvent = {
-  type: 'interstitial-start' | 'interstitial-end' | 'error' | 'playing' | 'level'
+  type: 'interstitial-start' | 'interstitial-end' | 'error' | 'playing' | 'level' | 'clock'
   uri?: string; message?: string
+  /** 'clock': the wall-clock instant of the picture on screen (from the stream's program date-time), in ms */
+  at?: number
   /** 'level': the quality level now playing */
   height?: number; width?: number; bitrate?: number
 }

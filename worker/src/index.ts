@@ -73,10 +73,10 @@ async function live(req: Request, env: Env, ctx: Ctx, url: URL, token: string, r
   const now = Date.now()
 
   if (rest === 'master.m3u8') return playlist(masterPlaylist(snap))
-  const v = rest.match(/^v(\d+)\.m3u8$/)
+  const v = rest.match(/^(?:v(\d+)|a)\.m3u8$/)
   if (v) {
-    const variant = Number(v[1])
-    if (variant >= snap.ladder.length) return text('No such rendition', 404)
+    const variant = v[1] === undefined ? ovp.AUDIO : Number(v[1])   // a.m3u8: the audio track of an fMP4 channel
+    if (variant >= snap.ladder.length || (variant === ovp.AUDIO && snap.fmt !== 'FMP4')) return text('No such rendition', 404)
     const { now: needed, soon } = breaksToDecide(snap, s, now)
     await Promise.all(needed.map(b => decide(env, s, b.id, true, viewer)))
     soon.forEach(b => ctx.waitUntil(decide(env, s, b.id, false, viewer)))

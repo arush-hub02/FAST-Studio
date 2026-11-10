@@ -6,6 +6,8 @@
 import type { Rendition, Snapshot } from './playout.ts'
 
 export type Variant = { height: number; bandwidth: number; uri: string }
+/** "Rendition" number of a video's separate audio track (fMP4 platforms such as Mux deliver audio apart from video). */
+export const AUDIO = -1
 
 const FRESH_MS = 30 * 60_000      // re-read a playlist after this long (signed URLs last far longer)
 const RETRY_MS = 15_000           // after a failed first read
@@ -30,6 +32,20 @@ export function parseMaster(text: string, base: string): Variant[] {
     i = j
   }
   return out
+}
+
+/** The audio track's playlist in a master (the default one, else the first); null when audio is inside the video segments. */
+export function parseAudio(text: string, base: string): string | null {
+  let first: string | null = null
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.startsWith('#EXT-X-MEDIA:') || !line.includes('TYPE=AUDIO')) continue
+    const u = /URI="([^"]+)"/.exec(line)?.[1]
+    if (!u) continue
+    const abs = new URL(u, base).toString()
+    if (line.includes('DEFAULT=YES')) return abs
+    first ??= abs
+  }
+  return first
 }
 
 /** Segment URLs of a media playlist and its fMP4 init section (EXT-X-MAP), absolute. */
@@ -62,16 +78,25 @@ async function get(url: string): Promise<string> {
   return res.text()
 }
 
-async function read(master: string, ours: Rendition): Promise<{ urls: string[]; map?: string }> {
-  const variants = parseMaster(await get(master), master)
-  if (!variants.length) throw new Error('no renditions')
-  const v = variants[pick(variants, ours)]
-  const r = parseMedia(await get(v.uri), v.uri)
+/** ours null = the audio track. */
+async function read(master: string, ours: Rendition | null): Promise<{ urls: string[]; map?: string }> {
+  const text = await get(master)
+  let uri: string
+  if (ours) {
+    const variants = parseMaster(text, master)
+    if (!variants.length) throw new Error('no renditions')
+    uri = variants[pick(variants, ours)].uri
+  } else {
+    const a = parseAudio(text, master)
+    if (!a) throw new Error('no separate audio track')
+    uri = a
+  }
+  const r = parseMedia(await get(uri), uri)
   if (!r.urls.length) throw new Error('empty rendition')
   return r
 }
 
-const cacheKey = async (master: string, variant: number) => {
+const cacheKey = async (master: string, variant: number | string) => {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(master)))
   return `https://ovp-playlists.internal/${[...h.slice(0, 16)].map(b => b.toString(16).padStart(2, '0')).join('')}/${variant}`
 }
@@ -79,8 +104,8 @@ const cacheKey = async (master: string, variant: number) => {
 /** Makes sure the segment URLs of this video and rendition are in memory (fresh, or the last good copy). */
 export async function load(snap: Snapshot, asset: string, variant: number, now = Date.now()): Promise<void> {
   const master = snap.ovp?.[asset]?.url
-  const ours = snap.ladder[variant]
-  if (!master || !ours) return
+  const ours = variant === AUDIO ? null : snap.ladder[variant]
+  if (!master || (variant !== AUDIO && !ours)) return
   const k = `${master}|${variant}`
   const hit = memo.get(k)
   if (hit && now - hit.at < (hit.urls ? FRESH_MS : RETRY_MS)) return
@@ -88,7 +113,7 @@ export async function load(snap: Snapshot, asset: string, variant: number, now =
   if (!p) {
     p = (async (): Promise<Entry> => {
       const cache = typeof caches !== 'undefined' ? (caches as unknown as { default: Cache }).default : null
-      const ck = cache ? await cacheKey(master, variant) : ''
+      const ck = cache ? await cacheKey(master, variant === AUDIO ? 'audio' : variant) : ''
       if (cache) {
         const c = await cache.match(ck)
         if (c) {
@@ -97,7 +122,7 @@ export async function load(snap: Snapshot, asset: string, variant: number, now =
         }
       }
       try {
-        const { urls, map } = await read(master, ours)
+        const { urls, map } = await read(master, ours ?? null)
         if (cache) await cache.put(ck, new Response(JSON.stringify({ urls, map }), {
           headers: { 'Content-Type': 'application/json', 'Cache-Control': `max-age=${FRESH_MS / 1000}`, 'X-Read-At': String(now) } }))
         return { at: now, urls, map }

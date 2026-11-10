@@ -17,6 +17,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Base64;
@@ -88,6 +89,17 @@ public class EdgeClient implements MediaStore {
     @Override
     public void put(String path, Path file, String contentType) throws IOException, InterruptedException {
         send("/_ingest/media/" + path, contentType, HttpRequest.BodyPublishers.ofFile(file));
+    }
+
+    @Override
+    public void get(String path, Path file) throws IOException, InterruptedException {
+        var req = HttpRequest.newBuilder(URI.create(settings().url() + "/media/" + path)).GET().timeout(Duration.ofSeconds(60)).build();
+        Files.createDirectories(file.getParent());
+        var res = http.send(req, HttpResponse.BodyHandlers.ofFile(file));
+        if (res.statusCode() != 200) {
+            Files.deleteIfExists(file);
+            throw new IOException("Edge has no " + path + ": HTTP " + res.statusCode());
+        }
     }
 
     /** Replaces the schedule snapshot the Worker builds a channel's live playlists from. */

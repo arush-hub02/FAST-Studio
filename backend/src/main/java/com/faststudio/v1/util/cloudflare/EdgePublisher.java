@@ -136,6 +136,14 @@ public class EdgePublisher {
                     if (!store.has(key)) upload(key, dir, false);
                     stored.add(key);
                 }
+                // ads and slate in R2 only, from before the current fMP4 layout: fetch their MPEG-TS pieces back once,
+                // make the fMP4 copies, upload them; the local pieces are removed again (prune) once R2 has everything
+                if (!Files.exists(dir.resolve(MediaServiceV1.FMP4_MASTER)) && r2Only.containsKey(key) && stored.contains(key)
+                        && !media.hasLocalSegments(key) && restored.add(key)) {
+                    restore(key, dir);
+                    if (media.fmp4(dir)) log.info("Made the fMP4 copies of {} (fetched back from R2)", key);
+                    pruned.remove(key);
+                }
                 // the fMP4 copy can arrive later (made at start-up for older media), so it is checked on its own
                 if (Files.exists(dir.resolve(MediaServiceV1.FMP4_MASTER))) {
                     if (!store.exists(key + "/" + MediaServiceV1.FMP4_MASTER)) upload(key, dir, true);
@@ -149,6 +157,20 @@ public class EdgePublisher {
     }
 
     private final Set<String> pruned = ConcurrentHashMap.newKeySet();
+    private final Set<String> restored = ConcurrentHashMap.newKeySet();   // tried once per run, so a failure doesn't loop
+
+    /** The MPEG-TS pieces of every quality level of a folder, copied back from R2 (their playlists stayed on disk). */
+    private void restore(String key, Path dir) throws IOException, InterruptedException {
+        for (int level : media.levels(key)) {
+            Path list = dir.resolve(level + "/index.m3u8");
+            for (String line : Files.readAllLines(list)) {
+                String name = line.trim();
+                if (name.isEmpty() || name.startsWith("#") || !name.matches("[A-Za-z0-9_.-]+")) continue;
+                Path to = dir.resolve(level + "/" + name);
+                if (!Files.exists(to)) store.get(key + "/" + level + "/" + name, to);
+            }
+        }
+    }
 
     /** R2 holds both copies: the server keeps only the playlists and thumbnail of this ad or slate, and drops the ad's original. */
     private void prune(String key, Path original) {
@@ -175,7 +197,8 @@ public class EdgePublisher {
         log.info("Copied {}{} ({} files) to the edge", key, fmp4 ? " (fMP4)" : "", files.size());
     }
 
-    static boolean isFmp4(String rel) { return rel.equals(MediaServiceV1.FMP4_MASTER) || rel.matches("f[0-9]+/.*"); }
+    /** Files of the fMP4 copies: video-only per level (v0/ ...) and the audio track (a/). Older f0/ ... copies are no longer used. */
+    static boolean isFmp4(String rel) { return rel.equals(MediaServiceV1.FMP4_MASTER) || rel.matches("(v[0-9]+|a)/.*"); }
 
     static String rel(Path dir, Path f) { return dir.relativize(f).toString().replace('\\', '/'); }
 

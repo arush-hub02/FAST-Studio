@@ -361,7 +361,7 @@ public class MediaServiceV1 {
     // ---------------------------------------------------------------- fMP4 copies
 
     /** Written last in a media folder once its fMP4 copy (f0/, f1/, ...) is complete. */
-    public static final String FMP4_MASTER = "f-master.m3u8";
+    public static final String FMP4_MASTER = "s-master.m3u8";
 
     public boolean hasFmp4(String mediaKey) { return mediaKey != null && Files.exists(mediaDir.resolve(mediaKey).resolve(FMP4_MASTER)); }
 
@@ -375,25 +375,13 @@ public class MediaServiceV1 {
         List<QualityLevels.Level> present = present(out);
         if (ffmpeg() == null || present.isEmpty()) return false;
         try {
-            for (QualityLevels.Level level : present) {
-                int i = level.index();
-                Path src = out.resolve(i + "/index.m3u8"), dir = out.resolve("f" + i);
-                deleteDir(dir);
-                Files.createDirectories(dir);
-                Process p = new ProcessBuilder(ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-i", src.toString(), "-map", "0", "-c", "copy",
-                        "-bsf:a", "aac_adtstoasc", "-f", "hls", "-hls_time", String.valueOf(Times.SEG_S), "-hls_playlist_type", "vod",
-                        "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", "init.mp4",
-                        // forward slashes: ffmpeg finds the playlist's folder (where init.mp4 goes) only by '/'
-                        "-hls_segment_filename", slash(dir.resolve("seg_%05d.m4s")), slash(dir.resolve("index.m3u8")))
-                        .directory(dir.toFile()).redirectErrorStream(true).start();
-                String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-                if (!p.waitFor(10, TimeUnit.MINUTES) || p.exitValue() != 0) { log.warn("fMP4 copy of {} failed: {}", out, output); return false; }
-                if (count(out.resolve(String.valueOf(i)), ".ts") != count(dir, ".m4s") || !Files.exists(dir.resolve("init.mp4"))) {
-                    log.warn("fMP4 copy of {} rendition {} has different segment boundaries; not used", out, i);
-                    return false;
-                }
-            }
-            Files.writeString(out.resolve(FMP4_MASTER), masterPlaylist(present, i -> "f" + i + "/index.m3u8"));
+            // fMP4 platforms (Mux) deliver audio as its own track, so channels with them play audio from a separate
+            // playlist: our media follows with video-only copies per level (v{level}/) and one audio-only copy (a/)
+            long segments = count(out.resolve(String.valueOf(present.getFirst().index())), ".ts");
+            for (QualityLevels.Level level : present)
+                if (!repackage(out, level.index(), "v" + level.index(), "0:v:0", segments)) return false;
+            if (!repackage(out, present.getFirst().index(), "a", "0:a:0", segments)) return false;
+            Files.writeString(out.resolve(FMP4_MASTER), masterPlaylist(present, i -> "v" + i + "/index.m3u8"));
             return true;
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -402,17 +390,58 @@ public class MediaServiceV1 {
         }
     }
 
+    /** One fMP4 track of the MPEG-TS level {@code from} into {@code folder}: a repackage, segment for segment (no re-encode). */
+    private boolean repackage(Path out, int from, String folder, String map, long segments) throws Exception {
+        Path src = out.resolve(from + "/index.m3u8"), dir = out.resolve(folder);
+        deleteDir(dir);
+        Files.createDirectories(dir);
+        // audio frames don't end exactly where the video does: cut the audio at the video's length, or a sliver of a
+        // last piece makes the audio track one segment longer than the video
+        double seconds = 0;
+        for (String line : Files.readAllLines(src)) if (line.startsWith("#EXTINF:")) seconds += Double.parseDouble(line.substring(8).split(",")[0]);
+        Process p = new ProcessBuilder(ffmpeg(), "-y", "-hide_banner", "-loglevel", "error", "-i", src.toString(), "-map", map, "-c", "copy",
+                "-bsf:a", "aac_adtstoasc",   // MPEG-TS carries ADTS audio; MP4 needs the raw form
+                "-t", String.format(Locale.ROOT, "%.3f", seconds),
+                "-f", "hls", "-hls_time", String.valueOf(Times.SEG_S), "-hls_playlist_type", "vod",
+                "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", "init.mp4",
+                // forward slashes: ffmpeg finds the playlist's folder (where init.mp4 goes) only by '/'
+                "-hls_segment_filename", slash(dir.resolve("seg_%05d.m4s")), slash(dir.resolve("index.m3u8")))
+                .directory(dir.toFile()).redirectErrorStream(true).start();
+        String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        if (!p.waitFor(10, TimeUnit.MINUTES) || p.exitValue() != 0) { log.warn("fMP4 copy {} of {} failed: {}", folder, out, output); return false; }
+        if (count(dir, ".m4s") != segments || !Files.exists(dir.resolve("init.mp4"))) {
+            log.warn("fMP4 copy {} of {} has different segment boundaries; not used", folder, out);
+            return false;
+        }
+        return true;
+    }
+
     private static String slash(Path p) { return p.toAbsolutePath().toString().replace('\\', '/'); }
 
     private static long count(Path dir, String ext) throws IOException {
         try (Stream<Path> s = Files.list(dir)) { return s.filter(p -> p.getFileName().toString().endsWith(ext)).count(); }
     }
 
-    /** Media packaged before fMP4 copies existed gets one at start-up (the edge uploads it on its next pass). */
+    /** True when the folder still has its MPEG-TS pieces on disk (ads and slate keep only playlists once R2 has them). */
+    public boolean hasLocalSegments(String mediaKey) {
+        Path dir = mediaDir.resolve(mediaKey);
+        List<QualityLevels.Level> p = present(dir);
+        try {
+            return !p.isEmpty() && count(dir.resolve(String.valueOf(p.getFirst().index())), ".ts") > 0;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Media packaged before the current fMP4 layout gets its copies at start-up (the edge uploads them on its next
+     * pass). Folders whose pieces live in R2 only are done by the edge publisher, which fetches them back first.
+     */
     void backfillFmp4() {
         if (!Files.isDirectory(mediaDir)) return;
         try (Stream<Path> s = Files.walk(mediaDir, 2)) {
-            for (Path dir : s.filter(d -> Files.exists(d.resolve("master.m3u8")) && !present(d).isEmpty() && !Files.exists(d.resolve(FMP4_MASTER))).toList())
+            for (Path dir : s.filter(d -> Files.exists(d.resolve("master.m3u8")) && !present(d).isEmpty() && !Files.exists(d.resolve(FMP4_MASTER))
+                    && hasLocalSegments(mediaDir.relativize(d).toString().replace('\\', '/'))).toList())
                 if (fmp4(dir)) log.info("Made the fMP4 copy of {}", mediaDir.relativize(dir));
         } catch (IOException e) {
             log.warn("fMP4 backfill stopped: {}", e.toString());

@@ -76,7 +76,12 @@ export default function Player({ src, title, live, poster, onEvent, videoRef, on
             autoPlay
             muted={live}
             playsInline
-            onTimeUpdate={onTimeUpdate ? e => onTimeUpdate(e.currentTarget.currentTime) : undefined}
+            onTimeUpdate={e => {
+              onTimeUpdate?.(e.currentTarget.currentTime)
+              // live: which instant of the channel's timeline is on screen, so overlays (ad banners) match the picture
+              const at = live ? media.current?.engine?.playingDate?.getTime() : undefined
+              if (at) cb.current?.({ type: 'clock', at })
+            }}
             onPlaying={() => cb.current?.({ type: 'playing' })}
           />
         </VideoSkin>

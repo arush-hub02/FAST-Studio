@@ -61,6 +61,19 @@ const EVENT: Record<string, { label: string; badge: string }> = {
   SLATE: { label: 'Slate Standby', badge: 'warn' },
 }
 
+/** What the banner says when the picture is at instant `at` (ms): the spot playing, slate in the break, or nothing. */
+function adLabel(list: BreakInfo[], at: number): string | null {
+  const b = list.find(x => new Date(x.start).getTime() <= at && at < new Date(x.end).getTime())
+  if (!b) return null
+  if (!b.decision) return b.filledByUs ? 'Commercial Break in Progress' : 'Distributor Ad Window · Slate in Master Feed'
+  let acc = new Date(b.start).getTime()
+  for (const [k, s] of b.decision.slots.entries()) {
+    if (at < acc + s.durationMs) return `Commercial ${k + 1} of ${b.decision.slots.length} · ${s.campaign} (${s.advertiser})`
+    acc += s.durationMs
+  }
+  return 'Commercial Break · Standby Slate (Unallocated Time)'
+}
+
 export default function Watch() {
   const org = useOrg()
   const toast = useToast()
@@ -84,6 +97,7 @@ export default function Watch() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const sgaiDecisions = useRef<Map<string, { breakId: string; campaignId: string; campaign: string }>>(new Map())
+  const breaks = useRef<Map<string, BreakInfo>>(new Map())   // breaks the server mentioned recently, by id
 
   // Channel dropdown options
   const channelOptions: DropdownOption[] = useMemo(() => live.map(c => ({
@@ -154,23 +168,11 @@ export default function Watch() {
           }
         }
 
-        if (session.adMode === 'SSAI') {
-          const b = i.currentBreak
-          if (b?.decision) {
-            const off = Date.now() - new Date(b.start).getTime() - 15000 // Player buffer latency compensation (~3 chunks of 5 s)
-            let acc = 0
-            let label: string | null = null
-            b.decision.slots.forEach((s, k) => {
-              if (off >= acc && off < acc + s.durationMs) {
-                label = `Commercial ${k + 1} of ${b.decision!.slots.length} · ${s.campaign} (${s.advertiser})`
-              }
-              acc += s.durationMs
-            })
-            setAdNow(label ?? (off >= 0 && off < b.decision.breakMs ? 'Commercial Break · Standby Slate (Unallocated Time)' : null))
-          } else {
-            setAdNow(i.currentBreak ? (i.currentBreak.filledByUs ? 'Commercial Break in Progress' : 'Distributor Ad Window · Slate in Master Feed') : null)
-          }
-        }
+        // remember every break the server mentioned: the picture runs behind the server clock, so a break the server
+        // already calls over can still be on screen (the banner follows the picture, see the 'clock' events)
+        for (const b of [i.currentBreak, ...i.upcomingBreaks]) if (b) breaks.current.set(b.id, b)
+        const old = Date.now() - 5 * 60_000
+        for (const [id, b] of breaks.current) if (new Date(b.end).getTime() < old) breaks.current.delete(id)
       } catch {
         /* transient polling error */
       }
@@ -186,6 +188,11 @@ export default function Watch() {
   // SGAI client interstitial ad beacons
   const onPlayer = useCallback((e: PlayerEvent) => {
     if (e.type === 'level') { setLevel(e); return }
+    if (e.type === 'clock') {
+      // SSAI: the banner names what is on screen now, from the stream's own clock (several times a second)
+      if (session?.adMode === 'SSAI' && e.at) setAdNow(adLabel([...breaks.current.values()], e.at))
+      return
+    }
     if (!session || session.adMode !== 'SGAI' || !e.uri) return
     const key = [...sgaiDecisions.current.keys()].find(k => e.uri!.includes(k))
     const d = key ? sgaiDecisions.current.get(key) : undefined
@@ -523,10 +530,22 @@ export default function Watch() {
                   <span>Stream starts muted by browser policy — toggle speaker icon for audio.</span>
                 </div>
                 <div className="row" style={{ gap: 8 }}>
-                  <span className="faint">Delay: ~9s live jitter buffer</span>
+                  <span className="faint">About 15 s behind live (3 segments of buffer)</span>
                   <span className="badge sm" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>Video.js 10 · hls.js</span>
                 </div>
               </div>
+              {session?.playlistUrl && (
+                <div className="watch-monitor-footer" data-testid="stream-link" style={{ flexWrap: 'wrap', gap: 8 }}>
+                  <span className="row" style={{ gap: 6 }}><Icon name="play" size={13} />Stream link (VLC, ffplay, any HLS player)</span>
+                  <input readOnly value={session.playlistUrl} onFocus={e => e.currentTarget.select()} aria-label="Stream link"
+                    style={{ flex: '1 1 320px', minWidth: 0, fontFamily: 'var(--mono, monospace)', fontSize: 12 }} />
+                  <button type="button" className="btn sm" onClick={copyStreamUrl}><Icon name="copy" size={13} />{copiedUrl ? 'Copied' : 'Copy'}</button>
+                  <span className="faint small" style={{ flexBasis: '100%' }}>
+                    In VLC: Media → Open Network Stream → paste. This viewer's country, ad mode and ads apply to the link.
+                    {/^https?:\/\/(127\.0\.0\.1|localhost)/.test(session.playlistUrl) && ' It points at this PC, so it plays on this PC only.'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Technical Inspection Deck (Tabs) */}

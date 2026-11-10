@@ -3,6 +3,38 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "watch-live-stream-link-vlc",
+      "asked": "2026-11-10",
+      "question": "Can Watch live give a manifest URL that plays anywhere, like VLC?",
+      "short": "Yes. Under the player on Watch live there is now a \"Stream link\" box with the full address and a Copy button. Paste it in VLC (Media → Open Network Stream), ffplay or any HLS player. It carries this viewer's country, ad mode and ads.",
+      "sections": [
+        {
+          "title": "Details",
+          "html": "<ul><li>The link is the channel's live master playlist for one viewer session: quality levels, the audio track and the ads chosen for that viewer.</li><li>On this PC the edge runs at 127.0.0.1:8787, so the link plays on this PC only. With the Worker deployed to Cloudflare it plays anywhere.</li><li>Starting a new session (another country or destination) gives a new link.</li></ul>"
+        }
+      ]
+    },
+    {
+      "id": "watch-live-no-sound-ad-lag",
+      "asked": "2026-11-10",
+      "question": "On Watch live there is no sound after unmuting, and the ad insertion lags and does not show at the right time. Why?",
+      "short": "Two bugs, both fixed. No sound: Mux sends audio as a separate track, and our channel playlists only passed on Mux's video. Channels with Mux programmes now have their own audio track: Mux audio during programmes, our audio during ads and slate. The ad banner guessed that the picture was 15 seconds behind the clock and updated every 3 seconds; it now follows the stream's own timestamps several times a second.",
+      "sections": [
+        {
+          "title": "1. The sound",
+          "html": "<ul><li>Mux delivers fMP4 video with audio in a separate playlist. Our edge listed only the video pieces, so players had nothing to play for sound.</li><li>Channels whose programmes stream as fMP4 now announce an audio track (<code>a.m3u8</code>) next to each video level. During a Mux programme it lists Mux's audio pieces; during ads and slate it lists our own audio.</li><li>Our ads, slates and uploads therefore get a video-only copy per quality level (<code>v0/</code> …) and one audio-only copy (<code>a/</code>). Media converted earlier gets them at the next start; ads and slates that live in R2 only are fetched back from R2 once, repackaged, and removed from the server again.</li><li>Checked on 10 November 2026 against your channel Music Tadka: an outside player (ffmpeg, which reads HLS the way VLC does) decoded video and Mux audio at normal loudness.</li></ul>"
+        },
+        {
+          "title": "2. The ad banner",
+          "html": "<ul><li>Before: it assumed the picture ran 15 seconds behind the server clock, and it was recalculated only every 3 seconds, so it was late, early or missing.</li><li>Now: the player reports the time of the picture on screen (from the stream's <code>EXT-X-PROGRAM-DATE-TIME</code>) several times a second, and the banner shows the spot of that moment. Breaks the server already finished are remembered for a few minutes, because the picture is behind.</li><li>The ads themselves were always inserted at the right place in the stream; only the banner was off.</li></ul>"
+        },
+        {
+          "title": "3. Delay",
+          "html": "<p>The player stays about 15 seconds (3 pieces of 5 seconds) behind live, for smooth playback on weaker connections. That is normal for HLS live streams.</p>"
+        }
+      ]
+    },
+    {
       "id": "view-local-r2",
       "asked": "2026-11-10",
       "question": "How can I view the local R2 assets?",
