@@ -179,5 +179,6 @@
     "folder": "Media folder.",
     "file": "The video file, sent as a multipart form field named file.",
     "prop": "Key of a connector field (e.g. token_secret)."
-  }
+  },
+  "delivery": "How an ad server connection's ads reach viewers: STORE_R2 (prepared once and served from R2) or DIRECT (the ad server's own HLS, needs the Direct ad delivery feature)."
 }

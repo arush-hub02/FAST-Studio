@@ -1,6 +1,9 @@
 package com.faststudio.v1.services.ads;
 
+import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Data;
+import com.faststudio.v1.core.common.Feature;
+import org.springframework.http.HttpStatus;
 import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.dto.ads.AdsDto.Candidate;
@@ -117,8 +120,19 @@ public class AdDecisionServiceV1 {
     /** The tenant's waterfall in order; without configuration, direct-sold campaigns only. */
     public List<IAdSource.Config> waterfall(UUID org) {
         List<IAdSource.Config> rows = repository.waterfall(org).stream().map(s -> s.tagUrl() == null ? s
-                : new IAdSource.Config(s.id(), s.name(), s.kind(), openTag(s.tagUrl()), s.timeoutMs(), s.position(), s.enabled(), s.managedBy())).toList();
+                : new IAdSource.Config(s.id(), s.name(), s.kind(), openTag(s.tagUrl()), s.timeoutMs(), s.position(), s.enabled(), s.managedBy(), s.delivery())).toList();
         return rows.isEmpty() ? List.of(DEFAULT_DIRECT) : rows;
+    }
+
+    /** A connection's delivery as it applies now: Direct only while the project has the Direct ad delivery feature. */
+    public String effectiveDelivery(UUID org, IAdSource.Config source) {
+        return IAdSource.DIRECT.equals(source.delivery()) && configuration.hasFeature(org, Feature.AD_DIRECT_DELIVERY) ? IAdSource.DIRECT : IAdSource.STORE_R2;
+    }
+
+    /** Saving Direct needs the feature (403 FEATURE_OFF otherwise). */
+    public void requireDeliveryAllowed(UUID org, String delivery) {
+        if (IAdSource.DIRECT.equals(delivery) && !configuration.hasFeature(org, Feature.AD_DIRECT_DELIVERY))
+            throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "Direct ad delivery isn't switched on for this company. Ask the platform administrator.");
     }
 
     /**

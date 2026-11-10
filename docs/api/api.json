@@ -1299,10 +1299,12 @@
             "kind": "VAST",
             "tagUrl": "https://ads.example.com/vast?slot=preroll",
             "timeoutMs": 1000,
-            "enabled": true
+            "enabled": true,
+            "delivery": "STORE_R2"
           },
           "fields": {
-            "kind": "VAST (an ad server tag) or DIRECT (your campaigns)."
+            "kind": "VAST (an ad server tag) or DIRECT (your campaigns).",
+            "delivery": "STORE_R2 (default: our prepared copy in R2) or DIRECT (the ad server's own HLS from its CDN; needs the AD_DIRECT_DELIVERY feature, else 403 FEATURE_OFF). Ads that cannot play directly fall back to STORE_R2."
           }
         },
         {
@@ -1317,10 +1319,12 @@
             "name": "My ad server",
             "kind": "VAST",
             "timeoutMs": 1500,
-            "enabled": true
+            "enabled": true,
+            "delivery": "STORE_R2"
           },
           "fields": {
-            "kind": "VAST (an ad server tag) or DIRECT (your campaigns)."
+            "kind": "VAST (an ad server tag) or DIRECT (your campaigns).",
+            "delivery": "STORE_R2 (default: our prepared copy in R2) or DIRECT (the ad server's own HLS from its CDN; needs the AD_DIRECT_DELIVERY feature, else 403 FEATURE_OFF). Ads that cannot play directly fall back to STORE_R2."
           }
         },
         {
@@ -2543,10 +2547,12 @@
             "kind": "VAST",
             "tagUrl": "https://ads.example.com/vast",
             "timeoutMs": 1000,
-            "enabled": true
+            "enabled": true,
+            "delivery": "STORE_R2"
           },
           "fields": {
-            "kind": "VAST (an ad server tag) or DIRECT (your campaigns)."
+            "kind": "VAST (an ad server tag) or DIRECT (your campaigns).",
+            "delivery": "STORE_R2 (default: our prepared copy in R2) or DIRECT (the ad server's own HLS from its CDN; needs the AD_DIRECT_DELIVERY feature, else 403 FEATURE_OFF). Ads that cannot play directly fall back to STORE_R2."
           }
         },
         {
@@ -2561,10 +2567,12 @@
             "name": "Platform ad server",
             "kind": "VAST",
             "timeoutMs": 1200,
-            "enabled": true
+            "enabled": true,
+            "delivery": "STORE_R2"
           },
           "fields": {
-            "kind": "VAST (an ad server tag) or DIRECT (your campaigns)."
+            "kind": "VAST (an ad server tag) or DIRECT (your campaigns).",
+            "delivery": "STORE_R2 (default: our prepared copy in R2) or DIRECT (the ad server's own HLS from its CDN; needs the AD_DIRECT_DELIVERY feature, else 403 FEATURE_OFF). Ads that cannot play directly fall back to STORE_R2."
           }
         },
         {

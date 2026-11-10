@@ -14,6 +14,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * DIRECT = our own direct-sold campaigns; VAST = any external ad server reached through a VAST tag.
  */
 public interface IAdSource {
+    /** How an ad server connection's ads reach viewers: our conditioned copy in R2, or the ad server's own HLS. */
+    String STORE_R2 = "STORE_R2", DIRECT = "DIRECT";
+
     String kind();
 
     Fill fill(Config source, Request req);
@@ -21,7 +24,10 @@ public interface IAdSource {
     /** One ad-server connection (or the default direct-sold source when a tenant has configured none). managedBy: PLATFORM or TENANT. */
     record Config(UUID id, String name, String kind,
                   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) String tagUrl,
-                  int timeoutMs, int position, boolean enabled, String managedBy) {
+                  int timeoutMs, int position, boolean enabled, String managedBy, String delivery) {
+        public Config(UUID id, String name, String kind, String tagUrl, int timeoutMs, int position, boolean enabled, String managedBy) {
+            this(id, name, kind, tagUrl, timeoutMs, position, enabled, managedBy, STORE_R2);
+        }
         @Override public String toString() { return "IAdSource.Config[id=" + id + ", kind=" + kind + ", tagUrl=REDACTED]"; }
     }
 

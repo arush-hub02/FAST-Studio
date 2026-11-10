@@ -271,6 +271,11 @@ public class TenantConfigurationServiceV1 {
         return grantableFeatures(project, requested);
     }
 
+    /** True when the feature is on for the project (switched on and allowed by the tenant's plan). */
+    public boolean hasFeature(UUID project, Feature f) {
+        return effectiveFeatures(project, projectFeatures(project)).contains(f.name());
+    }
+
     /** The project's switched-on feature keys as stored (organization.features). */
     public String projectFeatures(UUID project) {
         return TenantScope.bypass(() -> repository.projectFeatures(project));

@@ -36,7 +36,12 @@ public class AdSourceAdminService {
     }
 
     public record AdSourceRequest(@NotBlank @Size(max = 80) String name, @NotNull @Pattern(regexp = "DIRECT|VAST") String kind,
-                                  @Size(max = 2000) String tagUrl, @Min(100) @Max(5000) int timeoutMs, boolean enabled) {}
+                                  @Size(max = 2000) String tagUrl, @Min(100) @Max(5000) int timeoutMs, boolean enabled,
+                                  @Pattern(regexp = "STORE_R2|DIRECT") String delivery) {
+        public AdSourceRequest(String name, String kind, String tagUrl, int timeoutMs, boolean enabled) { this(name, kind, tagUrl, timeoutMs, enabled, null); }
+        /** Blank means Store in R2. */
+        public String deliveryOrDefault() { return delivery == null ? IAdSource.STORE_R2 : delivery; }
+    }
 
     public record OrderRequest(@NotNull List<UUID> ids) {}
 
@@ -49,16 +54,17 @@ public class AdSourceAdminService {
     /** The waterfall; a company never sees the platform's tag URLs (they carry the platform's ad server accounts). */
     public List<IAdSource.Config> list(UUID org, boolean platform) {
         return decisions.waterfall(org).stream().map(s -> platform || "TENANT".equals(s.managedBy()) ? s
-                : new IAdSource.Config(s.id(), s.name(), s.kind(), null, s.timeoutMs(), s.position(), s.enabled(), s.managedBy())).toList();
+                : new IAdSource.Config(s.id(), s.name(), s.kind(), null, s.timeoutMs(), s.position(), s.enabled(), s.managedBy(), s.delivery())).toList();
     }
 
     public UUID add(UUID org, UUID actor, AdSourceRequest r, String managedBy) {
         String tag = checkTag(r);
+        decisions.requireDeliveryAllowed(org, r.deliveryOrDefault());
         if ("TENANT".equals(managedBy) && !"VAST".equals(r.kind())) throw ApiException.bad("Companies can only add VAST ad tags.");
         materializeDefault(org);
         if ("DIRECT".equals(r.kind()) && repository.hasDirect(org))
             throw ApiException.conflict("DIRECT_EXISTS", "Direct-sold campaigns are already in the waterfall.");
-        UUID id = repository.insert(org, r.name().trim(), r.kind(), seal(tag), r.timeoutMs(), r.enabled(), managedBy);
+        UUID id = repository.insert(org, r.name().trim(), r.kind(), seal(tag), r.timeoutMs(), r.enabled(), managedBy, r.deliveryOrDefault());
         audit.log(org, actor, "ad-source.create", "ad_source", id, r.name() + " (" + managedBy.toLowerCase() + ")");
         return id;
     }
@@ -68,7 +74,8 @@ public class AdSourceAdminService {
         String tag = "VAST".equals(r.kind()) && (r.tagUrl() == null || r.tagUrl().isBlank())
                 ? repository.vastTagUrl(org, id, onlyManagedBy).orElseThrow(() -> ApiException.notFound("Ad source"))   // already sealed
                 : seal(checkTag(r));
-        if (!repository.update(org, id, r.kind(), r.name().trim(), tag, r.timeoutMs(), r.enabled(), onlyManagedBy))
+        decisions.requireDeliveryAllowed(org, r.deliveryOrDefault());
+        if (!repository.update(org, id, r.kind(), r.name().trim(), tag, r.timeoutMs(), r.enabled(), onlyManagedBy, r.deliveryOrDefault()))
             throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.update", "ad_source", id, r.name());
     }
