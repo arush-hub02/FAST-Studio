@@ -311,6 +311,26 @@
         "docs/html/FEATURES.html",
         "docs/html/FAST_Studio_Test_Guide.html#tests"
       ]
+    },
+    {
+      "id": "cloudflare-free-plan",
+      "asked": "2026-11-10",
+      "question": "Can we set up FAST Studio on Cloudflare for free?",
+      "short": "Partly, and only for a trial. Cloudflare's free plan can host the viewer side (the edge Worker, R2 storage for ads and slates, the ad-decision store) for a small audience: roughly 45 to 70 viewer-hours a day before the 100,000 requests a day limit. FAST Studio's server (screens, database, ffmpeg) cannot run on Cloudflare: it stays on a computer you run, which Cloudflare Tunnel can put online for free. For a real audience, Workers Paid starts at 5 US dollars a month.",
+      "sections": [
+        {
+          "title": "What fits in the free plan",
+          "html": "<table><thead><tr><th>Part</th><th>Free limit (Cloudflare, checked 2026-11-10)</th><th>What FAST Studio uses</th></tr></thead><tbody><tr><td>Edge Worker (every viewer's playlists, ad stitching)</td><td>100,000 requests a day, 10 ms CPU per request</td><td>About 1,500 to 2,200 requests per viewer-hour (playlist refresh every few seconds for video and audio, plus ad and slate pieces). So about 45 to 70 viewer-hours a day.</td></tr><tr><td>KV (channel snapshots)</td><td>100,000 reads and 1,000 writes a day, 1 GB</td><td>Each live channel is re-sent every 10 minutes and on every schedule change: about 150 writes a day per channel, so about 5 live channels.</td></tr><tr><td>R2 (ads, slates, black fillers, our own uploads)</td><td>10 GB stored, 1 million writes and 10 million reads a month, no egress fee</td><td>The pilot's whole data folder is about 1.2 GB; Mux programmes are not stored in R2.</td></tr><tr><td>Durable Objects (one ad decision per break)</td><td>100,000 requests a day, SQLite storage only</td><td>The Worker already uses SQLite-backed objects, which the free plan allows.</td></tr></tbody></table>"
+        },
+        {
+          "title": "What cannot run on Cloudflare",
+          "html": "<ul><li>The FAST Studio server: the screens, the API, PostgreSQL and ffmpeg packaging. Workers cannot run Java, a database server or ffmpeg.</li><li>Free way to put it online: keep it on this PC and expose it with Cloudflare Tunnel (free). A permanent address needs a domain on Cloudflare (a yearly domain fee); a quick tunnel gives a random trycloudflare.com address for testing only.</li><li>The Worker needs that address as <code>CONTROL_URL</code> in <code>worker/wrangler.toml</code>; the Worker itself can use its free workers.dev address.</li></ul>"
+        },
+        {
+          "title": "Things to know",
+          "html": "<ul><li>When the free daily request limit runs out, the Worker answers with errors for the rest of the day: viewers' streams stop. Fine for a demo, not for a channel on air.</li><li>Cloudflare may ask for a payment card to switch on R2 even when you stay inside the free amounts.</li><li>Workers Paid (5 US dollars a month) includes 10 million requests and 30 million CPU-ms; the full cost model is in docs/PRODUCTION_ARCHITECTURE_AND_COSTS.md.</li><li>Nothing has been deployed to Cloudflare yet: today the Worker runs locally with wrangler. The deploy steps are at the top of worker/wrangler.toml.</li></ul>"
+        }
+      ]
     }
   ]
 }
