@@ -4097,17 +4097,19 @@
     },
     {
       "id": "schedule-break-fill",
-      "title": "Choose how a scheduled ad break is filled",
+      "title": "Drag programmes and edit scheduled ad stitching",
       "area": "Programming",
       "status": "Built",
       "completed": "2026-11-10",
-      "summary": "Scheduled ad breaks try the project’s ad sources by default. Operators can choose Slate only for a specific upcoming break and publish that choice with the schedule.",
+      "summary": "Operators can place and move programmes on the draft timeline, then choose Ads first or Slate only for the draft, a programme placement or a single break. Publishing applies the draft to the live schedule.",
       "who": [
         "Operators with Schedule edit",
         "Users with Schedule publish to apply the draft"
       ],
       "steps": [
         "Open Schedule and select a channel.",
+        "Drag a ready programme from Ready programmes to an open slot, or drag an upcoming placement to move it with its linked mid-rolls. Use Reschedule to enter the time directly.",
+        "Choose Schedule ad stitching to edit all upcoming breaks, or select a programme and choose Edit ad stitching for its linked breaks.",
         "Choose Add Ad Break, or select an upcoming break in the draft timeline.",
         "Under Break fill, choose Ads first or Slate only. Insert a new break or let the edit save to the draft.",
         "Publish the draft when it is ready to go on air."
@@ -4124,15 +4126,17 @@
         "The setting is carried with the existing schedule snapshot. Each viewer of a slate-only break uses the same shared media objects."
       ],
       "rules": [
-        "Only an upcoming break in the draft can be edited. Publishing applies the choice to the live schedule.",
+        "Moves require an open, upcoming draft slot. The draft revision protects simultaneous editors. Publishing applies changes to the live schedule.",
         "The setting controls FAST Studio’s fill. A distributor can still use its own inventory according to the destination rules."
       ],
       "api": [
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
-        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}"
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching"
       ],
       "tests": [
-        "ProgrammingFeaturesTest verifies the default, permissions, draft revision and publish behavior.",
+        "ProgrammingFeaturesTest verifies the default, permissions, draft revision, publish behavior, overlap protection and placement-scoped editing.",
         "Worker playout.test.ts verifies that slate-only breaks keep their markers and skip ads."
       ],
       "docs": [
@@ -4140,6 +4144,8 @@
         "OVP_DELIVERY_PLAN.md"
       ],
       "screenshots": [
+        { "id": "ready-programmes", "account": "owner", "path": "/aurora/schedule", "steps": [], "target": ".schedule-programme-shelf", "caption": "Drag a ready programme from this list to an open slot." },
+        { "id": "ad-stitching", "account": "owner", "path": "/aurora/schedule", "steps": [{ "click": { "role": "button", "name": "Schedule ad stitching" } }], "target": "[role=dialog]", "caption": "Set the fill choice for all upcoming breaks in the draft." },
         {
           "id": "add-break",
           "account": "owner",
@@ -4194,6 +4200,15 @@
           }
         ],
         "scenarios": [
+          {
+            "name": "Drag and move a programme",
+            "steps": [
+              { "at": "schedule", "state": "DRAFT", "say": "Drop a ready programme into an open slot or move an upcoming placement with its mid-rolls." },
+              { "at": "schedule", "state": "SAVED", "say": "The draft saves the placement only if its complete time range fits." },
+              { "at": "version", "state": "PUBLISHED", "say": "Publishing applies the changed airtime and fill settings." },
+              { "at": "viewer", "state": "PLAYING", "say": "The programme and its breaks play at the new airtime." }
+            ]
+          },
           {
             "name": "Ads first",
             "steps": [

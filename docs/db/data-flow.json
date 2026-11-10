@@ -11313,6 +11313,104 @@
         }
       }
     },
+    "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching": {
+      "title": "Change draft or programme ad stitching",
+      "category": "Schedule and EPG",
+      "id": "ep-patch-api-orgs-org-channels-id-schedule-ad-stitching",
+      "handler": "ScheduleControllerV1.setAdStitching",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setAdStitching",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setAdStitching",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setAdStitching",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setAdStitching",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "bump",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "channel",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setAdStitching",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setAdStitching",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "entries",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_version": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "setAdStitching",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "setAdStitching",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "bump",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "draft",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
     "POST /api/orgs/{org}/channels/{id}/schedule/autofill": {
       "title": "Fill the schedule automatically",
       "category": "Schedule and EPG",
@@ -12405,6 +12503,99 @@
             {
               "class": "ScheduleServiceV1",
               "method": "setBreakFill",
+              "layer": "service"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "bump",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "draft",
+              "layer": "core"
+            }
+          ]
+        }
+      }
+    },
+    "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move": {
+      "title": "Reschedule a programme placement",
+      "category": "Schedule and EPG",
+      "id": "ep-patch-api-orgs-org-channels-id-schedule-entries-entryid-move",
+      "handler": "ScheduleControllerV1.move",
+      "tables": {
+        "audit_event": {
+          "mode": "write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "move",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "move",
+              "layer": "service"
+            },
+            {
+              "class": "Audit",
+              "method": "log",
+              "layer": "core"
+            }
+          ]
+        },
+        "channel": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "move",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "move",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "channel",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_entry": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "move",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "move",
+              "layer": "service"
+            },
+            {
+              "class": "Data",
+              "method": "entries",
+              "layer": "core"
+            }
+          ]
+        },
+        "schedule_version": {
+          "mode": "read+write",
+          "chain": [
+            {
+              "class": "ScheduleControllerV1",
+              "method": "move",
+              "layer": "controller"
+            },
+            {
+              "class": "ScheduleServiceV1",
+              "method": "move",
               "layer": "service"
             },
             {
@@ -46074,12 +46265,14 @@
         "POST /api/orgs/{org}/channels/{id}/programming",
         "PUT /api/orgs/{org}/channels/{id}/programming/{ruleId}",
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -47101,12 +47294,14 @@
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
         "POST /api/orgs/{org}/channels/{id}/programming/preview",
         "GET /api/orgs/{org}/channels/{id}/schedule",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -47168,11 +47363,13 @@
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
         "POST /api/orgs/{org}/channels/{id}/programming/preview",
         "GET /api/orgs/{org}/channels/{id}/schedule",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -47191,12 +47388,14 @@
       "write": [
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore"
       ]
@@ -47262,12 +47461,14 @@
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
         "POST /api/orgs/{org}/channels/{id}/programming/preview",
         "GET /api/orgs/{org}/channels/{id}/schedule",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore",
         "POST /api/orgs/{org}/channels/{id}/stop",
@@ -47279,12 +47480,14 @@
       "write": [
         "POST /api/orgs/{org}/channels",
         "POST /api/orgs/{org}/channels/{id}/programming/generate",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/clear",
         "POST /api/orgs/{org}/channels/{id}/schedule/close-gaps",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
         "POST /api/orgs/{org}/channels/{id}/schedule/publish",
         "POST /api/orgs/{org}/channels/{id}/schedule/restore"
       ]

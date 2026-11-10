@@ -43,6 +43,16 @@ public class ScheduleControllerV1 {
         return schedule.setBreakFill(t, id, entryId, r);
     }
 
+    @PatchMapping("/schedule/entries/{entryId}/move")
+    EditResult move(Tenant t, @PathVariable UUID id, @PathVariable UUID entryId, @Valid @RequestBody MoveRequest r) {
+        return schedule.move(t, id, entryId, r);
+    }
+
+    @PatchMapping("/schedule/ad-stitching")
+    EditResult setAdStitching(Tenant t, @PathVariable UUID id, @Valid @RequestBody AdStitchingRequest r) {
+        return schedule.setAdStitching(t, id, r);
+    }
+
     @DeleteMapping("/schedule/entries/{entryId}")
     EditResult remove(Tenant t, @PathVariable UUID id, @PathVariable UUID entryId, @RequestParam int expectedRevision,
                       @RequestParam(defaultValue = "true") boolean wholeProgramme) {

@@ -33,9 +33,13 @@ public final class ScheduleDto {
     public record EditResult(int revision, List<String> notices) {}
 
     /** kind AD_BREAK adds a break; otherwise a programme (by default with its mid-roll breaks). */
-    public record AddRequest(int expectedRevision, String kind, UUID assetId, Instant startAt, Integer seconds, Boolean withBreaks, Boolean slateOnly) {}
+    public record AddRequest(int expectedRevision, String kind, UUID assetId, Instant startAt, Integer seconds, Boolean withBreaks, Boolean slateOnly, Boolean fitGap) {}
 
     public record BreakFillRequest(int expectedRevision, @NotNull Boolean slateOnly) {}
+
+    public record MoveRequest(int expectedRevision, @NotNull Instant startAt) {}
+
+    public record AdStitchingRequest(int expectedRevision, UUID entryId, @NotNull Boolean slateOnly) {}
 
     public record RevisionRequest(int expectedRevision) {}
 

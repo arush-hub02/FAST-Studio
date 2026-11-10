@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { type Entry, type Issue } from '../../shared/api'
 import {
   fmtDayTime,
@@ -8,8 +8,40 @@ import {
   Icon,
   InfoTip,
 } from '../../shared/ui'
-import { type AssetRef, ZOOM } from './scheduleShared'
+import { type AssetRef, type View, readyProgrammes, ZOOM } from './scheduleShared'
 import { BreakFillField } from './ProgramModal'
+
+const PROGRAMME_DRAG = 'application/x-fast-programme'
+const PLACEMENT_DRAG = 'application/x-fast-placement'
+
+export function ProgrammeShelf({ view }: { view: View }) {
+  const [query, setQuery] = useState('')
+  const ready = readyProgrammes(view)
+  const programmes = ready.filter(p => p.title.toLowerCase().includes(query.trim().toLowerCase()))
+  return (
+    <details className="schedule-programme-shelf" open>
+      <summary>Ready programmes ({ready.length})</summary>
+      <p className="faint small">Drag a programme to an open slot. You can also use Add Programme.</p>
+      <label className="field">
+        <span>Find a programme</span>
+        <input type="search" value={query} onChange={e => setQuery(e.target.value)} />
+      </label>
+      <ul className="schedule-programme-list">
+        {programmes.map(programme => (
+          <li key={programme.id} draggable onDragStart={e => {
+            e.dataTransfer.effectAllowed = 'copy'
+            e.dataTransfer.setData(PROGRAMME_DRAG, programme.id)
+          }}>
+            <Icon name="film" size={14} />
+            <span>{programme.title}</span>
+            <small className="faint">{fmtDur(programme.durationMs)}</small>
+          </li>
+        ))}
+      </ul>
+      {programmes.length === 0 && <span className="faint small">No matching ready programmes.</span>}
+    </details>
+  )
+}
 
 export function Timeline({
   entries,
@@ -24,6 +56,8 @@ export function Timeline({
   errorIds,
   zoom,
   setZoom,
+  onAddAt,
+  onMoveAt,
 }: {
   entries: Entry[]
   assets: Record<string, AssetRef>
@@ -37,8 +71,11 @@ export function Timeline({
   errorIds: Set<string | undefined>
   zoom: keyof typeof ZOOM
   setZoom: (z: keyof typeof ZOOM) => void
+  onAddAt?: (assetId: string, at: string) => void
+  onMoveAt?: (entryId: string, at: string) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [dropAt, setDropAt] = useState<number | null>(null)
   const t0 = new Date(from).getTime()
   const t1 = new Date(to).getTime()
   const px = (t: number) => ((t - t0) / 3_600_000) * pxPerHour
@@ -67,7 +104,35 @@ export function Timeline({
     if (el && ref.current) ref.current.scrollLeft = Math.max(0, el.offsetLeft - 120)
   }, [selected])
 
-  if (entries.length === 0) {
+  function dropTime(e: DragEvent<HTMLDivElement>) {
+    const left = e.clientX - e.currentTarget.getBoundingClientRect().left
+    const position = t0 + (left / pxPerHour) * 3_600_000
+    return Math.floor(position / 5000) * 5000
+  }
+
+  function dragOver(e: DragEvent<HTMLDivElement>) {
+    const add = onAddAt && e.dataTransfer.types.includes(PROGRAMME_DRAG)
+    const move = onMoveAt && e.dataTransfer.types.includes(PLACEMENT_DRAG)
+    if (!add && !move) return
+    e.preventDefault()
+    const at = dropTime(e)
+    e.dataTransfer.dropEffect = at > nowMs ? add ? 'copy' : 'move' : 'none'
+    setDropAt(at > nowMs ? at : null)
+  }
+
+  function drop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setDropAt(null)
+    const at = dropTime(e)
+    if (at <= nowMs) return
+    const assetId = e.dataTransfer.getData(PROGRAMME_DRAG)
+    const entryId = e.dataTransfer.getData(PLACEMENT_DRAG)
+    const start = new Date(at).toISOString()
+    if (assetId && onAddAt) onAddAt(assetId, start)
+    else if (entryId && onMoveAt) onMoveAt(entryId, start)
+  }
+
+  if (entries.length === 0 && !onAddAt) {
     return (
       <div className="callout warn" style={{ marginTop: 8 }}>
         <Icon name="calendar" />
@@ -127,7 +192,11 @@ export function Timeline({
               </div>
             ))}
           </div>
-          <div className="tl-lane">
+          <div className="tl-lane" onDragOver={dragOver} onDrop={drop}
+            onDragLeave={e => { if (!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget)) setDropAt(null) }}>
+            {dropAt != null && <div className="schedule-drop-marker" style={{ left: px(dropAt) }} aria-hidden="true">
+              <span>{fmtTimeSec(new Date(dropAt).toISOString(), tz)}</span>
+            </div>}
             {ticks.map(t => (
               <div key={'grid-' + t} className="tl-grid-line" style={{ left: px(t) }} />
             ))}
@@ -156,6 +225,13 @@ export function Timeline({
                     width: w,
                     background: isBreak ? undefined : a?.color ?? '#6366f1',
                   }}
+                  draggable={!!onMoveAt && !isBreak && s > nowMs}
+                  onDragStart={event => {
+                    if (!onMoveAt || isBreak || s <= nowMs) return
+                    event.dataTransfer.effectAllowed = 'move'
+                    event.dataTransfer.setData(PLACEMENT_DRAG, e.id)
+                  }}
+                  onDragEnd={() => setDropAt(null)}
                   onClick={() => onSelect(e.id)}
                   onKeyDown={k => k.key === 'Enter' && onSelect(e.id)}
                 >
@@ -208,6 +284,8 @@ export function Selected({
   onDelete,
   onReplace,
   onBreakFill,
+  onReschedule,
+  onStitching,
   onClose,
 }: {
   e: Entry
@@ -219,6 +297,8 @@ export function Selected({
   onDelete: () => void
   onReplace?: () => void
   onBreakFill?: (slateOnly: boolean) => void
+  onReschedule?: () => void
+  onStitching?: () => void
   onClose: () => void
 }) {
   const isBreak = e.kind === 'AD_BREAK'
@@ -287,6 +367,12 @@ export function Selected({
 
       {editable && (
         <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+          {onReschedule && <button type="button" className="btn sm" disabled={busy} onClick={onReschedule}>
+            <Icon name="calendar" size={13} /> Reschedule
+          </button>}
+          {onStitching && <button type="button" className="btn sm" disabled={busy} onClick={onStitching}>
+            <Icon name="megaphone" size={13} /> Edit ad stitching
+          </button>}
           {!isBreak && onReplace && (
             <button
               type="button"

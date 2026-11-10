@@ -6,6 +6,9 @@ import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.services.programming.ProgrammingServiceV1;
 import com.faststudio.v1.repositories.media.AssetRepository;
+import com.faststudio.v1.repositories.programming.ScheduleRepository;
+import com.faststudio.v1.services.programming.Planner;
+import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.util.cloudflare.EdgePublisher;
 
 import org.junit.jupiter.api.*;
@@ -43,6 +46,7 @@ class ProgrammingFeaturesTest {
     @Autowired MockMvc mvc;
     @Autowired JdbcClient db;
     @Autowired AssetRepository assetRepository;
+    @Autowired ScheduleRepository scheduleRepository;
     @Autowired Tokens tokens;
     @Autowired Secrets secrets;
     @Autowired JsonMapper json;
@@ -84,6 +88,51 @@ class ProgrammingFeaturesTest {
         return Map.of("series",series,"startDate",start.toString(),"endDate",end.toString(),"premiereTime","20:00","repeatTime","23:00",
                 "weekdays",List.of(1,2,3,4,5,6,7),"startSeason",1,"startEpisode",1,"loop",false);
     }
+    @Test void moveKeepsThePlacementTogetherAndStitchingRespectsItsScope() throws Exception {
+        UUID org = org(), ch = channel(), asset = episode("Move-" + UUID.randomUUID(), 1, 1);
+        Instant start = Times.snapUp(Instant.now().plusSeconds(300));
+        TenantScope.as(org, () -> {
+            UUID version = db.sql("select id from schedule_version where org_id=:o and channel_id=:ch and number=0")
+                    .param("o", org).param("ch", ch).query(UUID.class).single();
+            scheduleRepository.insertEntries(org, version, List.of(
+                    new Planner.Item("PROGRAM", asset, 0, start, start.plusSeconds(30), null),
+                    new Planner.Item("AD_BREAK", asset, 0, start.plusSeconds(30), start.plusSeconds(45), "PROVIDER"),
+                    new Planner.Item("PROGRAM", asset, 30_000, start.plusSeconds(45), start.plusSeconds(75), null),
+                    new Planner.Item("PROGRAM", asset, 0, start.plusSeconds(90), start.plusSeconds(120), null),
+                    new Planner.Item("AD_BREAK", asset, 0, start.plusSeconds(120), start.plusSeconds(135), "PROVIDER")));
+            return null;
+        });
+        String base = "/api/orgs/aurora/channels/" + ch + "/schedule";
+        String owner = "owner@aurora.test";
+        var entries = ok(call(get(base), owner, null)).path("draftEntries");
+        String secondPart = entries.get(2).path("id").asText();
+        String firstBreak = entries.get(1).path("id").asText();
+        String otherBreak = entries.get(4).path("id").asText();
+
+        ok(call(patch(base + "/ad-stitching"), owner, Map.of("expectedRevision", 0, "entryId", secondPart, "slateOnly", true)));
+        var selectedOnly = ok(call(get(base), owner, null)).path("draftEntries");
+        assertTrue(selectedOnly.get(1).path("slateOnly").asBoolean());
+        assertFalse(selectedOnly.get(4).path("slateOnly").asBoolean());
+        ok(call(patch(base + "/ad-stitching"), owner, Map.of("expectedRevision", 1, "slateOnly", true)));
+        assertTrue(ok(call(get(base), owner, null)).path("draftEntries").get(4).path("slateOnly").asBoolean());
+
+        String move = base + "/entries/" + secondPart + "/move";
+        assertEquals(409, call(patch(move), owner,
+                Map.of("expectedRevision", 2, "startAt", start.plusSeconds(105).toString())).getResponse().getStatus());
+        ok(call(patch(move), owner, Map.of("expectedRevision", 2, "startAt", start.plusSeconds(285).toString())));
+        var moved = ok(call(get(base), owner, null)).path("draftEntries");
+        assertEquals(otherBreak, moved.get(1).path("id").asText());
+        assertEquals(firstBreak, moved.get(3).path("id").asText());
+        assertEquals(start.plusSeconds(270), OffsetDateTime.parse(moved.get(3).path("startAt").asText()).toInstant());
+        assertTrue(moved.get(3).path("slateOnly").asBoolean());
+
+        var collision = Map.of("expectedRevision", 3, "kind", "PROGRAM", "assetId", asset, "withBreaks", false,
+                "fitGap", true, "startAt", start.plusSeconds(90).toString());
+        assertEquals(409, call(post(base + "/entries"), owner, collision).getResponse().getStatus());
+        ok(call(post(base + "/entries"), owner, Map.of("expectedRevision", 3, "kind", "PROGRAM", "assetId", asset,
+                "withBreaks", false, "fitGap", true, "startAt", start.toString())));
+    }
+
     @Test void slateCanWaitForEachChannelsNextSchedule() throws Exception {
         UUID org = org(), oldChannel = channel(), newChannel = channel();
         UUID previous = TenantScope.bypass(() -> db.sql("""

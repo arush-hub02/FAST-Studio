@@ -42,6 +42,12 @@
       "help": "Break ID from viewer session info"
     },
     {
+      "key": "programEntryId",
+      "label": "Draft programme entry ID",
+      "value": "PASTE-DRAFT-PROGRAMME-ID",
+      "help": "ID of an upcoming PROGRAM from the draft schedule"
+    },
+    {
       "key": "breakEntryId",
       "label": "Draft break ID",
       "value": "PASTE-DRAFT-BREAK-ID",
@@ -970,7 +976,7 @@
           "params": {
             "id": "{{channelId}}"
           },
-          "description": "kind PROGRAM with an assetId (and withBreaks to insert ad breaks at its cue points) or AD_BREAK with seconds and optional slateOnly (default false, try the ad sources before using slate). startAt omitted = after the last entry. Times snap to 5 seconds.",
+          "description": "kind PROGRAM with an assetId (and withBreaks to insert ad breaks at its cue points) or AD_BREAK with seconds and optional slateOnly (default false, try the ad sources before using slate). startAt omitted = after the last entry. Times snap to 5 seconds. Set fitGap=true to require an upcoming open slot for the entire placement and its breaks.",
           "body": {
             "expectedRevision": 0,
             "kind": "PROGRAM",
@@ -988,6 +994,23 @@
           "params": { "id": "{{channelId}}", "entryId": "{{breakEntryId}}" },
           "description": "For an upcoming ad break in the draft, set slateOnly true to play slate throughout or false to try the project’s configured ad sources first. Requires Schedule edit and the current draft revision. Publish the draft to apply the change. Returns 404 for past, published or non-break entries and 412 for a stale revision.",
           "body": { "expectedRevision": 0, "slateOnly": true }
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
+          "title": "Reschedule a programme placement",
+          "params": { "id": "{{channelId}}", "entryId": "{{programEntryId}}" },
+          "description": "Move the selected programme segment to startAt and shift the rest of its placement and mid-rolls by the same amount. The target snaps to five seconds. This updates the draft and returns 409 if the placement has started or overlaps another item.",
+          "body": { "expectedRevision": 0, "startAt": "2027-01-05T15:00:00Z" }
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/orgs/{org}/channels/{id}/schedule/ad-stitching",
+          "title": "Change draft or programme ad stitching",
+          "params": { "id": "{{channelId}}" },
+          "description": "Set Ads first or Slate only for existing upcoming breaks in the draft. Omit entryId for the whole draft, or pass a draft programme entry ID to update that placement’s linked breaks. The live schedule changes after publication.",
+          "body": { "expectedRevision": 0, "slateOnly": true },
+          "fields": { "entryId": "Draft programme entry ID for placement scope. Leave out to update all upcoming breaks in the draft." }
         },
         {
           "method": "DELETE",

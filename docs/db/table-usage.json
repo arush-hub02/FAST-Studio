@@ -607,6 +607,8 @@
         "POST /api/orgs/{org}/channels/{id}/schedule/autofill",
         "POST /api/orgs/{org}/channels/{id}/schedule/entries",
         "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching",
         "DELETE /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
         "GET /api/orgs/{org}/channels/{id}/epg"
       ],

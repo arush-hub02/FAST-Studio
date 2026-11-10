@@ -7400,3 +7400,46 @@ table.table { width: 100%; border-collapse: collapse; }
 .clickable-row { cursor: pointer; }
 .clickable-row:hover td { background: var(--surface-2); }
 @media (max-width: 860px) { .side-tabs-layout { grid-template-columns: minmax(0, 1fr); } .side-tabs { position: static; } }
+
+.schedule-programme-shelf {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.schedule-programme-shelf summary { cursor: pointer; font-weight: 650; }
+.schedule-programme-shelf .field { max-width: 320px; }
+.schedule-programme-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin: 0;
+  list-style: none;
+}
+.schedule-programme-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  cursor: grab;
+}
+.tl-block[draggable="true"] { cursor: grab; }
+.schedule-drop-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  border-left: 2px solid var(--primary);
+  pointer-events: none;
+}
+.schedule-drop-marker span {
+  display: inline-block;
+  padding: 3px 7px;
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}

@@ -47,6 +47,7 @@ v.channelId = first(channels, c => c.channel?.id)
 const channelSlug = v.channelSlug = first(channels, c => c.channel?.slug)
 const schedule = await get(`/api/orgs/aurora/channels/${v.channelId}/schedule`)
 v.breakEntryId = first(schedule?.draftEntries, e => e.kind === 'AD_BREAK' && Date.parse(e.startAt) > Date.now() && e.id) ?? v.breakEntryId
+v.programEntryId = first(schedule?.draftEntries, e => e.kind === 'PROGRAM' && Date.parse(e.startAt) > Date.now() && e.id) ?? v.programEntryId
 const library = await get('/api/orgs/aurora/library')
 v.connectionId = first(library?.uploadTo, connection => connection.id) ?? ''
 const assets = await get('/api/orgs/aurora/assets')

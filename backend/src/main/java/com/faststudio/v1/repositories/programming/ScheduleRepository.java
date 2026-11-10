@@ -70,12 +70,12 @@ public class ScheduleRepository {
                     .param("s", Times.utc(it.start())).param("e", Times.utc(it.end())).param("own", it.ownership()).param("slate", it.slateOnly()).update();
     }
 
-    public boolean setBreakFill(UUID org, UUID version, UUID entry, boolean slateOnly, Instant now) {
+    public int setBreakFill(UUID org, UUID version, Collection<UUID> entries, boolean slateOnly, Instant now) {
         return db.sql("""
-                update schedule_entry set slate_only = :slate where org_id = :o and version_id = :v and id = :id
+                update schedule_entry set slate_only = :slate where org_id = :o and version_id = :v and id in (:ids)
                   and kind = 'AD_BREAK' and start_at > :now""")
-                .param("slate", slateOnly).param("o", org).param("v", version).param("id", entry)
-                .param("now", Times.utc(now)).update() == 1;
+                .param("slate", slateOnly).param("o", org).param("v", version).param("ids", entries)
+                .param("now", Times.utc(now)).update();
     }
 
     /** Deletes entries starting at or after {@code from}; returns how many. */

@@ -1,6 +1,7 @@
 {
   "_readme": "Plain explanations of request fields and parameters, shared by every endpoint of docs/html/API.html. An endpoint can override one with \"fields\" or \"paramHelp\" in api.json. tools/build-api-docs.mjs fails when a field or parameter has no explanation.",
   "fields": {
+    "fitGap": "True refuses insertion unless the whole placement fits in an upcoming open slot.",
     "slateOnly": "True plays slate throughout the break. False tries configured ad sources first and uses slate for unfilled time.",
     "adMode": "How ads reach viewers on this destination: SSAI = stitched into the stream by us, SGAI = the player inserts them, PASSTHROUGH = only markers, the destination sells its own ads.",
     "adSecondsPerHour": "Most ad time per hour on this channel, in seconds (e.g. 360 = 6 minutes).",
