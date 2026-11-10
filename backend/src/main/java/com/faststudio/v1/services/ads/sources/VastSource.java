@@ -3,7 +3,9 @@ package com.faststudio.v1.services.ads.sources;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.PublicUrl;
 import com.faststudio.v1.dto.ads.AdsDto.Creative;
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.ads.AdSourceRepository;
+import com.faststudio.v1.repositories.ads.AdSourceRepository.DirectCheck;
 import com.faststudio.v1.services.ads.AdDecisionServiceV1;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
@@ -25,6 +27,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -46,9 +52,31 @@ public class VastSource implements IAdSource {
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(2)).build();
 
-    public VastSource(AdSourceRepository repository, MediaServiceV1 media) {
+    static final Duration CHECK_EVERY = Duration.ofHours(24);
+    private final DirectAdCheck checker;
+    /** Direct checks run one at a time off the decision path; one in flight per creative. */
+    private final ExecutorService checks = Executors.newSingleThreadExecutor(r -> Thread.ofPlatform().daemon().name("direct-ad-check").unstarted(r));
+    private final Set<String> checking = ConcurrentHashMap.newKeySet();
+
+    public VastSource(AdSourceRepository repository, MediaServiceV1 media, DirectAdCheck checker) {
         this.repository = repository;
         this.media = media;
+        this.checker = checker;
+    }
+
+    /** Reads the ad's HLS in the background and saves what it offers; this answer meanwhile takes the R2 path. */
+    void checkLater(UUID org, String ref, String hlsUrl) {
+        if (checker == null || !checking.add(org + "|" + ref)) return;
+        checks.submit(() -> {
+            try {
+                DirectAdCheck.Profile p = checker.check(hlsUrl);
+                TenantScope.as(org, () -> { repository.saveDirectCheck(org, ref, p); return null; });
+            } catch (Exception e) {
+                log.info("Direct check of a creative's HLS failed ({}); it keeps the R2 path", e.getMessage());
+            } finally {
+                checking.remove(org + "|" + ref);
+            }
+        });
     }
 
     @Override
@@ -86,8 +114,32 @@ public class VastSource implements IAdSource {
         long left = req.remainingMs();
         for (Ad ad : ads) {
             String label = src.name() + ": " + ad.title();
+            String noDirect = null;
+            if (DIRECT.equals(src.delivery()) && ad.hlsUrl() != null) {
+                Optional<DirectCheck> check = repository.directCheck(req.org(), ad.ref());
+                if (check.isEmpty() || check.get().checkedAt().isBefore(Instant.now().minus(CHECK_EVERY))) {
+                    checkLater(req.org(), ad.ref(), ad.hlsUrl());
+                    noDirect = "Direct check of the ad's HLS is running";
+                } else {
+                    noDirect = DirectAdCheck.misfit(check.get().profile(), req.channelFmt(), ad.durationMs(), left);
+                    if (noDirect == null && !ad.advertiser().isEmpty() && req.advertisers().contains(ad.advertiser())) {
+                        excluded.add(new AdDecisionServiceV1.Excluded(label, "Same advertiser already in this break (competitive separation)"));
+                        continue;
+                    }
+                    if (noDirect == null) {
+                        long ms = DirectAdCheck.slotMs(check.get().profile());
+                        // a stable id per creative stands in for the campaign in delivery events (no asset of ours exists)
+                        UUID id = UUID.nameUUIDFromBytes(("direct|" + req.org() + "|" + ad.ref()).getBytes(StandardCharsets.UTF_8));
+                        slots.add(new AdDecisionServiceV1.Slot(id, label, ad.advertiser(), null, ms, null, src.name() + " · Direct", ad.tracking(),
+                                null, AdDecisionServiceV1.Slot.DIRECT, ad.hlsUrl()));
+                        req.advertisers().add(ad.advertiser());
+                        left -= ms;
+                        continue;
+                    }
+                }
+            }
             if (ad.mediaUrl() == null) {
-                excluded.add(new AdDecisionServiceV1.Excluded(label, "No MP4 file to prepare"));
+                excluded.add(new AdDecisionServiceV1.Excluded(label, noDirect != null ? noDirect : "No MP4 file to prepare"));
                 continue;
             }
             Creative c = creative(req.org(), src, ad);

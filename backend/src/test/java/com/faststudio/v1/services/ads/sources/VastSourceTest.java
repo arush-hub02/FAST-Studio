@@ -107,7 +107,7 @@ class VastSourceTest {
     @Test
     void hlsOnlyAdUnderStoreIsExcludedWithoutPreparing() {
         var repository = org.mockito.Mockito.mock(com.faststudio.v1.repositories.ads.AdSourceRepository.class);
-        var source = new VastSource(repository, null);
+        var source = new VastSource(repository, null, null);
         var src = new IAdSource.Config(UUID.randomUUID(), "GAM", "VAST", "https://x", 1000, 1, true, "PLATFORM");
         var req = new IAdSource.Request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), Instant.now(), 60_000, 60_000, "IN",
                 "ch", "", null, IAdSource.Viewer.NONE, new HashSet<>());

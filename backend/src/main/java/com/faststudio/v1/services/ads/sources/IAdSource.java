@@ -28,12 +28,19 @@ public interface IAdSource {
         public Config(UUID id, String name, String kind, String tagUrl, int timeoutMs, int position, boolean enabled, String managedBy) {
             this(id, name, kind, tagUrl, timeoutMs, position, enabled, managedBy, STORE_R2);
         }
+        public Config withDelivery(String d) { return new Config(id, name, kind, tagUrl, timeoutMs, position, enabled, managedBy, d); }
         @Override public String toString() { return "IAdSource.Config[id=" + id + ", kind=" + kind + ", tagUrl=REDACTED]"; }
     }
 
     /** What a source may use to pick ads. remainingMs is a hard ceiling: overfilling clips the programme. */
+    /** channelFmt: the channel's container now (TS or FMP4), which a Direct ad's HLS must match. */
     record Request(UUID org, UUID sessionId, UUID breakId, Instant at, long breakMs, long remainingMs, String country,
-                   String channel, String genre, UUID programmeAssetId, Viewer viewer, Set<String> advertisers) {}
+                   String channel, String genre, UUID programmeAssetId, Viewer viewer, Set<String> advertisers, String channelFmt) {
+        public Request(UUID org, UUID sessionId, UUID breakId, Instant at, long breakMs, long remainingMs, String country,
+                       String channel, String genre, UUID programmeAssetId, Viewer viewer, Set<String> advertisers) {
+            this(org, sessionId, breakId, at, breakMs, remainingMs, country, channel, genre, programmeAssetId, viewer, advertisers, "TS");
+        }
+    }
 
     /** The viewer as the edge saw them; ad servers use it for targeting and fraud checks. */
     record Viewer(String ip, String userAgent, String key, List<String> audiences) {

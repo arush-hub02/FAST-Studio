@@ -98,7 +98,7 @@ public class PlaybackServiceV1 {
         AdDecisionServiceV1.Decision d = playout.decision(s, playout.breakEntry(s, breakId), new IAdSource.Viewer(ip, userAgent), prefetch);
         List<AdDecisionServiceV1.Slot> ready = new ArrayList<>();
         for (var slot : d.slots()) {
-            if (!publisher.stored(slot.mediaKey())) break;
+            if (!slot.direct() && !publisher.stored(slot.mediaKey())) break;   // a Direct ad plays from the ad server
             ready.add(slot);
         }
         if (ready.size() == d.slots().size()) return d;

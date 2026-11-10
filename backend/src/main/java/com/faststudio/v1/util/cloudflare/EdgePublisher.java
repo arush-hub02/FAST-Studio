@@ -66,6 +66,8 @@ public class EdgePublisher {
     private final Set<String> storedFmp4 = ConcurrentHashMap.newKeySet();
     private final Map<String, String> sent = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Long> sentAt = new java.util.concurrent.ConcurrentHashMap<>();
+    /** org id/channel slug -> container (TS or FMP4) of the last snapshot built; Direct ads must match it. */
+    private final Map<String, String> formats = new java.util.concurrent.ConcurrentHashMap<>();
     /** Organizations being deleted: never published again, even before their rows are gone. */
     private final Set<UUID> retired = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private boolean warned;
@@ -86,6 +88,9 @@ public class EdgePublisher {
         this.edge = edge;
         this.json = json;
     }
+
+    /** The channel's container (TS or FMP4) as last published; TS until a snapshot was built. */
+    public String channelFormat(UUID org, String channelSlug) { return formats.getOrDefault(org + "/" + channelSlug, "TS"); }
 
     /** True once the media folder is on the edge; snapshots and ad decisions only point viewers at stored media. */
     public boolean stored(String mediaKey) { return mediaKey != null && stored.contains(mediaKey); }
@@ -273,6 +278,7 @@ public class EdgePublisher {
             if (retired.contains(r.orgId())) continue;
             Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
             String key = s.org() + "/" + s.channel(), body = json.writeValueAsString(s);
+            formats.put(r.orgId() + "/" + s.channel(), s.fmt() == null ? "TS" : s.fmt());
             if (body.equals(sent.get(key)) && now - sentAt.getOrDefault(key, 0L) < REPUBLISH_MS) continue;
             edge.putChannel(s.org(), s.channel(), body);
             sent.put(key, body);

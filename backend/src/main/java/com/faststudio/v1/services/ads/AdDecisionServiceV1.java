@@ -60,8 +60,16 @@ public class AdDecisionServiceV1 {
 
     /** One spot. tracking: delivery event -> ad server URLs to call when it happens (external ads only). */
     /** levels: the quality-level folders the ad's media has (set when the decision is made; the Worker picks the nearest one). */
+    /** delivery: R2 (our copy, mediaKey) or DIRECT (the ad server's own HLS at hlsUrl; mediaKey null). */
     public record Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
-                       String source, Map<String, List<String>> tracking, List<Integer> levels) {
+                       String source, Map<String, List<String>> tracking, List<Integer> levels, String delivery, String hlsUrl) {
+        public static final String R2 = "R2", DIRECT = "DIRECT";
+
+        public Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
+                    String source, Map<String, List<String>> tracking, List<Integer> levels) {
+            this(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, levels, R2, null);
+        }
+
         public Slot(UUID campaignId, String campaign, String advertiser, String mediaKey, long durationMs, BigDecimal cpm,
                     String source, Map<String, List<String>> tracking) {
             this(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, null);
@@ -69,7 +77,9 @@ public class AdDecisionServiceV1 {
 
         public int segments() { return (int) (durationMs / Times.SEG_MS); }
 
-        Slot withLevels(List<Integer> l) { return new Slot(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, l); }
+        public boolean direct() { return DIRECT.equals(delivery); }
+
+        Slot withLevels(List<Integer> l) { return new Slot(campaignId, campaign, advertiser, mediaKey, durationMs, cpm, source, tracking, l, delivery, hlsUrl); }
     }
 
     public record Excluded(String campaign, String reason) {}
@@ -159,16 +169,23 @@ public class AdDecisionServiceV1 {
         Set<String> advertisers = new HashSet<>();
         boolean preparing = false;
         long left = breakMs;
+        String fmt = publisher.channelFormat(org, channel);
         for (IAdSource.Config src : waterfall(org)) {
             IAdSource impl = sources.get(src.kind());
             if (!src.enabled() || impl == null) continue;
             if (src.kind().equals("VAST") && !configuration.driverEnabled(org,"VAST")) continue;
             if (left < Times.SEG_MS) break;
-            var fill = impl.fill(src, new IAdSource.Request(org, sessionId, breakId, at, breakMs, left, country, channel, genre, programmeAssetId, viewer, advertisers));
+            var fill = impl.fill(src.withDelivery(effectiveDelivery(org, src)),
+                    new IAdSource.Request(org, sessionId, breakId, at, breakMs, left, country, channel, genre, programmeAssetId, viewer, advertisers, fmt));
             excluded.addAll(fill.excluded());
             preparing |= fill.preparing();
             for (Slot s : fill.slots()) {
                 if (s.durationMs() > left || s.durationMs() < Times.SEG_MS) continue;   // never overfill
+                if (s.direct()) {   // the ad server's own HLS: nothing of ours has to reach the edge
+                    slots.add(s);
+                    left -= s.durationMs();
+                    continue;
+                }
                 if (!publisher.stored(s.mediaKey())) {
                     excluded.add(new Excluded(s.campaign(),"Creative has not reached the delivery edge yet"));
                     preparing = true;
