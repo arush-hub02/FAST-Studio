@@ -46,13 +46,17 @@ export type Session = {
   sid: string; org: string; channel: string; country: string; adMode: 'SSAI' | 'SGAI' | 'PASSTHROUGH'
   markers: 'CUE_OUT' | 'DATERANGE'; destKind: string; created: number
 }
-export type Slot = { campaignId: string; campaign: string; mediaKey: string; durationMs: number; levels?: number[] | null }
+/** delivery DIRECT: the ad server's own HLS at hlsUrl (mediaKey null), one 5 s piece per step like our R2 ads. */
+export type Slot = { campaignId: string; campaign: string; mediaKey: string | null; durationMs: number; levels?: number[] | null
+  delivery?: 'R2' | 'DIRECT'; hlsUrl?: string | null }
 export type Decision = { breakMs: number; filledMs: number; slots: Slot[] }
 /** A decision, or 'slate' once a break has started without one (it must never flip to ads mid-break). */
 export type Decided = Decision | 'slate' | undefined
 export type Beacon = { breakId: string; campaignId: string; event: string }
 /** Segment i of a streaming video in our rendition `variant`, with its fMP4 init section; null while its playlist can't be read. */
 export type OvpSegment = (asset: string, variant: number, i: number) => { url: string; map?: string } | null
+/** Piece n of a Direct ad's HLS in our rendition `variant`; null while its playlist can't be read. */
+export type AdSegment = (hlsUrl: string, variant: number, n: number) => { url: string; map?: string } | null
 
 /** One segment: start and duration in ms, the content key (a change means DISCONTINUITY), and where it comes from. */
 type Seg = { key: string; media: string; n: number; start: number; dur: number; url?: string; map?: string; levels?: number[] | null; ad?: { breakId: string; slot: Slot; segs: number } }
@@ -120,7 +124,8 @@ export function timeline(snap: Snapshot) {
   return tl
 }
 
-export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) => Decided, ovpSeg: OvpSegment = () => null, variant = 0) {
+export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) => Decided, ovpSeg: OvpSegment = () => null, variant = 0,
+                         adSeg: AdSegment = () => null) {
   const SEG = snap.segMs
   const live = snap.status === 'LIVE'
   const offered = snap.territories.includes(s.country)
@@ -202,8 +207,17 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
       let off = t - e.start
       for (let k = 0; k < d.slots.length; k++) {
         const slot = d.slots[k]
-        if (off < slot.durationMs)
-          return { key: `ad:${e.id}:${k}`, media: slot.mediaKey, n: Math.floor(off / SEG), levels: slot.levels, ad: { breakId: e.id, slot, segs: Math.floor(slot.durationMs / SEG) } }
+        if (off < slot.durationMs) {
+          const n = Math.floor(off / SEG), ad = { breakId: e.id, slot, segs: Math.floor(slot.durationMs / SEG) }
+          if (slot.delivery === 'DIRECT') {
+            // the ad server's piece n; unread, or of the other container (or a muxed fMP4 channel): slate
+            const p = slot.hlsUrl ? adSeg(slot.hlsUrl, variant, n) : null
+            const layout = fmp4Layout(snap)
+            if (!p || !!p.map !== !!layout || layout === 'muxed') return standby(i, t)
+            return { key: `ad:${e.id}:${k}`, media: '', n, url: p.url, map: p.map, ad }
+          }
+          return { key: `ad:${e.id}:${k}`, media: slot.mediaKey ?? '', n, levels: slot.levels, ad }
+        }
         off -= slot.durationMs
       }
     }
@@ -271,8 +285,9 @@ export function streamsInWindow(snap: Snapshot, now: number) {
  * ponytail: per-isolate memos (DSN, decisions); move them to the Cache API if viewers hop isolates mid-break.
  */
 export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: number, base: string,
-                              decided: (breakId: string) => Decided, dsnMemo: Map<string, [number, number]>, ovpSeg: OvpSegment = () => null) {
-  const r = resolver(snap, s, decided, ovpSeg, variant)
+                              decided: (breakId: string) => Decided, dsnMemo: Map<string, [number, number]>, ovpSeg: OvpSegment = () => null,
+                              adSeg: AdSegment = () => null) {
+  const r = resolver(snap, s, decided, ovpSeg, variant, adSeg)
   const SEG = r.SEG
   const edge = r.seqAt(now) - 1                     // newest segment that has fully "aired"
   const first = edge - WINDOW + 1
@@ -377,7 +392,7 @@ export function mediaPlaylist(snap: Snapshot, s: Session, variant: number, now: 
 export function assetList(snap: Snapshot, brk: Item, d: Decided, base: string, slateUrl: (seconds: number) => string) {
   const slots = d && d !== 'slate' ? d.slots : []
   const assets: Record<string, unknown>[] = slots.map(s => ({
-    URI: `${base}/${s.mediaKey}/master.m3u8`, DURATION: s.durationMs / 1000, 'X-CAMPAIGN-ID': s.campaignId, 'X-CAMPAIGN': s.campaign,
+    URI: s.delivery === 'DIRECT' && s.hlsUrl ? s.hlsUrl : `${base}/${s.mediaKey}/master.m3u8`, DURATION: s.durationMs / 1000, 'X-CAMPAIGN-ID': s.campaignId, 'X-CAMPAIGN': s.campaign,
   }))
   const rest = brk.end - brk.start - slots.reduce((a, s) => a + s.durationMs, 0)
   if (rest >= snap.segMs) assets.push({ URI: slateUrl(Math.floor(rest / 1000)), DURATION: rest / 1000 })

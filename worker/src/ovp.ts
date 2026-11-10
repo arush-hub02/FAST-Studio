@@ -84,7 +84,10 @@ async function read(master: string, ours: Rendition | null): Promise<{ urls: str
   let uri: string
   if (ours) {
     const variants = parseMaster(text, master)
-    if (!variants.length) throw new Error('no renditions')
+    if (!variants.length) {
+      if (!text.includes('#EXTINF:')) throw new Error('no renditions')
+      return parseMedia(text, master)   // a single media playlist (some ad servers): the only rendition
+    }
     uri = variants[pick(variants, ours)].uri
   } else {
     const a = parseAudio(text, master)
@@ -104,8 +107,27 @@ const cacheKey = async (master: string, variant: number | string) => {
 /** Makes sure the segment URLs of this video and rendition are in memory (fresh, or the last good copy). */
 export async function load(snap: Snapshot, asset: string, variant: number, now = Date.now()): Promise<void> {
   const master = snap.ovp?.[asset]?.url
+  if (master) await loadUrl(snap, master, variant, asset, now)
+}
+
+/** Same for a Direct ad's HLS (read once per location like programmes; signed ad URLs differ per answer). */
+export async function loadAd(snap: Snapshot, hlsUrl: string, variant: number, now = Date.now()): Promise<void> {
+  await loadUrl(snap, hlsUrl, variant, 'ad', now)
+}
+
+/** Piece n of a Direct ad in our rendition, with its fMP4 init section; null when not loaded or out of range. */
+export function adSegment(hlsUrl: string, variant: number, n: number): { url: string; map?: string } | null {
+  const e = memo.get(`${hlsUrl}|${variant}`)
+  const url = e?.urls?.[n]
+  return url ? { url, map: e?.map } : null
+}
+
+/** True when this ad's rendition has piece URLs in memory. */
+export function adCached(hlsUrl: string, variant: number): boolean { return !!memo.get(`${hlsUrl}|${variant}`)?.urls }
+
+async function loadUrl(snap: Snapshot, master: string, variant: number, asset: string, now: number): Promise<void> {
   const ours = variant === AUDIO ? null : snap.ladder[variant]
-  if (!master || (variant !== AUDIO && !ours)) return
+  if (variant !== AUDIO && !ours) return
   const k = `${master}|${variant}`
   const hit = memo.get(k)
   if (hit && now - hit.at < (hit.urls ? FRESH_MS : RETRY_MS)) return

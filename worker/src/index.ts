@@ -89,8 +89,16 @@ async function live(req: Request, env: Env, ctx: Ctx, url: URL, token: string, r
       ...needed.map(b => decide(env, s, b.id, true, viewer, layout)),
       ...cold.map(a => ovp.load(snap, a, variant, now)),
     ])
+    // Direct ads: their HLS is read like a platform programme's (wait only the first time, then refresh in the background)
+    const direct = [...new Set([...needed, ...soon].flatMap(b => {
+      const d = decisions.get(decisionKey(s, b.id, layout))
+      return d && d !== 'slate' ? d.slots.flatMap(x => x.delivery === 'DIRECT' && x.hlsUrl ? [x.hlsUrl] : []) : []
+    }))]
+    const coldAds = direct.filter(u => !ovp.adCached(u, variant))
+    direct.filter(u => !coldAds.includes(u)).forEach(u => ctx.waitUntil(ovp.loadAd(snap, u, variant, now)))
+    await Promise.all(coldAds.map(u => ovp.loadAd(snap, u, variant, now)))
     const out = mediaPlaylist(snap, s, variant, now, base, id => decisions.get(decisionKey(s, id, layout)), dsnMemo,
-      (asset, rendition, i) => ovp.segmentUrl(snap, asset, rendition, i))
+      (asset, rendition, i) => ovp.segmentUrl(snap, asset, rendition, i), (url, rendition, n) => ovp.adSegment(url, rendition, n))
     ctx.waitUntil(report(env, s, out.beacons))
     return playlist(out.text)
   }
