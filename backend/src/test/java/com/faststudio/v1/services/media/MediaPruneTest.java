@@ -72,6 +72,17 @@ class MediaPruneTest {
     }
 
     @Test
+    void loopsUseOnlyTheWholePiecesOfASlateWhoseLastPieceIsShort() throws Exception {
+        Path root = Files.createTempDirectory("fast-loop");
+        MediaServiceV1 media = new MediaServiceV1(null, null, root.toString(), "", List.of(), null, null);
+        Path level = Files.createDirectories(root.resolve("media/acme/slate.1/0"));
+        Files.writeString(level.resolve("index.m3u8"), "#EXTM3U\n#EXTINF:5.000000,\nseg_00000.ts\n#EXTINF:5.000000,\nseg_00001.ts\n#EXTINF:2.320000,\nseg_00002.ts\n#EXT-X-ENDLIST\n");
+        assertEquals(3, media.segments("acme/slate.1"));
+        assertEquals(2, media.fullSegments("acme/slate.1"), "a 12.3 s slate loops its two 5 s pieces: a 2.3 s piece listed as 5 s stalled players");
+        MediaServiceV1.deleteDir(root);
+    }
+
+    @Test
     void blackFillerIsOnePieceOfExactlyTheAskedFramesAtEveryLevelWithAudio() throws Exception {
         assertEquals(18, MediaServiceV1.blackFrames(714));
         assertEquals(1, MediaServiceV1.blackFrames(3));

@@ -137,6 +137,22 @@ public class MediaServiceV1 {
         });
     }
 
+    private final Map<String, Integer> fullCounts = new ConcurrentHashMap<>();
+
+    /**
+     * Leading whole 5 s segments: what a loop (standby, region slate, fallback) may play. The Worker loops these on the
+     * 5 s grid, so a short last piece (a 12.3 s slate ends in 2.3 s) would leave a hole in every loop and stall players.
+     */
+    public int fullSegments(String mediaKey) {
+        return fullCounts.computeIfAbsent(mediaKey, k -> {
+            try {
+                return fullSegments(mediaDir.resolve(k).resolve(firstLevelPath(k) + "index.m3u8"));
+            } catch (IOException | NumberFormatException e) {
+                return 0;
+            }
+        });
+    }
+
     /**
      * Ads and slate live in R2 only: once R2 holds a folder, the server deletes its video files and keeps only the
      * playlists and thumbnail (a few KB) as the index that segment counts, quality levels and previews read.
@@ -155,6 +171,7 @@ public class MediaServiceV1 {
 
     private void forget(String key) {
         segmentCounts.remove(key);
+        fullCounts.remove(key);
         levelsOf.remove(key);
     }
 

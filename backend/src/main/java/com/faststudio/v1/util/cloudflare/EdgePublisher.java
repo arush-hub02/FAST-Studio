@@ -389,9 +389,9 @@ public class EdgePublisher {
         if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
         // the project's own slate (Ads → Slate) once R2 holds it in this channel's container; else the platform's standby
         String own = assetRepository.slateKeys(org, ch.publishedVersionId()).stream()
-                .filter(k -> stored(k) && (!fmp4 || storedFmp4(k)) && media.segments(k) > 0).findFirst().orElse(null);
+                .filter(k -> stored(k) && (!fmp4 || storedFmp4(k)) && media.fullSegments(k) > 0).findFirst().orElse(null);
         Media standby = own != null
-                ? new Media(own, media.segments(own), levels(own)) : platform(MediaServiceV1.STANDBY);
+                ? new Media(own, media.fullSegments(own), levels(own)) : platform(MediaServiceV1.STANDBY);   // loops: whole pieces only
         return new Snapshot(3, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
                 standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt, fillers(items, fmp4));
     }
@@ -449,7 +449,7 @@ public class EdgePublisher {
         return byId;
     }
 
-    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0, levels(key)); }
+    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.fullSegments(key) : 0, levels(key)); }
 
     /** The quality-level folders a stored media folder has (for ad decisions and snapshots). */
     public List<Integer> levels(String mediaKey) { return media.levels(mediaKey); }
@@ -461,7 +461,7 @@ public class EdgePublisher {
         List<String> terr = ch.territoryList();
         // countries checked here; the Worker checks the licence window per segment
         List<String> ok = terr.stream().filter(c -> Rights.evaluate(p, terr, c, null, null).allowed()).toList();
-        return new Fallback(fb.mediaKey(), media.segments(fb.mediaKey()), ok,
+        return new Fallback(fb.mediaKey(), media.fullSegments(fb.mediaKey()), ok,
                 p == null || p.validFrom() == null ? null : p.validFrom().toInstant().toEpochMilli(),
                 p == null || p.validUntil() == null ? null : p.validUntil().toInstant().toEpochMilli(), levels(fb.mediaKey()));
     }
