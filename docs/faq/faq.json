@@ -331,6 +331,26 @@
           "html": "<ul><li>When the free daily request limit runs out, the Worker answers with errors for the rest of the day: viewers' streams stop. Fine for a demo, not for a channel on air.</li><li>Cloudflare may ask for a payment card to switch on R2 even when you stay inside the free amounts.</li><li>Workers Paid (5 US dollars a month) includes 10 million requests and 30 million CPU-ms; the full cost model is in docs/PRODUCTION_ARCHITECTURE_AND_COSTS.md.</li><li>Nothing has been deployed to Cloudflare yet: today the Worker runs locally with wrangler. The deploy steps are at the top of worker/wrangler.toml.</li></ul>"
         }
       ]
+    },
+    {
+      "id": "cheapest-full-hosting",
+      "asked": "2026-11-10",
+      "question": "Where can we run the complete system for free or as cheaply as possible, for a small audience?",
+      "short": "Cheapest workable setup: an Oracle Cloud Always Free Arm server (2 cores, 12 GB memory, 200 GB disk, 10 TB outbound a month, no charge) for the FAST Studio server, plus Cloudflare's free plan for the viewer side. Two catches: Oracle often has no free Arm capacity in a region, and FAST Studio's built-in database ships only for Intel/AMD, so on Arm it needs PostgreSQL installed separately (DB_URL). If Oracle is not available, a 4 GB Intel/AMD server costs about 5 to 6 US dollars a month and runs the system as it is. Mux, which hosts the programmes, is billed separately.",
+      "sections": [
+        {
+          "title": "Options (prices checked 2026-11-10)",
+          "html": "<table><thead><tr><th>Option</th><th>Cost</th><th>Fit</th></tr></thead><tbody><tr><td>Oracle Cloud Always Free, Arm (VM.Standard.A1.Flex)</td><td>Free: 2 OCPUs, 12 GB, 200 GB block storage, 10 TB outbound a month</td><td>Plenty for the server (it uses about 1 GB plus short ffmpeg bursts). Needs PostgreSQL from the OS packages instead of the built-in database. Sign-up asks for a card; free Arm capacity is often unavailable.</td></tr><tr><td>Small Intel/AMD VPS with 4 GB</td><td>About 5 to 6 US dollars a month (for example a listed OVHcloud Mumbai 2 vCPU/4 GB plan at 5.04 US dollars; Hetzner CX23 at 5.99 euros, EU only and shown as unavailable)</td><td>Runs the Docker image as it is, built-in database included.</td></tr><tr><td>This PC with Cloudflare Tunnel</td><td>Free</td><td>Works today with no changes, but the PC must stay on and online.</td></tr><tr><td>Oracle AMD micro (1 GB)</td><td>Free</td><td>Too small for Java, PostgreSQL and ffmpeg together.</td></tr></tbody></table>"
+        },
+        {
+          "title": "The whole free setup",
+          "html": "<ol><li>Server: Oracle Always Free Arm VM with Docker; build the image there (<code>docker build -t fast-studio .</code>), install PostgreSQL from the OS packages and set <code>DB_URL</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>.</li><li>Viewer side: Cloudflare free plan: deploy <code>worker/</code> with wrangler, R2 bucket for ads and slates, KV for schedules (steps at the top of <code>worker/wrangler.toml</code>). About 45 to 70 viewer-hours a day before the daily request limit.</li><li>Address and HTTPS: a domain on Cloudflare (yearly domain fee) with a free Cloudflare Tunnel or proxy to the server.</li><li>Programmes: Mux, billed by Mux.</li><li>Email: any SMTP account in <code>.env</code>.</li></ol>"
+        },
+        {
+          "title": "Things to know",
+          "html": "<ul><li>Oracle reclaims Always Free instances it deems idle: over 7 days, 95th-percentile CPU under 20%, network under 20% and (Arm) memory under 20%. A quiet pilot server can match that; upgrading the account to Pay As You Go keeps the same free allowance and is the usual way to avoid it.</li><li>Oracle halved the free Arm allowance in 2026 (it was 4 OCPUs and 24 GB); older guides show the old numbers.</li><li>Prices for small servers change often and usually exclude tax; check the renewal price.</li><li>Nothing is deployed yet. Running on Arm needs the database change above; it has not been tested.</li></ul>"
+        }
+      ]
     }
   ]
 }
