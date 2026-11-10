@@ -100,6 +100,20 @@ class AdDirectDeliverySettingTest {
         assertEquals("STORE_R2", decisions.effectiveDelivery(aurora(), config("DIRECT")));
     }
 
+    @Autowired com.faststudio.v1.repositories.ads.AdSourceRepository repository;
+
+    @Test @Order(6)
+    void directCheckIsSavedAndReadBack() {
+        var p = new com.faststudio.v1.services.ads.sources.DirectAdCheck.Profile("FMP4", true, java.util.List.of(720, 360), java.util.List.of(5.0, 5.0, 2.5));
+        UUID org = aurora();
+        com.faststudio.v1.core.tenant.TenantScope.as(org, () -> { repository.saveDirectCheck(org, "GAM|creative:x", p); return null; });
+        com.faststudio.v1.core.tenant.TenantScope.as(org, () -> { repository.saveDirectCheck(org, "GAM|creative:x", p); return null; });   // again: upsert
+        var back = com.faststudio.v1.core.tenant.TenantScope.as(org, () -> repository.directCheck(org, "GAM|creative:x")).orElseThrow();
+        assertEquals(p, back.profile());
+        assertNotNull(back.checkedAt());
+        assertTrue(com.faststudio.v1.core.tenant.TenantScope.as(org, () -> repository.directCheck(org, "GAM|creative:none")).isEmpty());
+    }
+
     static IAdSource.Config config(String delivery) {
         return new IAdSource.Config(UUID.randomUUID(), "x", "VAST", TAG, 1000, 1, true, "PLATFORM", delivery);
     }

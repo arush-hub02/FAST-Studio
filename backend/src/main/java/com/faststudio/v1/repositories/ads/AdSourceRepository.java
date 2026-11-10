@@ -1,6 +1,7 @@
 package com.faststudio.v1.repositories.ads;
 
 import com.faststudio.v1.dto.ads.AdsDto.Creative;
+import com.faststudio.v1.services.ads.sources.DirectAdCheck;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -152,6 +153,23 @@ public class AdSourceRepository {
 
     private static Map<String, Object> by(String managedBy) {
         return managedBy == null ? Map.of() : Map.of("by", managedBy);
+    }
+
+    // --- direct checks of ad servers' HLS, keyed like creatives (source_ref) ---
+
+    public record DirectCheck(DirectAdCheck.Profile profile, java.time.Instant checkedAt) {}
+
+    public Optional<DirectCheck> directCheck(UUID org, String ref) {
+        return db.sql("select profile::text, checked_at from ad_direct_check where org_id = :o and source_ref = :r")
+                .param("o", org).param("r", ref)
+                .query((rs, n) -> new DirectCheck(DirectAdCheck.fromJson(rs.getString(1)), rs.getTimestamp(2).toInstant())).optional();
+    }
+
+    public void saveDirectCheck(UUID org, String ref, DirectAdCheck.Profile p) {
+        db.sql("""
+                insert into ad_direct_check(org_id, source_ref, profile) values (:o, :r, cast(:p as jsonb))
+                on conflict (org_id, source_ref) do update set profile = excluded.profile, checked_at = now()""")
+                .param("o", org).param("r", ref).param("p", DirectAdCheck.toJson(p)).update();
     }
 
     // --- creatives from external ad servers (stored as AD assets keyed by source_ref) ---
