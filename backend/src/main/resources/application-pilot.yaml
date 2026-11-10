@@ -1,5 +1,5 @@
 # =====================================================================================================================
-# FAST Studio configuration: REAL-DATA PILOT (start.bat -Pilot, ./start.sh --pilot, or SPRING_PROFILES_ACTIVE=pilot)
+# FAST Studio configuration: REAL-DATA PILOT (pilot-start.bat, ./start.sh --pilot, or SPRING_PROFILES_ACTIVE=pilot)
 # =====================================================================================================================
 # Only the values that differ from application.yaml are here; everything else comes from application.yaml.
 # The launcher first loads your .env (project folder; see .env.example for every setting: email, address, HTTPS,

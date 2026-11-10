@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: faststudio
       POSTGRES_USER: faststudio
-      POSTGRES_PASSWORD: ${FASTSTUDIO_DB_PASSWORD:?Run start.bat -Docker to generate local credentials}
+      POSTGRES_PASSWORD: ${FASTSTUDIO_DB_PASSWORD:?Run powershell -File tools\manage-local.ps1 -Action Start -Docker to generate local credentials}
     ports:
       - "127.0.0.1:55432:5432"
     volumes:

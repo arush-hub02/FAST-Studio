@@ -189,10 +189,10 @@ try {
 
     if ($appProcess) {
         if (!(Test-ApplicationReady)) {
-            throw 'FAST Studio is running but its UI/API is unhealthy. Run stop.bat, then start.bat to rebuild and recover. Check data/runtime/app.log.'
+            throw 'FAST Studio is running but its UI/API is unhealthy. Run stop.bat, then demo-start.bat or pilot-start.bat to rebuild and recover. Check data/runtime/app.log.'
         }
         Write-Host "FAST Studio is already running at $appUrl (PID $($appProcess.ProcessId))."
-        Write-Host 'Use stop.bat, then start.bat to apply code or database-mode changes.'
+        Write-Host 'Use stop.bat, then demo-start.bat or pilot-start.bat to apply code or database-mode changes.'
         if (!$NoBrowser) { Start-Process $appUrl }
         exit 0
     }

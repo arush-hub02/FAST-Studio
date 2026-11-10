@@ -1,12 +1,12 @@
 # =====================================================================================================================
-# FAST Studio configuration: development / demo (used when no profile is active, e.g. start.bat)
+# FAST Studio configuration: development / demo (used when no profile is active, e.g. demo-start.bat)
 # =====================================================================================================================
 # Spring Boot reads this file automatically. application-pilot.yaml (same folder) changes a few values for real data
-# (start.bat -Pilot, or SPRING_PROFILES_ACTIVE=pilot).
+# (pilot-start.bat, or SPRING_PROFILES_ACTIVE=pilot).
 #
 # You rarely need to edit this file. Every value written as "${NAME:default}" comes from the environment variable
 # NAME, and uses the default when NAME is not set. Put your variables in .env in the project folder (copy
-# .env.example, which documents every one); start.bat / start.sh load it. Pilot mode also loads
+# .env.example, which documents every one); demo-start.bat / pilot-start.bat / start.sh load it. Pilot mode also loads
 # data-pilot/pilot.env (it wins). Any other key works as an environment variable too, upper-case with dots and dashes
 # as underscores (faststudio.partners.rate-limit-per-minute -> FASTSTUDIO_PARTNERS_RATE_LIMIT_PER_MINUTE), or on
 # the command line: java -jar backend.jar --server.port=9090.
@@ -58,7 +58,7 @@ faststudio:
 
   edge:
     # The Cloudflare Worker in worker/ serves every viewer: it builds the live playlists, stitches ads and serves
-    # the video from R2. start.bat runs it locally with "wrangler dev" on port 8787. This server copies finished
+    # the video from R2. demo-start.bat runs it locally with "wrangler dev" on port 8787. This server copies finished
     # videos and schedule snapshots to it. Env: FASTSTUDIO_EDGE_URL.
     url: "${FASTSTUDIO_EDGE_URL:http://127.0.0.1:8787}"
     # The Worker's address as players see it; stream URLs handed to viewers start with it. Env: FASTSTUDIO_EDGE_PUBLIC_URL.
@@ -106,7 +106,7 @@ spring:
   datasource:
     # "embedded" = the built-in PostgreSQL in <data-dir>/pg, started by the app (no installation needed).
     # For a real/managed PostgreSQL set DB_URL (e.g. jdbc:postgresql://db.example.com:5432/faststudio),
-    # DB_USER and DB_PASSWORD. start.bat -Docker sets these for the Docker database (compose.yaml).
+    # DB_USER and DB_PASSWORD. powershell -File tools\manage-local.ps1 -Action Start -Docker sets these for the Docker database (compose.yaml).
     url: "${DB_URL:embedded}"
     username: "${DB_USER:postgres}"
     password: "${DB_PASSWORD:postgres}"
