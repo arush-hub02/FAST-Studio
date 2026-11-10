@@ -63,9 +63,25 @@ class MuxTest {
     @AfterAll
     static void stop() { mux.stop(0); }
 
+    /** A second Mux account of the same project ("Archive"): its own credentials, uploads and videos. */
+    static final String TOKEN2 = "tok-id-archive", SECRET2 = "tok-secret-archive";
+
     static void stub(HttpExchange x) throws IOException {
         String auth = "Basic " + Base64.getEncoder().encodeToString((TOKEN + ":" + SECRET).getBytes(StandardCharsets.UTF_8));
+        String auth2 = "Basic " + Base64.getEncoder().encodeToString((TOKEN2 + ":" + SECRET2).getBytes(StandardCharsets.UTF_8));
         String path = x.getRequestURI().getPath(), q = Objects.toString(x.getRequestURI().getRawQuery(), "");
+        if (auth2.equals(x.getRequestHeaders().getFirst("Authorization"))) {
+            String body = path.equals("/video/v1/uploads") && x.getRequestMethod().equals("POST")
+                    ? "{\"data\":{\"id\":\"Up1oadTwo\",\"url\":\"https://storage.googleapis.com/archive/Up1oadTwo\",\"status\":\"waiting\"}}"
+                    : path.equals("/video/v1/uploads/Up1oadTwo") ? "{\"data\":{\"id\":\"Up1oadTwo\",\"status\":\"asset_created\",\"asset_id\":\"Tw0Asset\"}}"
+                    : path.equals("/video/v1/assets/Tw0Asset") ? "{\"data\":{\"id\":\"Tw0Asset\",\"status\":\"preparing\",\"upload_id\":\"Up1oadTwo\",\"passthrough\":\"fast\"}}"
+                    : path.equals("/video/v1/assets") ? "{\"data\":[]}" : null;
+            byte[] b = (body == null ? "{\"error\":{}}" : body).getBytes(StandardCharsets.UTF_8);
+            x.sendResponseHeaders(body == null ? 404 : 200, b.length);
+            x.getResponseBody().write(b);
+            x.close();
+            return;
+        }
         if (path.equals("/video/v1/uploads")) uploadBody.set(new String(x.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
         String file = path.equals("/video/v1/assets") && q.contains("page=1") ? "assets-page1.json"
                 : path.equals("/video/v1/assets") && q.contains("cursor=eyJwYWdlIjoyfQ") ? "assets-page2.json"
@@ -112,6 +128,7 @@ class MuxTest {
     @Autowired JdbcClient db;
     @Autowired Tokens tokens;
     @Autowired tools.jackson.databind.json.JsonMapper json;
+    @Autowired com.faststudio.v1.services.media.MediaServiceV1 media;
 
     UUID id(String sql) { return db.sql(sql).query(UUID.class).single(); }
 
@@ -289,6 +306,14 @@ class MuxTest {
         assertEquals(3, item.nc());
         assertNotNull(item.seq());
         assertEquals(item.n(), 3 + item.fill().length);
+        int[] fill = item.fill();
+        for (int k = 0; k < fill.length - 1; k++) assertEquals(5000, fill[k], "the rest of the slot is whole slate pieces");
+        assertEquals(1143, fill[fill.length - 1], "13.857 s of programme leaves 1.143 s before the next grid point");
+        assertNull(snap.fillers().get("1143"), "no black piece of that length on the edge yet: slate covers the gap meanwhile");
+        if (media.ffmpegAvailable()) {   // the snapshot asked for the black piece (29 frames = 1.16 s at 25 fps)
+            for (int i = 0; i < 600 && !media.blackReady(29); i++) Thread.sleep(100);
+            assertTrue(media.blackReady(29), "black filler made in the background");
+        }
         var o = snap.ovp().get(asset.toString());
         assertTrue(o.url().endsWith("/stream/pB7Hh01ocEanTales.m3u8"), o.url());
         assertArrayEquals(new int[]{5000, 5000, 3857}, o.d());
@@ -297,6 +322,44 @@ class MuxTest {
                 .param("c", channel).param("t", snap.t0()).query(Integer.class).single()), "the anchor is stored");
         // the same instant again: the same snapshot (numbers don't drift between publishes)
         assertEquals(json.writeValueAsString(snap), json.writeValueAsString(TenantScope.as(org, () -> publisher.snapshot(org, "aurora", channel, Instant.now()))));
+    }
+
+    @Autowired com.faststudio.v1.services.media.LibraryServiceV1 library;
+
+    @Test @Order(5)
+    void withTwoLibrariesTheUploadGoesToTheChosenOneAndIsLinkedWithoutWebhooks() throws Exception {
+        UUID org = aurora();
+        MvcResult added = call(post("/api/platform/orgs/" + org + "/connector-instances/mux"), "admin@platform.test",
+                "{\"name\":\"Archive\",\"enabled\":true,\"values\":{\"token_id\":\"" + TOKEN2 + "\",\"token_secret\":\"" + SECRET2 + "\",\"passthrough_tag\":\"fast\"}}");
+        assertEquals(200, added.getResponse().getStatus(), added.getResponse().getContentAsString());
+        JsonNode lib = json.readTree(call(get("/api/orgs/" + org + "/library"), "owner@aurora.test", null).getResponse().getContentAsString());
+        assertEquals(2, lib.path("uploadTo").size(), lib.toString());
+        assertEquals("Video library 1", lib.path("uploadTo").get(0).path("name").asString(), "a connection named after its platform stays white-label");
+        assertEquals("Archive", lib.path("uploadTo").get(1).path("name").asString());
+        UUID archive = UUID.fromString(lib.path("uploadTo").get(1).path("id").asString());
+
+        MvcResult created = call(post("/api/orgs/" + org + "/assets"), "owner@aurora.test", "{\"title\":\"Archive film\",\"kind\":\"MOVIE\"}");
+        UUID asset = UUID.fromString(json.readTree(created.getResponse().getContentAsString()).path("asset").path("id").asString());
+        assertEquals(422, call(post("/api/orgs/" + org + "/assets/" + asset + "/upload-url"), "owner@aurora.test", null).getResponse().getStatus(),
+                "with two libraries the upload must say which one");
+        MvcResult u = call(post("/api/orgs/" + org + "/assets/" + asset + "/upload-url?connection=" + archive), "owner@aurora.test", null);
+        assertEquals(200, u.getResponse().getStatus(), u.getResponse().getContentAsString());
+        assertTrue(u.getResponse().getContentAsString().contains("/archive/Up1oadTwo"));
+        assertEquals("mux-upload:Up1oadTwo", sourceRef(asset));
+        assertEquals(archive, connectionOf(asset));
+
+        library.watchUploads();   // no webhook: the watcher asks the platform where the upload went
+        assertEquals("mux:Tw0Asset", sourceRef(asset), "the upload is linked to its library video");
+        assertEquals(archive, connectionOf(asset), "and stays with the library it was uploaded to");
+
+        MvcResult ad = call(post("/api/orgs/" + org + "/assets"), "owner@aurora.test", "{\"title\":\"Some ad\",\"kind\":\"AD\"}");
+        UUID adId = UUID.fromString(json.readTree(ad.getResponse().getContentAsString()).path("asset").path("id").asString());
+        assertEquals(422, call(post("/api/orgs/" + org + "/assets/" + adId + "/upload-url?connection=" + archive), "owner@aurora.test", null)
+                .getResponse().getStatus(), "ads never go to the video library");
+    }
+
+    UUID connectionOf(UUID asset) {
+        return TenantScope.bypass(() -> db.sql("select connection_id from asset where id = :id").param("id", asset).query(UUID.class).single());
     }
 
     String sourceRef(UUID asset) {

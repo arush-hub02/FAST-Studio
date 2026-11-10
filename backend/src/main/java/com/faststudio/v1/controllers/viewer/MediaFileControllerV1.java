@@ -23,13 +23,16 @@ public class MediaFileControllerV1 {
     private final MediaSigner signer;
     private final MediaServiceV1 media;
 
-    public MediaFileControllerV1(MediaSigner signer, MediaServiceV1 media) {
+    private final com.faststudio.v1.util.cloudflare.EdgeClient edge;
+
+    public MediaFileControllerV1(MediaSigner signer, MediaServiceV1 media, com.faststudio.v1.util.cloudflare.EdgeClient edge) {
         this.signer = signer;
         this.media = media;
+        this.edge = edge;
     }
 
     @GetMapping("/media/s/{exp}/{sig}/{scope}/{folder}/**")
-    ResponseEntity<FileSystemResource> file(@PathVariable long exp, @PathVariable String sig, @PathVariable String scope,
+    ResponseEntity<?> file(@PathVariable long exp, @PathVariable String sig, @PathVariable String scope,
                                             @PathVariable String folder, HttpServletRequest req) {
         String key = scope + "/" + folder;
         if (!signer.valid(exp, sig, key)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -38,7 +41,12 @@ public class MediaFileControllerV1 {
         if (!rest.matches("[A-Za-z0-9_./-]+") || rest.contains("..")) return ResponseEntity.badRequest().build();
         Path base = media.mediaDir().resolve(key).normalize();
         Path file = base.resolve(rest).normalize();
-        if (!file.startsWith(base) || !Files.isRegularFile(file)) return ResponseEntity.notFound().build();
+        if (!file.startsWith(base)) return ResponseEntity.notFound().build();
+        // ads and slate keep only their playlists here: their video files are in R2, so the player fetches them from the edge
+        if (!Files.isRegularFile(file) && Files.isRegularFile(base.resolve("master.m3u8")) && !rest.endsWith(".m3u8")
+                && edge.publicUrl() != null && !edge.publicUrl().isBlank())
+            return ResponseEntity.status(HttpStatus.FOUND).location(java.net.URI.create(edge.publicUrl() + "/media/" + key + "/" + rest)).build();
+        if (!Files.isRegularFile(file)) return ResponseEntity.notFound().build();
         MediaType type = rest.endsWith(".m3u8") ? MediaType.parseMediaType("application/vnd.apple.mpegurl")
                 : rest.endsWith(".ts") ? MediaType.parseMediaType("video/mp2t")
                 : rest.endsWith(".jpg") ? MediaType.IMAGE_JPEG : MediaType.APPLICATION_OCTET_STREAM;

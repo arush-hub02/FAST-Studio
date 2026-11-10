@@ -31,7 +31,7 @@ Every completed feature gets an entry, and its screenshots are re-taken whenever
    - `flow`: an **animated flow** that shows the work happening behind the screens (see "Animated flows" below).
      **Required for every feature** (the build fails without it). For a simple screen, a short flow (person → screen →
      API → table, plus one refusal) is enough; features with background work or several moving parts show each failure case.
-2. Make sure the demo runs the new build (`start.bat`, demo mode on http://localhost:8080).
+2. Make sure the demo runs the new build (`demo-start.bat`, demo mode on http://localhost:8080).
 3. Take the screenshots: `cd frontend && npm run docs:shots` (`DOCS_BASE_URL` for another address).
 4. Build the page: `node tools/build-feature-docs.mjs`. It fails on missing fields and lists screenshots not taken yet.
 5. Look at every new picture (open the PNGs) and at the page in a browser. Check that nothing secret is visible.

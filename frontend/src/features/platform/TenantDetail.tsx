@@ -1,3 +1,4 @@
+import { QualityLevels } from './QualityLevels'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../../shared/api'
@@ -118,6 +119,7 @@ function Configure({ id, v, reload }: { id: string; v: Configuration; reload: ()
         <option value="">Tenant defaults (all projects)</option>{v.projects.map(p => <option value={p.id} key={p.id}>Project: {p.name} (/{p.slug})</option>)}</select></label>
       <p className="faint small">Tenant defaults apply to every project; a project value overrides it for that project only.</p>
     </section>
+    {!project && <QualityLevels tenantId={id} />}
     <ConfigurationEditor key={project || 'tenant'} base={project ? `${base}/projects/${project}/settings` : `${base}/settings`} platform onSaved={reload} />
   </>
 }

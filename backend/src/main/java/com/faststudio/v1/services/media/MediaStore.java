@@ -9,7 +9,13 @@ import java.nio.file.Path;
  */
 public interface MediaStore {
     /** True when the media folder is completely stored (its master.m3u8, written last, exists). */
-    boolean has(String mediaKey) throws IOException, InterruptedException;
+    default boolean has(String mediaKey) throws IOException, InterruptedException { return exists(mediaKey + "/master.m3u8"); }
+
+    /** True when this one file is stored (path inside the store, e.g. {key}/s-master.m3u8). */
+    boolean exists(String path) throws IOException, InterruptedException;
 
     void put(String path, Path file, String contentType) throws IOException, InterruptedException;
+
+    /** Copies one stored file back to disk (to repackage media that lives in the store only). */
+    void get(String path, Path file) throws IOException, InterruptedException;
 }

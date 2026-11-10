@@ -58,7 +58,7 @@ public class CampaignServiceV1 {
 
     private static CampaignRepository.Fields fields(CampaignRequest r, String audiences, Integer frequencyCap) {
         return new CampaignRepository.Fields(r.name().trim(), r.advertiser().trim(), r.creativeAssetId(), r.startsAt(), r.endsAt(),
-                territories(r.territories()), r.priority(), r.cpm(), audiences, frequencyCap);
+                territories(r.territories()), r.priority(), r.cpm(), audiences, frequencyCap, r.house());
     }
 
     /** The creative must be an Ad video of this project, and the campaign must end after it starts. */
@@ -90,7 +90,8 @@ public class CampaignServiceV1 {
                 .filter(e -> e.isBreak() && e.end().isAfter(now)).findFirst()
                 .orElseThrow(() -> ApiException.conflict("NO_BREAKS", "No upcoming ad breaks in the published schedule."));
         String programme = b.assetId() == null ? "Between programmes" : "Inside \"" + data.asset(t.orgId(), b.assetId()).title() + "\"";
-        var d = decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
+        var d = b.slateOnly() ? AdDecisionServiceV1.slateOnly(b.id(), b.durationMs())
+                : decisions.decide(t.orgId(), null, b.id(), b.start(), b.durationMs(), b.assetId(), r.country().toUpperCase());
         return new Simulation(b.start(), b.durationMs() / 1000, b.ownership(), programme, AdDecisionView.from(d), true);
     }
 }

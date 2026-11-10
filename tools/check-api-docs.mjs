@@ -45,6 +45,11 @@ const get = async (p, t = owner.access_token) => (await call('GET', base + p, t)
 const channels = await get('/api/orgs/aurora/channels')
 v.channelId = first(channels, c => c.channel?.id)
 const channelSlug = v.channelSlug = first(channels, c => c.channel?.slug)
+const schedule = await get(`/api/orgs/aurora/channels/${v.channelId}/schedule`)
+v.breakEntryId = first(schedule?.draftEntries, e => e.kind === 'AD_BREAK' && Date.parse(e.startAt) > Date.now() && e.id) ?? v.breakEntryId
+v.programEntryId = first(schedule?.draftEntries, e => e.kind === 'PROGRAM' && Date.parse(e.startAt) > Date.now() && e.id) ?? v.programEntryId
+const library = await get('/api/orgs/aurora/library')
+v.connectionId = first(library?.uploadTo, connection => connection.id) ?? ''
 const assets = await get('/api/orgs/aurora/assets')
 v.assetId = first(assets, a => a.asset?.status === 'READY' && a.asset.kind !== 'AD' && a.asset.id)
 v.campaignId = first(await get('/api/orgs/aurora/campaigns'), c => c.id || c.campaign?.id)
@@ -55,6 +60,10 @@ v.linkId = first(await get('/api/orgs/aurora/partners'), l => l.id || l.link?.id
 v.tenant = first(await get('/api/platform/tenants', platform.access_token), t => t.slug === 'aurora' && t.id)
 const session = await call('POST', base + '/play/sessions', null, { org: 'aurora', channel: channelSlug, country: 'IN' })
 v.sessionId = session.json?.sessionId
+if (v.sessionId) {
+  const info = await get(`/play/${v.sessionId}/info`, null)
+  v.breakId = (info?.currentBreak ?? info?.upcomingBreaks?.[0])?.id ?? v.breakId
+}
 for (const [k, val] of Object.entries(v)) if (val == null) console.log(`(could not find a demo value for ${k})`)
 
 const fill = s => String(s).replace(/\{\{(\w+)\}\}/g, (m, k) => v[k] ?? m)
@@ -82,7 +91,7 @@ for (const c of data.categories)
   for (const e of c.endpoints) {
     if (e.noExample) { rows.push(['skip', e, 'no example (signed links / webhooks)']); continue }
     let p = e.path.replace(/\{(\w+)\}/g, (m, k) => (e.params && e.params[k]) || PATH[k] || m)
-    const q = Object.entries(e.query || {}).filter(([, x]) => x !== '').map(([k, x]) => k + '=' + encodeURIComponent(fill(x))).join('&')
+    const q = Object.entries(e.query || {}).map(([k, x]) => [k, fill(x)]).filter(([, x]) => x !== '').map(([k, x]) => k + '=' + encodeURIComponent(x)).join('&')
     const url = fill(base + p + (q ? '?' + q : ''))
     const body = e.body === undefined ? undefined : JSON.parse(fill(JSON.stringify(e.body)))
     const auth = e.auth === 'none' ? null : tokenFor(c.id)
@@ -92,7 +101,7 @@ for (const c of data.categories)
     else if (url.startsWith(base + '/api/orgs/')) {
       mode = 'validate'
       let form
-      if (e.multipart) { form = new FormData(); form.append('file', new Blob(['not a video']), 'clip.mp4') }
+      if (e.multipart || e.form) { form = new FormData(); form.append('file', new Blob(['not a video']), 'clip.mp4') }
       r = await call(e.method, url, analyst.access_token, form ? undefined : body ?? {}, form)
     }
     else if (/{(tenant|orgId|id|project)}/.test(e.path) && url.startsWith(base + '/api/platform/')) {

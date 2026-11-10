@@ -93,17 +93,17 @@ public class PlaybackServiceV1 {
      * Ad decision for one viewer and break, asked by the Worker ahead of the break (SSAI) or by the player (SGAI).
      * Ads are listed only up to the first creative not yet copied to the edge; slate covers the rest.
      */
-    public AdDecisionView decision(UUID session, UUID breakId, String ip, String userAgent) {
+    public AdDecisionServiceV1.Decision decision(UUID session, UUID breakId, String ip, String userAgent, boolean prefetch) {
         var s = playout.session(session);
-        AdDecisionServiceV1.Decision d = playout.decision(s, playout.breakEntry(s, breakId), new IAdSource.Viewer(ip, userAgent));
+        AdDecisionServiceV1.Decision d = playout.decision(s, playout.breakEntry(s, breakId), new IAdSource.Viewer(ip, userAgent), prefetch);
         List<AdDecisionServiceV1.Slot> ready = new ArrayList<>();
         for (var slot : d.slots()) {
             if (!publisher.stored(slot.mediaKey())) break;
             ready.add(slot);
         }
-        if (ready.size() == d.slots().size()) return AdDecisionView.from(d);
+        if (ready.size() == d.slots().size()) return d;
         long filled = ready.stream().mapToLong(AdDecisionServiceV1.Slot::durationMs).sum();
-        return AdDecisionView.from(new AdDecisionServiceV1.Decision(d.breakId(), d.breakMs(), ready, filled, d.excluded(), d.summary()));
+        return new AdDecisionServiceV1.Decision(d.breakId(), d.breakMs(), ready, filled, d.excluded(), d.summary());
     }
 
     /** Permission can be withdrawn for future decisions; an already finalized break keeps its timeline. */
@@ -138,7 +138,7 @@ public class PlaybackServiceV1 {
         for (Entry b : breaks) {
             boolean ours = PlayoutServiceV1.ours(s, b) && ch.territoryList().contains(s.country());
             boolean active = !b.start().isAfter(now);
-            AdDecisionServiceV1.Decision d = ours && !"PASSTHROUGH".equals(s.adMode()) && active ? playout.decision(s, b) : null;
+            AdDecisionServiceV1.Decision d = ours && !"PASSTHROUGH".equals(s.adMode()) && active ? playout.savedDecision(s, b) : null;
             BreakInfo bi = new BreakInfo(b.id(), b.start(), b.end(), b.ownership(), ours && !"PASSTHROUGH".equals(s.adMode()),
                     PlayoutServiceV1.scteHex(b, true), AdDecisionView.from(d));
             if (active) curBreak = bi;

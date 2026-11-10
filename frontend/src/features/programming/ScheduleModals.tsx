@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { type Issue } from '../../shared/api'
+import { type Entry, type Issue } from '../../shared/api'
 import {
   Dropdown,
   fmtDur,
@@ -7,6 +7,8 @@ import {
   Modal,
 } from '../../shared/ui'
 import { type View, AUTOFILL_HOURS_OPTIONS, readyProgrammes } from './scheduleShared'
+import { BreakFillField } from './ProgramModal'
+import { DateTimePicker } from '../../shared/components/DateTimePicker'
 
 export function AutofillModal({
   v,
@@ -267,6 +269,50 @@ export function PublishModal({
           </label>
         </>
       )}
+    </Modal>
+  )
+}
+
+
+export function RescheduleModal({ entry, timezone, busy, onClose, onSubmit }: {
+  entry: Entry
+  timezone: string
+  busy: boolean
+  onClose: () => void
+  onSubmit: (startAt: string) => void
+}) {
+  const [startAt, setStartAt] = useState(entry.startAt)
+  return (
+    <Modal title="Reschedule programme" subtitle="Move this placement and its mid-roll breaks to an open slot." onClose={onClose}
+      footer={<>
+        <button type="button" className="btn" onClick={onClose}>Cancel</button>
+        <button type="button" className="btn primary" disabled={busy} onClick={() => onSubmit(startAt)}>Move in draft</button>
+      </>}>
+      <div className="field">
+        <span>New airtime</span>
+        <DateTimePicker value={startAt} onChange={setStartAt} timezone={timezone} showTime fixed />
+      </div>
+    </Modal>
+  )
+}
+
+export function AdStitchingModal({ programme, busy, onClose, onSubmit }: {
+  programme?: string
+  busy: boolean
+  onClose: () => void
+  onSubmit: (slateOnly: boolean) => void
+}) {
+  const [slateOnly, setSlateOnly] = useState(false)
+  return (
+    <Modal title={programme ? 'Programme ad stitching' : 'Schedule ad stitching'}
+      subtitle={programme ? programme + ' · This placement only' : 'All upcoming ad breaks in this draft'}
+      onClose={onClose}
+      footer={<>
+        <button type="button" className="btn" onClick={onClose}>Cancel</button>
+        <button type="button" className="btn primary" disabled={busy} onClick={() => onSubmit(slateOnly)}>Apply to draft</button>
+      </>}>
+      <BreakFillField slateOnly={slateOnly} onChange={setSlateOnly} disabled={busy} />
+      <p className="faint small">This changes the fill for existing upcoming breaks. Publish the draft to apply it to playback.</p>
     </Modal>
   )
 }

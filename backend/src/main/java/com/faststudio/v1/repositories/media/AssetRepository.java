@@ -24,7 +24,7 @@ public class AssetRepository {
 
     public ProcessingJob job(UUID org, UUID id) {
         return db.sql("""
-                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref
+                select a.id, a.org_id, o.slug, a.title, a.kind, a.color, a.generator, a.duration_ms, a.media_key, a.source_url, a.source_ref, a.connection_id
                 from asset a join organization o on o.id = a.org_id where a.org_id = :o and a.id = :id""")
                 .param("o", org).param("id", id).query(ProcessingJob.class).single();
     }
@@ -156,18 +156,60 @@ public class AssetRepository {
     }
 
     /** New MOVIE row for a library video; idempotent on (org, source_ref). Empty when it already exists. */
-    public Optional<UUID> insertLibraryAsset(UUID org, String title, long durationMs, String detail, String cuePoints, String ref) {
+    public Optional<UUID> insertLibraryAsset(UUID org, String title, long durationMs, String detail, String cuePoints, String ref, UUID connection) {
         return db.sql("""
-                insert into asset(org_id, title, kind, duration_ms, status, status_detail, cue_points, source_ref)
-                values (:o, :t, 'MOVIE', :ms, 'DRAFT', :d, :c, :r)
+                insert into asset(org_id, title, kind, duration_ms, status, status_detail, cue_points, source_ref, connection_id)
+                values (:o, :t, 'MOVIE', :ms, 'DRAFT', :d, :c, :r, :conn)
                 on conflict (org_id, source_ref) where source_ref is not null do nothing returning id""")
                 .param("o", org).param("t", title).param("ms", durationMs).param("d", detail).param("c", cuePoints).param("r", ref)
-                .query(UUID.class).optional();
+                .param("conn", connection).query(UUID.class).optional();
     }
 
-    public void setUploadReference(UUID org, UUID id, String uploadRef) {
-        db.sql("update asset set source_ref = :r, status_detail = 'Waiting for the upload to finish', updated_at = now() where org_id = :o and id = :id")
-                .param("r", uploadRef).param("o", org).param("id", id).update();
+    /** The asset now waits for its direct upload to the library connection (uploadRef "{provider}-upload:{upload id}"). */
+    public void setUploadReference(UUID org, UUID id, String uploadRef, UUID connection) {
+        db.sql("""
+                update asset set source_ref = :r, connection_id = :c, status = 'DRAFT', status_detail = 'Uploading to the video library',
+                  updated_at = now() where org_id = :o and id = :id""")
+                .param("r", uploadRef).param("c", connection).param("o", org).param("id", id).update();
+    }
+
+    /** A new project slate waiting for its file (it never appears in the Library or in schedules). */
+    public UUID insertSlate(UUID org, boolean nextSchedule) {
+        return db.sql("""
+                insert into asset(org_id, title, kind, status, status_detail, genre, color, slate_next_schedule)
+                values (:o, 'Slate', 'SLATE', 'DRAFT', 'Waiting for the file', 'Slate', '#1e1b4b', :deferred) returning id""")
+                .param("o", org).param("deferred", nextSchedule).query(UUID.class).single();
+    }
+
+    public record Slate(UUID id, boolean nextSchedule) {}
+
+    /** The project's slates that aren't archived, newest first. */
+    public List<Slate> slates(UUID org) {
+        return db.sql("""
+                select id, slate_next_schedule as next_schedule from asset
+                where org_id = :o and kind = 'SLATE' and status <> 'ARCHIVED' order by created_at desc, id""")
+                .param("o", org).query(Slate.class).list();
+    }
+
+    /** A deferred slate is eligible only after this channel publishes a schedule after the upload. */
+    public List<String> slateKeys(UUID org, UUID publishedVersion) {
+        return db.sql("""
+                select media_key from asset
+                where org_id = :o and kind = 'SLATE' and status = 'READY' and media_key is not null
+                  and (not slate_next_schedule or created_at <= (
+                    select published_at from schedule_version where org_id = :o and id = :v))
+                order by created_at desc, id""").param("o", org).param("v", publishedVersion).query(String.class).list();
+    }
+
+    /** A direct upload not yet linked to its library video. */
+    public record PendingUpload(UUID orgId, UUID id, String sourceRef, UUID connectionId) {}
+
+    /** Direct uploads of the last day still waiting for their library video, every project (the upload watcher). */
+    public List<PendingUpload> pendingUploads() {
+        return db.sql("""
+                select org_id, id, source_ref, connection_id from asset
+                where source_ref like '%-upload:%' and connection_id is not null and status not in ('ARCHIVED','FAILED')
+                  and updated_at > now() - interval '1 day' /* all tenants: upload watcher */""").query(PendingUpload.class).list();
     }
 
     /** Raw comma-separated feature switches of a project (filtered by plan in the tenancy service). */

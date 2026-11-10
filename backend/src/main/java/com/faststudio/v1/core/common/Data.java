@@ -45,7 +45,11 @@ public class Data {
                           OffsetDateTime createdAt, OffsetDateTime publishedAt) {}
 
     public record Entry(UUID id, UUID versionId, String kind, UUID assetId, long assetOffsetMs, OffsetDateTime startAt,
-                        OffsetDateTime endAt, String ownership) {
+                        OffsetDateTime endAt, String ownership, boolean slateOnly) {
+        public Entry(UUID id, UUID versionId, String kind, UUID assetId, long assetOffsetMs, OffsetDateTime startAt,
+                     OffsetDateTime endAt, String ownership) {
+            this(id, versionId, kind, assetId, assetOffsetMs, startAt, endAt, ownership, false);
+        }
         public Instant start() { return startAt.toInstant(); }
         public Instant end() { return endAt.toInstant(); }
         public long durationMs() { return end().toEpochMilli() - start().toEpochMilli(); }
@@ -98,14 +102,14 @@ public class Data {
                 .param("o", org).param("c", channelId).query(Version.class).list();
     }
 
-    static final String ENTRY_COLS = "id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership";
+    static final String ENTRY_COLS = "id, version_id, kind, asset_id, asset_offset_ms, start_at, end_at, ownership, slate_only";
 
     /**
      * Schedule entries are read hundreds at a time (guides, channel lists, playout), so they are mapped by hand: Spring's
      * reflection-based record mapper was most of a channel request's CPU time (profiled 2026-11-03).
      */
     static final org.springframework.jdbc.core.RowMapper<Entry> ENTRY = (rs, n) -> new Entry(rs.getObject(1, UUID.class), rs.getObject(2, UUID.class),
-            rs.getString(3), rs.getObject(4, UUID.class), rs.getLong(5), rs.getObject(6, OffsetDateTime.class), rs.getObject(7, OffsetDateTime.class), rs.getString(8));
+            rs.getString(3), rs.getObject(4, UUID.class), rs.getLong(5), rs.getObject(6, OffsetDateTime.class), rs.getObject(7, OffsetDateTime.class), rs.getString(8), rs.getBoolean(9));
 
     public List<Entry> entries(UUID org, UUID versionId) {
         return db.sql("select " + ENTRY_COLS + " from schedule_entry where org_id = :o and version_id = :v order by start_at")

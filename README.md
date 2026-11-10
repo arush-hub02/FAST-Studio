@@ -14,12 +14,12 @@ Turn a video library into 24/7 TV channels with ads: upload, licence, schedule, 
 
 Needs **Java 21+** and **Node.js 22+** (the local Cloudflare Worker needs it; with nvm: `nvm use 24`). By default PostgreSQL starts inside the app, ffmpeg comes from npm, and the viewer-facing Cloudflare Worker runs locally under `wrangler dev` (no Cloudflare account needed).
 
-- **Windows:** double-click `start.bat` to build/start; double-click `stop.bat` to stop. `start.cmd` forwards to the same launcher.
+- **Windows:** double-click `demo-start.bat` (demo) or `pilot-start.bat` (real data) to build/start; double-click `stop.bat` to stop whichever runs. `demo-r2.bat` / `pilot-r2.bat` open that environment's R2 dashboard.
 - **macOS/Linux:** `./start.sh`
 
 Then open **http://localhost:8080**. The first start downloads libraries and generates about 1 hour of demo video with ffmpeg (a few minutes). Local data is kept in `data/` between runs. Stopping the app preserves it; Docker database storage is described separately below.
 
-On Windows the Java server and the local Worker (port 8787) run in the background. Startup waits for both before opening the browser. Logs are in `data/runtime/app.log`, `app-error.log` and `edge.log`. The Worker's local R2 and KV live in `data/edge`. Repeated starts recognize this workspace's running server. Stop targets only a verified workspace Java process, shuts down its embedded database cleanly, and retains data. The original relative-jar/Maven launch can also be recognized when the JDK's `jcmd` is available. An unrecognized process on port 8080 is left alone. For troubleshooting, run `start.bat -NoBrowser` from a terminal.
+On Windows the Java server and the local Worker (port 8787) run in the background. Startup waits for both before opening the browser. Logs are in `data/runtime/app.log`, `app-error.log` and `edge.log`. The Worker's local R2 and KV live in `data/edge`. Repeated starts recognize this workspace's running server. Stop targets only a verified workspace Java process, shuts down its embedded database cleanly, and retains data. The original relative-jar/Maven launch can also be recognized when the JDK's `jcmd` is available. An unrecognized process on port 8080 is left alone. For troubleshooting, run `demo-start.bat` from a terminal.
 
 The Windows launcher now checks that the HTML application and API both respond before opening a browser. Java runs from a hash-named copy in `data/runtime/releases/`, so rebuilding Maven's output cannot overwrite the running package. If the existing process is unhealthy, stop it with `stop.bat` and start again to rebuild. When the default Node version is too old, the launcher can use an already-installed compatible NVM runtime for this launch without changing the system-wide selection.
 
@@ -31,7 +31,7 @@ Optional Docker mode is configured in [compose.yaml](compose.yaml). Start Docker
 
 ```bat
 stop.bat
-start.bat -Docker
+powershell -File tools\manage-local.ps1 -Action Start -Docker
 ```
 
 This pulls the official `postgres:17-alpine` image and creates container **`faststudio-db`**, database/user **`faststudio`**, and persistent volume **`faststudio_pgdata`**. Connect using `127.0.0.1:55432`. The launcher generates a local password in git-ignored `data/runtime/docker.env`; it passes the matching `DB_URL`, `DB_USER` and `DB_PASSWORD` to Java. Do not remove this credential file while keeping the Docker volume: the database retains its original password. This is a local development setup.
@@ -46,7 +46,7 @@ docker compose --env-file data/runtime/docker.env ps
 docker compose --env-file data/runtime/docker.env stop db
 ```
 
-`start.bat` without `-Docker` still honors an existing `DB_URL` for a separately managed server; `stop.bat` does not stop such an external server. Docker mode explicitly selects the Compose database. Database tables and seed data appear when Java first connects, not merely when the image is pulled.
+The demo and pilot launchers without Docker still honors an existing `DB_URL` for a separately managed server; `stop.bat` does not stop such an external server. Docker mode explicitly selects the Compose database. Database tables and seed data appear when Java first connects, not merely when the image is pulled.
 
 Developer mode (hot reload): run the backend with `cd backend && ./mvnw spring-boot:run`, and the UI with `cd frontend && npm run dev`, then open http://localhost:5173.
 
@@ -57,9 +57,9 @@ All settings, each with a description, are in two files:
 | File | What it is |
 | --- | --- |
 | `backend/src/main/resources/application.yaml` | Every setting with its default, used for development and the demo |
-| `backend/src/main/resources/application-pilot.yaml` | The few values that differ for real data (`start.bat -Pilot`) |
+| `backend/src/main/resources/application-pilot.yaml` | The few values that differ for real data (`pilot-start.bat`) |
 | `.env.example` | Every environment variable, documented with examples (mail servers too). Copy it to `.env` and uncomment what you need. |
-| `.env` (you create it, git-ignored) | Your own values and secrets. `start.bat` / `start.sh` load it in demo and pilot mode. |
+| `.env` (you create it, git-ignored) | Your own values and secrets. `demo-start.bat` / `start.sh` load it in demo and pilot mode. |
 | `data-pilot/pilot.env` (generated, git-ignored) | Pilot secrets created on the first pilot start: media signing key and first administrator. Loaded after `.env` and wins. |
 
 How a value travels: `.env` → environment → `application.yaml` (`${NAME:default}`) → the server. For email, the server passes `FASTSTUDIO_SMTP_URL` on to nodemailer (`mailer/send.mjs`) as `SMTP_URL`. Any other setting can also be given as an environment variable: upper-case, with dots and dashes as underscores, e.g. `FASTSTUDIO_PARTNERS_RATE_LIMIT_PER_MINUTE=300`.
@@ -85,7 +85,7 @@ Demo mode is for showing the product. For your own companies, videos and people,
 
 ```bat
 stop.bat
-start.bat -Pilot
+pilot-start.bat
 ```
 
 macOS/Linux: `./start.sh --pilot`.

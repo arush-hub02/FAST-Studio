@@ -78,7 +78,7 @@ That's all. You don't install a database or video tools separately: by default t
 
 | Your computer | Start | Stop |
 | --- | --- | --- |
-| Windows | Double-click **`start.bat`** (`start.cmd` does the same) | Double-click **`stop.bat`** |
+| Windows | Double-click **`demo-start.bat`** (`start.cmd` does the same) | Double-click **`stop.bat`** |
 | macOS / Linux | Run **`./start.sh`** in a terminal | Press Ctrl+C in that terminal |
 
 The launcher:
@@ -87,9 +87,9 @@ The launcher:
 2. Builds the web app.
 3. Starts the server on **http://localhost:8080**, and opens your browser once the server answers.
 
-On Windows the server runs in the background. Its logs are in `data/runtime/app.log` and `data/runtime/app-error.log`. `stop.bat` shuts the server and its database down cleanly and keeps your data. To troubleshoot, run `start.bat -NoBrowser` from a terminal.
+On Windows the server runs in the background. Its logs are in `data/runtime/app.log` and `data/runtime/app-error.log`. `stop.bat` shuts the server and its database down cleanly and keeps your data. To troubleshoot, run `demo-start.bat` from a terminal.
 
-**Optional Docker database:** with Docker Desktop running, `start.bat -Docker` uses a PostgreSQL container (`faststudio-db`) instead of the built-in one. The two databases are separate. See the README for details.
+**Optional Docker database:** with Docker Desktop running, `powershell -File tools\manage-local.ps1 -Action Start -Docker` uses a PostgreSQL container (`faststudio-db`) instead of the built-in one. The two databases are separate. See the README for details.
 
 **First start takes a few minutes.** The server:
 
@@ -122,7 +122,7 @@ Everything above starts the **demo**: fictional companies, demo videos and one-c
 
 | Your computer | Start pilot mode | Stop |
 | --- | --- | --- |
-| Windows | `start.bat -Pilot` (from a terminal in the project folder) | `stop.bat` |
+| Windows | `pilot-start.bat` (from a terminal in the project folder) | `stop.bat` |
 | macOS / Linux | `./start.sh --pilot` | Ctrl+C |
 
 **Step 1 — the very first start.** The launcher creates `data-pilot/pilot.env`, which holds the video-link secret and the first **platform administrator**. If you set `FASTSTUDIO_ADMIN_EMAIL` and `FASTSTUDIO_ADMIN_PASSWORD` before starting, those are used. Otherwise the email is `admin@pilot.local` and a random temporary password is generated. The details are printed in the terminal **once** and saved in `data-pilot/FIRST-SIGN-IN.txt`. To choose the administrator yourself, set `FASTSTUDIO_ADMIN_EMAIL` and `FASTSTUDIO_ADMIN_PASSWORD` in `.env` before this first start (see Step 6).
@@ -185,7 +185,7 @@ Owners and administrators who are locked out are reset by the **platform adminis
 | `FASTSTUDIO_MAIL_FROM` | `"FAST Studio <no-reply@yourcompany.com>"` | Sender name and address |
 | `FASTSTUDIO_APP_URL` | `https://studio.yourcompany.com` | The address people use to open FAST Studio. Links inside emails start with it. |
 
-Restart (`stop.bat`, then `start.bat -Pilot`) and use **Email → Send a test email** ([chapter 19](#19-email-and-templates)) to check that it arrives.
+Restart (`stop.bat`, then `pilot-start.bat`) and use **Email → Send a test email** ([chapter 19](#19-email-and-templates)) to check that it arrives.
 
 ### Backups (pilot mode)
 
@@ -206,7 +206,7 @@ powershell -File tools/backup.ps1 -Action Restore -Pilot -From backups/pilot-202
 Before overwriting anything, restore saves the current data as `backups/pilot-before-restore-<date>-<time>/`. If a restore was a mistake, restore that folder to undo it. Copy the `backups` folder to another disk or a cloud drive regularly: a copy on the same disk does not survive that disk failing.
 
 > **Behind the scenes — pilot mode**
-> - **Profile:** `start.bat -Pilot` starts the same program with the Spring profile **`pilot`** (`application-pilot.yaml`). It switches demo content off and points storage at `data-pilot/`. The database uses its own port, so demo and pilot can never mix.
+> - **Profile:** `pilot-start.bat` starts the same program with the Spring profile **`pilot`** (`application-pilot.yaml`). It switches demo content off and points storage at `data-pilot/`. The database uses its own port, so demo and pilot can never mix.
 > - **First administrator:** on start-up, if no platform administrator exists yet, the server creates one from `FASTSTUDIO_ADMIN_EMAIL` / `FASTSTUDIO_ADMIN_PASSWORD`. The account is marked *must change password*, and the password is never written to the log.
 > - **Must-change rule:** a server-side check runs before every API call except sign-in and sign-out. It answers `403 PASSWORD_CHANGE_REQUIRED` until the password is changed; the screen is just the friendly face of that rule.
 > - **Reset links:** each link is 32 random bytes. The database stores only its **SHA-256 fingerprint**, so even someone reading the database cannot use a link. A link expires after 24 hours, is marked used the first time it works, and is cancelled when a newer one is made. Every password change and reset is written to the audit log.
@@ -221,9 +221,9 @@ All settings, each with a description, are in two files:
 | File | What it is |
 | --- | --- |
 | `backend/src/main/resources/application.yaml` | Every setting with its default, used for development and the demo |
-| `backend/src/main/resources/application-pilot.yaml` | The few values that differ for real data (`start.bat -Pilot`) |
+| `backend/src/main/resources/application-pilot.yaml` | The few values that differ for real data (`pilot-start.bat`) |
 | `.env.example` | Every environment variable, documented with examples (mail servers too). Copy it to `.env` and uncomment what you need. |
-| `.env` (you create it, git-ignored) | Your own values and secrets. `start.bat` / `start.sh` load it in demo and pilot mode. |
+| `.env` (you create it, git-ignored) | Your own values and secrets. `demo-start.bat` / `start.sh` load it in demo and pilot mode. |
 | `data-pilot/pilot.env` (generated, git-ignored) | Pilot secrets created on the first pilot start: media signing key and first administrator. Loaded after `.env` and wins. |
 
 How a value travels: `.env` → environment → `application.yaml` (`${NAME:default}`) → the server. For email, the server passes `FASTSTUDIO_SMTP_URL` on to nodemailer (`mailer/send.mjs`) as `SMTP_URL`. Any other setting can also be given as an environment variable: upper-case, with dots and dashes as underscores, e.g. `FASTSTUDIO_PARTNERS_RATE_LIMIT_PER_MINUTE=300`.
@@ -245,7 +245,7 @@ Run each in its own terminal, then open http://localhost:5173.
 | Symptom | Fix |
 | --- | --- |
 | Port 8080 already in use | Run `stop.bat`. If another program owns the port, the launcher leaves it alone, so stop that program first |
-| Something went wrong at start | Look in `data/runtime/app-error.log`, or run `start.bat -NoBrowser` in a terminal to see messages |
+| Something went wrong at start | Look in `data/runtime/app-error.log`, or run `demo-start.bat` in a terminal to see messages |
 | Videos stay "Failed" | Run `npm install` in `frontend/` (it downloads ffmpeg), then press **Retry** on the video |
 | Channel shows "We'll be right back" | Nothing is scheduled right now. Open Schedule → Auto-fill → Publish |
 | Player says "Playback problem" | The player retries by itself. If the channel was stopped, press Go live again |

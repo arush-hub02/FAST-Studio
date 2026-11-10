@@ -227,7 +227,7 @@ type NavGroup = {
 const NAV: NavGroup[] = [
   { group: '', items: [{ to: '', icon: 'home', label: 'Home', hint: 'Launch checklist & status' }] },
   { group: 'Create', items: [
-    { to: 'library', icon: 'film', label: 'Library', hint: 'Videos & ad creatives' },
+    { to: 'library', icon: 'film', label: 'Library', hint: 'Programmes & episodes' },
     { to: 'channels', icon: 'tv', label: 'Channels', hint: 'Your TV channels' },
     { to: 'schedule', icon: 'calendar', label: 'Schedule', hint: 'What plays when' },
   ] },
@@ -236,7 +236,7 @@ const NAV: NavGroup[] = [
     { to: 'guide', icon: 'grid', label: 'TV guide', hint: 'Programme guide (EPG)' },
   ] },
   { group: 'Earn & deliver', items: [
-    { to: 'ads', icon: 'megaphone', label: 'Ads', hint: 'Campaigns & ad decisions', tag: 'SSAI', tagType: 'accent' },
+    { to: 'ads', icon: 'megaphone', label: 'Ads', hint: 'Campaigns, creatives & slate', tag: 'SSAI', tagType: 'accent' },
     { to: 'rights', icon: 'shield', label: 'Rights', hint: 'Where content may play' },
     { to: 'distribution', icon: 'send', label: 'Distribution', hint: 'Send to platforms' },
     { to: 'partners', icon: 'link', label: 'Partners', hint: 'Share channels with platforms' },

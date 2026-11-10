@@ -16,7 +16,10 @@ import com.faststudio.v1.util.mediaProvider.Capability;
 import com.faststudio.v1.util.mediaProvider.IDirectUpload;
 import com.faststudio.v1.util.mediaProvider.IMediaProvider.RemoteAsset;
 import com.faststudio.v1.util.mediaProvider.MediaProviderResolverService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -29,6 +32,7 @@ import java.util.*;
  */
 @Service
 public class LibraryServiceV1 {
+    private static final Logger log = LoggerFactory.getLogger(LibraryServiceV1.class);
     static final String CONVERTING = "Received from the library; converting into " + Times.SEG_S + "-second segments";
     static final String CATALOGUED = "In the library; not prepared for broadcast yet";
     static final String PREPARING = "Preparing for broadcast: converting into " + Times.SEG_S + "-second segments";
@@ -58,18 +62,47 @@ public class LibraryServiceV1 {
     }
 
     /** A one-time URL the browser PUTs the video file to; the file goes straight to the library, never through us. */
-    public Map<String, String> uploadUrl(Tenant t, UUID id) throws InterruptedException {
+    public Map<String, String> uploadUrl(Tenant t, UUID id, UUID connection) throws InterruptedException {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Data.Asset a = data.asset(t.orgId(), id);
+        if (a.kind().equals("AD")) throw ApiException.bad("Ads are uploaded in the Ads section and stay with FAST Studio, not in the video library.");
         if (a.status().equals("PROCESSING")) throw ApiException.conflict("BUSY", "This video is already being processed.");
-        MediaConnectionService.Connection c = connections.connected(t.orgId());
+        if (connection == null && connections.usable(t.orgId()).size() > 1)
+            throw ApiException.bad("This project has more than one video library. Choose the one to upload to.");
+        MediaConnectionService.Connection c = connections.connected(t.orgId(), connection);
         IDirectUpload provider = providers.directUpload(c.provider());
         limits.requireMediaRoom(t.orgId());
         limits.requireProcessingSlot(t.orgId());
-        IDirectUpload.Upload u = provider.upload(c.credentials(), appUrl, a.title());
-        assets.setUploadReference(t.orgId(), id, c.provider() + "-upload:" + u.id());
-        audit.log(t, "asset.upload", "asset", id, a.title() + " (direct upload)");
+        IDirectUpload.Upload u = provider.upload(c.credentials(), appUrl, a.title(), media.maxHeight(t.orgId()));
+        assets.setUploadReference(t.orgId(), id, c.provider() + "-upload:" + u.id(), c.id());
+        audit.log(t, "asset.upload", "asset", id, a.title() + " (direct upload to " + c.name() + ")");
         return Map.of("url", u.url());
+    }
+
+    /**
+     * Links finished direct uploads to their library video, so an upload becomes ready without webhooks (a server
+     * without a public address never gets them). A webhook or sync that gets there first makes this a no-op.
+     */
+    @Scheduled(initialDelay = 30_000, fixedDelay = 20_000)
+    public void watchUploads() {
+        for (AssetRepository.PendingUpload p : TenantScope.bypass(assets::pendingUploads)) {
+            try {
+                MediaConnectionService.Connection c = connections.connection(p.orgId(), p.connectionId());
+                String provider = p.sourceRef().substring(0, p.sourceRef().indexOf("-upload:"));
+                if (c == null || !c.provider().equals(provider)) continue;
+                RemoteAsset x = providers.directUpload(provider).uploaded(c.credentials(), p.sourceRef().substring(provider.length() + 8));
+                if (x == null) continue;   // the file hasn't arrived yet
+                if (x.status().equals("ERRORED"))
+                    TenantScope.as(p.orgId(), () -> { assets.markLibraryFailed(p.orgId(), p.sourceRef(), p.sourceRef(),
+                            "The library couldn't take this file. Check that it plays, then upload it again."); return null; });
+                else apply(p.orgId(), c, x);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            } catch (RuntimeException e) {
+                log.warn("Upload check for asset {} failed: {}", p.id(), e.getMessage());
+            }
+        }
     }
 
     /**
@@ -79,8 +112,12 @@ public class LibraryServiceV1 {
      */
     public PrepareResult prepare(Tenant t, List<UUID> ids) {
         t.require(Tenant.Perm.ASSETS_EDIT);
-        MediaConnectionService.Connection c = connections.connected(t.orgId());
-        if (!providers.supports(c.provider(), Capability.PLAYBACK)) providers.require(c.provider(), Capability.SOURCE_FILE);   // streams, or is copied
+        connections.connected(t.orgId());   // none, or the connector switched off: a clear error
+        Set<String> usable = new HashSet<>();
+        for (MediaConnectionService.Connection c : connections.usable(t.orgId())) {
+            if (!providers.supports(c.provider(), Capability.PLAYBACK)) providers.require(c.provider(), Capability.SOURCE_FILE);   // streams, or is copied
+            usable.add(c.provider());
+        }
         limits.requireMediaRoom(t.orgId());
         Map<UUID, Candidate> found = new HashMap<>();
         for (Candidate x : sources.candidates(t.orgId(), new LinkedHashSet<>(ids))) found.put(x.id(), x);
@@ -89,7 +126,7 @@ public class LibraryServiceV1 {
         for (UUID id : new LinkedHashSet<>(ids)) {
             Candidate x = found.get(id);
             String reason = x == null ? "NOT_FOUND"
-                    : !c.provider().equals(x.provider()) ? "NOT_FROM_LIBRARY"
+                    : !usable.contains(x.provider()) ? "NOT_FROM_LIBRARY"
                     : x.status().equals("READY") ? "ALREADY_READY"
                     : x.status().equals("PROCESSING") ? "ALREADY_PROCESSING"
                     : !x.status().equals("DRAFT") && !x.status().equals("FAILED") ? "NOT_FROM_LIBRARY"
@@ -121,7 +158,8 @@ public class LibraryServiceV1 {
      * </ul>
      * True when a row was added or linked.
      */
-    public boolean apply(UUID org, String provider, RemoteAsset x) {
+    public boolean apply(UUID org, MediaConnectionService.Connection c, RemoteAsset x) {
+        String provider = c.provider();
         return TenantScope.as(org, () -> {
             String ref = provider + ":" + x.externalId(), upload = x.uploadId() == null ? ref : provider + "-upload:" + x.uploadId();
             if (x.status().equals("DELETED")) {
@@ -134,7 +172,7 @@ public class LibraryServiceV1 {
             id.ifPresent(a -> media.enqueue(org, a));
             if (id.isEmpty() && x.status().equals("READY"))
                 id = assets.insertLibraryAsset(org, AssetRules.importedTitle(x.title()), x.durationMs(), CATALOGUED,
-                        AssetRules.defaultCues("MOVIE", x.durationMs()), ref);
+                        AssetRules.defaultCues("MOVIE", x.durationMs()), ref, c.id());
             sources.seen(org, provider, ref, x);
             return id.isPresent();
         });

@@ -22,6 +22,8 @@ export type Campaign = {
   thumbUrl?: string
   audiences: string
   frequencyCap: number
+  /** a house promo: the channel's own spot, never sold, fills break time the ads leave open */
+  house: boolean
 }
 
 export type Simulation = {

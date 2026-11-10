@@ -14,17 +14,16 @@ import {
   Status,
   useApi,
 } from '../../shared/ui'
-import { AddVideoModal } from './AddVideoModal'
-import { AssetDrawer } from './AssetDrawer'
+import { AddVideoModal } from '../../shared/media/AddVideoModal'
+import { AssetDrawer, UPLOADING_TO_LIBRARY } from '../../shared/media/AssetDrawer'
 import { LibrarySource } from './LibrarySource'
-import { formatMediaKind, KIND_LABEL } from './mediaKind'
+import { formatMediaKind, KIND_LABEL } from '../../shared/media/mediaKind'
 
 const KINDS = [
   { key: '', label: 'All Catalog', icon: 'film' },
   { key: 'MOVIE', label: 'Movies', icon: 'film' },
   { key: 'EPISODE', label: 'Episodes', icon: 'tv' },
   { key: 'SHORT', label: 'Shorts', icon: 'sliders' },
-  { key: 'AD', label: 'Ad Creatives', icon: 'megaphone' },
 ] as const
 
 export default function Library() {
@@ -40,7 +39,8 @@ export default function Library() {
 
   // Fetch full asset list for the org (stable catalog-wide dataset)
   const list = useApi<AssetView[]>(`/api/orgs/${org.slug}/assets`, [], 0)
-  const processing = list.data?.some(a => a.asset.status === 'PROCESSING')
+  // refresh while anything converts, here or in the video library
+  const processing = list.data?.some(a => a.asset.status === 'PROCESSING' || a.asset.statusDetail === UPLOADING_TO_LIBRARY)
 
   // Auto-refresh when any transcode is in progress
   useEffect(() => {
@@ -50,10 +50,9 @@ export default function Library() {
   }, [processing, list.reload])
 
   const openId = params.get('asset')
-  const open = list.data?.find(a => a.asset.id === openId)
-
-  // Full catalog base (stable)
-  const allAssets = list.data ?? []
+  // The Library holds programmes only; ad creatives live in the Ads section
+  const allAssets = useMemo(() => (list.data ?? []).filter(a => a.asset.kind !== 'AD'), [list.data])
+  const open = allAssets.find(a => a.asset.id === openId)
 
   // Stable catalog-wide total counts (these NEVER drop to 0 when filtering!)
   const totalCatalogCount = allAssets.length
@@ -198,7 +197,7 @@ export default function Library() {
             {isFiltered ? (
               <span className="badge primary sm">Filtered Selection</span>
             ) : (
-              <span className="badge default sm">{countsByKind['AD'] || 0} ads</span>
+              <span className="badge default sm">{countsByKind['EPISODE'] || 0} episodes</span>
             )}
           </div>
           <div>

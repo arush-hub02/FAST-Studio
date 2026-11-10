@@ -66,7 +66,7 @@ public class ScheduleServiceV1 {
 
     /** Comparable fingerprint of a version's entries (used to show "unpublished changes"). */
     private static List<String> signature(List<Entry> es) {
-        return es.stream().map(e -> e.kind() + e.assetId() + e.assetOffsetMs() + e.start() + e.end() + e.ownership()).toList();
+        return es.stream().map(e -> e.kind() + e.assetId() + e.assetOffsetMs() + e.start() + e.end() + e.ownership() + e.slateOnly()).toList();
     }
 
     // ------------------------------------------------------------------ draft edits
@@ -109,7 +109,7 @@ public class ScheduleServiceV1 {
             int secs = (int) (Times.snapMs((r.seconds() == null ? ch.breakSeconds() : r.seconds()) * 1000L) / 1000);
             if (secs <= 0) throw ApiException.bad("Break length must be at least " + Times.SEG_S + " seconds");
             UUID inside = existing.stream().filter(e -> !e.isBreak() && e.end().equals(start)).map(Entry::assetId).findFirst().orElse(null);
-            items = List.of(new Planner.Item("AD_BREAK", inside, 0, start, start.plusSeconds(secs), "PROVIDER"));
+            items = List.of(new Planner.Item("AD_BREAK", inside, 0, start, start.plusSeconds(secs), "PROVIDER", Boolean.TRUE.equals(r.slateOnly())));
         } else {
             Asset a = data.asset(t.orgId(), r.assetId());
             settings.require(t.orgId(), a.mediaType());
@@ -129,9 +129,90 @@ public class ScheduleServiceV1 {
                 if (items.isEmpty()) items = List.of(new Planner.Item("PROGRAM", a.id(), 0, start, start.plusMillis(a.durationMs()), null));
             }
         }
+        if (Boolean.TRUE.equals(r.fitGap())) {
+            requireFuture(start, now);
+            requireGap(existing, Set.of(), start, items.getLast().end());
+        }
         repository.insertEntries(t.orgId(), draft.id(), items);
         audit.log(t, "schedule.add", "channel", id, r.kind() + " at " + start);
         return new EditResult(draft.revision() + 1, List.of("Added at " + Planner.fmt(start, ch.timezone()) + ". Check the issues list before publishing."));
+    }
+
+    @Transactional
+    public EditResult setBreakFill(Tenant t, UUID id, UUID entryId, BreakFillRequest r) {
+        t.require(Tenant.Perm.SCHEDULE_EDIT);
+        Version draft = bump(t, id, r.expectedRevision());
+        if (repository.setBreakFill(t.orgId(), draft.id(), List.of(entryId), r.slateOnly(), Instant.now()) == 0)
+            throw ApiException.notFound("Upcoming draft ad break");
+        String fill = r.slateOnly() ? "Slate only" : "Ads first";
+        audit.log(t, "schedule.break-fill", "channel", id, fill);
+        return new EditResult(draft.revision() + 1, List.of(fill + " saved to draft. Publish to apply it."));
+    }
+
+    /** Moves a complete draft placement by the offset of the selected programme segment. */
+    @Transactional
+    public EditResult move(Tenant t, UUID id, UUID entryId, MoveRequest r) {
+        t.require(Tenant.Perm.SCHEDULE_EDIT);
+        Channel ch = data.channel(t.orgId(), id);
+        Version draft = bump(t, id, r.expectedRevision());
+        List<Entry> entries = data.entries(t.orgId(), draft.id());
+        int index = programmeIndex(entries, entryId);
+        List<Entry> placement = programmePlacement(entries, index);
+        Instant now = Instant.now();
+        long offset = Times.snapDown(r.startAt()).toEpochMilli() - entries.get(index).start().toEpochMilli();
+        Instant start = placement.getFirst().start().plusMillis(offset);
+        requireFuture(placement.getFirst().start(), now);
+        requireFuture(start, now);
+        Set<UUID> moving = new HashSet<>(placement.stream().map(Entry::id).toList());
+        requireGap(entries, moving, start, placement.getLast().end().plusMillis(offset));
+        for (Entry entry : placement)
+            repository.moveEntry(t.orgId(), entry.id(), entry.start().plusMillis(offset), entry.end().plusMillis(offset));
+        audit.log(t, "schedule.move", "channel", id, "programme placement to " + start);
+        return new EditResult(draft.revision() + 1, List.of("Programme moved to " + Planner.fmt(start, ch.timezone()) + " in the draft."));
+    }
+
+    @Transactional
+    public EditResult setAdStitching(Tenant t, UUID id, AdStitchingRequest r) {
+        t.require(Tenant.Perm.SCHEDULE_EDIT);
+        Version draft = bump(t, id, r.expectedRevision());
+        List<Entry> entries = data.entries(t.orgId(), draft.id());
+        List<Entry> scope = r.entryId() == null ? entries : programmePlacement(entries, programmeIndex(entries, r.entryId()));
+        Instant now = Instant.now();
+        List<UUID> breaks = scope.stream().filter(Entry::isBreak).filter(e -> e.start().isAfter(now)).map(Entry::id).toList();
+        if (breaks.isEmpty()) throw ApiException.bad("There are no upcoming ad breaks in this selection.");
+        int changed = repository.setBreakFill(t.orgId(), draft.id(), breaks, r.slateOnly(), now);
+        String fill = r.slateOnly() ? "Slate only" : "Ads first";
+        audit.log(t, "schedule.ad-stitching", "channel", id, changed + " breaks: " + fill);
+        return new EditResult(draft.revision() + 1, List.of(fill + " saved for " + changed + " upcoming break(s) in the draft."));
+    }
+
+    private static void requireFuture(Instant start, Instant now) {
+        if (!start.isAfter(now)) throw ApiException.conflict("SCHEDULE_STARTED", "Choose a time after the live playhead. Programmes that have started cannot be moved.");
+    }
+
+    private static void requireGap(List<Entry> entries, Set<UUID> moving, Instant start, Instant end) {
+        if (entries.stream().anyMatch(e -> !moving.contains(e.id()) && e.start().isBefore(end) && e.end().isAfter(start)))
+            throw ApiException.conflict("SCHEDULE_OVERLAP", "This programme and its breaks need an open slot. Choose a different time.");
+    }
+
+    private static int programmeIndex(List<Entry> entries, UUID entryId) {
+        int index = entryIndex(entries, entryId);
+        if (entries.get(index).isBreak()) throw ApiException.bad("Select a programme placement.");
+        return index;
+    }
+
+    private static int entryIndex(List<Entry> entries, UUID entryId) {
+        for (int i = 0; i < entries.size(); i++) if (entries.get(i).id().equals(entryId)) return i;
+        throw ApiException.notFound("Draft schedule item");
+    }
+
+    private static List<Entry> programmePlacement(List<Entry> entries, int index) {
+        UUID asset = entries.get(index).assetId();
+        if (asset == null) return List.of(entries.get(index));
+        int first = index, last = index;
+        while (first > 0 && sameRun(entries.get(first - 1), entries.get(first), asset)) first--;
+        while (last + 1 < entries.size() && sameRun(entries.get(last), entries.get(last + 1), asset)) last++;
+        return entries.subList(first, last + 1);
     }
 
     private static Map<Long, Long> adSecondsPerHour(List<Entry> existing) {
@@ -152,15 +233,11 @@ public class ScheduleServiceV1 {
         t.require(Tenant.Perm.SCHEDULE_EDIT);
         Version draft = bump(t, id, expectedRevision);
         List<Entry> es = data.entries(t.orgId(), draft.id());
-        int idx = -1;
-        for (int i = 0; i < es.size(); i++) if (es.get(i).id().equals(entryId)) idx = i;
-        if (idx < 0) throw ApiException.notFound("Schedule item");
+        int idx = entryIndex(es, entryId);
         Set<UUID> doomed = new HashSet<>(List.of(entryId));
         Entry target = es.get(idx);
-        if (wholeProgramme && target.assetId() != null) {
-            for (int i = idx - 1; i >= 0 && sameRun(es.get(i), es.get(i + 1), target.assetId()); i--) doomed.add(es.get(i).id());
-            for (int i = idx + 1; i < es.size() && sameRun(es.get(i - 1), es.get(i), target.assetId()); i++) doomed.add(es.get(i).id());
-        }
+        if (wholeProgramme && target.assetId() != null)
+            programmePlacement(es, idx).forEach(entry -> doomed.add(entry.id()));
         repository.deleteEntries(t.orgId(), draft.id(), doomed);
         audit.log(t, "schedule.remove", "channel", id, doomed.size() + " item(s)");
         return new EditResult(draft.revision() + 1, List.of("Removed " + doomed.size() + " item(s). Use 'Close gaps' to pull later items forward."));

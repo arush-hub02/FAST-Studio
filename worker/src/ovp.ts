@@ -6,13 +6,15 @@
 import type { Rendition, Snapshot } from './playout.ts'
 
 export type Variant = { height: number; bandwidth: number; uri: string }
+/** "Rendition" number of a video's separate audio track (fMP4 platforms such as Mux deliver audio apart from video). */
+export const AUDIO = -1
 
 const FRESH_MS = 30 * 60_000      // re-read a playlist after this long (signed URLs last far longer)
 const RETRY_MS = 15_000           // after a failed first read
 const FETCH_MS = 1_500            // per request: a viewer's playlist must not wait long
 const MAX_ENTRIES = 5_000
 
-type Entry = { at: number; urls: string[] | null }
+type Entry = { at: number; urls: string[] | null; map?: string }
 const memo = new Map<string, Entry>()
 const inflight = new Map<string, Promise<Entry>>()
 
@@ -32,14 +34,32 @@ export function parseMaster(text: string, base: string): Variant[] {
   return out
 }
 
-/** Segment URLs of a media playlist, absolute. */
-export function parseMedia(text: string, base: string): string[] {
-  const out: string[] = []
+/** The audio track's playlist in a master (the default one, else the first); null when audio is inside the video segments. */
+export function parseAudio(text: string, base: string): string | null {
+  let first: string | null = null
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.startsWith('#EXT-X-MEDIA:') || !line.includes('TYPE=AUDIO')) continue
+    const u = /URI="([^"]+)"/.exec(line)?.[1]
+    if (!u) continue
+    const abs = new URL(u, base).toString()
+    if (line.includes('DEFAULT=YES')) return abs
+    first ??= abs
+  }
+  return first
+}
+
+/** Segment URLs of a media playlist and its fMP4 init section (EXT-X-MAP), absolute. */
+export function parseMedia(text: string, base: string): { urls: string[]; map?: string } {
+  const urls: string[] = []
+  let map: string | undefined
   for (const line of text.split(/\r?\n/)) {
     const l = line.trim()
-    if (l && !l.startsWith('#')) out.push(new URL(l, base).toString())
+    if (l.startsWith('#EXT-X-MAP:')) {
+      const u = /URI="([^"]+)"/.exec(l)?.[1]
+      if (u) map = new URL(u, base).toString()
+    } else if (l && !l.startsWith('#')) urls.push(new URL(l, base).toString())
   }
-  return out
+  return { urls, map }
 }
 
 /** The platform rendition for one of our quality levels: the nearest height, the lower one on a tie. */
@@ -58,16 +78,25 @@ async function get(url: string): Promise<string> {
   return res.text()
 }
 
-async function read(master: string, ours: Rendition): Promise<string[]> {
-  const variants = parseMaster(await get(master), master)
-  if (!variants.length) throw new Error('no renditions')
-  const v = variants[pick(variants, ours)]
-  const urls = parseMedia(await get(v.uri), v.uri)
-  if (!urls.length) throw new Error('empty rendition')
-  return urls
+/** ours null = the audio track. */
+async function read(master: string, ours: Rendition | null): Promise<{ urls: string[]; map?: string }> {
+  const text = await get(master)
+  let uri: string
+  if (ours) {
+    const variants = parseMaster(text, master)
+    if (!variants.length) throw new Error('no renditions')
+    uri = variants[pick(variants, ours)].uri
+  } else {
+    const a = parseAudio(text, master)
+    if (!a) throw new Error('no separate audio track')
+    uri = a
+  }
+  const r = parseMedia(await get(uri), uri)
+  if (!r.urls.length) throw new Error('empty rendition')
+  return r
 }
 
-const cacheKey = async (master: string, variant: number) => {
+const cacheKey = async (master: string, variant: number | string) => {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(master)))
   return `https://ovp-playlists.internal/${[...h.slice(0, 16)].map(b => b.toString(16).padStart(2, '0')).join('')}/${variant}`
 }
@@ -75,8 +104,8 @@ const cacheKey = async (master: string, variant: number) => {
 /** Makes sure the segment URLs of this video and rendition are in memory (fresh, or the last good copy). */
 export async function load(snap: Snapshot, asset: string, variant: number, now = Date.now()): Promise<void> {
   const master = snap.ovp?.[asset]?.url
-  const ours = snap.ladder[variant]
-  if (!master || !ours) return
+  const ours = variant === AUDIO ? null : snap.ladder[variant]
+  if (!master || (variant !== AUDIO && !ours)) return
   const k = `${master}|${variant}`
   const hit = memo.get(k)
   if (hit && now - hit.at < (hit.urls ? FRESH_MS : RETRY_MS)) return
@@ -84,19 +113,22 @@ export async function load(snap: Snapshot, asset: string, variant: number, now =
   if (!p) {
     p = (async (): Promise<Entry> => {
       const cache = typeof caches !== 'undefined' ? (caches as unknown as { default: Cache }).default : null
-      const ck = cache ? await cacheKey(master, variant) : ''
+      const ck = cache ? await cacheKey(master, variant === AUDIO ? 'audio' : variant) : ''
       if (cache) {
         const c = await cache.match(ck)
-        if (c) return { at: Number(c.headers.get('X-Read-At') ?? now), urls: (await c.json()) as string[] }
+        if (c) {
+          const j = (await c.json()) as { urls: string[]; map?: string }
+          return { at: Number(c.headers.get('X-Read-At') ?? now), urls: j.urls, map: j.map }
+        }
       }
       try {
-        const urls = await read(master, ours)
-        if (cache) await cache.put(ck, new Response(JSON.stringify(urls), {
+        const { urls, map } = await read(master, ours ?? null)
+        if (cache) await cache.put(ck, new Response(JSON.stringify({ urls, map }), {
           headers: { 'Content-Type': 'application/json', 'Cache-Control': `max-age=${FRESH_MS / 1000}`, 'X-Read-At': String(now) } }))
-        return { at: now, urls }
+        return { at: now, urls, map }
       } catch (e) {
         console.warn('platform playlist unavailable', asset, variant, String(e))
-        return hit?.urls ? { at: now - FRESH_MS + RETRY_MS, urls: hit.urls } : { at: now, urls: null }
+        return hit?.urls ? { at: now - FRESH_MS + RETRY_MS, urls: hit.urls, map: hit.map } : { at: now, urls: null }
       }
     })().finally(() => inflight.delete(k))
     inflight.set(k, p)
@@ -106,11 +138,13 @@ export async function load(snap: Snapshot, asset: string, variant: number, now =
   memo.set(k, e)
 }
 
-/** URL of segment i of a streaming video in our rendition; null when not loaded or out of range. */
-export function segmentUrl(snap: Snapshot, asset: string, variant: number, i: number): string | null {
+/** Segment i of a streaming video in our rendition, with its fMP4 init section; null when not loaded or out of range. */
+export function segmentUrl(snap: Snapshot, asset: string, variant: number, i: number): { url: string; map?: string } | null {
   const master = snap.ovp?.[asset]?.url
   if (!master) return null
-  return memo.get(`${master}|${variant}`)?.urls?.[i] ?? null
+  const e = memo.get(`${master}|${variant}`)
+  const url = e?.urls?.[i]
+  return url ? { url, map: e?.map } : null
 }
 
 /** For tests. */

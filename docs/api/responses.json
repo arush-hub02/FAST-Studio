@@ -1018,8 +1018,8 @@
     "status": 200,
     "body": {
       "channel": {
-        "id": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-        "orgId": "6f19186a-248c-42e9-8184-428a9908f2fc",
+        "id": "1b25e1a3-70e7-40d2-afc4-15b0be4649d2",
+        "orgId": "65751573-37e2-40ee-9353-a9003eaa0ea2",
         "slug": "aurora-action",
         "name": "Aurora Action",
         "description": "Non-stop chases, heists and high-altitude thrills.",
@@ -1031,331 +1031,287 @@
         "status": "LIVE",
         "adSecondsPerHour": 480,
         "breakSeconds": 90,
-        "fallbackAssetId": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-        "publishedVersionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
-        "createdAt": "2026-10-20T08:38:25.654894Z",
-        "updatedAt": "2026-10-20T08:38:25.654894Z"
+        "fallbackAssetId": "6e5eab35-09d9-4c09-b314-39bd58254243",
+        "publishedVersionId": "8cf49c25-c0d1-4d40-8fb5-37436d1617f6",
+        "createdAt": "2026-11-10T08:20:45.040226Z",
+        "updatedAt": "2026-11-10T08:20:45.040226Z"
       },
       "draft": {
-        "id": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
-        "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
+        "id": "efd1adb4-75f8-4d60-b56f-26aa93dcf664",
+        "channelId": "1b25e1a3-70e7-40d2-afc4-15b0be4649d2",
         "number": 0,
         "status": "DRAFT",
-        "revision": 3,
+        "revision": 0,
         "note": "",
-        "createdBy": "ca0e73ee-639c-4a8e-a678-166204f57d82",
-        "createdAt": "2026-10-20T08:38:25.654894Z",
+        "createdBy": "a938a0ed-6c9c-45ca-b448-bcadb2d80f0c",
+        "createdAt": "2026-11-10T08:20:45.040226Z",
         "publishedAt": null
       },
       "draftEntries": [
         {
-          "id": "9a243fbd-20b8-4a76-b4a9-c3d42bc255e8",
-          "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
+          "id": "47f9b237-7dc5-4205-a7cf-a795ce9c36ad",
+          "versionId": "efd1adb4-75f8-4d60-b56f-26aa93dcf664",
           "kind": "PROGRAM",
-          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "assetId": "f1a87f03-4d7a-4adc-a506-bc014b5742f3",
           "assetOffsetMs": 0,
-          "startAt": "2026-11-01T15:30:00Z",
-          "endAt": "2026-11-01T15:32:30Z",
+          "startAt": "2026-11-10T08:00:45Z",
+          "endAt": "2026-11-10T08:03:45Z",
           "ownership": null,
+          "slateOnly": false,
           "break": false
         },
         {
-          "id": "8ddd1a96-5b57-4ce5-9238-4fd2c2eff2fa",
-          "versionId": "e4f6e949-fdd5-4224-af0b-3b9f94e4f99f",
-          "kind": "PROGRAM",
-          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-          "assetOffsetMs": 150000,
-          "startAt": "2026-11-01T15:32:30Z",
-          "endAt": "2026-11-01T15:35:00Z",
-          "ownership": null,
-          "break": false
+          "id": "aa31c749-f545-49f3-927a-d41118058ad1",
+          "versionId": "efd1adb4-75f8-4d60-b56f-26aa93dcf664",
+          "kind": "AD_BREAK",
+          "assetId": "f1a87f03-4d7a-4adc-a506-bc014b5742f3",
+          "assetOffsetMs": 0,
+          "startAt": "2026-11-10T08:03:45Z",
+          "endAt": "2026-11-10T08:05:15Z",
+          "ownership": "PROVIDER",
+          "slateOnly": false,
+          "break": true
         },
-        "… 591 more"
+        "… 588 more"
       ],
       "published": {
-        "id": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
-        "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-        "number": 7,
+        "id": "8cf49c25-c0d1-4d40-8fb5-37436d1617f6",
+        "channelId": "1b25e1a3-70e7-40d2-afc4-15b0be4649d2",
+        "number": 1,
         "status": "PUBLISHED",
         "revision": 0,
-        "note": "Demo mode: schedule auto-extended on startup",
-        "createdBy": null,
-        "createdAt": "2026-11-01T17:31:18.015889Z",
-        "publishedAt": "2026-11-01T17:31:18.015889Z"
+        "note": "Initial lineup",
+        "createdBy": "bc03627c-104c-418f-887c-5edb2938deac",
+        "createdAt": "2026-11-10T08:20:45.040226Z",
+        "publishedAt": "2026-11-10T08:20:45.040226Z"
       },
       "publishedEntries": [
         {
-          "id": "72488bcb-765a-4f28-8ef7-92fbae0599e2",
-          "versionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
+          "id": "28d2b489-221e-409e-bbd8-87a3d88946cc",
+          "versionId": "8cf49c25-c0d1-4d40-8fb5-37436d1617f6",
           "kind": "PROGRAM",
-          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
+          "assetId": "f1a87f03-4d7a-4adc-a506-bc014b5742f3",
           "assetOffsetMs": 0,
-          "startAt": "2026-11-01T15:30:00Z",
-          "endAt": "2026-11-01T15:32:30Z",
+          "startAt": "2026-11-10T08:00:45Z",
+          "endAt": "2026-11-10T08:03:45Z",
           "ownership": null,
+          "slateOnly": false,
           "break": false
         },
         {
-          "id": "d2947820-eef9-4c0b-8e61-9c5a25016e82",
-          "versionId": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
-          "kind": "PROGRAM",
-          "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-          "assetOffsetMs": 150000,
-          "startAt": "2026-11-01T15:32:30Z",
-          "endAt": "2026-11-01T15:35:00Z",
-          "ownership": null,
-          "break": false
+          "id": "2e75c936-a010-4acd-9e67-64e38376be7e",
+          "versionId": "8cf49c25-c0d1-4d40-8fb5-37436d1617f6",
+          "kind": "AD_BREAK",
+          "assetId": "f1a87f03-4d7a-4adc-a506-bc014b5742f3",
+          "assetOffsetMs": 0,
+          "startAt": "2026-11-10T08:03:45Z",
+          "endAt": "2026-11-10T08:05:15Z",
+          "ownership": "PROVIDER",
+          "slateOnly": false,
+          "break": true
         },
-        "… 591 more"
+        "… 588 more"
       ],
       "issues": [
         {
           "severity": "WARNING",
           "code": "BLACKOUT",
-          "message": "\"Steel Horizon\" at Sun 23:08 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
-          "entryId": "3daced6c-8b78-47f5-879e-5897c01c4480",
+          "message": "\"Last Signal\" at Tue 14:09 isn't licensed in US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "4c2df2c4-0062-47a4-9c00-33fbc2f62997",
           "hint": "Acceptable if intended; otherwise extend the licence.",
-          "at": "2026-11-01T17:38:20Z"
+          "at": "2026-11-10T08:39:15Z"
         },
         {
           "severity": "WARNING",
           "code": "BLACKOUT",
-          "message": "\"Steel Horizon\" at Sun 23:12 isn't licensed in GB, US. Viewers there will see a 'not available in your region' screen.",
-          "entryId": "9e615300-b47c-4331-b6c0-7bb67f112312",
+          "message": "\"Last Signal\" at Tue 14:11 isn't licensed in US. Viewers there will see a 'not available in your region' screen.",
+          "entryId": "502f90e9-43eb-449b-90ef-099cf2de6360",
           "hint": "Acceptable if intended; otherwise extend the licence.",
-          "at": "2026-11-01T17:42:20Z"
+          "at": "2026-11-10T08:41:15Z"
         },
-        "… 194 more"
+        "… 308 more"
       ],
       "versions": [
         {
-          "id": "b16b3662-6f34-4d39-aeeb-d727b102f01f",
-          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-          "number": 7,
+          "id": "8cf49c25-c0d1-4d40-8fb5-37436d1617f6",
+          "channelId": "1b25e1a3-70e7-40d2-afc4-15b0be4649d2",
+          "number": 1,
           "status": "PUBLISHED",
           "revision": 0,
-          "note": "Demo mode: schedule auto-extended on startup",
-          "createdBy": null,
-          "createdAt": "2026-11-01T17:31:18.015889Z",
-          "publishedAt": "2026-11-01T17:31:18.015889Z"
-        },
-        {
-          "id": "b8ee6e20-1b6b-4dc2-8b3a-3327e0d69e58",
-          "channelId": "b6776493-c6d2-4fcd-a874-7de5e2b5e355",
-          "number": 6,
-          "status": "SUPERSEDED",
-          "revision": 0,
-          "note": "Demo mode: schedule auto-extended on startup",
-          "createdBy": null,
-          "createdAt": "2026-10-31T11:21:27.978568Z",
-          "publishedAt": "2026-10-31T11:21:27.978568Z"
-        },
-        "… 5 more"
+          "note": "Initial lineup",
+          "createdBy": "bc03627c-104c-418f-887c-5edb2938deac",
+          "createdAt": "2026-11-10T08:20:45.040226Z",
+          "publishedAt": "2026-11-10T08:20:45.040226Z"
+        }
       ],
       "assets": {
-        "412d4dd8-db9a-448d-8671-d1d4a7219286": {
-          "id": "412d4dd8-db9a-448d-8671-d1d4a7219286",
-          "title": "Bluebird Air",
-          "kind": "AD",
-          "color": "#0891b2",
-          "mediaKey": "aurora/412d4dd8-db9a-448d-8671-d1d4a7219286.1793295016",
-          "durationMs": 30000,
-          "status": "READY"
-        },
-        "c95821f4-1057-42db-a401-11f1b69d562c": {
-          "id": "c95821f4-1057-42db-a401-11f1b69d562c",
-          "title": "Slow Roads: Desert Light",
-          "kind": "EPISODE",
-          "color": "#ca8a04",
-          "mediaKey": "aurora/c95821f4-1057-42db-a401-11f1b69d562c.1793295745",
-          "durationMs": 300000,
-          "status": "READY"
-        },
-        "acff26c4-0cad-46c7-9b0a-edfe15aecfe9": {
-          "id": "acff26c4-0cad-46c7-9b0a-edfe15aecfe9",
-          "title": "Nova Bank",
-          "kind": "AD",
-          "color": "#16a34a",
-          "mediaKey": "aurora/acff26c4-0cad-46c7-9b0a-edfe15aecfe9.1793295067",
-          "durationMs": 30000,
-          "status": "READY"
-        },
-        "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17": {
-          "id": "9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17",
-          "title": "Slow Roads: Coastlines of Kerala",
-          "kind": "EPISODE",
-          "color": "#059669",
-          "mediaKey": "aurora/9c0b4c69-f1ab-4fe5-9a55-ec02d9a8ba17.1793296370",
-          "durationMs": 300000,
-          "status": "READY"
-        },
-        "3a32efde-9be4-40b4-9694-5167711470fd": {
-          "id": "3a32efde-9be4-40b4-9694-5167711470fd",
-          "title": "Aurora Promo",
-          "kind": "AD",
-          "color": "#7c3aed",
-          "mediaKey": "aurora/3a32efde-9be4-40b4-9694-5167711470fd.1793295054",
-          "durationMs": 15000,
-          "status": "READY"
-        },
-        "a7bca6a5-54ea-49ac-a129-7a0323e03a52": {
-          "id": "a7bca6a5-54ea-49ac-a129-7a0323e03a52",
-          "title": "Robot Garden",
-          "kind": "SHORT",
-          "color": "#22c55e",
-          "mediaKey": "aurora/a7bca6a5-54ea-49ac-a129-7a0323e03a52.1793296813",
-          "durationMs": 180000,
-          "status": "READY"
-        },
-        "b85e0cc7-b853-433b-a770-68062ea8ce87": {
-          "id": "b85e0cc7-b853-433b-a770-68062ea8ce87",
-          "title": "Big Buck Bunny",
-          "kind": "MOVIE",
-          "color": "#6366f1",
-          "mediaKey": "aurora/b85e0cc7-b853-433b-a770-68062ea8ce87.1793293777",
-          "durationMs": 5000,
-          "status": "READY"
-        },
-        "31a2e51f-4198-452e-972e-fdd21c4d7d90": {
-          "id": "31a2e51f-4198-452e-972e-fdd21c4d7d90",
-          "title": "Aurora Channel Ident",
-          "kind": "SHORT",
-          "color": "#6366f1",
-          "mediaKey": "aurora/31a2e51f-4198-452e-972e-fdd21c4d7d90.1793294941",
-          "durationMs": 30000,
-          "status": "READY"
-        },
-        "df55a5f6-0521-429e-8e9f-3d66369412fa": {
-          "id": "df55a5f6-0521-429e-8e9f-3d66369412fa",
+        "206703de-b45e-4d99-a0b6-67f7bc18dbe7": {
+          "id": "206703de-b45e-4d99-a0b6-67f7bc18dbe7",
           "title": "Moonlit Avenue",
           "kind": "MOVIE",
           "color": "#64748b",
-          "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
+          "mediaKey": "aurora/206703de-b45e-4d99-a0b6-67f7bc18dbe7.1794299131",
           "durationMs": 300000,
           "status": "READY"
         },
-        "cd5a4b10-291b-469d-8542-b79ac1eee451": {
-          "id": "cd5a4b10-291b-469d-8542-b79ac1eee451",
-          "title": "Zenith Phones",
+        "614c9047-37c1-49ea-9e17-dd6a89f4da88": {
+          "id": "614c9047-37c1-49ea-9e17-dd6a89f4da88",
+          "title": "Aurora Promo",
           "kind": "AD",
-          "color": "#2563eb",
-          "mediaKey": "aurora/cd5a4b10-291b-469d-8542-b79ac1eee451.1793294990",
-          "durationMs": 30000,
+          "color": "#7c3aed",
+          "mediaKey": "aurora/614c9047-37c1-49ea-9e17-dd6a89f4da88.1794298967",
+          "durationMs": 15000,
           "status": "READY"
         },
-        "c4297efd-c4cb-42f5-9443-db0806e84227": {
-          "id": "c4297efd-c4cb-42f5-9443-db0806e84227",
-          "title": "Neon Pursuit",
-          "kind": "MOVIE",
-          "color": "#ef4444",
-          "mediaKey": "aurora/c4297efd-c4cb-42f5-9443-db0806e84227.1793295315",
-          "durationMs": 360000,
-          "status": "READY"
-        },
-        "1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c": {
-          "id": "1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c",
+        "0977c8ce-a9a8-420c-8b1c-33dd2fe9d894": {
+          "id": "0977c8ce-a9a8-420c-8b1c-33dd2fe9d894",
           "title": "Pip & the Paper Moon",
           "kind": "SHORT",
           "color": "#ec4899",
-          "mediaKey": "aurora/1e8b8eeb-7bee-4e3c-9dbb-1db3b0594e2c.1793296691",
+          "mediaKey": "aurora/0977c8ce-a9a8-420c-8b1c-33dd2fe9d894.1794299656",
           "durationMs": 180000,
           "status": "READY"
         },
-        "8774d469-c451-4f8a-926a-a34475a547fc": {
-          "id": "8774d469-c451-4f8a-926a-a34475a547fc",
-          "title": "Steel Horizon",
-          "kind": "MOVIE",
-          "color": "#f97316",
-          "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-          "durationMs": 300000,
-          "status": "READY"
-        },
-        "1241aea9-0f9f-4c94-8b5d-80d3b8408bdf": {
-          "id": "1241aea9-0f9f-4c94-8b5d-80d3b8408bdf",
+        "a252387f-0f48-4d7b-a16b-d30d4d8220b9": {
+          "id": "a252387f-0f48-4d7b-a16b-d30d4d8220b9",
           "title": "Crunchy Oats",
           "kind": "AD",
           "color": "#d97706",
-          "mediaKey": "aurora/1241aea9-0f9f-4c94-8b5d-80d3b8408bdf.1793295040",
+          "mediaKey": "aurora/a252387f-0f48-4d7b-a16b-d30d4d8220b9.1794298922",
           "durationMs": 15000,
           "status": "READY"
         },
-        "2139f2cc-7b8e-405e-9ce3-67c827737a2e": {
-          "id": "2139f2cc-7b8e-405e-9ce3-67c827737a2e",
-          "title": "Last Signal",
-          "kind": "MOVIE",
-          "color": "#8b5cf6",
-          "mediaKey": "aurora/2139f2cc-7b8e-405e-9ce3-67c827737a2e.1793293829",
-          "durationMs": 240000,
-          "status": "READY"
-        },
-        "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a": {
-          "id": "f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a",
-          "title": "Earth",
-          "kind": "SHORT",
-          "color": "#6366f1",
-          "mediaKey": "aurora/f521cdd6-89cb-4a64-8d83-0ab53cd2fd0a.1793293810",
-          "durationMs": 30000,
-          "status": "READY"
-        },
-        "2b8efa53-7b36-4f56-90c0-eca70bfeb793": {
-          "id": "2b8efa53-7b36-4f56-90c0-eca70bfeb793",
-          "title": "External - Single Inline Linear",
-          "kind": "AD",
-          "color": "#64748b",
-          "mediaKey": "aurora/2b8efa53-7b36-4f56-90c0-eca70bfeb793.1793296386",
-          "durationMs": 10000,
-          "status": "READY"
-        },
-        "dde083a6-0b3b-4e09-9c60-22d64225fb9f": {
-          "id": "dde083a6-0b3b-4e09-9c60-22d64225fb9f",
-          "title": "Mountain Markets",
-          "kind": "EPISODE",
-          "color": "#0d9488",
-          "mediaKey": "aurora/dde083a6-0b3b-4e09-9c60-22d64225fb9f.1793296370",
-          "durationMs": 240000,
-          "status": "READY"
-        },
-        "27e8f8e9-f1f7-4e40-8844-c57177c2fa9b": {
-          "id": "27e8f8e9-f1f7-4e40-8844-c57177c2fa9b",
-          "title": "Harbor Lights",
-          "kind": "MOVIE",
-          "color": "#0e7490",
-          "mediaKey": "aurora/27e8f8e9-f1f7-4e40-8844-c57177c2fa9b.1793295690",
-          "durationMs": 270000,
-          "status": "READY"
-        },
-        "b733b3fe-2135-4dcd-be84-d6bf68532586": {
-          "id": "b733b3fe-2135-4dcd-be84-d6bf68532586",
-          "title": "The Velvet Clock",
-          "kind": "MOVIE",
-          "color": "#a16207",
-          "mediaKey": "aurora/b733b3fe-2135-4dcd-be84-d6bf68532586.1793295315",
-          "durationMs": 360000,
-          "status": "READY"
-        },
-        "4b777af5-4748-4df5-96db-24a710a8c7d4": {
-          "id": "4b777af5-4748-4df5-96db-24a710a8c7d4",
+        "d16711b2-e3c9-428e-b225-044edc7942e4": {
+          "id": "d16711b2-e3c9-428e-b225-044edc7942e4",
           "title": "Glow Cola",
           "kind": "AD",
           "color": "#e11d48",
-          "mediaKey": "aurora/4b777af5-4748-4df5-96db-24a710a8c7d4.1793294979",
+          "mediaKey": "aurora/d16711b2-e3c9-428e-b225-044edc7942e4.1794298846",
           "durationMs": 15000,
           "status": "READY"
         },
-        "53ce2987-f272-4a07-afb1-10640ab36ca5": {
-          "id": "53ce2987-f272-4a07-afb1-10640ab36ca5",
-          "title": "External - Single Inline Linear",
+        "92094c85-1572-4920-aae7-08665c34742f": {
+          "id": "92094c85-1572-4920-aae7-08665c34742f",
+          "title": "Slow Roads: Desert Light",
+          "kind": "EPISODE",
+          "color": "#ca8a04",
+          "mediaKey": "aurora/92094c85-1572-4920-aae7-08665c34742f.1794299761",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "4b60ab28-b90d-4122-89df-93a43c2c713c": {
+          "id": "4b60ab28-b90d-4122-89df-93a43c2c713c",
+          "title": "Nova Bank",
           "kind": "AD",
-          "color": "#64748b",
-          "mediaKey": "aurora/53ce2987-f272-4a07-afb1-10640ab36ca5.1793297021",
-          "durationMs": 10000,
+          "color": "#16a34a",
+          "mediaKey": "aurora/4b60ab28-b90d-4122-89df-93a43c2c713c.1794298940",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "46bb3fb7-53c1-4c25-b3f0-105d82cbbba2": {
+          "id": "46bb3fb7-53c1-4c25-b3f0-105d82cbbba2",
+          "title": "Steel Horizon",
+          "kind": "MOVIE",
+          "color": "#f97316",
+          "mediaKey": "aurora/46bb3fb7-53c1-4c25-b3f0-105d82cbbba2.1794298846",
+          "durationMs": 300000,
+          "status": "READY"
+        },
+        "f1a87f03-4d7a-4adc-a506-bc014b5742f3": {
+          "id": "f1a87f03-4d7a-4adc-a506-bc014b5742f3",
+          "title": "Neon Pursuit",
+          "kind": "MOVIE",
+          "color": "#ef4444",
+          "mediaKey": "aurora/f1a87f03-4d7a-4adc-a506-bc014b5742f3.1794298846",
+          "durationMs": 360000,
+          "status": "READY"
+        },
+        "8624fb9f-481e-4f8c-baee-f85c72d894f2": {
+          "id": "8624fb9f-481e-4f8c-baee-f85c72d894f2",
+          "title": "The Velvet Clock",
+          "kind": "MOVIE",
+          "color": "#a16207",
+          "mediaKey": "aurora/8624fb9f-481e-4f8c-baee-f85c72d894f2.1794299223",
+          "durationMs": 360000,
+          "status": "READY"
+        },
+        "acb0d990-1ce5-419e-b634-13ebdc439c53": {
+          "id": "acb0d990-1ce5-419e-b634-13ebdc439c53",
+          "title": "Last Signal",
+          "kind": "MOVIE",
+          "color": "#8b5cf6",
+          "mediaKey": "aurora/acb0d990-1ce5-419e-b634-13ebdc439c53.1794299114",
+          "durationMs": 240000,
+          "status": "READY"
+        },
+        "6e5eab35-09d9-4c09-b314-39bd58254243": {
+          "id": "6e5eab35-09d9-4c09-b314-39bd58254243",
+          "title": "Aurora Channel Ident",
+          "kind": "SHORT",
+          "color": "#6366f1",
+          "mediaKey": "aurora/6e5eab35-09d9-4c09-b314-39bd58254243.1794299207",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "b778f5cc-ff7a-4d00-8c39-dd43aaa8272a": {
+          "id": "b778f5cc-ff7a-4d00-8c39-dd43aaa8272a",
+          "title": "Robot Garden",
+          "kind": "SHORT",
+          "color": "#22c55e",
+          "mediaKey": "aurora/b778f5cc-ff7a-4d00-8c39-dd43aaa8272a.1794299739",
+          "durationMs": 180000,
+          "status": "READY"
+        },
+        "7c1e325f-f895-405d-8a63-d6dfce2cd0a0": {
+          "id": "7c1e325f-f895-405d-8a63-d6dfce2cd0a0",
+          "title": "Zenith Phones",
+          "kind": "AD",
+          "color": "#2563eb",
+          "mediaKey": "aurora/7c1e325f-f895-405d-8a63-d6dfce2cd0a0.1794298860",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "ea05d05c-7c0e-4833-8814-50e0135bd8b6": {
+          "id": "ea05d05c-7c0e-4833-8814-50e0135bd8b6",
+          "title": "Bluebird Air",
+          "kind": "AD",
+          "color": "#0891b2",
+          "mediaKey": "aurora/ea05d05c-7c0e-4833-8814-50e0135bd8b6.1794298890",
+          "durationMs": 30000,
+          "status": "READY"
+        },
+        "bb4e5ba4-9257-412b-bc7b-9c15fa3f07f9": {
+          "id": "bb4e5ba4-9257-412b-bc7b-9c15fa3f07f9",
+          "title": "Mountain Markets",
+          "kind": "EPISODE",
+          "color": "#0d9488",
+          "mediaKey": "aurora/bb4e5ba4-9257-412b-bc7b-9c15fa3f07f9.1794299655",
+          "durationMs": 240000,
+          "status": "READY"
+        },
+        "efb20e7f-f787-4b97-be37-e2a73e4038b2": {
+          "id": "efb20e7f-f787-4b97-be37-e2a73e4038b2",
+          "title": "Slow Roads: Coastlines of Kerala",
+          "kind": "EPISODE",
+          "color": "#059669",
+          "mediaKey": null,
+          "durationMs": 300000,
+          "status": "PROCESSING"
+        },
+        "5e2e7490-9d38-4ba8-bc6a-4afff069794d": {
+          "id": "5e2e7490-9d38-4ba8-bc6a-4afff069794d",
+          "title": "Harbor Lights",
+          "kind": "MOVIE",
+          "color": "#0e7490",
+          "mediaKey": "aurora/5e2e7490-9d38-4ba8-bc6a-4afff069794d.1794299259",
+          "durationMs": 270000,
           "status": "READY"
         }
       },
       "unpublishedChanges": false,
-      "now": "2026-11-01T17:32:12.435243200Z",
-      "from": "2026-11-01T15:32:12.435243200Z",
-      "to": "2026-11-02T15:32:12.435243200Z"
+      "now": "2026-11-10T08:40:27.171876800Z",
+      "from": "2026-11-10T06:40:27.171876800Z",
+      "to": "2026-11-11T06:40:27.171876800Z"
     }
   },
   "GET /api/orgs/{org}/channels/{id}/epg": {
@@ -1897,16 +1853,16 @@
       "markerFormat": "DATERANGE",
       "country": "IN",
       "now": {
-        "assetId": "df55a5f6-0521-429e-8e9f-3d66369412fa",
-        "title": "Moonlit Avenue",
-        "description": "A jazz pianist and a detective share one long night.",
-        "genre": "Classic",
+        "assetId": "acb0d990-1ce5-419e-b634-13ebdc439c53",
+        "title": "Last Signal",
+        "description": "A radio operator hears a message from a ship that sank 40 years ago.",
+        "genre": "Thriller",
         "kind": "MOVIE",
-        "color": "#64748b",
-        "mediaKey": "aurora/df55a5f6-0521-429e-8e9f-3d66369412fa.1793294490",
-        "start": "2026-11-01T17:30:20Z",
-        "end": "2026-11-01T17:36:50Z",
-        "adBreaks": 1,
+        "color": "#8b5cf6",
+        "mediaKey": "aurora/acb0d990-1ce5-419e-b634-13ebdc439c53.1794299114",
+        "start": "2026-11-10T08:39:15Z",
+        "end": "2026-11-10T08:43:15Z",
+        "adBreaks": 0,
         "now": true,
         "thumbUrl": null,
         "series": null,
@@ -1914,16 +1870,16 @@
         "episode": null
       },
       "next": {
-        "assetId": "8774d469-c451-4f8a-926a-a34475a547fc",
-        "title": "Steel Horizon",
-        "description": "Two rival pilots must land a damaged cargo plane together.",
-        "genre": "Action",
+        "assetId": "206703de-b45e-4d99-a0b6-67f7bc18dbe7",
+        "title": "Moonlit Avenue",
+        "description": "A jazz pianist and a detective share one long night.",
+        "genre": "Classic",
         "kind": "MOVIE",
-        "color": "#f97316",
-        "mediaKey": "aurora/8774d469-c451-4f8a-926a-a34475a547fc.1793294490",
-        "start": "2026-11-01T17:38:20Z",
-        "end": "2026-11-01T17:44:50Z",
-        "adBreaks": 1,
+        "color": "#64748b",
+        "mediaKey": "aurora/206703de-b45e-4d99-a0b6-67f7bc18dbe7.1794299131",
+        "start": "2026-11-10T08:43:15Z",
+        "end": "2026-11-10T08:48:15Z",
+        "adBreaks": 0,
         "now": false,
         "thumbUrl": null,
         "series": null,
@@ -1933,21 +1889,21 @@
       "currentBreak": null,
       "upcomingBreaks": [
         {
-          "id": "b3f76a49-66a6-480e-aad2-84a3cb99c361",
-          "start": "2026-11-01T17:32:50Z",
-          "end": "2026-11-01T17:34:20Z",
-          "ownership": "PROVIDER",
+          "id": "f429b88d-cc7e-40e4-8b0d-5431486a28ae",
+          "start": "2026-11-10T09:01:15Z",
+          "end": "2026-11-10T09:02:45Z",
+          "ownership": "DISTRIBUTOR",
           "filledByUs": true,
-          "scteOut": "0xFC302E00000000000000FFF00506FF7F665B200018021643554549B3F76A497FFF00007B98A0000034000000003276B9A3",
+          "scteOut": "0xFC302E00000000000000FFF00506FF261C48300018021643554549F429B88D7FFF00007B98A0000036000000002A9E91DA",
           "decision": null
         },
         {
-          "id": "65d395f1-7a90-44fa-bdc2-0f575a7fa165",
-          "start": "2026-11-01T17:36:50Z",
-          "end": "2026-11-01T17:38:20Z",
-          "ownership": "DISTRIBUTOR",
+          "id": "6f9bc186-1d21-4139-be53-5a2237cf096f",
+          "start": "2026-11-10T09:04:45Z",
+          "end": "2026-11-10T09:06:15Z",
+          "ownership": "PROVIDER",
           "filledByUs": true,
-          "scteOut": "0xFC302E00000000000000FFF00506FF80AFF220001802164355454965D395F17FFF00007B98A0000036000000000116E14A",
+          "scteOut": "0xFC302E00000000000000FFF00506FF273CAC5000180216435545496F9BC1867FFF00007B98A0000034000000000BE1013C",
           "decision": null
         },
         "… 1 more"
@@ -1964,13 +1920,13 @@
           {
             "label": "Licence lists where it may play",
             "passed": true,
-            "detail": "IN, GB, US"
+            "detail": "WW"
           },
           "… 4 more"
         ]
       },
       "events": [],
-      "serverTime": "2026-11-01T17:32:15.978020200Z"
+      "serverTime": "2026-11-10T08:40:27.782183800Z"
     }
   },
   "GET /api/tools/scte35/example": {
@@ -3380,6 +3336,60 @@
       "problems": [
         "Keep {{temporaryPassword}} — without it this email is useless to the person who gets it."
       ]
+    }
+  },
+  "GET /api/orgs/{org}/slate": {
+    "status": 200,
+    "body": []
+  },
+  "GET /play/{session}/decisions/{breakId}": {
+    "status": 200,
+    "body": {
+      "breakId": "f429b88d-cc7e-40e4-8b0d-5431486a28ae",
+      "breakMs": 90000,
+      "slots": [
+        {
+          "campaignId": "ce94a2fa-a513-4806-b903-5eff678f23a3",
+          "campaign": "Glow Cola — Summer Sparkle",
+          "advertiser": "Glow Beverages (fictional)",
+          "mediaKey": "aurora/d16711b2-e3c9-428e-b225-044edc7942e4.1794298846",
+          "durationMs": 15000,
+          "cpm": 12,
+          "source": "Direct-sold campaigns",
+          "levels": [
+            0,
+            1,
+            "… 1 more"
+          ]
+        },
+        {
+          "campaignId": "31a2415f-93bb-4116-9b45-acf693b061cd",
+          "campaign": "Zenith X launch",
+          "advertiser": "Zenith Electronics (fictional)",
+          "mediaKey": "aurora/7c1e325f-f895-405d-8a63-d6dfce2cd0a0.1794298860",
+          "durationMs": 30000,
+          "cpm": 18,
+          "source": "Direct-sold campaigns",
+          "levels": [
+            0,
+            1,
+            "… 1 more"
+          ]
+        },
+        "… 2 more"
+      ],
+      "filledMs": 75000,
+      "excluded": [
+        {
+          "campaign": "Nova Bank brand",
+          "reason": "Campaign is paused"
+        },
+        {
+          "campaign": "Bluebird — Fly Further",
+          "reason": "Not targeting IN (targets GB, US)"
+        }
+      ],
+      "summary": "Filled 75 of 90 s with 4 ad(s); slate covers the last 15 s."
     }
   }
 }

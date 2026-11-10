@@ -11,7 +11,8 @@
     "docs:shots": "playwright test --config playwright.docs.config.ts"
   },
   "dependencies": {
-    "hls.js": "1.7.3",
+    "@videojs/hlsjs-video": "10.2.0",
+    "@videojs/react": "10.2.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-router-dom": "7.9.4"

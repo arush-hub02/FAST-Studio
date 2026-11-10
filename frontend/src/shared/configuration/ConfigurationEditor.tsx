@@ -44,6 +44,6 @@ export function ConfigurationEditor({ base, platform = false, onSaved }: { base:
       {platform && v.project && <Link to={`/platform/connectors?project=${v.project.id}`}>Configure project credentials, media permissions and ad sources</Link>}
     </section>
     <h2>Custom properties</h2>{!v.properties.length && <p className="faint">No properties defined yet. The platform owner can add definitions and global defaults in Global configuration.</p>}
-    <div className="grid g2">{v.properties.map(p=><ValueEditor key={`${base}:${p.definition.key}:${p.definition.revision}:${p.source}:${JSON.stringify(p.value)}:${p.configured}`} property={p} base={mutationBase} editable={v.editable} platform={platform} reload={reload}/>)}</div>
+    <div className="grid g2">{v.properties.filter(p => p.definition.key !== 'media.quality_levels').map(p=><ValueEditor key={`${base}:${p.definition.key}:${p.definition.revision}:${p.source}:${JSON.stringify(p.value)}:${p.configured}`} property={p} base={mutationBase} editable={v.editable} platform={platform} reload={reload}/>)}</div>
   </div>
 }

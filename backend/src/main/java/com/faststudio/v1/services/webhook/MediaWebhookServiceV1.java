@@ -12,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,15 +40,22 @@ public class MediaWebhookServiceV1 {
     }
 
     public Result mux(UUID org, String signature, byte[] body) throws GeneralSecurityException {
-        MuxClientService.Account a = connections.account(org);
-        if (a == null || a.webhookSecret() == null) return Result.UNKNOWN_PROJECT;
-        if (!MuxWebhookVerifier.signed(a.webhookSecret(), signature, body, Instant.now())) return Result.BAD_SIGNATURE;
+        // a project may have several Mux connections on one webhook URL: the secret that signed it says which one
+        var withSecret = connections.accounts(org).stream().filter(e -> e.getValue().webhookSecret() != null).toList();
+        if (withSecret.isEmpty()) return Result.UNKNOWN_PROJECT;
+        Map.Entry<UUID, MuxClientService.Account> signedBy = null;
+        Instant now = Instant.now();
+        for (var e : withSecret) if (MuxWebhookVerifier.signed(e.getValue().webhookSecret(), signature, body, now)) { signedBy = e; break; }
+        if (signedBy == null) return Result.BAD_SIGNATURE;
+        MuxClientService.Account a = signedBy.getValue();
+        MediaConnectionService.Connection c = connections.connection(org, signedBy.getKey());
+        if (c == null) return Result.UNKNOWN_PROJECT;
         JsonNode event = json.readTree(body);
         String type = event.path("type").asString("");
         MuxClientService.Asset x = MUX_EVENTS.contains(type) ? MuxClientService.Asset.of(event.path("data")) : null;
         if (x != null && a.includes(x)) {
             RemoteAsset r = MuxProvider.normalize(x);
-            library.apply(org, MuxProvider.KEY, type.equals("video.asset.deleted") ? r.withStatus("DELETED") : r);
+            library.apply(org, c, type.equals("video.asset.deleted") ? r.withStatus("DELETED") : r);
         }
         return Result.ACCEPTED;
     }

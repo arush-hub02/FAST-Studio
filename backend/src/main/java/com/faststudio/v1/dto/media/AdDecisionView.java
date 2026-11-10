@@ -11,12 +11,12 @@ import java.util.UUID;
 public record AdDecisionView(UUID breakId, long breakMs, List<Slot> slots, long filledMs,
                              List<AdDecisionServiceV1.Excluded> excluded, String summary) {
     public record Slot(UUID campaignId, String campaign, String advertiser, String mediaKey,
-                       long durationMs, BigDecimal cpm, String source) {}
+                       long durationMs, BigDecimal cpm, String source, List<Integer> levels) {}
     public static AdDecisionView from(AdDecisionServiceV1.Decision decision) {
         if (decision == null) return null;
         return new AdDecisionView(decision.breakId(), decision.breakMs(), decision.slots().stream()
                 .map(s -> new Slot(s.campaignId(), s.campaign(), s.advertiser(), s.mediaKey(),
-                        s.durationMs(), s.cpm(), s.source())).toList(),
+                        s.durationMs(), s.cpm(), s.source(), s.levels())).toList(),
                 decision.filledMs(), decision.excluded(), decision.summary());
     }
 }

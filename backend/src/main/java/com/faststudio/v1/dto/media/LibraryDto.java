@@ -38,7 +38,11 @@ public final class LibraryDto {
      * DIRECT_UPLOAD, SOURCE_FILE, WEBHOOKS, PLAYBACK), the last check and the library sync. waiting: imported videos
      * that are ready in the library but not yet prepared here (Draft or Failed), oldest first, at most 500.
      */
-    public record LibraryView(boolean connected, Boolean healthy, OffsetDateTime checkedAt, List<String> capabilities, SyncStatus sync, List<UUID> waiting) {}
+    public record LibraryView(boolean connected, Boolean healthy, OffsetDateTime checkedAt, List<String> capabilities, SyncStatus sync, List<UUID> waiting,
+                              List<UploadTarget> uploadTo) {}
+
+    /** A library connection the project can upload to: its id and the name it was given (e.g. "Mux"). */
+    public record UploadTarget(UUID id, String name) {}
 
     /** Library videos to prepare for broadcast (1 to 100). */
     public record PrepareRequest(@NotNull @NotEmpty @Size(max = 100) List<@NotNull UUID> assetIds) {}

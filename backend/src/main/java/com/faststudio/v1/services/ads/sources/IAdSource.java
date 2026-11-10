@@ -35,5 +35,9 @@ public interface IAdSource {
         public static final Viewer NONE = new Viewer("", "");
     }
 
-    record Fill(List<AdDecisionServiceV1.Slot> slots, List<AdDecisionServiceV1.Excluded> excluded) {}
+    record Fill(List<AdDecisionServiceV1.Slot> slots, List<AdDecisionServiceV1.Excluded> excluded, boolean preparing) {
+        public Fill(List<AdDecisionServiceV1.Slot> slots, List<AdDecisionServiceV1.Excluded> excluded) {
+            this(slots, excluded, false);
+        }
+    }
 }

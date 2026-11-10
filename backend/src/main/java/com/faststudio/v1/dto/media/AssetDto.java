@@ -1,6 +1,7 @@
 package com.faststudio.v1.dto.media;
 
 import com.faststudio.v1.core.common.Data.Asset;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.faststudio.v1.services.rights.Rights;
 import jakarta.validation.constraints.*;
 
@@ -22,7 +23,7 @@ public final class AssetDto {
 
     /** What a processing job needs to know about one asset (looked up within its project). */
     public record ProcessingJob(UUID id, UUID orgId, String slug, String title, String kind, String color, String generator, long durationMs,
-                                String mediaKey, String sourceUrl, String sourceRef) {}
+                                String mediaKey, String sourceUrl, String sourceRef, UUID connectionId) {}
 
     /**
      * An asset as the library shows it: signed thumbnail/preview URLs, its rights policy, a rights status
@@ -31,6 +32,8 @@ public final class AssetDto {
      */
     public record AssetView(Asset asset, String thumbUrl, String previewUrl, Rights.Policy rights, String rightsStatus,
                             int upcomingAirings, List<String> channels, Streaming streaming) {}
+
+    public record SlateView(@JsonUnwrapped AssetView view, boolean nextSchedule) {}
 
     /**
      * What the screens show about a video that streams from its platform: segment count and average length, quality

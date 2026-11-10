@@ -44,7 +44,7 @@ public class StreamingServiceV1 {
 
     /** Reads how the video streams and records it; the job then marks the asset ready (no media key: nothing on R2). */
     public Packaged resolve(UUID org, ProcessingJob j) throws InterruptedException {
-        MediaConnectionService.Connection c = connections.connection(org);
+        MediaConnectionService.Connection c = connections.connection(org, j.connectionId());
         if (c == null) return Packaged.failed(MediaConnectionService.NOT_CONNECTED, false);
         String provider = j.sourceRef().substring(0, j.sourceRef().indexOf(':'));
         IPlayback adapter = providers.playback(provider);
@@ -56,8 +56,6 @@ public class StreamingServiceV1 {
             return Packaged.failed(e.getMessage(), e.status.is5xxServerError());
         }
         if (p == null) return Packaged.failed("The library is still preparing this video. It will be tried again.", true);
-        // ponytail: fMP4 programmes need fMP4 ads and slate too (EXT-X-MAP); add an fMP4 packaging lane when a platform needs it
-        if (p.format().equals("FMP4")) return Packaged.failed("This library video streams as fMP4. Only MPEG-TS streams can carry our ads and slate today.", false);
         if (p.durationMs() < Times.SEG_MS) return Packaged.failed("The video is shorter than " + Times.SEG_S + " seconds.", false);
         for (int d : p.segmentsMs())
             if (d <= 0 || d > MAX_SEGMENT_MS) return Packaged.failed("The library video has a " + d / 1000.0 + " s segment; streaming needs segments of at most "
@@ -81,13 +79,15 @@ public class StreamingServiceV1 {
     public Map<UUID, Streaming> streaming(UUID org, Collection<UUID> assets) {
         Map<UUID, AssetPlaybackRepository.Row> rows = playbacks.of(org, assets);
         if (rows.isEmpty()) return Map.of();
-        MediaConnectionService.Connection c = connections.connection(org);
+        Map<UUID, MediaConnectionService.Connection> byId = new HashMap<>();
+        for (MediaConnectionService.Connection x : connections.connections(org)) byId.put(x.id(), x);
         long exp = (System.currentTimeMillis() / 3_600_000 + 7) * 3600;   // whole hours, so thumbnails stay cacheable
         Map<UUID, Streaming> out = new HashMap<>();
         for (AssetPlaybackRepository.Row r : rows.values()) {
             Playback p = r.playback();
             IPlayback adapter = providers.playback(r.provider());
             String thumb = null, player = null, problem = null;
+            MediaConnectionService.Connection c = byId.get(r.connectionId());
             if (c == null || adapter == null || !r.provider().equals(c.provider())) problem = "The library connection is gone, so this video can't stream.";
             else {
                 try {

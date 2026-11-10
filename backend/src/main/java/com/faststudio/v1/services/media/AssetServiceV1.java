@@ -48,9 +48,15 @@ public class AssetServiceV1 {
     private final Audit audit;
     private final StreamingServiceV1 playback;
 
+    private final MediaConnectionService connections;
+    private final com.faststudio.v1.util.mediaProvider.MediaProviderResolverService providers;
+
     public AssetServiceV1(Data data, AssetRepository repository, MediaJobRepository jobs, MediaServiceV1 media, MediaSigner signer,
-                            AssetRules rules, TenantLimitsService limits, Audit audit, StreamingServiceV1 playback) {
+                            AssetRules rules, TenantLimitsService limits, Audit audit, StreamingServiceV1 playback,
+                            MediaConnectionService connections, com.faststudio.v1.util.mediaProvider.MediaProviderResolverService providers) {
         this.playback = playback;
+        this.connections = connections;
+        this.providers = providers;
         this.data = data;
         this.repository = repository;
         this.jobs = jobs;
@@ -70,7 +76,7 @@ public class AssetServiceV1 {
         Map<UUID, Streaming> streams = playback.streaming(t.orgId(), all.stream().filter(a -> a.mediaKey() == null).map(Asset::id).toList());
         return all.stream()
                 .filter(a -> archived == a.status().equals("ARCHIVED"))
-                .filter(a -> kind == null || kind.isBlank() || a.kind().equals(kind))
+                .filter(a -> kind == null || kind.isBlank() ? !a.kind().equals("SLATE") : a.kind().equals(kind))   // slates only when asked for (Ads → Slate)
                 .filter(a -> q == null || q.isBlank() || (a.title() + " " + a.genre() + " " + Objects.toString(a.series(), "")).toLowerCase().contains(q.toLowerCase()))
                 .sorted(Comparator.comparing(Asset::createdAt).reversed())
                 .map(a -> view(a, policies.get(a.id()), usage.getOrDefault(a.id(), List.of()), streams.get(a.id())))
@@ -130,6 +136,10 @@ public class AssetServiceV1 {
         t.require(Tenant.Perm.ASSETS_EDIT);
         Asset a = data.asset(t.orgId(), id);
         if (a.status().equals("PROCESSING")) throw ApiException.conflict("BUSY", "This video is already being processed.");
+        // programmes go to the project's video library when it has one; FAST Studio keeps only ads (and projects without a library)
+        if (!a.kind().equals("AD") && !a.kind().equals("SLATE") && connections.usable(t.orgId()).stream()
+                .anyMatch(c -> providers.supports(c.provider(), com.faststudio.v1.util.mediaProvider.Capability.DIRECT_UPLOAD)))
+            throw ApiException.conflict("UPLOAD_TO_LIBRARY", "This project uploads programmes to its video library. Use Add video in the Library.");
         String name = Objects.toString(file.getOriginalFilename(), "");
         String ext = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase() : "";
         if (!UPLOAD_EXT.contains(ext)) throw ApiException.bad("Unsupported file type ." + ext + ". Use MP4, MOV, MKV, WEBM or M4V.");

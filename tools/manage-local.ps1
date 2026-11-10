@@ -189,10 +189,10 @@ try {
 
     if ($appProcess) {
         if (!(Test-ApplicationReady)) {
-            throw 'FAST Studio is running but its UI/API is unhealthy. Run stop.bat, then start.bat to rebuild and recover. Check data/runtime/app.log.'
+            throw 'FAST Studio is running but its UI/API is unhealthy. Run stop.bat, then demo-start.bat or pilot-start.bat to rebuild and recover. Check data/runtime/app.log.'
         }
         Write-Host "FAST Studio is already running at $appUrl (PID $($appProcess.ProcessId))."
-        Write-Host 'Use stop.bat, then start.bat to apply code or database-mode changes.'
+        Write-Host 'Use stop.bat, then demo-start.bat or pilot-start.bat to apply code or database-mode changes.'
         if (!$NoBrowser) { Start-Process $appUrl }
         exit 0
     }
@@ -302,6 +302,7 @@ try {
     }
     Set-Content -LiteralPath (Join-Path $workerDir '.dev.vars') -Encoding ASCII -Value "EDGE_SECRET=$env:FASTSTUDIO_EDGE_SECRET"
     Stop-Edge $state   # a Worker left over from an interrupted start
+    & (Join-Path $PSScriptRoot 'r2-explorer.ps1') -Env stop -Quiet   # R2-dashboard edges share the R2 folders: close them first
     if (Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue) {
         throw 'Port 8787 (the local Cloudflare Worker) is occupied by another process; it will not be stopped.'
     }

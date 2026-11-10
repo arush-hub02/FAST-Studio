@@ -75,16 +75,26 @@ public class PlayoutServiceV1 {
                 .orElseThrow(() -> ApiException.notFound("Ad break"));
     }
 
+    public AdDecisionServiceV1.Decision savedDecision(Session s, Entry brk) {
+        return brk.slateOnly() ? AdDecisionServiceV1.slateOnly(brk.id(), brk.durationMs())
+                : ads.saved(s.orgId(), s.id(), brk.id()).orElse(null);
+    }
+
     public AdDecisionServiceV1.Decision decision(Session s, Entry brk) {
         return decision(s, brk, IAdSource.Viewer.NONE);
     }
 
     public AdDecisionServiceV1.Decision decision(Session s, Entry brk, IAdSource.Viewer viewer) {
+        return decision(s, brk, viewer, false);
+    }
+
+    public AdDecisionServiceV1.Decision decision(Session s, Entry brk, IAdSource.Viewer viewer, boolean prefetch) {
         boolean enabled = settings.personalizedAds(s.orgId());   // dynamic property since V15
         boolean personalized = enabled && s.personalizedUntil()!=null && s.personalizedUntil().toInstant().isAfter(Instant.now());
         viewer = new IAdSource.Viewer(viewer.ip(),viewer.userAgent(),personalized?s.viewerKey():null,personalized?Times.codes(s.audiences()):List.of());
-        AdDecisionServiceV1.Decision d = ads.decide(s.orgId(), s.id(), brk.id(), brk.start(), brk.durationMs(), brk.assetId(), s.country(), viewer);
-        if (d.filledMs() < d.breakMs() && slateRecorded.add(s.id() + ":" + brk.id()))
+        AdDecisionServiceV1.Decision d = brk.slateOnly() ? AdDecisionServiceV1.slateOnly(brk.id(), brk.durationMs())
+                : ads.decide(s.orgId(), s.id(), brk.id(), brk.start(), brk.durationMs(), brk.assetId(), s.country(), viewer, prefetch);
+        if (!(prefetch && d.preparing()) && d.filledMs() < d.breakMs() && slateRecorded.add(s.id() + ":" + brk.id()))
             recordEvent(s, brk.id(), null, "SLATE", (int) ((d.breakMs() - d.filledMs()) / 1000));
         return d;
     }

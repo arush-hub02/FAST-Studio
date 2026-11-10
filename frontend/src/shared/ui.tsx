@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { api, ApiError } from './api'
 
@@ -355,49 +355,20 @@ export function Countries({ codes, bad }: { codes: string[]; bad?: boolean }) {
 
 // ---------------------------------------------------------------- video
 
-export type PlayerEvent = { type: 'interstitial-start' | 'interstitial-end' | 'error' | 'playing'; uri?: string; message?: string }
+export type PlayerEvent = {
+  type: 'interstitial-start' | 'interstitial-end' | 'error' | 'playing' | 'level' | 'clock'
+  uri?: string; message?: string
+  /** 'clock': the wall-clock instant of the picture on screen (from the stream's program date-time), in ms */
+  at?: number
+  /** 'level': the quality level now playing */
+  height?: number; width?: number; bitrate?: number
+}
 
-export function VideoPlayer({ src, live, onEvent, poster }: { src: string | null; live?: boolean; onEvent?: (e: PlayerEvent) => void; poster?: string }) {
-  const ref = useRef<HTMLVideoElement>(null)
-  const cb = useRef(onEvent)
-  cb.current = onEvent
-  const [err, setErr] = useState<string | null>(null)
-  useEffect(() => {
-    const video = ref.current
-    if (!video || !src) return
-    setErr(null)
-    let hls: import('hls.js').default | undefined
-    let cancelled = false
-    // hls.js is large: download it only when a player is actually shown.
-    import('hls.js').then(({ default: Hls }) => {
-      if (cancelled) return
-      if (!Hls.isSupported()) {
-        video.src = src     // Safari plays HLS natively (incl. interstitials)
-        return
-      }
-      const h = hls = new Hls({ liveSyncDurationCount: 3, enableInterstitialPlayback: true })
-      h.loadSource(src)
-      h.attachMedia(video)
-      h.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => { /* autoplay blocked: user presses play */ }) })
-      h.on(Hls.Events.INTERSTITIAL_ASSET_STARTED, (_e, d) => cb.current?.({ type: 'interstitial-start', uri: d.asset?.uri }))
-      h.on(Hls.Events.INTERSTITIAL_ASSET_ENDED, (_e, d) => cb.current?.({ type: 'interstitial-end', uri: d.asset?.uri }))
-      h.on(Hls.Events.ERROR, (_e, d) => {
-        if (d.fatal) {
-          setErr(d.details)
-          cb.current?.({ type: 'error', message: d.details })
-          if (d.type === Hls.ErrorTypes.NETWORK_ERROR) setTimeout(() => h.startLoad(), 3000)
-          else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) h.recoverMediaError()
-        }
-      })
-    })
-    return () => { cancelled = true; hls?.destroy() }
-  }, [src])
-  return (
-    <div className="player">
-      <video ref={ref} controls muted={live} playsInline poster={poster} />
-      {err && <div className="player-top"><span className="badge bad">Playback problem: {err}. Retrying…</span></div>}
-    </div>
-  )
+const LazyPlayer = lazy(() => import('./Player'))
+
+/** Video.js player (title, quality menu, speed, PiP, fullscreen). Downloaded only when a player is shown. */
+export function VideoPlayer(props: import('./Player').PlayerProps) {
+  return <Suspense fallback={<div className="player" />}><LazyPlayer {...props} /></Suspense>
 }
 
 export function ProgressRing({

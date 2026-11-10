@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Hls from 'hls.js'
-import { api, type AssetView, type Streaming } from '../../shared/api'
+import { api, type AssetView, type Streaming } from '../api'
 import { useOrg } from '../../app/App'
 import {
   Confirm,
@@ -12,10 +11,16 @@ import {
   InfoTip,
   Status,
   useAction,
-} from '../../shared/ui'
-import { GenreSelector } from '../../shared/components/GenreSelector'
+  useApi,
+  VideoPlayer,
+  type PlayerEvent,
+} from '../ui'
+import { GenreSelector } from '../components/GenreSelector'
 import { formatMediaKind } from './mediaKind'
-import { useProjectMedia } from '../../shared/projectMedia'
+import { useProjectMedia } from '../projectMedia'
+
+/** Status detail of a video whose file went straight to the video library and is still converting there (set by the server). */
+export const UPLOADING_TO_LIBRARY = 'Uploading to the video library'
 
 /** How a library video plays: straight from its platform, with our ads and slate spliced in by the edge. */
 function StreamingCard({ s }: { s: Streaming }) {
@@ -40,11 +45,19 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const a = view.asset
   const { busy, run } = useAction()
   const videoRef = useRef<HTMLVideoElement>(null)
+  // quality level playing now (the player's own menu picks one)
+  const [playingLevel, setPlayingLevel] = useState<PlayerEvent | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'cues' | 'rights' | 'edit'>('overview')
   const [title, setTitle] = useState(a.title)
   const [description, setDescription] = useState(a.description)
   const [genre, setGenre] = useState(a.genre)
   const mediaSettings = useProjectMedia()
+  // library videos waiting to be prepared (synced drafts): they need "Get ready", not an upload
+  const library = useApi<{ capabilities: string[]; waiting: string[] }>(`/api/orgs/${org.slug}/library`)
+  const fromLibrary = !!library.data?.waiting.includes(a.id)
+  const streams = !!library.data?.capabilities.includes('PLAYBACK')
+  const prepare = () => run(() => api(`/api/orgs/${org.slug}/library/prepare`, { body: { assetIds: [a.id] } }),
+    streams ? 'Getting it ready to stream' : 'Getting it ready to air').then(() => { library.reload(); onChange() })
   const [mediaType, setMediaType] = useState(a.mediaType)
   const editKind = mediaSettings.data?.types.find(t => t.key === mediaType)?.kind ?? a.kind
   const [series, setSeries] = useState(a.series ?? '')
@@ -61,26 +74,7 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
   const editable = org.can('ASSETS_EDIT')
   const durationSec = Math.max(1, Math.round(a.durationMs / 1000))
 
-  // Setup HLS video preview
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v || !view.previewUrl || a.status !== 'READY') return
-    if (!Hls.isSupported()) {
-      v.src = view.previewUrl
-      return
-    }
-    const hls = new Hls()
-    hls.loadSource(view.previewUrl)
-    hls.attachMedia(v)
-
-    const onTime = () => setCurrentTimeSec(Math.round(v.currentTime))
-    v.addEventListener('timeupdate', onTime)
-
-    return () => {
-      v.removeEventListener('timeupdate', onTime)
-      hls.destroy()
-    }
-  }, [view.previewUrl, a.status])
+  const onTime = (sec: number) => setCurrentTimeSec(Math.round(sec))
 
   const save = (body: object, msg: string) =>
     run(() => api(`/api/orgs/${org.slug}/assets/${a.id}`, { method: 'PATCH', body }), msg).then(onChange)
@@ -154,8 +148,15 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
         {/* Built-in Video Player */}
         {a.status === 'READY' ? (
           <div className="library-player-container">
-            <div className="player library-preview-player">
-              <video ref={videoRef} controls playsInline />
+            <div className="library-preview-player">
+              <VideoPlayer src={view.previewUrl} title={a.title} videoRef={videoRef} onTimeUpdate={onTime}
+                onEvent={e => { if (e.type === 'level') setPlayingLevel(e) }} />
+            </div>
+            <div className="row-wrap" style={{ gap: 10, alignItems: 'center', marginTop: 8 }}>
+              <span className="badge" data-testid="quality-playing">
+                {playingLevel ? `Playing ${playingLevel.height}p · ${playingLevel.width}×${playingLevel.height} · ${((playingLevel.bitrate ?? 0) / 1e6).toFixed(1)} Mbit/s` : 'Starting…'}
+              </span>
+              <span className="faint small">Pick a quality with the ⚙ settings button on the player.</span>
             </div>
 
             {/* Interactive Broadcast Breakpoint Scrubber */}
@@ -265,12 +266,20 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
         ) : (
           <div className="thumb library-preview-thumb" style={{ background: a.color || 'var(--surface-3)' }}>
             <div className="stack" style={{ alignItems: 'center', textAlign: 'center', padding: 24, gap: 10 }}>
-              {a.status === 'PROCESSING' ? (
+              {a.status === 'DRAFT' && a.statusDetail === UPLOADING_TO_LIBRARY ? (
                 <>
                   <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
-                  <b>Transcoding Video</b>
+                  <b>Converting in your video library</b>
+                  <p className="faint small" style={{ maxWidth: 340 }}>
+                    The file went straight to your video library, which is converting it. This page updates by itself when it is ready to stream (usually a few minutes).
+                  </p>
+                </>
+              ) : a.status === 'PROCESSING' ? (
+                <>
+                  <span className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
+                  <b>Getting it ready</b>
                   <p className="faint small" style={{ maxWidth: 320 }}>
-                    Converting video to 640×360 and cutting into 5-second segments for live broadcast.
+                    {a.statusDetail || 'Converting the video and cutting it into 5-second segments for live broadcast.'}
                   </p>
                 </>
               ) : a.status === 'FAILED' ? (
@@ -288,6 +297,20 @@ export function AssetDrawer({ view, onClose, onChange }: { view: AssetView; onCl
                       }
                     >
                       <Icon name="refresh" size={14} /> Retry processing
+                    </button>
+                  )}
+                </>
+              ) : fromLibrary ? (
+                <>
+                  <Icon name="film" size={32} />
+                  <b>In your video library</b>
+                  <p className="faint small" style={{ maxWidth: 340 }}>
+                    {streams ? 'Get it ready to stream: FAST Studio reads its quality levels and segments from the library. Nothing is copied.'
+                      : 'Get it ready to air: FAST Studio fetches it once and prepares it for broadcast.'}
+                  </p>
+                  {editable && (
+                    <button type="button" className="btn primary sm" disabled={busy} onClick={prepare}>
+                      <Icon name="play" size={14} /> {streams ? 'Get ready to stream' : 'Get ready to air'}
                     </button>
                   )}
                 </>

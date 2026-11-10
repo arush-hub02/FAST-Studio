@@ -128,9 +128,21 @@ public class MuxClientService {
         return Asset.of(call(a, "GET", "/video/v1/assets/" + id, null).path("data"));
     }
 
+    /** Where a direct upload stands: Mux status (waiting, asset_created, errored, cancelled, timed_out) and its asset, once made. */
+    public record UploadState(String status, String assetId) {}
+
+    public UploadState uploadState(Account a, String uploadId) throws InterruptedException {
+        if (!uploadId.matches("[A-Za-z0-9]{1,128}")) throw unavailable(0);
+        JsonNode d = call(a, "GET", "/video/v1/uploads/" + uploadId, null).path("data");
+        String asset = d.path("asset_id").asString("");
+        return new UploadState(d.path("status").asString(""), asset.matches("[A-Za-z0-9]{1,128}") ? asset : null);
+    }
+
     /** One-time URL the browser PUTs the file to. The asset it becomes carries the tenant's tag and a public playback id (it streams from Mux). */
-    public Upload upload(Account a, String corsOrigin, String title) throws InterruptedException {
+    public Upload upload(Account a, String corsOrigin, String title, int maxHeight) throws InterruptedException {
         Map<String, Object> settings = new LinkedHashMap<>(Map.of("playback_policy", List.of("public"), "meta", Map.of("title", title)));
+        // Mux keeps 1080p at most unless asked; above that it costs more, so only when the project uses 1440p or 2160p
+        if (maxHeight > 1080) settings.put("max_resolution_tier", maxHeight >= 2160 ? "2160p" : "1440p");
         if (!a.tag().isEmpty()) settings.put("passthrough", a.tag());
         JsonNode d = call(a, "POST", "/video/v1/uploads", json.writeValueAsString(Map.of("cors_origin", corsOrigin, "new_asset_settings", settings))).path("data");
         String id = d.path("id").asString(""), url = d.path("url").asString("");

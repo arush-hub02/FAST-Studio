@@ -74,7 +74,7 @@ function ChannelDrawer({ link, channel, onClose }: { link: Shared; channel: Name
           title={link.scopes.includes(k) ? '' : 'Not shared with you'}>{label}{!link.scopes.includes(k) && ' 🔒'}</button>))}</div>
       <div className="modal-body">
         {tab === 'epg:read' && <GuideTab base={base} />}
-        {tab === 'stream:read' && <StreamTab base={base} />}
+        {tab === 'stream:read' && <StreamTab base={base} title={channel.name} />}
         {tab === 'markers:read' && <BreaksTab base={base} />}
         {tab === 'delivery:read' && <DeliveryTab base={base} />}
         {!tab && <Empty icon="shield" title="Only the channel name is shared" text="Ask the content owner to share the guide or stream set-up." />}
@@ -95,7 +95,7 @@ function GuideTab({ base }: { base: string }) {
   </>
 }
 
-function StreamTab({ base }: { base: string }) {
+function StreamTab({ base, title }: { base: string; title: string }) {
   const s = useApi<Stream>(`${base}/stream`)
   const [country, setCountry] = useState('IN')
   const [playlist, setPlaylist] = useState<string | null>(null)
@@ -110,7 +110,7 @@ function StreamTab({ base }: { base: string }) {
       <button className="btn primary" disabled={busy} onClick={() => run(() => api<{ playlistUrl: string }>('/play/sessions', { body: { ...s.data!.body, country } })).then(r => r && setPlaylist(r.playlistUrl))}>
         <Icon name="play" size={16} />Try it as a viewer</button>
     </div>
-    {playlist && <VideoPlayer key={playlist} src={playlist} live />}
+    {playlist && <VideoPlayer key={playlist} src={playlist} title={title} live />}
   </div>
 }
 

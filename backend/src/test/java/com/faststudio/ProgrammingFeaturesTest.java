@@ -5,6 +5,10 @@ import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.Secrets;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.services.programming.ProgrammingServiceV1;
+import com.faststudio.v1.repositories.media.AssetRepository;
+import com.faststudio.v1.repositories.programming.ScheduleRepository;
+import com.faststudio.v1.services.programming.Planner;
+import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.util.cloudflare.EdgePublisher;
 
 import org.junit.jupiter.api.*;
@@ -41,6 +45,8 @@ class ProgrammingFeaturesTest {
     }
     @Autowired MockMvc mvc;
     @Autowired JdbcClient db;
+    @Autowired AssetRepository assetRepository;
+    @Autowired ScheduleRepository scheduleRepository;
     @Autowired Tokens tokens;
     @Autowired Secrets secrets;
     @Autowired JsonMapper json;
@@ -82,6 +88,103 @@ class ProgrammingFeaturesTest {
         return Map.of("series",series,"startDate",start.toString(),"endDate",end.toString(),"premiereTime","20:00","repeatTime","23:00",
                 "weekdays",List.of(1,2,3,4,5,6,7),"startSeason",1,"startEpisode",1,"loop",false);
     }
+    @Test void moveKeepsThePlacementTogetherAndStitchingRespectsItsScope() throws Exception {
+        UUID org = org(), ch = channel(), asset = episode("Move-" + UUID.randomUUID(), 1, 1);
+        Instant start = Times.snapUp(Instant.now().plusSeconds(300));
+        TenantScope.as(org, () -> {
+            UUID version = db.sql("select id from schedule_version where org_id=:o and channel_id=:ch and number=0")
+                    .param("o", org).param("ch", ch).query(UUID.class).single();
+            scheduleRepository.insertEntries(org, version, List.of(
+                    new Planner.Item("PROGRAM", asset, 0, start, start.plusSeconds(30), null),
+                    new Planner.Item("AD_BREAK", asset, 0, start.plusSeconds(30), start.plusSeconds(45), "PROVIDER"),
+                    new Planner.Item("PROGRAM", asset, 30_000, start.plusSeconds(45), start.plusSeconds(75), null),
+                    new Planner.Item("PROGRAM", asset, 0, start.plusSeconds(90), start.plusSeconds(120), null),
+                    new Planner.Item("AD_BREAK", asset, 0, start.plusSeconds(120), start.plusSeconds(135), "PROVIDER")));
+            return null;
+        });
+        String base = "/api/orgs/aurora/channels/" + ch + "/schedule";
+        String owner = "owner@aurora.test";
+        var entries = ok(call(get(base), owner, null)).path("draftEntries");
+        String secondPart = entries.get(2).path("id").asText();
+        String firstBreak = entries.get(1).path("id").asText();
+        String otherBreak = entries.get(4).path("id").asText();
+
+        ok(call(patch(base + "/ad-stitching"), owner, Map.of("expectedRevision", 0, "entryId", secondPart, "slateOnly", true)));
+        var selectedOnly = ok(call(get(base), owner, null)).path("draftEntries");
+        assertTrue(selectedOnly.get(1).path("slateOnly").asBoolean());
+        assertFalse(selectedOnly.get(4).path("slateOnly").asBoolean());
+        ok(call(patch(base + "/ad-stitching"), owner, Map.of("expectedRevision", 1, "slateOnly", true)));
+        assertTrue(ok(call(get(base), owner, null)).path("draftEntries").get(4).path("slateOnly").asBoolean());
+
+        String move = base + "/entries/" + secondPart + "/move";
+        assertEquals(409, call(patch(move), owner,
+                Map.of("expectedRevision", 2, "startAt", start.plusSeconds(105).toString())).getResponse().getStatus());
+        ok(call(patch(move), owner, Map.of("expectedRevision", 2, "startAt", start.plusSeconds(285).toString())));
+        var moved = ok(call(get(base), owner, null)).path("draftEntries");
+        assertEquals(otherBreak, moved.get(1).path("id").asText());
+        assertEquals(firstBreak, moved.get(3).path("id").asText());
+        assertEquals(start.plusSeconds(270), OffsetDateTime.parse(moved.get(3).path("startAt").asText()).toInstant());
+        assertTrue(moved.get(3).path("slateOnly").asBoolean());
+
+        var collision = Map.of("expectedRevision", 3, "kind", "PROGRAM", "assetId", asset, "withBreaks", false,
+                "fitGap", true, "startAt", start.plusSeconds(90).toString());
+        assertEquals(409, call(post(base + "/entries"), owner, collision).getResponse().getStatus());
+        ok(call(post(base + "/entries"), owner, Map.of("expectedRevision", 3, "kind", "PROGRAM", "assetId", asset,
+                "withBreaks", false, "fitGap", true, "startAt", start.toString())));
+    }
+
+    @Test void slateCanWaitForEachChannelsNextSchedule() throws Exception {
+        UUID org = org(), oldChannel = channel(), newChannel = channel();
+        UUID previous = TenantScope.bypass(() -> db.sql("""
+                insert into schedule_version(org_id,channel_id,number,status,published_at)
+                values (:o,:c,1,'PUBLISHED',now() - interval '1 hour') returning id""")
+                .param("o", org).param("c", oldChannel).query(UUID.class).single());
+        UUID live = TenantScope.bypass(() -> assetRepository.insertSlate(org, false));
+        UUID deferred = TenantScope.bypass(() -> assetRepository.insertSlate(org, true));
+        UUID next = TenantScope.bypass(() -> {
+            db.sql("update asset set status='READY', media_key='test/live-slate', created_at=now() - interval '1 minute' where org_id=:o and id=:id")
+                    .param("o", org).param("id", live).update();
+            db.sql("update asset set status='READY', media_key='test/deferred-slate' where org_id=:o and id=:id")
+                    .param("o", org).param("id", deferred).update();
+            return db.sql("""
+                    insert into schedule_version(org_id,channel_id,number,status,published_at)
+                    values (:o,:c,1,'PUBLISHED',now()) returning id""")
+                    .param("o", org).param("c", newChannel).query(UUID.class).single();
+        });
+
+        assertEquals(List.of("test/live-slate"), TenantScope.as(org, () -> assetRepository.slateKeys(org, previous)));
+        assertEquals(List.of("test/live-slate"), TenantScope.as(org, () -> assetRepository.slateKeys(org, null)));
+        assertEquals(List.of("test/deferred-slate", "test/live-slate"),
+                TenantScope.as(org, () -> assetRepository.slateKeys(org, next)));
+        var newest = ok(call(get("/api/orgs/aurora/slate"), "owner@aurora.test", null)).get(0);
+        assertTrue(newest.path("nextSchedule").asBoolean());
+        assertEquals(deferred.toString(), newest.path("asset").path("id").asText());
+    }
+
+    @Test void operatorCanSetFutureBreakFillAndPublishIt() throws Exception {
+        UUID ch = channel();
+        String base = "/api/orgs/aurora/channels/" + ch + "/schedule";
+        String owner = "owner@aurora.test";
+        ok(call(post(base + "/entries"), owner, Map.of("expectedRevision", 0, "kind", "AD_BREAK", "seconds", 15,
+                "startAt", Instant.now().plusSeconds(300).toString())));
+        var draft = ok(call(get(base), owner, null)).path("draftEntries").get(0);
+        assertFalse(draft.path("slateOnly").asBoolean());
+        String entry = base + "/entries/" + draft.path("id").asText();
+        var request = Map.of("expectedRevision", 1, "slateOnly", true);
+        assertEquals(403, call(patch(entry), "analyst@aurora.test", request).getResponse().getStatus());
+        ok(call(patch(entry), owner, request));
+        assertEquals(412, call(patch(entry), owner, request).getResponse().getStatus());
+        var changed = ok(call(get(base), owner, null));
+        assertTrue(changed.path("draftEntries").get(0).path("slateOnly").asBoolean());
+        assertTrue(changed.path("publishedEntries").isEmpty());
+
+        ok(call(post(base + "/publish"), owner, Map.of("expectedRevision", 2)));
+        var published = ok(call(get(base), owner, null)).path("publishedEntries").get(0);
+        assertTrue(published.path("slateOnly").asBoolean());
+        assertEquals(404, call(patch(base + "/entries/" + published.path("id").asText()), owner,
+                Map.of("expectedRevision", 2, "slateOnly", false)).getResponse().getStatus());
+    }
+
     @Test void dailyProgressionEncoresSeasonRolloverAndRegeneration() throws Exception {
         UUID ch=channel(); String series="Show-"+UUID.randomUUID(); episode(series,1,1); episode(series,1,2); episode(series,2,1);
         LocalDate day=LocalDate.now(ZoneId.of("Asia/Kolkata")).plusDays(1);

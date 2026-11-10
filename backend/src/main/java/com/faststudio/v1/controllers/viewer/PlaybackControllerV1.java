@@ -24,10 +24,12 @@ public class PlaybackControllerV1 {
     Started start(@Valid @RequestBody StartRequest r) { return playback.start(r); }
 
     @GetMapping("/{session}/decisions/{breakId}")
-    AdDecisionView decision(@PathVariable UUID session, @PathVariable UUID breakId,
+    ResponseEntity<AdDecisionView> decision(@PathVariable UUID session, @PathVariable UUID breakId,
                             @RequestHeader(value = "X-Viewer-IP", defaultValue = "") String ip,
-                            @RequestHeader(value = "X-Viewer-UA", defaultValue = "") String ua) {
-        return playback.decision(session, breakId, ip, ua);
+                            @RequestHeader(value = "X-Viewer-UA", defaultValue = "") String ua,
+                            @RequestHeader(value = "X-Ad-Prefetch", defaultValue = "false") boolean prefetch) {
+        var decision = playback.decision(session, breakId, ip, ua, prefetch);
+        return ResponseEntity.status(prefetch && decision.preparing() ? 202 : 200).body(AdDecisionView.from(decision));
     }
 
     @PostMapping("/{session}/privacy/contextual")

@@ -1,7 +1,7 @@
 // Run: npm test (Node 22+ strips the types itself)
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { type Decided, type Session, type Snapshot, EPOCH, assetList, mediaPlaylist } from './playout.ts'
+import { type Decided, type Session, type Snapshot, EPOCH, assetList, breaksToDecide, mediaPlaylist } from './playout.ts'
 
 const SEG = 5000
 const T0 = EPOCH + 1000 * SEG
@@ -62,4 +62,43 @@ test('delivered spots are reported when their segments enter the window', () => 
 test('SGAI asset list pads with slate so the viewer rejoins live at break end', () => {
   const list = assetList(snap, snap.items[1], ad15, 'https://m', s => `slate/${s}.m3u8`)
   assert.deepEqual(list.ASSETS.map(a => a.DURATION), [15, 15])
+})
+
+test("a project's own slate pads from its lowest level (it may have no 360p)", async () => {
+  const { slatePlaylist } = await import('./playout.ts')
+  const own: Snapshot = { ...snap, standby: { key: 'acme/slate.1', segments: 2, levels: [2, 3] } }
+  const m = slatePlaylist(own, 10, 'https://m')
+  assert.ok(m.includes('https://m/acme/slate.1/2/seg_00000.ts'), m)
+  assert.ok(!m.includes('/0/seg_'), 'no 360p folder is asked for')
+})
+
+test('quality levels: each channel level uses its folder, or the nearest lower one the media has', async () => {
+  const { levelFolder } = await import('./playout.ts')
+  assert.equal(levelFolder(3, [0, 1, 2, 3, 4, 5]), 3)
+  assert.equal(levelFolder(3, [0, 1, 2]), 2, 'older media without 1080p plays its 720p')
+  assert.equal(levelFolder(1, [2, 3]), 2, 'nothing lower: the lowest it has')
+  assert.equal(levelFolder(5, undefined), 2, 'media from before configurable levels has folders 0-2')
+  const hd: Snapshot = { ...snap, ladder: [{ name: '720p', width: 1280, height: 720, bandwidth: 2900000, codecs: 'x', i: 2 },
+    { name: '1080p', width: 1920, height: 1080, bandwidth: 5800000, codecs: 'x', i: 3 }],
+    items: snap.items.map(e => e.key ? { ...e, levels: [0, 1, 2, 3] } : e) }
+  const t = mediaPlaylist(hd, viewer(), 1, T0 + 100_000, 'https://m', () => ad15, new Map()).text
+  assert.ok(t.includes('https://m/aurora/film.1/3/seg_'), 'programme at 1080p')
+  assert.ok(t.includes('https://m/aurora/ad.1/2/seg_'), 'the ad has no level list here, so 720p')
+})
+
+test('slate-only breaks keep the splice markers but skip ad requests and creative segments', () => {
+  const slateOnly: Snapshot = { ...snap, items: snap.items.map(item => item.id === 'b1' ? { ...item, slateOnly: true } : item) }
+  assert.equal(breaksToDecide(snap, viewer(), T0 + 20_000).soon.length, 1)
+  assert.deepEqual(breaksToDecide(slateOnly, viewer(), T0 + 20_000), { now: [], soon: [] })
+  assert.deepEqual(breaksToDecide(slateOnly, viewer(), T0 + 65_000), { now: [], soon: [] })
+  const result = mediaPlaylist(slateOnly, viewer(), 0, T0 + 100_000, 'https://m', () => ad15, new Map())
+  assert.match(result.text, /#EXT-X-CUE-OUT:DURATION=30.000/)
+  assert.equal(segs(result.text).filter(uri => uri.includes('standby')).length, 6)
+  assert.equal(result.beacons.length, 0)
+})
+
+test('an empty ad-server decision fills the complete break with slate', () => {
+  const result = play(T0 + 100_000, { breakMs: 30_000, filledMs: 0, slots: [] })
+  assert.equal(segs(result.text).filter(uri => uri.includes('standby')).length, 6)
+  assert.equal(result.beacons.length, 0)
 })

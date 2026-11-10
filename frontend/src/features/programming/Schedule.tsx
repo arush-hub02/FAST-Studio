@@ -15,11 +15,11 @@ import {
   useToast,
 } from '../../shared/ui'
 import { SmartProgramming } from './SmartProgramming'
-import { Timeline, Selected, EntryList } from './ScheduleTimeline'
+import { Timeline, Selected, EntryList, ProgrammeShelf } from './ScheduleTimeline'
 import { PreflightPanel } from './PreflightPanel'
 import { ReplaceModal } from './ReplaceModal'
 import { ProgramModal, BreakModal } from './ProgramModal'
-import { AutofillModal, PublishModal } from './ScheduleModals'
+import { AdStitchingModal, AutofillModal, PublishModal, RescheduleModal } from './ScheduleModals'
 import { type View, ZOOM } from './scheduleShared'
 
 export default function Schedule() {
@@ -31,7 +31,7 @@ export default function Schedule() {
   const [mode, setMode] = useState<'draft' | 'published'>('draft')
   const [zoom, setZoom] = useState<keyof typeof ZOOM>('1h')
   const [selected, setSelected] = useState<string | null>(null)
-  const [modal, setModal] = useState<null | 'autofill' | 'program' | 'break' | 'publish' | 'clear'>(null)
+  const [modal, setModal] = useState<null | 'autofill' | 'program' | 'break' | 'publish' | 'clear' | 'move' | 'stitch-schedule' | 'stitch-programme'>(null)
   const [replaceEntry, setReplaceEntry] = useState<Entry | null>(null)
   const [busy, setBusy] = useState(false)
   const toast = useToast()
@@ -513,6 +513,9 @@ export default function Schedule() {
                           <button type="button" className="btn sm" disabled={busy} onClick={() => setModal('break')} title="Insert commercial ad break with SCTE-35 markers">
                             <Icon name="megaphone" size={13} /> Add Ad Break
                           </button>
+                          <button type="button" className="btn sm" disabled={busy} onClick={() => setModal('stitch-schedule')}>
+                            <Icon name="megaphone" size={13} /> Schedule ad stitching
+                          </button>
                           <button type="button" className="btn sm" disabled={busy} onClick={() => edit('close-gaps', {})} title="Close any silent airtime gaps">
                             ⚡ Close Gaps
                           </button>
@@ -575,6 +578,7 @@ export default function Schedule() {
 
               {/* Timeline Container */}
               <div className="card-pad stack" style={{ gap: 10 }}>
+                {editable && <ProgrammeShelf view={v} />}
                 <Timeline
                   entries={entries}
                   assets={v.assets}
@@ -588,6 +592,8 @@ export default function Schedule() {
                   errorIds={errorIds}
                   zoom={zoom}
                   setZoom={setZoom}
+                  onAddAt={editable && !busy ? (assetId, startAt) => edit('entries', { kind: 'PROGRAM', assetId, startAt, fitGap: true }) : undefined}
+                  onMoveAt={editable && !busy ? (entryId, startAt) => edit(`entries/${entryId}/move`, { startAt }, 'PATCH') : undefined}
                 />
 
                 {/* Selected Inspector Drawer */}
@@ -600,10 +606,14 @@ export default function Schedule() {
                     busy={busy}
                     issues={v.issues.filter(i => i.entryId === sel.id)}
                     onReplace={() => setReplaceEntry(sel)}
+                    onBreakFill={editable && sel.kind === 'AD_BREAK' && Date.parse(sel.startAt) > liveTimeMs
+                      ? slateOnly => edit(`entries/${sel.id}`, { slateOnly }, 'PATCH') : undefined}
                     onDelete={() => {
                       edit(`entries/${sel.id}`, null, 'DELETE')
                       setSelected(null)
                     }}
+                    onReschedule={editable && sel.kind === 'PROGRAM' && Date.parse(sel.startAt) > liveTimeMs ? () => setModal('move') : undefined}
+                    onStitching={editable && sel.kind === 'PROGRAM' ? () => setModal('stitch-programme') : undefined}
                     onClose={() => setSelected(null)}
                   />
                 )}
@@ -705,6 +715,15 @@ export default function Schedule() {
       )}
       {v && modal === 'break' && (
         <BreakModal v={v} busy={busy} onClose={() => setModal(null)} onSubmit={b => edit('entries', b)} />
+      )}
+      {v && sel && modal === 'move' && (
+        <RescheduleModal entry={sel} timezone={v.channel.timezone} busy={busy} onClose={() => setModal(null)}
+          onSubmit={startAt => edit(`entries/${sel.id}/move`, { startAt }, 'PATCH')} />
+      )}
+      {v && (modal === 'stitch-schedule' || (modal === 'stitch-programme' && sel)) && (
+        <AdStitchingModal programme={modal === 'stitch-programme' ? (sel?.assetId && v.assets[sel.assetId]?.title) || 'Selected programme' : undefined}
+          busy={busy} onClose={() => setModal(null)}
+          onSubmit={slateOnly => edit('ad-stitching', { slateOnly, entryId: modal === 'stitch-programme' ? sel?.id : undefined }, 'PATCH')} />
       )}
       {v && modal === 'publish' && (
         <PublishModal

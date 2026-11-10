@@ -120,7 +120,7 @@ export type ChannelView = {
   channel: Channel; now?: Programme; next?: Programme; scheduledUntil?: string; publishedVersion?: number; readiness: string[]; fallbackTitle?: string
 }
 export type Entry = {
-  id: string; versionId: string; kind: 'PROGRAM' | 'AD_BREAK'; assetId?: string; assetOffsetMs: number; startAt: string; endAt: string; ownership?: string
+  id: string; versionId: string; kind: 'PROGRAM' | 'AD_BREAK'; assetId?: string; assetOffsetMs: number; startAt: string; endAt: string; ownership?: string; slateOnly?: boolean
 }
 export type Version = { id: string; number: number; status: string; revision: number; note: string; createdAt: string; publishedAt?: string }
 export type Issue = { severity: 'ERROR' | 'WARNING' | 'INFO'; code: string; message: string; entryId?: string; hint: string; at?: string }

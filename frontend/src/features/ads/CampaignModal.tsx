@@ -43,6 +43,7 @@ export function CampaignModal({
     cpm: c?.cpm ?? 12,
     audiences: c?.audiences ?? '',
     frequencyCap: c?.frequencyCap ?? 0,
+    house: c?.house ?? false,
   })
 
   const set = (k: string, v: unknown) => setF(x => ({ ...x, [k]: v }))
@@ -177,6 +178,10 @@ export function CampaignModal({
           <label className="field"><span>Viewer audiences (optional)</span><input value={f.audiences} onChange={e => set('audiences', e.target.value)} placeholder="SPORTS_FANS, RETURNING_VIEWERS" /><span className="faint small">Match any listed key from signed viewer context. Leave blank for contextual delivery.</span></label>
           <label className="field"><span>Maximum selections per viewer per hour</span><input type="number" min={0} max={100} value={f.frequencyCap} onChange={e => set('frequencyCap', Number(e.target.value))} /><span className="faint small">0 means unlimited. Reservations prevent concurrent over-serving; only confirmed impressions count as delivered. Without identity the cap applies to the session.</span></label>
         </div>
+        <label className="row" style={{ gap: 8, alignItems: 'flex-start' }} data-testid="campaign-house">
+          <input type="checkbox" style={{ width: 'auto', minHeight: 0, marginTop: 3 }} checked={f.house} onChange={e => set('house', e.target.checked)} />
+          <span><b>House promo</b><span className="faint small" style={{ display: 'block' }}>The channel's own spot (ident, "coming up next"). Never sold and earns nothing: it fills break time the ads leave open, so viewers see it instead of the standby slate.</span></span>
+        </label>
         {/* Video Creative Selector with Visual Preview */}
         <div>
           <div className="field">
@@ -185,7 +190,7 @@ export function CampaignModal({
                 Video Creative Asset
               </span>
               <span className="hint" style={{ fontSize: 11 }}>
-                New video files can be ingested via the Media Library
+                New creatives are added under Ads → Ad creatives
               </span>
             </div>
             <Dropdown

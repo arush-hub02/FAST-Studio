@@ -4,9 +4,9 @@ Status (8 November 2026): **S2-S5 built and tested locally against a stand-in fo
 
 ## As built (8 November 2026)
 
-- **S2:** `IPlayback` capability (`util/mediaProvider`), Mux implementation (`MuxProvider.playback`, `util/mediaProvider/Hls`), `asset_playback` (V31). Preparing a library video reads its playlists (`StreamingServiceV1`); nothing is downloaded, and the Mux master-file download path (`MuxSource`) is gone. Uploads straight to FAST Studio still go to R2. One library connection per project (several: with S6).
-- **S3:** the schedule stays on the 5 s grid. A streaming programme occupies whole slots; inside them the edge plays the platform's segments at their real lengths and fills the rest of the slot with slate (`util/cloudflare/Timeline`), so listed lengths always equal the clock. Numbering comes from a per-channel anchor (`channel_timeline`), carried in the snapshot as t0/seq0 plus each programme's seq/n. The Worker (`worker/src/ovp.ts`) reads the platform playlists once per location and quality level (memory, then Cache API), keeps the last good copy on failures, and plays slate for the same lengths when it has none.
-- **S4:** our ads and slate keep our ladder (360p/540p/720p); each of our quality levels takes the platform rendition nearest in height. Platform 1080p needs a 1080p rung for ads and slate (not built). fMP4 platform streams are refused (our ads and slate are MPEG-TS).
+- **S2:** `IPlayback` capability (`util/mediaProvider`), Mux implementation (`MuxProvider.playback`, `util/mediaProvider/Hls`), `asset_playback` (V31). Preparing a library video reads its playlists (`StreamingServiceV1`); nothing is downloaded, and the Mux master-file download path (`MuxSource`) is gone. Since 9 November 2026 programme uploads go straight to the project's connected video library (Upload to asks which when there are several); only projects without a library upload to FAST Studio, which keeps them in R2. A project may have several library connections (V33: each video, sync and job carries its connection; webhooks find it by the signing secret; an upload watcher links finished uploads without webhooks).
+- **S3:** the schedule stays on the 5 s grid. A streaming programme occupies whole slots; inside them the edge plays the platform's segments at their real lengths and fills the rest of the slot with slate (`util/cloudflare/Timeline`), so listed lengths always equal the clock. Since 10 November 2026 a remainder shorter than a segment plays a black, silent piece of exactly that many frames (made once per length by the control plane, listed in the snapshot as `fillers`), because a cut-off 5 s slate piece made players play the whole 5 s and drift behind live at every such break. Numbering comes from a per-channel anchor (`channel_timeline`), carried in the snapshot as t0/seq0 plus each programme's seq/n. The Worker (`worker/src/ovp.ts`) reads the platform playlists once per location and quality level (memory, then Cache API), keeps the last good copy on failures, and plays slate for the same lengths when it has none.
+- **S4:** each tenant's quality levels are chosen by platform administrators (any of 360p to 2160p, since 9 November 2026; default 360p/540p/720p). Ads, slate and uploads are encoded to them, and each channel level takes the platform rendition nearest in height, so Mux 1080p, 2K and 4K play when the tenant uses those levels. fMP4 (CMAF) platform streams are supported since 9 November 2026: every video, ad and slate we package also gets fMP4 copies (a repackage of the 5 s MPEG-TS segments, no re-encode): since 10 November 2026 video-only per level (v0/ …) plus one audio-only track (a/), because fMP4 platforms such as Mux deliver audio separately and such channels play audio from their own audio playlist (a.m3u8); older media is repackaged at start-up, and ads and slates in R2 only are fetched back from R2 once to be repackaged, and a channel whose library programmes stream as fMP4 plays all our media from those copies, with an `EXT-X-MAP` for each source (HLS can not switch from fMP4 back to TS in one playlist). On such a channel, anything without an fMP4 copy, and any MPEG-TS library video, plays slate. Real Mux videos stream as fMP4 today (the user's first Mux video, 9 November 2026), unlike the older public sample measured on 3 November.
 - **S5:** Mux signed playback: optional signing key on the connection (V31 connector fields), RS256 tokens per video (`MuxSigner`), valid until 6 hours after the snapshot window; the library screen gets 6-7 hour links. Tokens are per video, not per viewer.
 - **Screens:** Library page panel (Sync library, Get N ready to stream), Delivery card in the video drawer, signing key fields in the platform Mux form.
 - **Known limits:** viewers' players fetch programme segments from the platform's own domain (stream.mux.com), so the platform is visible in network traffic; a part can lose up to one platform segment at a mid-roll break; DSN memo per Worker isolate (as before).
@@ -14,7 +14,7 @@ Status (8 November 2026): **S2-S5 built and tested locally against a stand-in fo
 ## Goal
 
 - A viewer's live playlist takes **programme segments from the online video platform (OVP)** the programme lives on: Mux today, JW Player soon, and any other platform (e.g. Brightcove, Watchity), or several in one project.
-- **Ads and slate** are FAST Studio's own: transcoded by us, stored in R2, delivered by the Cloudflare CDN, and spliced into the playlist at the breaks.
+- **Ads and slate** are FAST Studio's own: added only in the Ads section (ad creatives, and since 9 November 2026 a project slate that replaces the platform standby on its channels), transcoded by us, stored in R2 only (the server keeps just their playlists as an index once R2 holds both copies), delivered by the Cloudflare CDN, and spliced into the playlist at the breaks.
 - Scheduling, rights, ad decisions, beacons and measurement keep working as they do now.
 
 ## How it works today (what changes)
@@ -107,16 +107,18 @@ These decide the design and can't be assumed:
 3. ~~Players~~ **Decided 3 November 2026: web, iOS and one TV.** A channel goes live only after programme → ad → programme joins and quality switching play cleanly in a web player (hls.js), on iOS (Safari/AVPlayer) and on one smart-TV platform. The TV platform is **Android TV** (ExoPlayer/Media3), tested on the Android TV emulator or a stick. S1 tests all three.
 4. ~~Second OVP~~ **Decided 3 November 2026: JW Player, soon.** S1 measures a JW Player asset alongside Mux (segment lengths, format, quality levels, signed URLs), and S2 builds the playback capability for both, so nothing in the design is Mux-shaped. Needs a JW Player property's API credentials and one test asset. If JW Player's segments are longer than 5 s, breaks there move to the nearest JW segment edge.
 
-## Ads and slate at a break (built, unchanged by this plan)
+## Ads and slate at a break
 
 Confirmed with the user on 8 November 2026. This is how breaks already work (`AdDecisionServiceV1`, `VastSource`, `worker/src/playout.ts`):
-- **Ads come straight from the ad server.** For each viewer and break, the ad server's tag (Google Ad Manager or any VAST server) is called live, within its timeout (default 1 s).
+- **Ads come straight from the ad server.** For each viewer and break, the ad server's tag (Google Ad Manager or any VAST server) is called within its timeout (default 1 s). SSAI starts the decision in the background up to 60 seconds before the break.
 - **Each creative is transcoded by our FFmpeg** into 5 s segments on R2, once per creative. After that, the copy is reused.
 - **Slate covers every gap.** The standby slate from R2 plays when:
   - the ad server times out, fails or returns no ads (the whole break is slate);
-  - the ads are shorter than the break (slate fills the rest);
+  - the ads are shorter than the break (house promos fill the rest since 10 November 2026, then slate);
   - the decision isn't ready when the break starts (the whole break is slate, and it never switches to ads halfway).
-- **A creative seen for the first time** isn't converted yet when its break starts, so that break plays slate and the creative airs from the next break. Converting it inside the ~1 s decision window isn't possible.
+- **A creative seen for the first time** is queued. An otherwise empty prefetch retries while it is being prepared, so the ad can air in that break if it reaches R2 in time. Once the break starts, its decision is fixed.
+
+- **Slate changes** take effect on future segments after a 60-second propagation window. Live when ready uses the slate as soon as its media is available. Next schedule publish also requires each channel to publish a schedule after the upload. Older fMP4 snapshots use their muxed R2 files during an upgrade. New snapshots advertise separate audio and video only after those copies are ready.
 
 ## Not affected
 

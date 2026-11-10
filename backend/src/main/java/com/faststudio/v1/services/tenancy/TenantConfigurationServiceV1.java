@@ -53,7 +53,11 @@ public class TenantConfigurationServiceV1 {
             PERSONALIZED_ADS, v -> {},
             TenantLimitsService.API_PER_MINUTE, TenantConfigurationServiceV1::wholeNumber,
             TenantLimitsService.MEDIA_HOURS, TenantConfigurationServiceV1::wholeNumber,
-            TenantLimitsService.PROCESSING, TenantConfigurationServiceV1::wholeNumber);
+            TenantLimitsService.PROCESSING, TenantConfigurationServiceV1::wholeNumber,
+            com.faststudio.v1.services.media.QualityLevels.PROPERTY, com.faststudio.v1.services.media.QualityLevels::validate);
+
+    /** Values only platform administrators may set (they cost encoding time and storage), even in a tenant's own scope. */
+    private static final Set<String> PLATFORM_ONLY = Set.of(com.faststudio.v1.services.media.QualityLevels.PROPERTY);
 
     /** Limits are whole numbers; 0 means unlimited. */
     private static void wholeNumber(JsonNode v) {
@@ -449,6 +453,8 @@ public class TenantConfigurationServiceV1 {
             if (project != null && !d.projectOverride()) throw ApiException.bad("This property does not allow project overrides.");
             if (d.secret() && !platform)
                 throw new ApiException(HttpStatus.FORBIDDEN, "SECRET_ADMIN_ONLY", "Only the platform administrator may provision connector secrets.");
+            if (PLATFORM_ONLY.contains(key) && !platform)
+                throw new ApiException(HttpStatus.FORBIDDEN, "PLATFORM_ONLY", "Only the platform administrator may change this setting.");
             repository.value(tenant, project, key, Boolean.TRUE.equals(request.reset()) ? null : encode(d, request.value()));
             audit.log(scope, Auth.userId(), "configuration.property.update", "property", null, key);
             return null;

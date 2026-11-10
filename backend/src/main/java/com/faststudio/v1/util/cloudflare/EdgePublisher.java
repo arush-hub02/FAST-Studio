@@ -8,6 +8,7 @@ import com.faststudio.v1.core.common.Data;
 import com.faststudio.v1.core.common.Times;
 import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.media.AssetPlaybackRepository;
+import com.faststudio.v1.repositories.media.AssetRepository;
 import com.faststudio.v1.repositories.playout.ChannelTimelineRepository;
 import com.faststudio.v1.repositories.playout.ChannelTimelineRepository.Anchor;
 import com.faststudio.v1.services.media.MediaConnectionService;
@@ -55,11 +56,14 @@ public class EdgePublisher {
     private final EdgeClient edge;
     private final JsonMapper json;
     private final AssetPlaybackRepository playbacks;
+    private final AssetRepository assetRepository;
     private final ChannelTimelineRepository timelines;
     private final MediaConnectionService connections;
     private final MediaProviderResolverService providers;
+    private final com.faststudio.v1.services.media.QualityLevels qualities;
     private final Map<UUID, Anchor> anchors = new ConcurrentHashMap<>();
     private final Set<String> stored = ConcurrentHashMap.newKeySet();
+    private final Set<String> storedFmp4 = ConcurrentHashMap.newKeySet();
     private final Map<String, String> sent = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Long> sentAt = new java.util.concurrent.ConcurrentHashMap<>();
     /** Organizations being deleted: never published again, even before their rows are gone. */
@@ -67,8 +71,12 @@ public class EdgePublisher {
     private boolean warned;
 
     public EdgePublisher(Data data, MediaServiceV1 media, MediaStore store, EdgeClient edge, JsonMapper json, AssetPlaybackRepository playbacks,
-                         ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers) {
+                         ChannelTimelineRepository timelines, MediaConnectionService connections, MediaProviderResolverService providers,
+                         AssetRepository assetRepository,
+                         com.faststudio.v1.services.media.QualityLevels qualities) {
+        this.qualities = qualities;
         this.playbacks = playbacks;
+        this.assetRepository = assetRepository;
         this.timelines = timelines;
         this.connections = connections;
         this.providers = providers;
@@ -81,6 +89,9 @@ public class EdgePublisher {
 
     /** True once the media folder is on the edge; snapshots and ad decisions only point viewers at stored media. */
     public boolean stored(String mediaKey) { return mediaKey != null && stored.contains(mediaKey); }
+
+    /** True once the media's fMP4 copy is on the edge too (needed on channels whose library programmes stream as fMP4). */
+    public boolean storedFmp4(String mediaKey) { return mediaKey != null && storedFmp4.contains(mediaKey); }
 
     @Scheduled(initialDelay = 3_000, fixedDelay = 5_000)
     public void tick() {
@@ -106,15 +117,46 @@ public class EdgePublisher {
 
     void syncMedia() throws IOException, InterruptedException {
         List<String> keys = new ArrayList<>(List.of(MediaServiceV1.STANDBY, MediaServiceV1.GEO));
-        keys.addAll(TenantScope.bypass(() -> data.db.sql("select media_key from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
-                .query(String.class).list()));
+        Map<String, Path> r2Only = new HashMap<>();   // ads and slate live in R2 only: key -> the ad's uploaded original (null for slate)
+        r2Only.put(MediaServiceV1.STANDBY, null);
+        r2Only.put(MediaServiceV1.GEO, null);
+        // black fillers made so far (tiny; they stay on the server too)
+        try (Stream<Path> s = Files.list(media.mediaDir().resolve("_platform"))) {
+            s.map(p -> "_platform/" + p.getFileName()).filter(k -> k.startsWith("_platform/black-")).forEach(keys::add);
+        } catch (IOException e) { /* no platform folder yet */ }
+        TenantScope.bypass(() -> data.db.sql("select media_key, kind, org_id, id from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
+                .query((rs, n) -> {
+                    String key = rs.getString("media_key");
+                    keys.add(key);
+                    if (rs.getString("kind").equals("AD") || rs.getString("kind").equals("SLATE"))
+                        r2Only.put(key, media.uploadDir(rs.getObject("org_id", UUID.class), rs.getObject("id", UUID.class)));
+                    return key;
+                }).list());
         for (String key : keys) {
-            if (stored.contains(key)) continue;
+            if (stored.contains(key) && storedFmp4.contains(key)) {
+                if (r2Only.containsKey(key) && pruned.add(key)) prune(key, r2Only.get(key));
+                continue;
+            }
             Path dir = media.mediaDir().resolve(key);
             if (!Files.exists(dir.resolve("master.m3u8"))) continue;   // still being packaged
             try {
-                if (!store.has(key)) upload(key, dir);
-                stored.add(key);
+                if (!stored.contains(key)) {
+                    if (!store.has(key)) upload(key, dir, false);
+                    stored.add(key);
+                }
+                // ads and slate in R2 only, from before the current fMP4 layout: fetch their MPEG-TS pieces back once,
+                // make the fMP4 copies, upload them; the local pieces are removed again (prune) once R2 has everything
+                if (!Files.exists(dir.resolve(MediaServiceV1.FMP4_MASTER)) && r2Only.containsKey(key) && stored.contains(key)
+                        && !media.hasLocalSegments(key) && restored.add(key)) {
+                    restore(key, dir);
+                    if (media.fmp4(dir)) log.info("Made the fMP4 copies of {} (fetched back from R2)", key);
+                    pruned.remove(key);
+                }
+                // the fMP4 copy can arrive later (made at start-up for older media), so it is checked on its own
+                if (Files.exists(dir.resolve(MediaServiceV1.FMP4_MASTER))) {
+                    if (!store.exists(key + "/" + MediaServiceV1.FMP4_MASTER)) upload(key, dir, true);
+                    storedFmp4.add(key);
+                }
             } catch (IOException e) {
                 if (e instanceof java.net.ConnectException || e instanceof java.net.http.HttpConnectTimeoutException) throw e;
                 log.warn("Couldn't copy {} to the edge: {}", key, e.getMessage());   // retried next tick
@@ -122,31 +164,66 @@ public class EdgePublisher {
         }
     }
 
-    private void upload(String key, Path dir) throws IOException, InterruptedException {
+    private final Set<String> pruned = ConcurrentHashMap.newKeySet();
+    private final Set<String> restored = ConcurrentHashMap.newKeySet();   // tried once per run, so a failure doesn't loop
+
+    /** The MPEG-TS pieces of every quality level of a folder, copied back from R2 (their playlists stayed on disk). */
+    private void restore(String key, Path dir) throws IOException, InterruptedException {
+        for (int level : media.levels(key)) {
+            Path list = dir.resolve(level + "/index.m3u8");
+            for (String line : Files.readAllLines(list)) {
+                String name = line.trim();
+                if (name.isEmpty() || name.startsWith("#") || !name.matches("[A-Za-z0-9_.-]+")) continue;
+                Path to = dir.resolve(level + "/" + name);
+                if (!Files.exists(to)) store.get(key + "/" + level + "/" + name, to);
+            }
+        }
+    }
+
+    /** R2 holds both copies: the server keeps only the playlists and thumbnail of this ad or slate, and drops the ad's original. */
+    private void prune(String key, Path original) {
+        try {
+            media.pruneToIndex(key);
+            if (original != null && Files.isDirectory(original))
+                try (Stream<Path> s = Files.walk(original)) { for (Path p : s.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(p); }
+            log.info("{} now lives in R2 only", key);
+        } catch (IOException e) {
+            pruned.remove(key);   // try again next tick
+            log.warn("Couldn't remove the local copy of {}: {}", key, e.getMessage());
+        }
+    }
+
+    /** One copy of a media folder: the MPEG-TS renditions, or (fmp4) the fMP4 copy; its master goes last, as the "complete" mark. */
+    private void upload(String key, Path dir, boolean fmp4) throws IOException, InterruptedException {
         List<Path> files;
         try (Stream<Path> s = Files.walk(dir)) {
-            files = s.filter(Files::isRegularFile).sorted().toList();
+            files = s.filter(Files::isRegularFile).filter(f -> isFmp4(rel(dir, f)) == fmp4).sorted().toList();
         }
-        Path master = dir.resolve("master.m3u8");
+        Path master = dir.resolve(fmp4 ? MediaServiceV1.FMP4_MASTER : "master.m3u8");
         for (Path f : files) if (!f.equals(master)) store.put(key + "/" + rel(dir, f), f, type(f));
-        store.put(key + "/master.m3u8", master, type(master));   // last: its presence means "complete"
-        log.info("Copied {} ({} files) to the edge", key, files.size());
+        store.put(key + "/" + master.getFileName(), master, type(master));
+        log.info("Copied {}{} ({} files) to the edge", key, fmp4 ? " (fMP4)" : "", files.size());
     }
+
+    /** Files of the fMP4 copies: video-only per level (v0/ ...) and the audio track (a/). Older f0/ ... copies are no longer used. */
+    static boolean isFmp4(String rel) { return rel.equals(MediaServiceV1.FMP4_MASTER) || rel.matches("(v[0-9]+|a)/.*"); }
 
     static String rel(Path dir, Path f) { return dir.relativize(f).toString().replace('\\', '/'); }
 
     static String type(Path f) {
         String n = f.getFileName().toString();
-        return n.endsWith(".m3u8") ? "application/vnd.apple.mpegurl" : n.endsWith(".ts") ? "video/mp2t" : n.endsWith(".jpg") ? "image/jpeg" : "application/octet-stream";
+        return n.endsWith(".m3u8") ? "application/vnd.apple.mpegurl" : n.endsWith(".ts") ? "video/mp2t" : n.endsWith(".m4s") || n.endsWith(".mp4") ? "video/mp4" : n.endsWith(".jpg") ? "image/jpeg" : "application/octet-stream";
     }
 
     // ------------------------------------------------------------------ schedule snapshots
 
-    public record Rendition(String name, int width, int height, int bandwidth, String codecs) {}
+    /** One quality level a channel offers; i = its folder in every media folder (QualityLevels.ALL index). */
+    public record Rendition(String name, int width, int height, int bandwidth, String codecs, int i) {}
 
-    public record Media(String key, int segments) {}
+    /** levels: the quality-level folders this media has (the Worker plays the nearest lower one when a channel level is missing). */
+    public record Media(String key, int segments, List<Integer> levels) {}
 
-    public record Fallback(String key, int segments, List<String> allowed, Long validFrom, Long validUntil) {}
+    public record Fallback(String key, int segments, List<String> allowed, Long validFrom, Long validUntil, List<Integer> levels) {}
 
     /**
      * One schedule item; times in epoch ms. allowed = channel territories whose licence covers the whole item.
@@ -156,12 +233,16 @@ public class EdgePublisher {
      */
     public record Item(String id, String kind, String key, int segments, long offsetMs, long start, long end,
                        List<String> allowed, String ownership, String scteOut, String scteIn,
-                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill) {
-        Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn) {
-            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null);
+                       String ovp, Long seq, Integer n, Integer i0, Integer nc, Integer last, int[] fill, List<Integer> levels, boolean slateOnly) {
+        Item(String id, String kind, String key, int segments, long offsetMs, long start, long end, List<String> allowed, String ownership, String scteOut, String scteIn, boolean slateOnly) {
+            this(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, null, null, null, null, null, null, null, null, slateOnly);
         }
 
-        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill); }
+        Item withoutMedia() { return new Item(id, kind, null, 0, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, null, slateOnly); }
+
+        Item withLevels(List<Integer> l) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, seq, n, i0, nc, last, fill, l, slateOnly); }
+
+        Item withSeq(long s) { return new Item(id, kind, key, segments, offsetMs, start, end, allowed, ownership, scteOut, scteIn, ovp, s, n, i0, nc, last, fill, levels, slateOnly); }
     }
 
     /** A video the edge streams from its platform: master playlist URL (signed when needed), real segment lengths, container. */
@@ -173,7 +254,13 @@ public class EdgePublisher {
      */
     public record Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs,
                            long from, long until, List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items,
-                           long t0, long seq0, int target, Map<String, Ovp> ovp) {}
+                           long t0, long seq0, int target, Map<String, Ovp> ovp, String fmt, Map<String, Media> fillers) {
+        public Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs, long from, long until,
+                        List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items, long t0, long seq0, int target,
+                        Map<String, Ovp> ovp, String fmt) {
+            this(v, org, channel, status, territories, segMs, from, until, ladder, standby, geo, fallback, items, t0, seq0, target, ovp, fmt, Map.of());
+        }
+    }
 
     record ChannelRow(UUID orgId, String orgSlug, UUID channelId) {}
 
@@ -208,7 +295,7 @@ public class EdgePublisher {
         for (ChannelRow r : rows) {
             Snapshot s = TenantScope.as(r.orgId(), () -> snapshot(r.orgId(), r.orgSlug(), r.channelId(), Instant.ofEpochMilli(now)));
             Snapshot off = new Snapshot(s.v(), s.org(), s.channel(), "ARCHIVED", s.territories(), s.segMs(), s.from(), s.until(),
-                    s.ladder(), s.standby(), s.geo(), null, List.of(), s.t0(), s.seq0(), s.target(), Map.of());
+                    s.ladder(), s.standby(), s.geo(), null, List.of(), s.t0(), s.seq0(), s.target(), Map.of(), s.fmt());
             try {
                 edge.putChannel(off.org(), off.channel(), json.writeValueAsString(off));
             } catch (IOException e) {
@@ -245,7 +332,7 @@ public class EdgePublisher {
             boolean shown = end > from;
             if (e.isBreak()) {
                 if (shown) items.add(new Item(e.id().toString(), e.kind(), null, 0, 0, start, end, terr,
-                        e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false)));
+                        e.ownership(), PlayoutServiceV1.scteHex(e, true), PlayoutServiceV1.scteHex(e, false), e.slateOnly()));
                 continue;
             }
             Asset a = assets.get(e.assetId());
@@ -258,13 +345,13 @@ public class EdgePublisher {
                 longest = Math.max(longest, l.longest(seg));
                 ovp.computeIfAbsent(a.id().toString(), k -> ovpEntry(org, stream, until));
                 items.add(new Item(e.id().toString(), e.kind(), null, 0, e.assetOffsetMs(), start, end, allowed(a, terr, policies, e),
-                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill()));
+                        null, null, null, a.id().toString(), null, l.n(), l.i0(), l.nc(), l.lastMs(), l.fill(), null, false));
                 continue;
             }
             if (!shown) continue;
             String key = a != null && a.ready() && stored(a.mediaKey()) ? a.mediaKey() : null;   // null: standby plays
             items.add(new Item(e.id().toString(), e.kind(), key, key == null ? 0 : media.segments(key), e.assetOffsetMs(), start, end,
-                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null));
+                    a == null ? List.of() : allowed(a, terr, policies, e), null, null, null, false).withLevels(key == null ? null : levels(key)));
         }
 
         // numbering anchor: the hour mark, or the start of the streaming programme the hour mark falls into
@@ -291,8 +378,42 @@ public class EdgePublisher {
             baseT = it.end();
             baseSeq = seq + it.n();
         }
-        return new Snapshot(2, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(),
-                platform(MediaServiceV1.STANDBY), platform(MediaServiceV1.GEO), fallback(ch, assets, policies), items, t0, seq0, target, ovp);
+        // Container of the whole channel: HLS can't switch from fMP4 back to MPEG-TS inside one playlist, so a channel with
+        // fMP4 library programmes plays our media from its fMP4 copies, and anything without one plays slate instead.
+        boolean fmp4 = ovp.values().stream().anyMatch(o -> "FMP4".equals(o.fmt()))
+                && storedFmp4(MediaServiceV1.STANDBY) && storedFmp4(MediaServiceV1.GEO);
+        String fmt = fmp4 ? "FMP4" : "TS";
+        ovp.replaceAll((k, o) -> o.fmt().equals(fmt) ? o : new Ovp(null, o.d(), o.fmt()));   // the other container plays slate
+        if (fmp4) items.replaceAll(it -> it.key() != null && !storedFmp4(it.key()) ? it.withoutMedia() : it);
+        Fallback fb = fallback(ch, assets, policies);
+        if (fb != null && fmp4 && !storedFmp4(fb.key())) fb = null;
+        // the project's own slate (Ads → Slate) once R2 holds it in this channel's container; else the platform's standby
+        String own = assetRepository.slateKeys(org, ch.publishedVersionId()).stream()
+                .filter(k -> stored(k) && (!fmp4 || storedFmp4(k)) && media.fullSegments(k) > 0).findFirst().orElse(null);
+        Media standby = own != null
+                ? new Media(own, media.fullSegments(own), levels(own)) : platform(MediaServiceV1.STANDBY);   // loops: whole pieces only
+        return new Snapshot(3, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
+                standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt, fillers(items, fmp4));
+    }
+
+    /**
+     * Black fillers for the gaps shorter than a segment that streaming programmes leave before the next grid point,
+     * keyed by gap length in ms. One that isn't on the edge yet is made in the background; until then that gap plays a
+     * standby slate piece, as before.
+     */
+    private Map<String, Media> fillers(List<Item> items, boolean fmp4) {
+        Map<String, Media> out = new TreeMap<>();
+        for (Item it : items) {
+            if (it.fill() == null) continue;
+            for (int ms : it.fill()) {
+                if (ms >= Times.SEG_MS || out.containsKey(String.valueOf(ms))) continue;
+                int frames = MediaServiceV1.blackFrames(ms);
+                String key = MediaServiceV1.blackKey(frames);
+                if (stored(key) && (!fmp4 || storedFmp4(key))) out.put(String.valueOf(ms), new Media(key, 1, levels(key)));
+                else media.ensureBlack(frames);
+            }
+        }
+        return out;
     }
 
     private static List<String> allowed(Asset a, List<String> terr, Map<UUID, Rights.Policy> policies, Entry e) {
@@ -302,7 +423,7 @@ public class EdgePublisher {
     /** The edge's URL and segment lengths for one streaming video. url is null when none can be made (the programme plays slate). */
     private Ovp ovpEntry(UUID org, AssetPlaybackRepository.Row r, long until) {
         IPlayback adapter = providers.playback(r.provider());
-        MediaConnectionService.Connection c = connection(org);
+        MediaConnectionService.Connection c = connections(org).get(r.connectionId());
         String url = null;
         if (adapter != null && c != null && r.provider().equals(c.provider())) {
             try {
@@ -315,18 +436,23 @@ public class EdgePublisher {
     }
 
     // decrypting a connection for every channel every 5 s isn't needed: a minute is fresh enough
-    private final Map<UUID, Map.Entry<Long, Optional<MediaConnectionService.Connection>>> connectionCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Map.Entry<Long, Map<UUID, MediaConnectionService.Connection>>> connectionCache = new ConcurrentHashMap<>();
 
-    private MediaConnectionService.Connection connection(UUID org) {
+    /** The project's library connections by id. */
+    private Map<UUID, MediaConnectionService.Connection> connections(UUID org) {
         long now = System.currentTimeMillis();
         var hit = connectionCache.get(org);
-        if (hit != null && hit.getKey() > now) return hit.getValue().orElse(null);
-        Optional<MediaConnectionService.Connection> c = Optional.ofNullable(connections.connection(org));
-        connectionCache.put(org, Map.entry(now + 60_000, c));
-        return c.orElse(null);
+        if (hit != null && hit.getKey() > now) return hit.getValue();
+        Map<UUID, MediaConnectionService.Connection> byId = new HashMap<>();
+        for (MediaConnectionService.Connection c : connections.connections(org)) byId.put(c.id(), c);
+        connectionCache.put(org, Map.entry(now + 60_000, byId));
+        return byId;
     }
 
-    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.segments(key) : 0); }
+    private Media platform(String key) { return new Media(stored(key) ? key : null, stored(key) ? media.fullSegments(key) : 0, levels(key)); }
+
+    /** The quality-level folders a stored media folder has (for ad decisions and snapshots). */
+    public List<Integer> levels(String mediaKey) { return media.levels(mediaKey); }
 
     private Fallback fallback(Channel ch, Map<UUID, Asset> assets, Map<UUID, Rights.Policy> policies) {
         Asset fb = ch.fallbackAssetId() == null ? null : assets.get(ch.fallbackAssetId());
@@ -335,12 +461,13 @@ public class EdgePublisher {
         List<String> terr = ch.territoryList();
         // countries checked here; the Worker checks the licence window per segment
         List<String> ok = terr.stream().filter(c -> Rights.evaluate(p, terr, c, null, null).allowed()).toList();
-        return new Fallback(fb.mediaKey(), media.segments(fb.mediaKey()), ok,
+        return new Fallback(fb.mediaKey(), media.fullSegments(fb.mediaKey()), ok,
                 p == null || p.validFrom() == null ? null : p.validFrom().toInstant().toEpochMilli(),
-                p == null || p.validUntil() == null ? null : p.validUntil().toInstant().toEpochMilli());
+                p == null || p.validUntil() == null ? null : p.validUntil().toInstant().toEpochMilli(), levels(fb.mediaKey()));
     }
 
-    private static List<Rendition> ladder() {
-        return MediaServiceV1.LADDER.stream().map(r -> new Rendition(r.name(), r.width(), r.height(), r.bandwidth(), r.codecs())).toList();
+    /** The quality levels a channel offers: its tenant's setting (platform administration → tenant). */
+    private List<Rendition> ladder(UUID org) {
+        return qualities.of(org).stream().map(r -> new Rendition(r.name(), r.width(), r.height(), r.bandwidth(), r.codecs(), r.index())).toList();
     }
 }

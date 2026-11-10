@@ -1,6 +1,8 @@
 {
   "_readme": "Plain explanations of request fields and parameters, shared by every endpoint of docs/html/API.html. An endpoint can override one with \"fields\" or \"paramHelp\" in api.json. tools/build-api-docs.mjs fails when a field or parameter has no explanation.",
   "fields": {
+    "fitGap": "True refuses insertion unless the whole placement fits in an upcoming open slot.",
+    "slateOnly": "True plays slate throughout the break. False tries configured ad sources first and uses slate for unfilled time.",
     "adMode": "How ads reach viewers on this destination: SSAI = stitched into the stream by us, SGAI = the player inserts them, PASSTHROUGH = only markers, the destination sells its own ads.",
     "adSecondsPerHour": "Most ad time per hour on this channel, in seconds (e.g. 360 = 6 minutes).",
     "adsAllowed": "Whether ads may run during this video.",
@@ -51,7 +53,8 @@
     "expiresInDays": "Days until the token stops working (1–3650). Leave out for no expiry.",
     "fallbackAssetId": "Video that plays when nothing is scheduled.",
     "features": "Feature switches, e.g. LIBRARY_SYNC.",
-    "frequencyCap": "How many times one viewer may see this campaign per day (0 = no cap).",
+    "frequencyCap": "How many breaks in the last hour one viewer may be given this campaign (0 = no cap).",
+    "house": "True for a house promo: the channel's own spot, never sold (CPM 0), that only fills break time the ads leave open. Left out on an update: unchanged.",
     "genre": "Genre shown in the guide, e.g. Documentary.",
     "hours": "How many hours ahead to fill.",
     "ids": "IDs in the order you want.",
@@ -140,6 +143,7 @@
     "darkLogoUrl": "Web address of the logo used in dark mode."
   },
   "params": {
+    "nextSchedule": "For a slate upload, true waits for each channel’s next schedule publish. The default false switches live when ready.",
     "org": "The project: its short name (e.g. aurora) or ID. You must be a member and your token must be for it.",
     "orgId": "ID (UUID) of the organization.",
     "tenant": "ID (UUID) of the customer tenant (List tenants).",

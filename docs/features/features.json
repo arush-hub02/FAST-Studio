@@ -3628,7 +3628,7 @@
               {
                 "at": "r2",
                 "state": "slate",
-                "say": "If an ad server times out, fails or has no ads, the break plays slate."
+                "say": "If an ad server times out, fails or has no eligible creative by the break, the player sees slate."
               },
               {
                 "at": "player",
@@ -3646,15 +3646,16 @@
         "Schedule it like any video; ads and slate are spliced in at its breaks."
       ],
       "howItWorks": [
-        "StreamingServiceV1.resolve reads the library's HLS playlists through the provider's IPlayback adapter and stores the real segment lengths (asset_playback). All quality levels must share segment boundaries; fMP4 streams are refused for now (our ads and slate are MPEG-TS).",
+        "StreamingServiceV1.resolve reads the library's HLS playlists through the provider's IPlayback adapter and stores the real segment lengths (asset_playback). All quality levels must share segment boundaries; MPEG-TS and fMP4 (CMAF) streams are both accepted.",
         "EdgePublisher lays each programme part out in its 5 s slots (util/cloudflare/Timeline): the library's segments, then slate for the rest of the slot, so listed lengths always add up to the clock.",
         "Segment numbers come from a per-channel anchor (channel_timeline) and stay identical across snapshots and Worker locations.",
         "The Worker (ovp.ts) reads the library's master and rendition playlists, picks the rendition nearest each of our quality levels, caches them per location (memory, then the Cache API) and keeps serving the last good copy when a read fails.",
-        "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window."
+        "Signed playback: the control plane signs a token per video (RS256, the connection's signing key) valid until 6 hours after the snapshot window.",
+        "fMP4 channels: every video, ad and slate FAST Studio packages also gets an fMP4 copy (repackaged, not re-encoded). A channel whose library programmes stream as fMP4 plays all our media from those copies, announcing each source with EXT-X-MAP; media without a matching copy plays slate. The edge can still read older muxed fMP4 packages during an upgrade."
       ],
       "optimizations": [
         "Library playlists are read once per location, video and quality level and shared by every viewer; viewers fetch video segments from the library's CDN directly.",
-        "A viewer's playlist waits for a library read only the first time; refreshes run in the background.",
+        "A viewer's playlist waits for a library read only the first time. Ad decisions are prefetched up to 60 seconds before an SSAI break. An empty decision waiting for a creative can retry before the break.",
         "Snapshots only load the streaming details of videos in their window; the numbering anchor is written once an hour per channel."
       ],
       "scale": [
@@ -3682,6 +3683,770 @@
         "docs/OVP_DELIVERY_PLAN.md"
       ],
       "screenshots": []
+    },
+    {
+      "id": "quality-levels",
+      "title": "Quality levels per tenant (360p to 4K)",
+      "area": "Media library",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Platform administrators choose, per tenant, which quality levels its videos, ads and channels use: any of 360p, 540p, 720p, 1080p, 1440p (2K) and 2160p (4K). Every player has a Quality menu (⚙ Settings) to pick a level or Auto, and the video detail page shows which level is playing.",
+      "who": [
+        "Platform administrators (choose the levels of a tenant)",
+        "Everyone who opens a video in the Library (quality menu)"
+      ],
+      "flow": {
+        "title": "From a tenant setting to the viewer",
+        "intro": "The boxes are the parts involved; the pill is a video moving through.",
+        "nodes": [
+          {
+            "id": "admin",
+            "col": 1,
+            "row": 1,
+            "icon": "🛠️",
+            "label": "Tenant → Configuration",
+            "sub": "platform administrator"
+          },
+          {
+            "id": "enc",
+            "col": 2,
+            "row": 1,
+            "icon": "🎞️",
+            "label": "FFmpeg",
+            "sub": "QualityLevels + MediaServiceV1"
+          },
+          {
+            "id": "r2",
+            "col": 3,
+            "row": 1,
+            "icon": "🪣",
+            "label": "R2",
+            "sub": "one folder per level"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Edge Worker",
+            "sub": "channel levels"
+          },
+          {
+            "id": "player",
+            "col": 1,
+            "row": 2,
+            "icon": "📺",
+            "label": "Player",
+            "sub": "picks a level"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Turn on 1080p",
+            "steps": [
+              {
+                "at": "admin",
+                "state": "720p + 1080p",
+                "say": "Tick the levels and Save quality levels.",
+                "tech": "`PUT /api/platform/tenants/{tenant}/properties/media.quality_levels`"
+              },
+              {
+                "at": "enc",
+                "state": "encoding",
+                "say": "New uploads and ads are converted to exactly those levels."
+              },
+              {
+                "at": "r2",
+                "state": "folders 2, 3",
+                "say": "Each level has its own folder (0 = 360p … 5 = 2160p)."
+              },
+              {
+                "at": "edge",
+                "state": "offers 720p, 1080p",
+                "say": "The tenant's channels offer those levels; older media without 1080p plays its 720p there."
+              },
+              {
+                "at": "player",
+                "state": "Auto / 1080p",
+                "say": "Players pick a level by connection speed, or you pick one in the Library player."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Platform administration → Tenants → the tenant → Configuration → Quality levels.",
+        "Tick the levels and Save. New conversions use them within 30 seconds.",
+        "Library → open a video → ⚙ Settings → Quality on the player lists its levels (Auto or one); the badge under the player says which one is playing."
+      ],
+      "howItWorks": [
+        "services/media/QualityLevels holds the six levels and reads the tenant property media.quality_levels (default 360p, 540p, 720p; platform administrators only).",
+        "MediaServiceV1 encodes the project's levels in one FFmpeg pass into folders named by level (0 … 5), plus fMP4 copies; slates carry all six.",
+        "EdgePublisher puts the tenant's levels in each channel snapshot and, for every piece of media, the levels it has; the Worker plays the nearest lower level when one is missing.",
+        "Direct uploads to Mux ask for the 1440p or 2160p resolution tier when the tenant uses those levels."
+      ],
+      "optimizations": [
+        "One decode, split into all levels in a single FFmpeg run.",
+        "Levels per project cached for 30 s, so snapshots don't read settings every 5 s."
+      ],
+      "scale": [
+        "Higher levels multiply encoding time and storage (about 8 GB per hour of video at 4K); choose them per tenant."
+      ],
+      "rules": [
+        "Platform administrators only (403 PLATFORM_ONLY for tenant owners).",
+        "Changes apply to new conversions; existing media is not re-encoded.",
+        "A small source is scaled up to every chosen level."
+      ],
+      "api": [
+        "PUT /api/platform/tenants/{tenant}/properties/media.quality_levels",
+        "GET /api/platform/tenants/{tenant}/settings"
+      ],
+      "tests": [
+        "PlatformAdminStagesTest.qualityLevelsArePerTenantAndPlatformOnly",
+        "worker/src/playout.test.ts (quality levels)"
+      ],
+      "docs": [
+        "docs/OVP_DELIVERY_PLAN.md",
+        "docs/html/FAQ.html"
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "video-player",
+      "title": "Video player (Video.js 10)",
+      "area": "Playback",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Every video in FAST Studio plays in one Video.js 10 player with the title on the video, a quality menu, playback speed, picture-in-picture, fullscreen, casting and keyboard shortcuts.",
+      "who": [
+        "Everyone who plays a video: Library video detail, Watch live, Partner \"Try it as a viewer\""
+      ],
+      "flow": {
+        "title": "From a page to a playing video",
+        "intro": "The boxes are the parts involved; the pill is a viewer pressing play.",
+        "nodes": [
+          {
+            "id": "page",
+            "col": 1,
+            "row": 1,
+            "icon": "🖥️",
+            "label": "Page",
+            "sub": "Library / Watch / Partner"
+          },
+          {
+            "id": "player",
+            "col": 2,
+            "row": 1,
+            "icon": "📺",
+            "label": "Video.js player",
+            "sub": "shared/Player.tsx"
+          },
+          {
+            "id": "hls",
+            "col": 3,
+            "row": 1,
+            "icon": "🧩",
+            "label": "hls.js",
+            "sub": "inside the player"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 2,
+            "icon": "🌐",
+            "label": "Edge or library",
+            "sub": "HLS playlists"
+          },
+          {
+            "id": "menu",
+            "col": 1,
+            "row": 2,
+            "icon": "⚙️",
+            "label": "Settings menu",
+            "sub": "Quality, Speed"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Pick 360p",
+            "steps": [
+              {
+                "at": "page",
+                "state": "title",
+                "say": "The page passes the stream address and the title.",
+                "tech": "`<VideoPlayer src title live onEvent />`"
+              },
+              {
+                "at": "player",
+                "state": "loading",
+                "say": "The player is downloaded the first time a video is shown."
+              },
+              {
+                "at": "hls",
+                "state": "Auto (720p)",
+                "say": "hls.js reads the playlist and picks a level by connection speed."
+              },
+              {
+                "at": "edge",
+                "state": "segments",
+                "say": "Segments come from the edge (channels) or the library preview."
+              },
+              {
+                "at": "menu",
+                "state": "360p",
+                "say": "Settings → Quality → 360p pins that level; the badge shows \"Playing 360p\"."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Open a Ready video in the Library, Watch live, or a shared channel's Stream tab on the Partner page.",
+        "Hover the video: the title is top left, the controls along the bottom.",
+        "⚙ Settings → Quality: Auto or a fixed level. ⚙ Settings → Speed for slower or faster playback."
+      ],
+      "howItWorks": [
+        "frontend/src/shared/Player.tsx wraps @videojs/react VideoPlayer + VideoSkin around @videojs/hlsjs-video HlsJsVideo.",
+        "shared/ui.tsx exports VideoPlayer, which loads Player.tsx lazily.",
+        "The player hooks the hls.js instance for HLS interstitials (SGAI ads and beacons on Watch live), the level playing, and fatal errors (retry after 3 s, media recovery)."
+      ],
+      "optimizations": [
+        "Downloaded only when a video is shown (about 250 kB compressed with hls.js).",
+        "One hls.js copy (the one Video.js ships) instead of two."
+      ],
+      "scale": [
+        "Playback runs in the viewer's browser; nothing extra on the server."
+      ],
+      "rules": [
+        "Live channels start muted because browsers block autoplay with sound.",
+        "Quality lists only the levels the stream offers."
+      ],
+      "api": [],
+      "tests": [
+        "frontend e2e (Playwright) suite, 12 tests",
+        "Manual check on a throwaway copy: Library, Watch live, Partner"
+      ],
+      "docs": [
+        "docs/html/FAQ.html"
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "library-uploads-ads-slate",
+      "title": "Uploads to the video library; ads and slate in the Ads section, R2 only",
+      "area": "Media library",
+      "status": "Built (2026-11-09)",
+      "completed": "2026-11-09",
+      "summary": "Programme uploads go straight to the project's connected video library (choose one when there are several connections). Ad creatives and the project's own slate are added in the Ads section, converted once by FAST Studio and served from R2 only.",
+      "who": [
+        "Content managers and owners (Library uploads, ad creatives, slate)",
+        "Platform administrators (add several library connections to a project)"
+      ],
+      "flow": {
+        "title": "Where each kind of video goes",
+        "intro": "The boxes are the parts involved; the pill is a file being added.",
+        "nodes": [
+          {
+            "id": "ui",
+            "col": 1,
+            "row": 1,
+            "icon": "🖥️",
+            "label": "Library / Ads",
+            "sub": "Add video, Add creative, Slate"
+          },
+          {
+            "id": "lib",
+            "col": 2,
+            "row": 1,
+            "icon": "📚",
+            "label": "Video library",
+            "sub": "Mux (one or more)"
+          },
+          {
+            "id": "fs",
+            "col": 2,
+            "row": 2,
+            "icon": "🎞️",
+            "label": "FAST Studio",
+            "sub": "FFmpeg, then prune"
+          },
+          {
+            "id": "r2",
+            "col": 3,
+            "row": 2,
+            "icon": "🪣",
+            "label": "R2",
+            "sub": "ads and slate only"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "🌐",
+            "label": "Edge Worker",
+            "sub": "channels"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Programme upload",
+            "steps": [
+              {
+                "at": "ui",
+                "state": "Upload to: Archive",
+                "say": "Add video asks which library when there are several.",
+                "tech": "`POST /api/orgs/{org}/assets/{id}/upload-url?connection={id}`"
+              },
+              {
+                "at": "lib",
+                "state": "converting",
+                "say": "The browser sends the file straight to the library."
+              },
+              {
+                "at": "fs",
+                "state": "linked",
+                "say": "Webhook, or the upload watcher every 20 s, links the library video and prepares it to stream."
+              },
+              {
+                "at": "edge",
+                "state": "streams",
+                "say": "Channels stream it from the library with that connection's links."
+              }
+            ]
+          },
+          {
+            "name": "Slate",
+            "steps": [
+              {
+                "at": "ui",
+                "state": "slate.mp4",
+                "say": "Ads → Slate → Upload slate, then choose Live when ready or Next schedule publish.",
+                "tech": "`POST /api/orgs/{org}/slate`"
+              },
+              {
+                "at": "fs",
+                "state": "converting",
+                "say": "FFmpeg makes the tenant's quality levels (MPEG-TS + fMP4)."
+              },
+              {
+                "at": "r2",
+                "state": "stored",
+                "say": "Copied to R2; then the server deletes its video files, keeping only playlists."
+              },
+              {
+                "at": "edge",
+                "state": "on air",
+                "say": "The new slate appears once ready. If deferred, each channel waits for its next schedule publish. Existing live segments keep their URLs."
+              }
+            ]
+          }
+        ]
+      },
+      "steps": [
+        "Library → Add video → choose a file; with several video libraries choose one under Upload to → Upload.",
+        "Ads → Ad creatives → Add creative.",
+        "Ads → Slate → Upload slate (a 10 to 60 s loop). Choose Live when ready or Next schedule publish. \"Use platform standby\" removes it.",
+        "Platform administrators: tenant page → Connectors → Mux → add another connection with its own name and tokens."
+      ],
+      "howItWorks": [
+        "V33: asset.connection_id, media_connection per connection (instance_id), media_job.connection_id for syncs; Mux connector allows several connections.",
+        "MediaConnectionService lists every connection; sync, prepare, streaming, edge links and webhooks use the video's own connection (webhooks find it by the secret that signed them).",
+        "LibraryServiceV1.watchUploads asks the platform where each pending upload went (IDirectUpload.uploaded), so uploads finish without webhooks.",
+        "AssetServiceV1 refuses FAST Studio uploads of programmes when the project has a video library; SlateServiceV1 keeps SLATE assets (hidden from the asset list).",
+        "EdgePublisher prunes ads and slate to their playlists once R2 holds both copies; MediaFileControllerV1 redirects missing segments to the edge; snapshots use the latest slate whose media is ready at the edge. On a running channel, a slate update takes effect on future segments after a short propagation window."
+      ],
+      "optimizations": [
+        "Connections cached per project for a minute at the edge publisher.",
+        "Segment counts read from playlists, so pruned media needs no file listing."
+      ],
+      "scale": [
+        "The upload watcher only looks at uploads of the last day that are still waiting.",
+        "R2-only ads and slate keep server disk use flat as creatives grow."
+      ],
+      "rules": [
+        "Ads and slate never go to the video library.",
+        "Projects never see the platform's name: connections named after it show as \"Video library\".",
+        "A new slate airs after it reaches the edge and the update has time to propagate. The previous slate remains in playlists for segments already issued. A deferred slate also waits for each channel to publish a schedule after the upload."
+      ],
+      "api": [
+        "GET /api/orgs/{org}/library (uploadTo)",
+        "POST /api/orgs/{org}/assets/{id}/upload-url?connection={id}",
+        "GET/POST/DELETE /api/orgs/{org}/slate",
+        "POST /api/platform/orgs/{orgId}/connector-instances/mux"
+      ],
+      "tests": [
+        "MuxTest.withTwoLibrariesTheUploadGoesToTheChosenOneAndIsLinkedWithoutWebhooks",
+        "MediaPruneTest",
+        "ProgrammingFeaturesTest.slateCanWaitForEachChannelsNextSchedule",
+        "worker playout.test.ts (project slate levels)"
+      ],
+      "docs": [
+        "docs/html/FAQ.html",
+        "docs/OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "activation",
+          "account": "owner",
+          "path": "/aurora/ads",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Upload slate"
+              }
+            }
+          ],
+          "target": "[role=dialog]",
+          "caption": "Choose when the new slate applies to each channel."
+        }
+      ]
+    },
+    {
+      "id": "schedule-break-fill",
+      "title": "Drag programmes and edit scheduled ad stitching",
+      "area": "Programming",
+      "status": "Built",
+      "completed": "2026-11-10",
+      "summary": "Operators can place and move programmes on the draft timeline, then choose Ads first or Slate only for the draft, a programme placement or a single break. Publishing applies the draft to the live schedule.",
+      "who": [
+        "Operators with Schedule edit",
+        "Users with Schedule publish to apply the draft"
+      ],
+      "steps": [
+        "Open Schedule and select a channel.",
+        "Drag a ready programme from Ready programmes to an open slot, or drag an upcoming placement to move it with its linked mid-rolls. Use Reschedule to enter the time directly.",
+        "Choose Schedule ad stitching to edit all upcoming breaks, or select a programme and choose Edit ad stitching for its linked breaks.",
+        "Choose Add Ad Break, or select an upcoming break in the draft timeline.",
+        "Under Break fill, choose Ads first or Slate only. Insert a new break or let the edit save to the draft.",
+        "Publish the draft when it is ready to go on air."
+      ],
+      "howItWorks": [
+        "The break stores one fill choice in its schedule version. New and existing breaks use Ads first unless an operator chooses Slate only.",
+        "The Worker starts the ad decision ahead of an Ads first break. It uses the configured ad-source order and plays slate in unfilled slots.",
+        "For Slate only, the Worker keeps the scheduled duration and skips ad requests. SSAI and pass-through still carry their SCTE-35 markers."
+      ],
+      "optimizations": [
+        "Slate-only breaks use media already packaged at the edge and skip the ad decision request."
+      ],
+      "scale": [
+        "The setting is carried with the existing schedule snapshot. Each viewer of a slate-only break uses the same shared media objects."
+      ],
+      "rules": [
+        "Moves require an open, upcoming draft slot. The draft revision protects simultaneous editors. Publishing applies changes to the live schedule.",
+        "The setting controls FAST Studio’s fill. A distributor can still use its own inventory according to the destination rules."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/channels/{id}/schedule/entries",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/entries/{entryId}/move",
+        "PATCH /api/orgs/{org}/channels/{id}/schedule/ad-stitching"
+      ],
+      "tests": [
+        "ProgrammingFeaturesTest verifies the default, permissions, draft revision, publish behavior, overlap protection and placement-scoped editing.",
+        "Worker playout.test.ts verifies that slate-only breaks keep their markers and skip ads."
+      ],
+      "docs": [
+        "HOW_FAST_WORKS.md",
+        "OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": [
+        {
+          "id": "ready-programmes",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [],
+          "target": ".schedule-programme-shelf",
+          "caption": "Drag a ready programme from this list to an open slot."
+        },
+        {
+          "id": "ad-stitching",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Schedule ad stitching"
+              }
+            }
+          ],
+          "target": "[role=dialog]",
+          "caption": "Set the fill choice for all upcoming breaks in the draft."
+        },
+        {
+          "id": "add-break",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Add Ad Break"
+              }
+            }
+          ],
+          "target": "[role=dialog]",
+          "caption": "Ads first is selected when the operator adds a break."
+        }
+      ],
+      "flow": {
+        "title": "Follow the fill choice from the draft to the viewer",
+        "intro": "A published break keeps the choice saved in its schedule version.",
+        "nodes": [
+          {
+            "id": "schedule",
+            "col": 1,
+            "row": 1,
+            "icon": "🗓",
+            "label": "Schedule",
+            "sub": "Operator draft"
+          },
+          {
+            "id": "version",
+            "col": 2,
+            "row": 1,
+            "icon": "🗄",
+            "label": "Published version",
+            "sub": "Saved break fill"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "⚙",
+            "label": "Playback edge",
+            "sub": "Builds the live playlist"
+          },
+          {
+            "id": "viewer",
+            "col": 4,
+            "row": 1,
+            "icon": "▶",
+            "label": "Viewer",
+            "sub": "Plays the break"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Drag and move a programme",
+            "steps": [
+              {
+                "at": "schedule",
+                "state": "DRAFT",
+                "say": "Drop a ready programme into an open slot or move an upcoming placement with its mid-rolls."
+              },
+              {
+                "at": "schedule",
+                "state": "SAVED",
+                "say": "The draft saves the placement only if its complete time range fits."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing applies the changed airtime and fill settings."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The programme and its breaks play at the new airtime."
+              }
+            ]
+          },
+          {
+            "name": "Ads first",
+            "steps": [
+              {
+                "at": "schedule",
+                "state": "ADS FIRST",
+                "say": "The operator keeps the default for this break."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing carries that choice into the live schedule."
+              },
+              {
+                "at": "edge",
+                "state": "DECIDING",
+                "say": "The edge asks the configured ad sources and fills any remaining time with slate."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The viewer receives one continuous break in the live playlist."
+              }
+            ]
+          },
+          {
+            "name": "Slate only",
+            "steps": [
+              {
+                "at": "schedule",
+                "state": "SLATE ONLY",
+                "say": "The operator chooses Slate only for an upcoming break."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing applies that choice to the live schedule."
+              },
+              {
+                "at": "edge",
+                "state": "SLATE",
+                "say": "The edge skips ad requests and uses slate for the whole break."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The break plays for its scheduled duration and the programme resumes."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tv-style-breaks",
+      "title": "TV-style breaks: house promos, exact gaps and smooth slate loops",
+      "area": "Ads and playout",
+      "status": "Built (2026-11-10), tested locally; not yet on the running pilot",
+      "completed": "2026-11-10",
+      "summary": "Break time no ad fills plays the channel's own house promos instead of the \"We'll be right back\" slate. When a library programme ends between two 5 s grid points, the gap before the break is a black piece of exactly that length, so players stay on time instead of playing about 5 s of slate and falling behind live at every break. Slates that are not a whole number of 5 s pieces loop only their whole pieces, so unfilled breaks no longer stall at every loop.",
+      "who": [
+        "Ad managers with Ads edit (mark a campaign as a house promo)",
+        "Viewers (no slate flash, no drift at breaks)"
+      ],
+      "steps": [
+        "Open Ads and create or edit a campaign.",
+        "Choose an Ad creative (for example a channel ident or \"coming up next\" spot) and tick House promo.",
+        "Save. The campaign list marks it House promo. It is never sold and plays only in time the ads leave open."
+      ],
+      "howItWorks": [
+        "The ad decision works down the waterfall as before (direct-sold campaigns, then ad servers). Time still open afterwards is filled with active house promos for the viewer's country, rotating and repeating, at no CPM. Only time no promo fits plays the standby slate.",
+        "While a paid ad is still being prepared before the break, the time stays open so the retry can still place it; promos are added when the decision becomes final.",
+        "Streaming programmes have their own segment lengths (Mux: 5 s pieces and a shorter last one). When a programme part ends before its 5 s slot does, the snapshot lists the gap length. The control plane makes a black, silent piece of that many frames once (every quality level, MPEG-TS and fMP4 with its own audio) and copies it to the edge; the Worker then plays it for the gap.",
+        "Standby, region slate and fallback loop their leading whole 5 s pieces only (MediaServiceV1.fullSegments); a project slate of 12.3 s loops its first 10 s."
+      ],
+      "optimizations": [
+        "Black pieces are made once per length (nearest frame at 25 fps) and shared by every channel and viewer; distinct lengths are few.",
+        "Until a piece has reached the edge, that gap plays a standby slate piece as before, so nothing waits on ffmpeg."
+      ],
+      "scale": [
+        "House promos come from the same campaign rows as direct-sold ads; one extra query per decision that has time left."
+      ],
+      "rules": [
+        "House promos are never sold and earn nothing: direct-sold selection skips them, and their slots carry CPM 0.",
+        "They follow the same flight dates, territories, status and creative rules as campaigns; frequency caps and audiences do not apply.",
+        "A programme whose licence forbids advertising gets no promos either."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/campaigns",
+        "PUT /api/orgs/{org}/campaigns/{id}"
+      ],
+      "tests": [
+        "AdDecisionServiceTest: promos fill what the paid ad left open, paused or other-country promos are left out, CPM 0.",
+        "MediaPruneTest: a black filler is one piece of exactly the asked frames at every level, with an audio track (runs ffmpeg).",
+        "MuxTest: a 13.857 s programme in a 15 s slot asks for the 1.143 s black piece.",
+        "Worker ovp.test.ts: the gap plays the black piece of its length, after a discontinuity.",
+        "Splice check in Chrome (hls.js) with real Mux pieces and our ad: the old cut-off slate piece played 5 s of slate for a 0.714 s gap; an exact piece played on time with no stalls.",
+        "MediaPruneTest: a slate of 5 + 5 + 2.32 s loops two pieces.",
+        "Live pilot probe (hls.js, Watch settings): before the loop fix, stalls at the end of every slate loop in an unfilled break."
+      ],
+      "docs": [
+        "OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": [],
+      "flow": {
+        "title": "What fills a break, and the gap before it",
+        "intro": "The edge builds one live playlist; every listed length matches the media it points to.",
+        "nodes": [
+          {
+            "id": "programme",
+            "col": 1,
+            "row": 1,
+            "icon": "🎬",
+            "label": "Library programme",
+            "sub": "Its own segment lengths"
+          },
+          {
+            "id": "control",
+            "col": 2,
+            "row": 1,
+            "icon": "⚙",
+            "label": "Control plane",
+            "sub": "Snapshot and ad decision"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "☁",
+            "label": "Playback edge",
+            "sub": "Builds the playlist"
+          },
+          {
+            "id": "viewer",
+            "col": 4,
+            "row": 1,
+            "icon": "▶",
+            "label": "Viewer",
+            "sub": "Plays the channel"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Programme ends between grid points",
+            "steps": [
+              {
+                "at": "programme",
+                "state": "4.286 s",
+                "say": "The programme's last piece ends 0.714 s before its slot does."
+              },
+              {
+                "at": "control",
+                "state": "BLACK",
+                "say": "The control plane makes a black piece of 18 frames (0.72 s) once and copies it to the edge."
+              },
+              {
+                "at": "edge",
+                "state": "GAP",
+                "say": "The playlist lists 0.714 s and points at that piece, after a discontinuity."
+              },
+              {
+                "at": "viewer",
+                "state": "ON TIME",
+                "say": "The break starts on time; the player stays the same distance behind live."
+              }
+            ]
+          },
+          {
+            "name": "Ads leave time open",
+            "steps": [
+              {
+                "at": "control",
+                "state": "ADS",
+                "say": "The waterfall fills 15 s of a 30 s break."
+              },
+              {
+                "at": "control",
+                "state": "PROMOS",
+                "say": "Three 5 s house promos fill the remaining 15 s at no CPM."
+              },
+              {
+                "at": "edge",
+                "state": "SPLICED",
+                "say": "The edge stitches the ad and the promos into the break."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The viewer sees an ad and the channel's own spots, not the standby slate."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

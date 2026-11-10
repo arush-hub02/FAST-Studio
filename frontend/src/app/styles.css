@@ -1164,6 +1164,8 @@ table.table { width: 100%; border-collapse: collapse; }
 
 .player { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
 .player video { width: 100%; height: 100%; display: block; background: #000; }
+.vjs-player { --media-border-radius: 6px; border-radius: 6px; }
+.watch-player-wrap .vjs-player { --media-border-radius: 0; }
 .player-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; pointer-events: none; gap: 8px; }
 .player-ad { position: absolute; left: 12px; bottom: 54px; background: rgba(245, 158, 11, .95); color: #451a03; font-weight: 700; font-size: 12.5px; padding: 5px 10px; border-radius: 7px; }
 .player-msg { position: absolute; inset: 0; display: grid; place-items: center; color: #e2e8f0; text-align: center; padding: 24px; background: radial-gradient(circle at center, #1e1b4b, #000); }
@@ -3277,7 +3279,7 @@ table.table { width: 100%; border-collapse: collapse; }
 .library-preview-player {
   margin-bottom: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
 }
 .library-preview-thumb {
@@ -7398,3 +7400,46 @@ table.table { width: 100%; border-collapse: collapse; }
 .clickable-row { cursor: pointer; }
 .clickable-row:hover td { background: var(--surface-2); }
 @media (max-width: 860px) { .side-tabs-layout { grid-template-columns: minmax(0, 1fr); } .side-tabs { position: static; } }
+
+.schedule-programme-shelf {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.schedule-programme-shelf summary { cursor: pointer; font-weight: 650; }
+.schedule-programme-shelf .field { max-width: 320px; }
+.schedule-programme-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin: 0;
+  list-style: none;
+}
+.schedule-programme-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  cursor: grab;
+}
+.tl-block[draggable="true"] { cursor: grab; }
+.schedule-drop-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  border-left: 2px solid var(--primary);
+  pointer-events: none;
+}
+.schedule-drop-marker span {
+  display: inline-block;
+  padding: 3px 7px;
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}
