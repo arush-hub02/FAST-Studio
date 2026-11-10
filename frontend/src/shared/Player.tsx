@@ -20,6 +20,13 @@ export type PlayerProps = {
 }
 
 const ENGINE = { hlsJs: { liveSyncDurationCount: 3, enableInterstitialPlayback: true } }
+const LIVE_ENGINE = {
+  hlsJs: {
+    ...ENGINE.hlsJs,
+    liveSyncDurationCount: 2.5,
+    liveMaxLatencyDurationCount: 5,
+  },
+}
 
 export default function Player({ src, title, live, poster, onEvent, videoRef, onTimeUpdate }: PlayerProps) {
   const media = useRef<HlsJsAdapter>(null)
@@ -71,7 +78,7 @@ export default function Player({ src, title, live, poster, onEvent, videoRef, on
           <HlsJsVideo
             ref={videoRef}
             mediaRef={media}
-            source={src ? { src, engine: ENGINE } : null}
+            source={src ? { src, engine: live ? LIVE_ENGINE : ENGINE } : null}
             streamType={live ? 'live' : 'on-demand'}
             autoPlay
             muted={live}

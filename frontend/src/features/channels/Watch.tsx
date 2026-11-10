@@ -530,7 +530,7 @@ export default function Watch() {
                   <span>Stream starts muted by browser policy — toggle speaker icon for audio.</span>
                 </div>
                 <div className="row" style={{ gap: 8 }}>
-                  <span className="faint">About 15 s behind live (3 segments of buffer)</span>
+                  <span className="faint">Live buffer target · 2.5 segments</span>
                   <span className="badge sm" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>Video.js 10 · hls.js</span>
                 </div>
               </div>
