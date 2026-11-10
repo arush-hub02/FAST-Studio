@@ -4089,12 +4089,19 @@
           "id": "activation",
           "account": "owner",
           "path": "/aurora/ads",
-          "steps": [{ "click": { "role": "button", "name": "Upload slate" } }],
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Upload slate"
+              }
+            }
+          ],
           "target": "[role=dialog]",
           "caption": "Choose when the new slate applies to each channel."
         }
       ]
-    },
+    },
     {
       "id": "schedule-break-fill",
       "title": "Drag programmes and edit scheduled ad stitching",
@@ -4144,8 +4151,29 @@
         "OVP_DELIVERY_PLAN.md"
       ],
       "screenshots": [
-        { "id": "ready-programmes", "account": "owner", "path": "/aurora/schedule", "steps": [], "target": ".schedule-programme-shelf", "caption": "Drag a ready programme from this list to an open slot." },
-        { "id": "ad-stitching", "account": "owner", "path": "/aurora/schedule", "steps": [{ "click": { "role": "button", "name": "Schedule ad stitching" } }], "target": "[role=dialog]", "caption": "Set the fill choice for all upcoming breaks in the draft." },
+        {
+          "id": "ready-programmes",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [],
+          "target": ".schedule-programme-shelf",
+          "caption": "Drag a ready programme from this list to an open slot."
+        },
+        {
+          "id": "ad-stitching",
+          "account": "owner",
+          "path": "/aurora/schedule",
+          "steps": [
+            {
+              "click": {
+                "role": "button",
+                "name": "Schedule ad stitching"
+              }
+            }
+          ],
+          "target": "[role=dialog]",
+          "caption": "Set the fill choice for all upcoming breaks in the draft."
+        },
         {
           "id": "add-break",
           "account": "owner",
@@ -4203,10 +4231,26 @@
           {
             "name": "Drag and move a programme",
             "steps": [
-              { "at": "schedule", "state": "DRAFT", "say": "Drop a ready programme into an open slot or move an upcoming placement with its mid-rolls." },
-              { "at": "schedule", "state": "SAVED", "say": "The draft saves the placement only if its complete time range fits." },
-              { "at": "version", "state": "PUBLISHED", "say": "Publishing applies the changed airtime and fill settings." },
-              { "at": "viewer", "state": "PLAYING", "say": "The programme and its breaks play at the new airtime." }
+              {
+                "at": "schedule",
+                "state": "DRAFT",
+                "say": "Drop a ready programme into an open slot or move an upcoming placement with its mid-rolls."
+              },
+              {
+                "at": "schedule",
+                "state": "SAVED",
+                "say": "The draft saves the placement only if its complete time range fits."
+              },
+              {
+                "at": "version",
+                "state": "PUBLISHED",
+                "say": "Publishing applies the changed airtime and fill settings."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The programme and its breaks play at the new airtime."
+              }
             ]
           },
           {
@@ -4256,6 +4300,145 @@
                 "at": "viewer",
                 "state": "PLAYING",
                 "say": "The break plays for its scheduled duration and the programme resumes."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tv-style-breaks",
+      "title": "TV-style breaks: house promos and exact gaps",
+      "area": "Ads and playout",
+      "status": "Built (2026-11-10), tested locally; not yet on the running pilot",
+      "completed": "2026-11-10",
+      "summary": "Break time no ad fills plays the channel's own house promos instead of the \"We'll be right back\" slate. When a library programme ends between two 5 s grid points, the gap before the break is a black piece of exactly that length, so players stay on time instead of playing about 5 s of slate and falling behind live at every break.",
+      "who": [
+        "Ad managers with Ads edit (mark a campaign as a house promo)",
+        "Viewers (no slate flash, no drift at breaks)"
+      ],
+      "steps": [
+        "Open Ads and create or edit a campaign.",
+        "Choose an Ad creative (for example a channel ident or \"coming up next\" spot) and tick House promo.",
+        "Save. The campaign list marks it House promo. It is never sold and plays only in time the ads leave open."
+      ],
+      "howItWorks": [
+        "The ad decision works down the waterfall as before (direct-sold campaigns, then ad servers). Time still open afterwards is filled with active house promos for the viewer's country, rotating and repeating, at no CPM. Only time no promo fits plays the standby slate.",
+        "While a paid ad is still being prepared before the break, the time stays open so the retry can still place it; promos are added when the decision becomes final.",
+        "Streaming programmes have their own segment lengths (Mux: 5 s pieces and a shorter last one). When a programme part ends before its 5 s slot does, the snapshot lists the gap length. The control plane makes a black, silent piece of that many frames once (every quality level, MPEG-TS and fMP4 with its own audio) and copies it to the edge; the Worker then plays it for the gap."
+      ],
+      "optimizations": [
+        "Black pieces are made once per length (nearest frame at 25 fps) and shared by every channel and viewer; distinct lengths are few.",
+        "Until a piece has reached the edge, that gap plays a standby slate piece as before, so nothing waits on ffmpeg."
+      ],
+      "scale": [
+        "House promos come from the same campaign rows as direct-sold ads; one extra query per decision that has time left."
+      ],
+      "rules": [
+        "House promos are never sold and earn nothing: direct-sold selection skips them, and their slots carry CPM 0.",
+        "They follow the same flight dates, territories, status and creative rules as campaigns; frequency caps and audiences do not apply.",
+        "A programme whose licence forbids advertising gets no promos either."
+      ],
+      "api": [
+        "POST /api/orgs/{org}/campaigns",
+        "PUT /api/orgs/{org}/campaigns/{id}"
+      ],
+      "tests": [
+        "AdDecisionServiceTest: promos fill what the paid ad left open, paused or other-country promos are left out, CPM 0.",
+        "MediaPruneTest: a black filler is one piece of exactly the asked frames at every level, with an audio track (runs ffmpeg).",
+        "MuxTest: a 13.857 s programme in a 15 s slot asks for the 1.143 s black piece.",
+        "Worker ovp.test.ts: the gap plays the black piece of its length, after a discontinuity.",
+        "Splice check in Chrome (hls.js) with real Mux pieces and our ad: the old cut-off slate piece played 5 s of slate for a 0.714 s gap; an exact piece played on time with no stalls."
+      ],
+      "docs": [
+        "OVP_DELIVERY_PLAN.md"
+      ],
+      "screenshots": [],
+      "flow": {
+        "title": "What fills a break, and the gap before it",
+        "intro": "The edge builds one live playlist; every listed length matches the media it points to.",
+        "nodes": [
+          {
+            "id": "programme",
+            "col": 1,
+            "row": 1,
+            "icon": "🎬",
+            "label": "Library programme",
+            "sub": "Its own segment lengths"
+          },
+          {
+            "id": "control",
+            "col": 2,
+            "row": 1,
+            "icon": "⚙",
+            "label": "Control plane",
+            "sub": "Snapshot and ad decision"
+          },
+          {
+            "id": "edge",
+            "col": 3,
+            "row": 1,
+            "icon": "☁",
+            "label": "Playback edge",
+            "sub": "Builds the playlist"
+          },
+          {
+            "id": "viewer",
+            "col": 4,
+            "row": 1,
+            "icon": "▶",
+            "label": "Viewer",
+            "sub": "Plays the channel"
+          }
+        ],
+        "scenarios": [
+          {
+            "name": "Programme ends between grid points",
+            "steps": [
+              {
+                "at": "programme",
+                "state": "4.286 s",
+                "say": "The programme's last piece ends 0.714 s before its slot does."
+              },
+              {
+                "at": "control",
+                "state": "BLACK",
+                "say": "The control plane makes a black piece of 18 frames (0.72 s) once and copies it to the edge."
+              },
+              {
+                "at": "edge",
+                "state": "GAP",
+                "say": "The playlist lists 0.714 s and points at that piece, after a discontinuity."
+              },
+              {
+                "at": "viewer",
+                "state": "ON TIME",
+                "say": "The break starts on time; the player stays the same distance behind live."
+              }
+            ]
+          },
+          {
+            "name": "Ads leave time open",
+            "steps": [
+              {
+                "at": "control",
+                "state": "ADS",
+                "say": "The waterfall fills 15 s of a 30 s break."
+              },
+              {
+                "at": "control",
+                "state": "PROMOS",
+                "say": "Three 5 s house promos fill the remaining 15 s at no CPM."
+              },
+              {
+                "at": "edge",
+                "state": "SPLICED",
+                "say": "The edge stitches the ad and the promos into the break."
+              },
+              {
+                "at": "viewer",
+                "state": "PLAYING",
+                "say": "The viewer sees an ad and the channel's own spots, not the standby slate."
               }
             ]
           }

@@ -29,6 +29,7 @@ public class DirectSoldSource implements IAdSource {
         List<Candidate> all = campaigns.candidates(req.org());
         List<Candidate> eligible = new ArrayList<>();
         for (Candidate c : all) {
+            if (c.house()) continue;   // house promos are never sold: AdDecisionServiceV1 adds them to unsold time
             List<String> terr = Times.codes(c.territories());
             if (!c.status().equals("ACTIVE")) excluded.add(new AdDecisionServiceV1.Excluded(c.name(), "Campaign is " + c.status().toLowerCase()));
             else if (req.at().isBefore(c.startsAt().toInstant()) || !req.at().isBefore(c.endsAt().toInstant())) excluded.add(new AdDecisionServiceV1.Excluded(c.name(), "Outside its flight dates"));

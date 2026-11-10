@@ -128,6 +128,7 @@ class MuxTest {
     @Autowired JdbcClient db;
     @Autowired Tokens tokens;
     @Autowired tools.jackson.databind.json.JsonMapper json;
+    @Autowired com.faststudio.v1.services.media.MediaServiceV1 media;
 
     UUID id(String sql) { return db.sql(sql).query(UUID.class).single(); }
 
@@ -305,6 +306,14 @@ class MuxTest {
         assertEquals(3, item.nc());
         assertNotNull(item.seq());
         assertEquals(item.n(), 3 + item.fill().length);
+        int[] fill = item.fill();
+        for (int k = 0; k < fill.length - 1; k++) assertEquals(5000, fill[k], "the rest of the slot is whole slate pieces");
+        assertEquals(1143, fill[fill.length - 1], "13.857 s of programme leaves 1.143 s before the next grid point");
+        assertNull(snap.fillers().get("1143"), "no black piece of that length on the edge yet: slate covers the gap meanwhile");
+        if (media.ffmpegAvailable()) {   // the snapshot asked for the black piece (29 frames = 1.16 s at 25 fps)
+            for (int i = 0; i < 600 && !media.blackReady(29); i++) Thread.sleep(100);
+            assertTrue(media.blackReady(29), "black filler made in the background");
+        }
         var o = snap.ovp().get(asset.toString());
         assertTrue(o.url().endsWith("/stream/pB7Hh01ocEanTales.m3u8"), o.url());
         assertArrayEquals(new int[]{5000, 5000, 3857}, o.d());

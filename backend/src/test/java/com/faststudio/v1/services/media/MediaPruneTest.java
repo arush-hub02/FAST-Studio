@@ -70,4 +70,24 @@ class MediaPruneTest {
         assertTrue(Files.exists(out.resolve(MediaServiceV1.FMP4_MASTER)));
         MediaServiceV1.deleteDir(root);
     }
+
+    @Test
+    void blackFillerIsOnePieceOfExactlyTheAskedFramesAtEveryLevelWithAudio() throws Exception {
+        assertEquals(18, MediaServiceV1.blackFrames(714));
+        assertEquals(1, MediaServiceV1.blackFrames(3));
+        Path root = Files.createTempDirectory("fast-black");
+        MediaServiceV1 media = new MediaServiceV1(null, null, root.toString(), "", List.of(), null, null);
+        org.junit.jupiter.api.Assumptions.assumeTrue(media.ffmpegAvailable(), "needs ffmpeg");
+        media.ensureBlack(18);
+        for (int i = 0; i < 600 && !media.blackReady(18); i++) Thread.sleep(100);
+        assertTrue(media.blackReady(18), "made within a minute");
+        Path out = root.resolve("media").resolve(MediaServiceV1.blackKey(18));
+        for (int level = 0; level < QualityLevels.ALL.size(); level++) {
+            String list = Files.readString(out.resolve(level + "/index.m3u8"));
+            assertTrue(list.contains("#EXTINF:0.720000,") && list.split("#EXTINF").length == 2, "level " + level + ": one 0.72 s piece: " + list);
+            assertTrue(Files.exists(out.resolve("v" + level + "/seg_00000.m4s")));
+        }
+        assertTrue(Files.exists(out.resolve("a/seg_00000.m4s")), "silent audio track for fMP4 channels");
+        MediaServiceV1.deleteDir(root);
+    }
 }

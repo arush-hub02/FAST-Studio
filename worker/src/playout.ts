@@ -38,6 +38,8 @@ export type Snapshot = {
   fmt?: 'TS' | 'FMP4'
   fmp4Layout?: Fmp4Layout
   slateChanges?: SlateChange[]
+  /** Black pieces for the gaps shorter than a segment that streaming programmes leave, by gap length in ms. */
+  fillers?: Record<string, Media>
 }
 /** Signed by the control plane when a viewer starts watching (PlaybackController.start). */
 export type Session = {
@@ -215,7 +217,13 @@ export function resolver(snap: Snapshot, s: Session, decided: (breakId: string) 
     const slate = (g: { key: string; media: string; n: number }) => ({ ...g, start, dur })
     if (!live) return slate(standby(i, start))
     if (!offered || !e.allowed.includes(s.country)) return slate(geo(i))
-    if (k >= (e.nc ?? 0) || !e.ovp) return slate(standby(i, start))
+    if (k >= (e.nc ?? 0)) {
+      // a gap shorter than a segment: a black piece of that exact length (a cut-off slate piece would play in full)
+      const f = dur < SEG ? snap.fillers?.[String(dur)] : undefined
+      if (f?.key) return { key: `fill:${e.id}:${k}`, media: f.key, n: 0, start, dur, levels: f.levels }
+      return slate(standby(i, start))
+    }
+    if (!e.ovp) return slate(standby(i, start))
     const seg = ovpSeg(e.ovp, variant, (e.i0 ?? 0) + k)
     if (!seg) return { ...standby(i, start), start, dur }   // platform unreachable: slate for the whole programme
     return { key: 'e:' + e.id, media: '', n: k, start, dur, url: seg.url, map: seg.map }

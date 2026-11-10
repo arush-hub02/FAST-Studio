@@ -58,7 +58,7 @@ public class CampaignServiceV1 {
 
     private static CampaignRepository.Fields fields(CampaignRequest r, String audiences, Integer frequencyCap) {
         return new CampaignRepository.Fields(r.name().trim(), r.advertiser().trim(), r.creativeAssetId(), r.startsAt(), r.endsAt(),
-                territories(r.territories()), r.priority(), r.cpm(), audiences, frequencyCap);
+                territories(r.territories()), r.priority(), r.cpm(), audiences, frequencyCap, r.house());
     }
 
     /** The creative must be an Ad video of this project, and the campaign must end after it starts. */

@@ -2990,6 +2990,41 @@
             }
           ]
         },
+        "campaign": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "house",
+              "layer": "service"
+            },
+            {
+              "class": "CampaignRepository",
+              "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -44307,6 +44342,46 @@
             }
           ]
         },
+        "campaign": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "beacon",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "beacon",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "house",
+              "layer": "service"
+            },
+            {
+              "class": "CampaignRepository",
+              "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -44947,6 +45022,46 @@
               "class": "Data",
               "method": "asset",
               "layer": "core"
+            }
+          ]
+        },
+        "campaign": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "decision",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "house",
+              "layer": "service"
+            },
+            {
+              "class": "CampaignRepository",
+              "method": "candidates",
+              "layer": "repository"
             }
           ]
         },
@@ -47574,6 +47689,23 @@
       ],
       "write": []
     },
+    "campaign": {
+      "read": [
+        "POST /api/orgs/{org}/ads/simulate",
+        "GET /api/orgs/{org}/analytics",
+        "POST /api/orgs/{org}/assets/{id}/archive",
+        "GET /api/orgs/{org}/campaigns",
+        "DELETE /api/orgs/{org}/slate",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}",
+        "GET /play/{session}/info"
+      ],
+      "write": [
+        "POST /api/orgs/{org}/campaigns",
+        "PUT /api/orgs/{org}/campaigns/{id}",
+        "POST /api/orgs/{org}/campaigns/{id}/status"
+      ]
+    },
     "alert": {
       "read": [
         "GET /api/orgs/{org}/alerts",
@@ -47613,20 +47745,6 @@
       "write": [
         "POST /play/{session}/beacons",
         "GET /play/{session}/decisions/{breakId}"
-      ]
-    },
-    "campaign": {
-      "read": [
-        "GET /api/orgs/{org}/analytics",
-        "POST /api/orgs/{org}/assets/{id}/archive",
-        "GET /api/orgs/{org}/campaigns",
-        "DELETE /api/orgs/{org}/slate",
-        "GET /play/{session}/info"
-      ],
-      "write": [
-        "POST /api/orgs/{org}/campaigns",
-        "PUT /api/orgs/{org}/campaigns/{id}",
-        "POST /api/orgs/{org}/campaigns/{id}/status"
       ]
     },
     "asset_playback": {

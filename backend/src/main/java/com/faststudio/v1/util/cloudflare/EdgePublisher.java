@@ -120,6 +120,10 @@ public class EdgePublisher {
         Map<String, Path> r2Only = new HashMap<>();   // ads and slate live in R2 only: key -> the ad's uploaded original (null for slate)
         r2Only.put(MediaServiceV1.STANDBY, null);
         r2Only.put(MediaServiceV1.GEO, null);
+        // black fillers made so far (tiny; they stay on the server too)
+        try (Stream<Path> s = Files.list(media.mediaDir().resolve("_platform"))) {
+            s.map(p -> "_platform/" + p.getFileName()).filter(k -> k.startsWith("_platform/black-")).forEach(keys::add);
+        } catch (IOException e) { /* no platform folder yet */ }
         TenantScope.bypass(() -> data.db.sql("select media_key, kind, org_id, id from asset where status = 'READY' and media_key is not null /* all tenants: edge sync */")
                 .query((rs, n) -> {
                     String key = rs.getString("media_key");
@@ -250,7 +254,13 @@ public class EdgePublisher {
      */
     public record Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs,
                            long from, long until, List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items,
-                           long t0, long seq0, int target, Map<String, Ovp> ovp, String fmt) {}
+                           long t0, long seq0, int target, Map<String, Ovp> ovp, String fmt, Map<String, Media> fillers) {
+        public Snapshot(int v, String org, String channel, String status, List<String> territories, long segMs, long from, long until,
+                        List<Rendition> ladder, Media standby, Media geo, Fallback fallback, List<Item> items, long t0, long seq0, int target,
+                        Map<String, Ovp> ovp, String fmt) {
+            this(v, org, channel, status, territories, segMs, from, until, ladder, standby, geo, fallback, items, t0, seq0, target, ovp, fmt, Map.of());
+        }
+    }
 
     record ChannelRow(UUID orgId, String orgSlug, UUID channelId) {}
 
@@ -383,7 +393,27 @@ public class EdgePublisher {
         Media standby = own != null
                 ? new Media(own, media.segments(own), levels(own)) : platform(MediaServiceV1.STANDBY);
         return new Snapshot(3, orgSlug, ch.slug(), ch.status(), terr, Times.SEG_MS, from, until, ladder(org),
-                standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt);
+                standby, platform(MediaServiceV1.GEO), fb, items, t0, seq0, target, ovp, fmt, fillers(items, fmp4));
+    }
+
+    /**
+     * Black fillers for the gaps shorter than a segment that streaming programmes leave before the next grid point,
+     * keyed by gap length in ms. One that isn't on the edge yet is made in the background; until then that gap plays a
+     * standby slate piece, as before.
+     */
+    private Map<String, Media> fillers(List<Item> items, boolean fmp4) {
+        Map<String, Media> out = new TreeMap<>();
+        for (Item it : items) {
+            if (it.fill() == null) continue;
+            for (int ms : it.fill()) {
+                if (ms >= Times.SEG_MS || out.containsKey(String.valueOf(ms))) continue;
+                int frames = MediaServiceV1.blackFrames(ms);
+                String key = MediaServiceV1.blackKey(frames);
+                if (stored(key) && (!fmp4 || storedFmp4(key))) out.put(String.valueOf(ms), new Media(key, 1, levels(key)));
+                else media.ensureBlack(frames);
+            }
+        }
+        return out;
     }
 
     private static List<String> allowed(Asset a, List<String> terr, Map<UUID, Rights.Policy> policies, Entry e) {

@@ -3,6 +3,22 @@
   "intro": "Questions asked while building and testing FAST Studio, answered for this product as it is today. The newest question is at the top. Source: docs/faq/faq.json; rebuild with node tools/build-faq.mjs (also part of node tools/build-docs.mjs).",
   "questions": [
     {
+      "id": "tv-style-breaks-lag",
+      "asked": "2026-11-10",
+      "question": "Watch live lags and drops frames around ad breaks. How do we make breaks seamless like TV?",
+      "short": "Two changes. A programme from the library that ends between two 5 s grid points used to be followed by a cut-off 5 s slate piece: players played the whole 5 s and fell about 4 s further behind live at every such break, then jumped to catch up. That gap is now a black piece of exactly its length. And break time no ad fills now plays the channel's house promos instead of the standby slate.",
+      "sections": [
+        {
+          "title": "What was measured",
+          "html": "<ul><li>Two browsers played the pilot channel through a break: both stalled 4 to 5 times there and none during the programme. The player buffer setting made no difference.</li><li>The live playlist showed a 0.714 s gap after the Mux programme, pointing at a full 5 s slate piece. Rebuilt locally with the real pieces, that layout played 5 s longer than scheduled; an exact 0.72 s piece played on time.</li><li>Mux programmes are 29.97 fps with 44.1 kHz audio, our ads 25 fps with 48 kHz. Switching between them caused no stalls in Chrome, so ads are not re-encoded per channel.</li></ul>"
+        },
+        {
+          "title": "House promos",
+          "html": "<p>Ads → edit a campaign → tick <b>House promo</b>. It is never sold, earns nothing, and fills only time the ads leave open, rotating with other promos.</p>"
+        }
+      ]
+    },
+    {
       "id": "watch-live-stream-link-vlc",
       "asked": "2026-11-10",
       "question": "Can Watch live give a manifest URL that plays anywhere, like VLC?",

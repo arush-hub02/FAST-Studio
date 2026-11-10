@@ -410,6 +410,7 @@ export default function Ads() {
                           </div>
                           <div className="faint small" style={{ marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span>{c.advertiser}</span>
+                            {c.house && <span className="badge sm" title="Fills unsold break time instead of the standby slate">House promo</span>}
                             <span>·</span>
                             <span>Creative: <b>{c.creativeTitle || 'Standard Video'}</b></span>
                           </div>
@@ -573,7 +574,7 @@ export default function Ads() {
                             {c.creativeTitle} ({fmtDur(c.creativeDurationMs)})
                           </div>
                         </td>
-                        <td>{c.advertiser}</td>
+                        <td>{c.advertiser}{c.house && <> <span className="badge sm">House promo</span></>}</td>
                         <td>
                           <Status value={c.status} />
                         </td>

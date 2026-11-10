@@ -256,6 +256,49 @@ public class MediaServiceV1 {
 
     public void release(Thread worker) { stopped.remove(worker); }
 
+    // ---------------------------------------------------------------- black fillers
+
+    /** Frames per second of everything we encode (see runEncode). */
+    public static final int FPS = 25;
+    private final Set<Integer> blackQueued = ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.ExecutorService blackRuns = java.util.concurrent.Executors.newSingleThreadExecutor(Thread.ofPlatform().name("black-fillers").daemon().factory());
+
+    /** Frame count of a black filler for a gap of ms (nearest frame, at least one). */
+    public static int blackFrames(long ms) { return (int) Math.max(1, Math.round(ms * FPS / 1000.0)); }
+
+    /** Key of the black filler that is the given number of frames long: one segment, every level, silent audio. */
+    public static String blackKey(int frames) { return "_platform/black-" + frames + "f-q" + QualityLevels.ALL.size(); }
+
+    /** True once the filler of this length is packaged on this server (EdgePublisher then copies it to the edge). */
+    public boolean blackReady(int frames) { return Files.exists(mediaDir.resolve(blackKey(frames)).resolve(FMP4_MASTER)); }
+
+    /**
+     * Makes the filler of this length in the background, once. A streaming programme that ends between two 5 s grid
+     * points leaves a gap before the next item; a filler the exact length of the gap keeps the playlist true to the
+     * media (a cut-off 5 s slate piece made players play ~5 s of slate and drift behind live at every such break).
+     */
+    public void ensureBlack(int frames) {
+        if (blackReady(frames) || ffmpeg() == null || !blackQueued.add(frames)) return;
+        blackRuns.submit(() -> {
+            String key = blackKey(frames);
+            Path out = mediaDir.resolve(key);
+            RUN_LEVELS.set(QualityLevels.ALL);
+            try {
+                if (Files.exists(out)) try (Stream<Path> s = Files.walk(out)) { for (Path p : s.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(p); }
+                Files.createDirectories(out);
+                String err = encode(List.of("-f", "lavfi", "-i", "color=c=black:size=1280x720:rate=" + FPS, "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"),
+                        "1:a", "null", out, frames * 1000L / FPS, false);
+                if (err != null) log.error("black filler {} failed: {}", key, err);
+                forget(key);
+            } catch (Exception e) {
+                log.error("black filler {} failed", key, e);
+            } finally {
+                RUN_LEVELS.remove();
+                blackQueued.remove(frames);   // a failure may be tried again later
+            }
+        });
+    }
+
     // ---------------------------------------------------------------- ffmpeg recipes (drawn on a 1280x720 canvas)
 
     private void slate(String key, String title, String subtitle, String c0, String c1, int seconds) {

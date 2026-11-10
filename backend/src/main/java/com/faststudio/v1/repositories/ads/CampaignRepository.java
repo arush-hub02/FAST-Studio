@@ -26,39 +26,39 @@ public class CampaignRepository {
                        (select count(*) from ad_event e where e.org_id = c.org_id and e.campaign_id = c.id and e.event = 'COMPLETE'
                           and exists (select 1 from ad_event i where i.session_id = e.session_id and i.break_id = e.break_id
                                       and i.campaign_id = e.campaign_id and i.event = 'IMPRESSION')) as completes,
-                       null as thumb_url, c.audiences, c.frequency_cap
+                       null as thumb_url, c.audiences, c.frequency_cap, c.house
                 from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
                 where c.org_id = :o order by c.status, c.priority desc, c.name""").param("o", org).query(Campaign.class).list();
     }
 
     public record Fields(String name, String advertiser, UUID creativeAssetId, OffsetDateTime startsAt, OffsetDateTime endsAt, String territories,
-                         int priority, BigDecimal cpm, String audiences, Integer frequencyCap) {}
+                         int priority, BigDecimal cpm, String audiences, Integer frequencyCap, Boolean house) {}
 
     public UUID insert(UUID org, Fields f) {
         return db.sql("""
-                insert into campaign(org_id, name, advertiser, creative_asset_id, starts_at, ends_at, territories, priority, cpm, audiences, frequency_cap)
-                values (:o, :n, :a, :cr, :s, :e, :terr, :p, :cpm, :aud, :cap) returning id""")
+                insert into campaign(org_id, name, advertiser, creative_asset_id, starts_at, ends_at, territories, priority, cpm, audiences, frequency_cap, house)
+                values (:o, :n, :a, :cr, :s, :e, :terr, :p, :cpm, :aud, :cap, coalesce(:h, false)) returning id""")
                 .param("o", org).param("n", f.name()).param("a", f.advertiser()).param("cr", f.creativeAssetId()).param("s", f.startsAt())
                 .param("e", f.endsAt()).param("terr", f.territories()).param("p", f.priority()).param("cpm", f.cpm())
-                .param("aud", f.audiences()).param("cap", f.frequencyCap()).query(UUID.class).single();
+                .param("aud", f.audiences()).param("cap", f.frequencyCap()).param("h", f.house()).query(UUID.class).single();
     }
 
     /** Null audiences / frequency cap keep the stored values. False when the campaign does not exist. */
     public boolean update(UUID org, UUID id, Fields f) {
         return db.sql("""
                 update campaign set name = :n, advertiser = :a, creative_asset_id = :cr, starts_at = :s, ends_at = :e, territories = :terr,
-                priority = :p, cpm = :cpm, audiences = coalesce(:aud, audiences), frequency_cap = coalesce(:cap, frequency_cap)
+                priority = :p, cpm = :cpm, audiences = coalesce(:aud, audiences), frequency_cap = coalesce(:cap, frequency_cap), house = coalesce(:h, house)
                 where org_id = :o and id = :id""")
                 .param("n", f.name()).param("a", f.advertiser()).param("cr", f.creativeAssetId()).param("s", f.startsAt()).param("e", f.endsAt())
                 .param("terr", f.territories()).param("p", f.priority()).param("cpm", f.cpm()).param("aud", f.audiences())
-                .param("cap", f.frequencyCap()).param("o", org).param("id", id).update() > 0;
+                .param("cap", f.frequencyCap()).param("h", f.house()).param("o", org).param("id", id).update() > 0;
     }
 
     /** Every campaign of the project with its creative, for the ad decision to filter. */
     public List<Candidate> candidates(UUID org) {
         return db.sql("""
                 select c.id, c.name, c.advertiser, c.status, c.starts_at, c.ends_at, c.territories, c.priority, c.cpm,
-                       a.status as creative_status, a.media_key, a.duration_ms,c.audiences,c.frequency_cap
+                       a.status as creative_status, a.media_key, a.duration_ms,c.audiences,c.frequency_cap,c.house
                 from campaign c join asset a on a.org_id = c.org_id and a.id = c.creative_asset_id
                 where c.org_id = :o""").param("o", org).query(Candidate.class).list();
     }

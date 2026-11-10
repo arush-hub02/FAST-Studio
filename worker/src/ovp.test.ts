@@ -49,6 +49,16 @@ test('platform segments play at their real lengths and the slot ends with slate'
   assert.ok(segs.some(s => s[2].includes('aurora/ad.1/')), 'our ad follows in the break')
 })
 
+test('a gap shorter than a segment plays the black piece of that length when the edge has one', () => {
+  const withBlack = { ...snap, fillers: { '1143': { key: '_platform/black-29f-q6', segments: 1, levels: [0, 2] } } }
+  const segs = parse(mediaPlaylist(withBlack, viewer, 1, T + 45_000, 'https://m', () => ad15, new Map(), mux).text)
+  const after = segs[segs.findIndex(s => s[2] === muxUrl('a1', 1, 5)) + 1]
+  assert.equal(after[1], 1143)
+  assert.equal(after[2], 'https://m/_platform/black-29f-q6/0/seg_00000.ts', 'nearest lower level of the filler, its only piece')
+  const t = mediaPlaylist(withBlack, viewer, 1, T + 45_000, 'https://m', () => ad15, new Map(), mux).text
+  assert.match(t, /DISCONTINUITY\n(#EXT-X-PROGRAM-DATE-TIME:[^\n]+\n)?#EXTINF:1\.143,\nhttps:\/\/m\/_platform\/black/, 'a discontinuity before it')
+})
+
 test('listed lengths add up to the clock across the programme, the break and the next programme', () => {
   const segs = parse(play(T + 75_000))
   const total = segs.reduce((a, s) => a + s[1], 0)
