@@ -3608,12 +3608,12 @@
               {
                 "at": "player",
                 "state": "programme",
-                "say": "The player gets the library's own segments at their real lengths…"
+                "say": "Watch aims to play 2.5 segments behind the available edge. Automatic quality adapts to the player size and can step down when frames drop."
               },
               {
                 "at": "r2",
                 "state": "ad break",
-                "say": "…then our ads and slate from R2 at the break, with a discontinuity in between."
+                "say": "The same player switches to ads or slate from R2 at the break, with a discontinuity in between."
               }
             ]
           },
@@ -3655,6 +3655,7 @@
       ],
       "optimizations": [
         "Library playlists are read once per location, video and quality level and shared by every viewer; viewers fetch video segments from the library's CDN directly.",
+        "Watch targets 2.5 HLS segments behind the available edge and moves back toward its target after falling more than five segments behind. Actual delay varies with segment availability, the connection and player buffering. External players use their own buffers.",
         "A viewer's playlist waits for a library read only the first time. Ad decisions are prefetched up to 60 seconds before an SSAI break. An empty decision waiting for a creative can retry before the break.",
         "Snapshots only load the streaming details of videos in their window; the numbering anchor is written once an hour per channel."
       ],
@@ -3682,7 +3683,21 @@
       "docs": [
         "docs/OVP_DELIVERY_PLAN.md"
       ],
-      "screenshots": []
+      "screenshots": [
+        {
+          "id": "watch-buffer",
+          "account": "owner",
+          "path": "/aurora/watch",
+          "steps": [
+            { "waitFor": { "text": "Live buffer target · 2.5 segments" } },
+            { "waitFor": { "selector": ".watch-monitor-frame video" } },
+            { "eval": "document.querySelector('video').readyState >= 2 || new Promise((resolve, reject) => { const video = document.querySelector('video'); video.addEventListener('playing', resolve, { once: true }); setTimeout(() => reject(new Error('Watch did not start playback')), 15000); })" }
+          ],
+          "target": ".watch-monitor-frame",
+          "mask": ["input[aria-label='Stream link']"],
+          "caption": "Watch shows its live buffer target. An external HLS player chooses its own buffer."
+        }
+      ]
     },
     {
       "id": "quality-levels",
