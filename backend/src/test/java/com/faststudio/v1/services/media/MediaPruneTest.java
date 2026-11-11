@@ -71,6 +71,34 @@ class MediaPruneTest {
         MediaServiceV1.deleteDir(root);
     }
 
+    static com.faststudio.v1.dto.media.AssetDto.ProcessingJob adJob(String mediaKey, String sourceRef) {
+        return new com.faststudio.v1.dto.media.AssetDto.ProcessingJob(java.util.UUID.randomUUID(), java.util.UUID.randomUUID(), "acme", "Spot", "AD",
+                null, null, 30_000, mediaKey, "https://cdn.example/a.mp4", sourceRef, null);
+    }
+
+    @Test
+    void firstVersionIsOneLevelThenFullLadderIsQueued() {
+        var project = QualityLevels.parse("360p,540p,720p,1080p");
+        assertEquals(List.of("720p"), MediaServiceV1.firstLevels(adJob(null, "GAM|creative:1"), project).stream().map(QualityLevels.Level::name).toList());
+        assertEquals(project, MediaServiceV1.firstLevels(adJob("acme/ad.1", "GAM|creative:1"), project), "second run: the full ladder");
+        assertEquals(project, MediaServiceV1.firstLevels(adJob(null, null), project), "our own uploads: unchanged");
+        var low = QualityLevels.parse("1080p,2160p");
+        assertEquals(List.of("1080p"), MediaServiceV1.firstLevels(adJob(null, "GAM|creative:1"), low).stream().map(QualityLevels.Level::name).toList(),
+                "no level at or below 720p: the lowest");
+        assertEquals(List.of("360p"), MediaServiceV1.firstLevels(adJob(null, "GAM|creative:1"), QualityLevels.parse("360p")).stream().map(QualityLevels.Level::name).toList());
+    }
+
+    @Test
+    void publishOfOneLevelCreativeQueuesFullLadder() {
+        var jobs = org.mockito.Mockito.mock(com.faststudio.v1.repositories.media.MediaJobRepository.class);
+        MediaServiceV1 media = new MediaServiceV1(null, jobs, System.getProperty("java.io.tmpdir"), "", List.of(), null, null);
+        java.util.UUID project = java.util.UUID.randomUUID(), asset = java.util.UUID.randomUUID();
+        media.published(project, asset, new MediaServiceV1.Packaged("acme/ad.1", null, 30_000, "x", null, false, true));
+        org.mockito.Mockito.verify(jobs).enqueue(project, asset, "PROGRAMME");   // off the ad lane: new creatives' first versions never wait behind it
+        media.published(project, asset, new MediaServiceV1.Packaged("acme/ad.2", null, 30_000, "x", null, false));
+        org.mockito.Mockito.verifyNoMoreInteractions(jobs);
+    }
+
     @Test
     void loopsUseOnlyTheWholePiecesOfASlateWhoseLastPieceIsShort() throws Exception {
         Path root = Files.createTempDirectory("fast-loop");

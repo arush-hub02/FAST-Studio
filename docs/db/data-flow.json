@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10",
+  "generatedAt": "2026-11-11",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -2067,8 +2067,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -2187,8 +2197,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -2247,8 +2267,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -2523,8 +2553,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -2594,6 +2634,31 @@
             }
           ]
         },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_value": {
           "mode": "read+write",
           "chain": [
@@ -2633,8 +2698,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -2693,8 +2768,18 @@
               "layer": "service"
             },
             {
-              "class": "ProjectAdSourceServiceV1",
-              "method": "requireFeature",
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -3025,6 +3110,56 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -3331,6 +3466,66 @@
             {
               "class": "AdSourceRepository",
               "method": "channelSlugOfBreak",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "simulate",
+              "layer": "controller"
+            },
+            {
+              "class": "CampaignServiceV1",
+              "method": "simulate",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -14298,18 +14493,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -14449,7 +14644,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -14468,23 +14663,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -14538,19 +14733,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -14603,23 +14798,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -15264,18 +15444,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -15415,7 +15595,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -15434,23 +15614,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -15504,19 +15684,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -15569,23 +15749,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -27272,18 +27437,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -27423,7 +27588,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -27442,23 +27607,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -27512,19 +27677,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -27577,23 +27742,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -28238,18 +28388,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -28389,7 +28539,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -28408,23 +28558,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -28478,19 +28628,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -28543,23 +28693,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -31258,6 +31393,51 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_definition": {
           "mode": "read",
           "chain": [
@@ -31343,6 +31523,51 @@
             }
           ]
         },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
+              "layer": "repository"
+            }
+          ]
+        },
         "organization": {
           "mode": "read",
           "chain": [
@@ -31369,6 +31594,61 @@
             {
               "class": "ConnectorRepository",
               "method": "organization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "add",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "addAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "add",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -31554,6 +31834,51 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_definition": {
           "mode": "read",
           "chain": [
@@ -31604,6 +31929,31 @@
             }
           ]
         },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_value": {
           "mode": "read+write",
           "chain": [
@@ -31625,6 +31975,51 @@
             {
               "class": "AdSourceRepository",
               "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "customer_tenant": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -31655,6 +32050,61 @@
             {
               "class": "ConnectorRepository",
               "method": "organization",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "requireDeliveryAllowed",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -32395,18 +32845,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -32546,7 +32996,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -32565,23 +33015,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -32635,19 +33085,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -32700,23 +33150,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -33361,18 +33796,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -33512,7 +33947,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -33531,23 +33966,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -33601,19 +34036,19 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "record",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platform",
-              "layer": "core"
+              "class": "TenantConfigurationServiceV1",
+              "method": "projectFeatures",
+              "layer": "service"
             },
             {
-              "class": "Audit",
-              "method": "platformOrg",
-              "layer": "core"
+              "class": "TenantConfigurationRepository",
+              "method": "projectFeatures",
+              "layer": "repository"
             }
           ]
         },
@@ -33666,23 +34101,8 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "marketplace",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "ownAdServers",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
@@ -34270,18 +34690,18 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
               "layer": "service"
             },
             {
-              "class": "CatalogueServiceV1",
-              "method": "permissions",
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
@@ -34450,23 +34870,23 @@
               "layer": "service"
             },
             {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "visible",
-              "layer": "service"
-            },
-            {
-              "class": "ConnectorCatalogueServiceV1",
-              "method": "forProject",
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationServiceV1",
-              "method": "connectorEnabled",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
               "layer": "service"
             },
             {
               "class": "TenantConfigurationRepository",
-              "method": "connectorEnabled",
+              "method": "account",
               "layer": "repository"
             }
           ]
@@ -34607,6 +35027,56 @@
             {
               "class": "TenantConfigurationRepository",
               "method": "connectorEnabled",
+              "layer": "repository"
+            }
+          ]
+        },
+        "subscription_plan": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "MuxControllerV1",
+              "method": "setAccount",
+              "layer": "controller"
+            },
+            {
+              "class": "MediaConnectionService",
+              "method": "save",
+              "layer": "service"
+            },
+            {
+              "class": "ConnectorCatalogueServiceV1",
+              "method": "saveInstance",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plan",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "plans",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationRepository",
+              "method": "plans",
               "layer": "repository"
             }
           ]
@@ -44382,6 +44852,61 @@
             }
           ]
         },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "beacon",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "beacon",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
+              "layer": "repository"
+            }
+          ]
+        },
         "channel": {
           "mode": "read",
           "chain": [
@@ -45061,6 +45586,61 @@
             {
               "class": "CampaignRepository",
               "method": "candidates",
+              "layer": "repository"
+            }
+          ]
+        },
+        "capability": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "PlaybackControllerV1",
+              "method": "decision",
+              "layer": "controller"
+            },
+            {
+              "class": "PlaybackServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "PlayoutServiceV1",
+              "method": "decision",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "decide",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "compute",
+              "layer": "service"
+            },
+            {
+              "class": "AdDecisionServiceV1",
+              "method": "effectiveDelivery",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "hasFeature",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "effectiveFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "TenantConfigurationServiceV1",
+              "method": "grantableFeatures",
+              "layer": "service"
+            },
+            {
+              "class": "CapabilityRepository",
+              "method": "enabledCustom",
               "layer": "repository"
             }
           ]
@@ -46838,6 +47418,8 @@
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
@@ -47040,6 +47622,7 @@
     "connector_property": {
       "read": [
         "GET /api/orgs/{org}/ad-sources",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ads/simulate",
         "GET /api/orgs/{org}/assets",
         "POST /api/orgs/{org}/assets",
@@ -47073,6 +47656,7 @@
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
@@ -47101,6 +47685,7 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "POST /api/orgs/{org}/ads/simulate",
         "GET /api/orgs/{org}/connectors",
         "POST /api/orgs/{org}/connectors/{key}",
         "DELETE /api/orgs/{org}/connectors/{key}/{id}",
@@ -47129,6 +47714,8 @@
         "PUT /api/platform/features/{key}",
         "POST /api/platform/modules",
         "PUT /api/platform/modules/{key}",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
@@ -47145,7 +47732,9 @@
         "DELETE /api/platform/orgs/{orgId}/roles/{key}",
         "POST /api/platform/permissions",
         "DELETE /api/platform/permissions/{key}",
-        "PUT /api/platform/permissions/{key}"
+        "PUT /api/platform/permissions/{key}",
+        "POST /play/{session}/beacons",
+        "GET /play/{session}/decisions/{breakId}"
       ],
       "write": [
         "POST /api/platform/features",
@@ -47163,6 +47752,7 @@
         "DELETE /api/orgs/{org}/ad-sources/{id}",
         "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ad-sources/test",
+        "POST /api/orgs/{org}/ads/simulate",
         "POST /api/orgs/{org}/channels",
         "GET /api/orgs/{org}/configuration",
         "PUT /api/orgs/{org}/configuration/connectors/{key}",
@@ -47183,11 +47773,14 @@
         "POST /api/platform/connector-instances/{key}",
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
+        "POST /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",
         "DELETE /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "PUT /api/platform/orgs/{orgId}/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/connectors",
+        "PUT /api/platform/orgs/{orgId}/connectors/mux",
         "PUT /api/platform/orgs/{orgId}/features",
         "GET /api/platform/orgs/{orgId}/project-details",
         "GET /api/platform/orgs/{orgId}/project-features",

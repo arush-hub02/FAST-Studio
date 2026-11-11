@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "wrangler dev --ip 127.0.0.1 --port 8787 --persist-to ../data/edge",
     "deploy": "wrangler deploy",
-    "test": "node --test src/playout.test.ts src/ovp.test.ts src/decision.test.ts src/index.test.ts"
+    "test": "node --test src/playout.test.ts src/ovp.test.ts src/direct.test.ts src/decision.test.ts src/index.test.ts"
   },
   "devDependencies": {
     "wrangler": "4.149.0"

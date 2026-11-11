@@ -205,8 +205,28 @@ public class MediaServiceV1 {
     }
 
     /** What packaging produced: a new revision for the job to publish, or why not and whether a retry can help. */
-    public record Packaged(String mediaKey, String previousKey, long durationMs, String detail, String error, boolean retry) {
+    /** partial: a first, single-level version of an ad server creative; the full ladder follows once it is published. */
+    public record Packaged(String mediaKey, String previousKey, long durationMs, String detail, String error, boolean retry, boolean partial) {
+        public Packaged(String mediaKey, String previousKey, long durationMs, String detail, String error, boolean retry) {
+            this(mediaKey, previousKey, durationMs, detail, error, retry, false);
+        }
         public static Packaged failed(String error, boolean retry) { return new Packaged(null, null, 0, null, error, retry); }
+    }
+
+    /**
+     * Levels to make in this run. A creative from an ad server is new (no media yet): one level first, so it can air in
+     * its first break (the project's highest at or below 720p, else its lowest); the full ladder comes in the next run.
+     */
+    public static List<QualityLevels.Level> firstLevels(ProcessingJob j, List<QualityLevels.Level> project) {
+        if (!"AD".equals(j.kind()) || j.sourceRef() == null || j.mediaKey() != null || project.size() <= 1) return project;
+        QualityLevels.Level pick = project.getFirst();
+        for (QualityLevels.Level l : project) if (l.height() <= 720) pick = l;
+        return List.of(pick);
+    }
+
+    /** After the job published p: a first version queues the full ladder. */
+    public void published(UUID org, UUID assetId, Packaged p) {
+        if (p.partial()) jobs.enqueue(org, assetId, "PROGRAMME");   // off the ad lane, so new creatives' first versions never wait behind it
     }
 
     /**
@@ -228,8 +248,8 @@ public class MediaServiceV1 {
             }
         }
         Files.createDirectories(out);
-        List<QualityLevels.Level> levels = qualities.of(org);
-        RUN_LEVELS.set(levels);   // the project's quality levels, read by encode() on this thread
+        List<QualityLevels.Level> project = qualities.of(org), levels = firstLevels(j, project);
+        RUN_LEVELS.set(levels);   // the quality levels of this run, read by encode() on this thread
         try {
             String err = source.ingest(j, out, this);
             if (err != null) { deleteDir(out); return Packaged.failed(err, false); }
@@ -239,7 +259,8 @@ public class MediaServiceV1 {
             log.info("Asset packaged: {} ({} s)", j.title(), full * Times.SEG_S);
             String names = String.join(", ", levels.stream().map(QualityLevels.Level::name).toList());
             return new Packaged(key, j.mediaKey(), full * Times.SEG_MS, "Processed: " + full + " segments of " + Times.SEG_S + " s in "
-                    + levels.size() + (levels.size() == 1 ? " quality" : " qualities") + " (" + names + ") H.264/AAC, loudness -23 LUFS", null, false);
+                    + levels.size() + (levels.size() == 1 ? " quality" : " qualities") + " (" + names + ") H.264/AAC, loudness -23 LUFS"
+                    + (levels.size() < project.size() ? "; first version, the other qualities follow" : ""), null, false, levels.size() < project.size());
         } catch (Retryable e) {
             deleteDir(out);
             return Packaged.failed(e.getMessage(), true);

@@ -6,16 +6,19 @@ import { ErrorBox, InfoTip, Loading, useAction, useApi } from '../ui'
 // platform mode (Connectors page): the platform administrator manages everything.
 // company mode (Ads page, behind feature switches): platform sources are read-only and their tag URLs hidden;
 // with canAddOwn the company may add, pause and remove its own VAST tags, which run after the platform's.
-type Source = { id: string | null; name: string; kind: 'DIRECT' | 'VAST'; tagUrl: string | null; timeoutMs: number; position: number; enabled: boolean; managedBy: 'PLATFORM' | 'TENANT' }
-type TestAd = { title: string; advertiser: string; durationMs: number; mediaUrl: string; trackingUrls: number; creative: string }
+type Source = { id: string | null; name: string; kind: 'DIRECT' | 'VAST'; tagUrl: string | null; timeoutMs: number; position: number; enabled: boolean; managedBy: 'PLATFORM' | 'TENANT'; delivery?: Delivery }
+type Delivery = 'STORE_R2' | 'DIRECT'
+const DELIVERY: Record<Delivery, string> = { STORE_R2: 'Store in R2 and serve', DIRECT: 'Direct from the ad server' }
+type TestAd = { title: string; advertiser: string; durationMs: number; mediaUrl: string; trackingUrls: number; creative: string; files?: string }
 type TagTest = { url: string; ms: number; ads: TestAd[]; error: string | null }
 
 const MACROS = '[POD_DURATION] [CHANNEL_ID] [DEVICE_ID] [CLIENT_IP] [USER_AGENT] [COUNTRY] [CONTENT_GENRE] [CACHEBUSTER]'
 
-export function AdSources({ base, mode, canAddOwn = false }: { base: string; mode: 'platform' | 'company'; canAddOwn?: boolean }) {
+// canDirect: the company has the Direct ad delivery feature, so an ad server may play its own HLS from its CDN.
+export function AdSources({ base, mode, canAddOwn = false, canDirect = false }: { base: string; mode: 'platform' | 'company'; canAddOwn?: boolean; canDirect?: boolean }) {
   const list = useApi<Source[]>(base)
   const { busy, run } = useAction()
-  const [form, setForm] = useState({ name: '', tagUrl: '', timeoutMs: 1000 })
+  const [form, setForm] = useState({ name: '', tagUrl: '', timeoutMs: 1000, delivery: 'STORE_R2' as Delivery })
   const [test, setTest] = useState<TagTest | null>(null)
   const sources = list.data ?? []
   const platform = mode === 'platform'
@@ -31,8 +34,8 @@ export function AdSources({ base, mode, canAddOwn = false }: { base: string; mod
     run(() => api(`${base}/order`, { body: { ids } }), 'Waterfall reordered').then(list.reload)
   }
   const add = () =>
-    run(() => api(base, { body: { name: form.name, kind: 'VAST', tagUrl: form.tagUrl, timeoutMs: form.timeoutMs, enabled: true } }), 'Ad server added')
-      .then(r => { if (r) { setForm({ name: '', tagUrl: '', timeoutMs: 1000 }); setTest(null); list.reload() } })
+    run(() => api(base, { body: { name: form.name, kind: 'VAST', tagUrl: form.tagUrl, timeoutMs: form.timeoutMs, enabled: true, delivery: canDirect ? form.delivery : 'STORE_R2' } }), 'Ad server added')
+      .then(r => { if (r) { setForm({ name: '', tagUrl: '', timeoutMs: 1000, delivery: 'STORE_R2' }); setTest(null); list.reload() } })
   const runTest = (prepare: boolean) =>
     run(() => api<TagTest>(`${base}/test`, { body: { tagUrl: form.tagUrl, timeoutMs: form.timeoutMs, prepare } })).then(r => r && setTest(r))
 
@@ -57,10 +60,19 @@ export function AdSources({ base, mode, canAddOwn = false }: { base: string; mod
               <div style={{ flex: 1, minWidth: 0 }}>
                 <b>{s.name}</b> <span className={`badge ${s.kind === 'DIRECT' ? 'ok' : 'info'}`}>{s.kind === 'DIRECT' ? 'Direct-sold' : 'VAST ad server'}</span>
                 {' '}<span className="badge">{s.managedBy === 'TENANT' ? (platform ? 'Company tag' : 'Your tag') : 'Platform'}</span>
+                {s.delivery === 'DIRECT' && (canDirect
+                  ? <>{' '}<span className="badge info" title="Plays the ad server's own HLS from its CDN when it fits the channel; other ads are stored in R2">Direct</span></>
+                  : <span className="faint small" title="Direct ad delivery is switched off for this company, so its ads are stored in R2"> · Direct (feature off: stored in R2)</span>)}
                 {!s.enabled && <span className="faint small"> · paused</span>}
                 {s.tagUrl && <div className="faint small mono" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.tagUrl}</div>}
               </div>
               {s.kind === 'VAST' && <span className="faint small">{s.timeoutMs} ms</span>}
+              {s.kind === 'VAST' && editable(s) && canDirect && (
+                <select className="input" style={{ maxWidth: 210 }} value={s.delivery ?? 'STORE_R2'} disabled={busy} aria-label={`Delivery for ${s.name}`}
+                        onChange={e => save(s, { delivery: e.target.value as Delivery })}>
+                  {(Object.keys(DELIVERY) as Delivery[]).map(d => <option key={d} value={d}>{DELIVERY[d]}</option>)}
+                </select>
+              )}
               {platform && s.id && (
                 <>
                   <button className="btn ghost sm" disabled={busy || i === 0} onClick={() => move(i, -1)} aria-label="Ask earlier">↑</button>
@@ -88,6 +100,12 @@ export function AdSources({ base, mode, canAddOwn = false }: { base: string; mod
                    onChange={e => setForm({ ...form, name: e.target.value })} aria-label="Ad server name" />
             <input className="input" style={{ flex: '1 1 110px', maxWidth: 140 }} type="number" min={100} max={5000} step={100} value={form.timeoutMs}
                    onChange={e => setForm({ ...form, timeoutMs: +e.target.value })} aria-label="Timeout in milliseconds" />
+            {canDirect && (
+              <select className="input" style={{ flex: '1 1 180px', maxWidth: 230 }} value={form.delivery} aria-label="Delivery for a new ad server"
+                      onChange={e => setForm({ ...form, delivery: e.target.value as Delivery })}>
+                {(Object.keys(DELIVERY) as Delivery[]).map(d => <option key={d} value={d}>{DELIVERY[d]}</option>)}
+              </select>
+            )}
           </div>
           <input type="password" autoComplete="new-password" className="input mono" placeholder="Write-only VAST tag URL" value={form.tagUrl}
                  onChange={e => setForm({ ...form, tagUrl: e.target.value })} aria-label="VAST tag URL" />
@@ -104,7 +122,7 @@ export function AdSources({ base, mode, canAddOwn = false }: { base: string; mod
                 : <div><b>{test.ads.length} ad(s) in {test.ms} ms</b>{test.ads.length === 0 && ' (no fill: the tag works but returned nothing)'}</div>}
               {test.ads.map((a, i) => (
                 <div key={i} style={{ marginTop: 6 }}>
-                  {a.title} · {Math.round(a.durationMs / 1000)} s{a.advertiser && ` · ${a.advertiser}`} · {a.trackingUrls} tracking URLs · <i>{a.creative}</i>
+                  {a.title} · {Math.round(a.durationMs / 1000)} s{a.advertiser && ` · ${a.advertiser}`}{a.files && ` · ${a.files}`} · {a.trackingUrls} tracking URLs · <i>{a.creative}</i>
                 </div>
               ))}
               <div className="faint mono" style={{ marginTop: 6, wordBreak: 'break-all' }}>{test.url}</div>

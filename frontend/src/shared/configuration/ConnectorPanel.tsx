@@ -7,7 +7,10 @@ import { Confirm, Empty, ErrorBox, Icon, Loading, Modal, useAction, useApi } fro
 // (/api/platform/orgs/{id}/connector-instances) and platform-level connectors (/api/platform/connector-instances).
 // The fields come from the server (connector_property rows); this file knows no connector by name.
 
-export type ConnectorCategory = { key: string; name: string; description: string; position: number }
+/** Readable names for choice values (the ad server delivery setting). */
+const OPTION_LABELS: Record<string, string> = { STORE_R2: 'Store in R2 and serve', DIRECT: 'Direct from the ad server' }
+
+export type ConnectorCategory ={ key: string; name: string; description: string; position: number }
 export type ConnectorField = {
   connectorKey: string; key: string; label: string; description: string; valueType: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'SELECT' | 'URL'
   options: string[]; defaultValue: string | null; position: number; required: boolean; encrypted: boolean; scope: 'EXTERNAL' | 'INTERNAL'
@@ -141,8 +144,8 @@ function ConnectForm({ base, editing, onClose, onSaved }: { base: string; editin
               <span>{p.label}{p.required && ' *'}{p.scope === 'INTERNAL' && <span className="chip" style={{ marginLeft: 6 }}>Platform only</span>}</span>
               {p.valueType === 'BOOLEAN' || p.valueType === 'SELECT' ? (
                 <select aria-label={p.label} value={v} required={required} onChange={e => set(e.target.value)}>
-                  <option value="">{p.defaultValue != null ? `Default (${p.defaultValue})` : 'Choose…'}</option>
-                  {(p.valueType === 'BOOLEAN' ? ['true', 'false'] : p.options).map(o => <option key={o} value={o}>{p.valueType === 'BOOLEAN' ? (o === 'true' ? 'Yes' : 'No') : o}</option>)}
+                  <option value="">{p.defaultValue != null ? `Default (${OPTION_LABELS[p.defaultValue] ?? p.defaultValue})` : 'Choose…'}</option>
+                  {(p.valueType === 'BOOLEAN' ? ['true', 'false'] : p.options).map(o => <option key={o} value={o}>{p.valueType === 'BOOLEAN' ? (o === 'true' ? 'Yes' : 'No') : OPTION_LABELS[o] ?? o}</option>)}
                 </select>
               ) : (
                 <input aria-label={p.label} value={v} required={required} autoComplete="off"

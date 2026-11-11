@@ -161,6 +161,7 @@ public class MediaJobObserverV1 {
                 if (jobs.fail(c, p.error(), p.retry()).isEmpty()) jobs.cancelled(c);
             } else if (jobs.publish(c, p.detail(), p.durationMs(), p.mediaKey())) {
                 media.retire(p);
+                media.published(c.orgId(), c.assetId(), p);
             } else {                                   // cancelled or taken over meanwhile: the asset keeps what it has
                 media.discard(p.mediaKey());
                 jobs.cancelled(c);

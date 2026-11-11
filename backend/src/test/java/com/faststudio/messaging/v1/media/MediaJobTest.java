@@ -223,6 +223,16 @@ class MediaJobTest {
     }
 
     @Test
+    void failedFollowUpKeepsAnAiringCreativeReady() throws Exception {
+        UUID a = asset(aurora, "READY", "aurora/ad.first");   // its first version airs
+        TenantScope.as(aurora, () -> jobs.enqueue(aurora, a, "PROGRAMME"));
+        doReturn(Packaged.failed("The remote video could not be processed.", false)).when(media).pack(aurora, a);
+        assertTrue(observer.runOne("PROGRAMME"));
+        assertEquals("FAILED", job(a).get("state"));
+        assertEquals("READY", assetRow(a).get("status"), "the media it has keeps airing");
+    }
+
+    @Test
     void permanentFailureFailsAtOnce() throws Exception {
         UUID a = queued(aurora, "PROGRAMME");
         doReturn(Packaged.failed("The video is shorter than 5 seconds.", false)).when(media).pack(aurora, a);

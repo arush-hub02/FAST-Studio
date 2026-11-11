@@ -10,7 +10,8 @@ import java.util.List;
 public enum Feature {
     AD_WATERFALL_VIEW("Company sees its ad demand waterfall (names and order only, no tag URLs)"),
     AD_OWN_TAGS("Company may add its own VAST ad tags (appended after the platform's sources)"),
-    LIBRARY_SYNC("Company may sync its connected video library itself (otherwise only the platform syncs it)");
+    LIBRARY_SYNC("Company may sync its connected video library itself (otherwise only the platform syncs it)"),
+    AD_DIRECT_DELIVERY("Ad server connections may play the ad server's own HLS directly (Direct delivery)");
 
     public final String label;
 

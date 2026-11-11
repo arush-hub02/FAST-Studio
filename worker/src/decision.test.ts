@@ -64,3 +64,20 @@ test('an early incomplete creative is retried and only matching fMP4 objects ent
     assert.equal(calls, 2)
   } finally { globalThis.fetch = original }
 })
+
+test('a Direct slot needs no R2 object on an fMP4 channel and does not cut the break', async () => {
+  const state = storage(), original = globalThis.fetch
+  const object = new BreakDecision(state, {
+    CONTROL_URL: 'https://control.invalid',
+    MEDIA: { head: async key => key === 'ours/s-master.m3u8' ? {} : null },
+  })
+  try {
+    globalThis.fetch = async () => Response.json({ breakMs: 45000, filledMs: 45000, slots: [
+      { campaignId: 'd1', mediaKey: null, durationMs: 30000, delivery: 'DIRECT', hlsUrl: 'https://ads.cdn/a/master.m3u8' },
+      { campaignId: 'c1', mediaKey: 'ours', levels: [0], durationMs: 15000 },
+    ] })
+    const d = await (await object.fetch(request(true, 'split'))).json()
+    assert.deepEqual(d.slots.map((s: { campaignId: string }) => s.campaignId), ['d1', 'c1'])
+    assert.equal(d.filledMs, 45000)
+  } finally { globalThis.fetch = original }
+})

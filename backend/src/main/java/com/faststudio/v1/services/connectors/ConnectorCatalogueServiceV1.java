@@ -143,6 +143,11 @@ public class ConnectorCatalogueServiceV1 {
             if (p == null) throw ApiException.bad("Unknown field " + e.getKey() + " for " + c.name() + ".");
             String v = e.getValue() == null ? "" : e.getValue().trim();
             if (!v.isEmpty()) check(p, v);
+            if (c.driver().equals("VAST") && p.key().equals("delivery") && v.equals("DIRECT")
+                    && (org == null || !configuration.hasFeature(org, Feature.AD_DIRECT_DELIVERY))
+                    && !(id != null && scoped(org, () -> repository.values(org)).stream()   // already saved: stays editable
+                            .anyMatch(x -> x.instanceId().equals(id) && x.propertyKey().equals("delivery") && x.value().equals("DIRECT"))))
+                throw new ApiException(HttpStatus.FORBIDDEN, "FEATURE_OFF", "Direct ad delivery isn't switched on for this company. Ask the platform administrator.");
             sealed.put(p.key(), v.isEmpty() ? (p.encrypted() ? null : "") : p.encrypted() ? secrets.seal(v) : v);
         }
         UUID saved = scoped(org, () -> tx.execute(s -> {

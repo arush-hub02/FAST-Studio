@@ -3,7 +3,9 @@ package com.faststudio.v1.services.ads.sources;
 import com.faststudio.v1.core.common.ApiException;
 import com.faststudio.v1.core.common.PublicUrl;
 import com.faststudio.v1.dto.ads.AdsDto.Creative;
+import com.faststudio.v1.core.tenant.TenantScope;
 import com.faststudio.v1.repositories.ads.AdSourceRepository;
+import com.faststudio.v1.repositories.ads.AdSourceRepository.DirectCheck;
 import com.faststudio.v1.services.ads.AdDecisionServiceV1;
 import com.faststudio.v1.services.media.MediaServiceV1;
 
@@ -25,6 +27,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -46,9 +52,31 @@ public class VastSource implements IAdSource {
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(2)).build();
 
-    public VastSource(AdSourceRepository repository, MediaServiceV1 media) {
+    static final Duration CHECK_EVERY = Duration.ofHours(24);
+    private final DirectAdCheck checker;
+    /** Direct checks run one at a time off the decision path; one in flight per creative. */
+    private final ExecutorService checks = Executors.newSingleThreadExecutor(r -> Thread.ofPlatform().daemon().name("direct-ad-check").unstarted(r));
+    private final Set<String> checking = ConcurrentHashMap.newKeySet();
+
+    public VastSource(AdSourceRepository repository, MediaServiceV1 media, DirectAdCheck checker) {
         this.repository = repository;
         this.media = media;
+        this.checker = checker;
+    }
+
+    /** Reads the ad's HLS in the background and saves what it offers; this answer meanwhile takes the R2 path. */
+    void checkLater(UUID org, String ref, String hlsUrl) {
+        if (checker == null || !checking.add(org + "|" + ref)) return;
+        checks.submit(() -> {
+            try {
+                DirectAdCheck.Profile p = checker.check(hlsUrl);
+                TenantScope.as(org, () -> { repository.saveDirectCheck(org, ref, p); return null; });
+            } catch (Exception e) {
+                log.info("Direct check of a creative's HLS failed ({}); it keeps the R2 path", e.getMessage());
+            } finally {
+                checking.remove(org + "|" + ref);
+            }
+        });
     }
 
     @Override
@@ -56,7 +84,12 @@ public class VastSource implements IAdSource {
 
     /** One linear ad from a VAST response; tracking = our event -> URLs to call when it happens. */
     /** One linear ad. ref = its stable identity (creative URLs are often signed per request, so they can't be). */
-    public record Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking) {}
+    /** mediaUrl = the progressive MP4 we prepare (null when the ad only offers HLS); hlsUrl = its HLS for Direct delivery, if any. */
+    public record Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking, String hlsUrl) {
+        public Ad(String title, String advertiser, long durationMs, String mediaUrl, String ref, Map<String, List<String>> tracking) {
+            this(title, advertiser, durationMs, mediaUrl, ref, tracking, null);
+        }
+    }
 
     @Override
     public Fill fill(Config src, Request req) {
@@ -69,11 +102,46 @@ public class VastSource implements IAdSource {
             excluded.add(new AdDecisionServiceV1.Excluded(src.name(), "No answer: " + reason(e)));
             return new Fill(slots, excluded);
         }
+        return place(src, req, ads);
+    }
+
+    /** Turns an ad server's answer into slots for the time still open. */
+    Fill place(Config src, Request req, List<Ad> ads) {
+        List<AdDecisionServiceV1.Slot> slots = new ArrayList<>();
+        List<AdDecisionServiceV1.Excluded> excluded = new ArrayList<>();
         if (ads.isEmpty()) excluded.add(new AdDecisionServiceV1.Excluded(src.name(), "No fill: the ad server returned no playable ads"));
         boolean preparing = false;
         long left = req.remainingMs();
         for (Ad ad : ads) {
             String label = src.name() + ": " + ad.title();
+            String noDirect = null;
+            if (DIRECT.equals(src.delivery()) && ad.hlsUrl() != null) {
+                Optional<DirectCheck> check = repository.directCheck(req.org(), ad.ref());
+                if (check.isEmpty() || check.get().checkedAt().isBefore(Instant.now().minus(CHECK_EVERY))) {
+                    checkLater(req.org(), ad.ref(), ad.hlsUrl());
+                    noDirect = "Direct check of the ad's HLS is running";
+                } else {
+                    noDirect = DirectAdCheck.misfit(check.get().profile(), req.channelFmt(), ad.durationMs(), left);
+                    if (noDirect == null && !ad.advertiser().isEmpty() && req.advertisers().contains(ad.advertiser())) {
+                        excluded.add(new AdDecisionServiceV1.Excluded(label, "Same advertiser already in this break (competitive separation)"));
+                        continue;
+                    }
+                    if (noDirect == null) {
+                        long ms = DirectAdCheck.slotMs(check.get().profile());
+                        // a stable id per creative stands in for the campaign in delivery events (no asset of ours exists)
+                        UUID id = UUID.nameUUIDFromBytes(("direct|" + req.org() + "|" + ad.ref()).getBytes(StandardCharsets.UTF_8));
+                        slots.add(new AdDecisionServiceV1.Slot(id, label, ad.advertiser(), null, ms, null, src.name() + " · Direct", ad.tracking(),
+                                null, AdDecisionServiceV1.Slot.DIRECT, ad.hlsUrl()));
+                        req.advertisers().add(ad.advertiser());
+                        left -= ms;
+                        continue;
+                    }
+                }
+            }
+            if (ad.mediaUrl() == null) {
+                excluded.add(new AdDecisionServiceV1.Excluded(label, noDirect != null ? noDirect : "No MP4 file to prepare"));
+                continue;
+            }
             Creative c = creative(req.org(), src, ad);
             if (c == null || !"READY".equals(c.status()) || c.mediaKey() == null) {
                 boolean pending = c == null || "PROCESSING".equals(c.status());
@@ -94,8 +162,14 @@ public class VastSource implements IAdSource {
         return new Fill(slots, excluded, preparing);
     }
 
-    /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen. */
+    /** Which files the ad server offers for this ad (shown by the tag tester). */
+    public static String files(Ad ad) {
+        return ad.mediaUrl() != null && ad.hlsUrl() != null ? "MP4 and HLS" : ad.hlsUrl() != null ? "HLS only" : "MP4 only";
+    }
+
+    /** Our copy of a creative, keyed by its ad id; queues conditioning the first time it is seen (never for HLS-only ads). */
     public Creative creative(UUID org, Config src, Ad ad) {
+        if (ad.mediaUrl() == null) return new Creative(null, "HLS_ONLY", null, 0);   // nothing for us to prepare
         Optional<Creative> found = repository.creative(org, ad.ref());
         if (found.isPresent()) return found.get();
         try {
@@ -135,15 +209,34 @@ public class VastSource implements IAdSource {
                 continue;
             }
             if (inline == null) continue;
-            Element linear = first(inline, "Linear");
-            String mediaUrl = linear == null ? null : pickMedia(linear);
-            long dur = linear == null ? 0 : duration(text(linear, "Duration"));
-            if (mediaUrl == null || dur <= 0) continue;   // not a playable linear video ad (e.g. VPAID only)
-            String advertiser = !text(inline, "Advertiser").isEmpty() ? text(inline, "Advertiser") : text(inline, "AdSystem");
-            out.add(new Ad(text(inline, "AdTitle").isEmpty() ? "Untitled ad" : text(inline, "AdTitle"), advertiser, dur, mediaUrl,
-                    ref(ad, inline, linear, mediaUrl), tracking));
+            Ad a = toAd(ad, inline, tracking);
+            if (a != null) out.add(a);
         }
         return out;
+    }
+
+    /** The playable linear ad of an InLine, or null (no MP4 or HLS file, e.g. VPAID only, or no duration). */
+    static Ad toAd(Element ad, Element inline, Map<String, List<String>> tracking) {
+        Element linear = first(inline, "Linear");
+        if (linear == null) return null;
+        String mediaUrl = pickMedia(linear), hlsUrl = pickHls(linear);
+        long dur = duration(text(linear, "Duration"));
+        if ((mediaUrl == null && hlsUrl == null) || dur <= 0) return null;
+        String advertiser = !text(inline, "Advertiser").isEmpty() ? text(inline, "Advertiser") : text(inline, "AdSystem");
+        return new Ad(text(inline, "AdTitle").isEmpty() ? "Untitled ad" : text(inline, "AdTitle"), advertiser, dur, mediaUrl,
+                ref(ad, inline, linear, mediaUrl != null ? mediaUrl : hlsUrl), tracking, hlsUrl);
+    }
+
+    /** The ad's HLS file (https only: viewers fetch it straight from the ad server), or null. */
+    static String pickHls(Element linear) {
+        NodeList files = linear.getElementsByTagName("MediaFile");
+        for (int i = 0; i < files.getLength(); i++) {
+            Element f = (Element) files.item(i);
+            String type = f.getAttribute("type").toLowerCase(Locale.ROOT), url = f.getTextContent().trim();
+            if ((type.equals("application/x-mpegurl") || type.equals("application/vnd.apple.mpegurl")) && url.regionMatches(true, 0, "https://", 0, 8))
+                return url;
+        }
+        return null;
     }
 
     /** Stable creative identity: ad system + UniversalAdId, else the creative's ad id or id, else the ad id, else the file path. */

@@ -70,7 +70,7 @@ export function OrgConnectors({ orgId }: { orgId: string }) {
         </div>
       </div>
 
-      <AdSources base={`/api/platform/orgs/${orgId}/ad-sources`} mode="platform" />
+      <AdSources base={`/api/platform/orgs/${orgId}/ad-sources`} mode="platform" canDirect={v.features.includes('AD_DIRECT_DELIVERY')} />
       <TenantMediaEntitlements orgId={orgId} />
 
       <div className="card card-pad stack" style={{ gap: 10 }}>

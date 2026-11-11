@@ -55,6 +55,32 @@ class AdDecisionServiceTest {
     }
 
     @Test
+    void directSlotNeedsNoEdgeCopyAndReachesTheWorker() {
+        UUID org = UUID.randomUUID(), brk = UUID.randomUUID();
+        var publisher = mock(EdgePublisher.class);
+        when(publisher.channelFormat(any(), any())).thenReturn("FMP4");
+        var vast = mock(IAdSource.class);
+        when(vast.kind()).thenReturn("VAST");
+        var slot = new AdDecisionServiceV1.Slot(UUID.randomUUID(), "GAM: Spot", "Glow", null, 30_000, null, "GAM · Direct", Map.of(),
+                null, "DIRECT", "https://ads.cdn/a/master.m3u8");
+        when(vast.fill(any(), any())).thenReturn(new IAdSource.Fill(List.of(slot), List.of()));
+        var repository = mock(AdSourceRepository.class);
+        when(repository.waterfall(org)).thenReturn(List.of(new IAdSource.Config(UUID.randomUUID(), "GAM", "VAST", null, 1000, 1, true, "PLATFORM", "DIRECT")));
+        var configuration = mock(TenantConfigurationServiceV1.class);
+        when(configuration.driverEnabled(org, "VAST")).thenReturn(true);
+        var service = new AdDecisionServiceV1(mock(Data.class), repository, List.of(vast), mock(PlatformTransactionManager.class), new JsonMapper(),
+                publisher, configuration, mock(Secrets.class), mock(CampaignRepository.class));
+        var d = service.decide(org, UUID.randomUUID(), brk, Instant.now().plusSeconds(60), 30_000, null, "IN", IAdSource.Viewer.NONE, true);
+        assertEquals(30_000, d.filledMs());
+        verify(publisher, never()).stored(any());
+        var view = AdDecisionView.from(d).slots().getFirst();
+        assertEquals("DIRECT", view.delivery());
+        assertEquals("https://ads.cdn/a/master.m3u8", view.hlsUrl());
+        // the feature is off in this mock: the source is asked as Store in R2; the channel's container is passed on
+        verify(vast).fill(argThat(c -> "STORE_R2".equals(c.delivery())), argThat(r -> "FMP4".equals(r.channelFmt())));
+    }
+
+    @Test
     void housePromosFillWhatTheAdsLeftOpenAndAreNeverSold() {
         UUID org = UUID.randomUUID(), brk = UUID.randomUUID();
         var publisher = mock(EdgePublisher.class);

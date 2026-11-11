@@ -1,6 +1,7 @@
 package com.faststudio.v1.repositories.ads;
 
 import com.faststudio.v1.dto.ads.AdsDto.Creative;
+import com.faststudio.v1.services.ads.sources.DirectAdCheck;
 import com.faststudio.v1.services.ads.sources.IAdSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -51,11 +52,13 @@ public class AdSourceRepository {
     public List<IAdSource.Config> waterfall(UUID org) {
         return db.sql("""
                 select i.id, i.name, d.driver as kind, t.value as tag_url, i.position, i.enabled, i.managed_by,
-                  least(5000, greatest(100, coalesce(substring(m.value from '^[0-9]{1,6}$'), substring(p.default_value from '^[0-9]{1,6}$'), '1000')::int)) as timeout_ms
+                  least(5000, greatest(100, coalesce(substring(m.value from '^[0-9]{1,6}$'), substring(p.default_value from '^[0-9]{1,6}$'), '1000')::int)) as timeout_ms,
+                  case when dv.value = 'DIRECT' then 'DIRECT' else 'STORE_R2' end as delivery
                 from """ + AD_INSTANCE + """
 
                 left join connector_value t on t.instance_id = i.id and t.property_key = 'tag_url'
                 left join connector_value m on m.instance_id = i.id and m.property_key = 'timeout_ms'
+                left join connector_value dv on dv.instance_id = i.id and dv.property_key = 'delivery'
                 left join connector_property p on p.connector_key = i.connector_key and p.key = 'timeout_ms'
                 where i.org_id = :o order by i.position, i.created_at""")
                 .param("o", org).query(IAdSource.Config.class).list();
@@ -82,13 +85,13 @@ public class AdSourceRepository {
     }
 
     /** Appends a source at the end of the waterfall; tagUrl is already sealed. */
-    public UUID insert(UUID org, String name, String kind, String tagUrl, int timeoutMs, boolean enabled, String managedBy) {
+    public UUID insert(UUID org, String name, String kind, String tagUrl, int timeoutMs, boolean enabled, String managedBy, String delivery) {
         UUID id = db.sql("""
                 insert into connector_instance(connector_key, org_id, name, position, enabled, managed_by)
                 values (:k, :o, :n, :p, :en, :by) returning id""")
                 .param("k", key(kind)).param("o", org).param("n", name).param("p", nextPosition(org)).param("en", enabled).param("by", managedBy)
                 .query(UUID.class).single();
-        if ("VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs);
+        if ("VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs, delivery);
         return id;
     }
 
@@ -102,18 +105,19 @@ public class AdSourceRepository {
     }
 
     /** False when no row of that kind (and owner) exists. */
-    public boolean update(UUID org, UUID id, String kind, String name, String tagUrl, int timeoutMs, boolean enabled, String onlyManagedBy) {
+    public boolean update(UUID org, UUID id, String kind, String name, String tagUrl, int timeoutMs, boolean enabled, String onlyManagedBy, String delivery) {
         boolean found = db.sql("""
                 update connector_instance i set name = :n, enabled = :en, updated_at = now() from connector_definition d
                 where d.key = i.connector_key and d.driver = :k and i.org_id = :o and i.id = :id""" + (onlyManagedBy == null ? "" : " and i.managed_by = :by"))
                 .param("n", name).param("en", enabled).param("k", kind).param("o", org).param("id", id).params(by(onlyManagedBy)).update() > 0;
-        if (found && "VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs);
+        if (found && "VAST".equals(kind)) putVast(org, id, tagUrl, timeoutMs, delivery);
         return found;
     }
 
-    private void putVast(UUID org, UUID id, String tagUrl, int timeoutMs) {
+    private void putVast(UUID org, UUID id, String tagUrl, int timeoutMs, String delivery) {
         put(org, id, "tag_url", tagUrl);
         put(org, id, "timeout_ms", Integer.toString(timeoutMs));
+        put(org, id, "delivery", delivery);
     }
 
     private void put(UUID org, UUID id, String key, String value) {
@@ -149,6 +153,23 @@ public class AdSourceRepository {
 
     private static Map<String, Object> by(String managedBy) {
         return managedBy == null ? Map.of() : Map.of("by", managedBy);
+    }
+
+    // --- direct checks of ad servers' HLS, keyed like creatives (source_ref) ---
+
+    public record DirectCheck(DirectAdCheck.Profile profile, java.time.Instant checkedAt) {}
+
+    public Optional<DirectCheck> directCheck(UUID org, String ref) {
+        return db.sql("select profile::text, checked_at from ad_direct_check where org_id = :o and source_ref = :r")
+                .param("o", org).param("r", ref)
+                .query((rs, n) -> new DirectCheck(DirectAdCheck.fromJson(rs.getString(1)), rs.getTimestamp(2).toInstant())).optional();
+    }
+
+    public void saveDirectCheck(UUID org, String ref, DirectAdCheck.Profile p) {
+        db.sql("""
+                insert into ad_direct_check(org_id, source_ref, profile) values (:o, :r, cast(:p as jsonb))
+                on conflict (org_id, source_ref) do update set profile = excluded.profile, checked_at = now()""")
+                .param("o", org).param("r", ref).param("p", DirectAdCheck.toJson(p)).update();
     }
 
     // --- creatives from external ad servers (stored as AD assets keyed by source_ref) ---

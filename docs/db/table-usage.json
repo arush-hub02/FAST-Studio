@@ -990,6 +990,22 @@
         "Exported and deleted with the tenant (tenant_id)."
       ]
     },
+    "ad_direct_check": {
+      "feature": "Advertising",
+      "purpose": "What an ad server's HLS creative offers (V37): container (TS or FMP4), whether audio is a separate track, variant heights and piece lengths. Read once per creative (key: ad system + creative id, like creative assets) and again after a day, to decide whether an ad server connection set to Direct can play it straight from the ad server's CDN.",
+      "pages": [
+        "/:org/ads"
+      ],
+      "apis": [
+        "POST /api/orgs/{org}/ad-sources",
+        "PUT /api/orgs/{org}/ad-sources/{id}"
+      ],
+      "watch": [
+        "Only used when the connection's delivery is DIRECT and the project has the AD_DIRECT_DELIVERY feature.",
+        "No URLs are stored: Google signs creative URLs per request; the URL played is always the one in the current VAST answer.",
+        "HLS-only creatives have no asset row, which is why this is its own table."
+      ]
+    },
     "asset_playback": {
       "feature": "Media library",
       "purpose": "How a library video streams from its platform (V31): playback id, signed or public, container (TS), quality levels and the real length of every segment, read when the video is prepared. Nothing is copied to R2; the edge plays the platform's segments and splices our ads and slate in.",
