@@ -79,3 +79,20 @@ test('adSegment returns piece n of the variant nearest our level after loadAd; a
     assert.deepEqual(ovp.adSegment('https://ads.cdn/b/index.m3u8', 0, 0), { url: 'https://ads.cdn/b/b0.ts', map: undefined })
   } finally { globalThis.fetch = real; ovp.reset() }
 })
+
+test('an ad whose HLS could not be read stays slate for its break (no flip to the ad mid-slot)', async () => {
+  ovp.reset()
+  const url = 'https://ads.cdn/flaky/master.m3u8'
+  let calls = 0, up = false
+  const real = globalThis.fetch
+  globalThis.fetch = (async () => { calls++; return up ? new Response('#EXTM3U\n#EXTINF:5.0,\ns0.ts\n#EXT-X-ENDLIST\n') : new Response('', { status: 503 }) }) as typeof fetch
+  try {
+    const t = Date.now()
+    await ovp.loadAd(base(), url, 0, t)
+    assert.equal(ovp.adSegment(url, 0, 0), null)
+    up = true
+    await ovp.loadAd(base(), url, 0, t + 20_000)   // past the programme retry delay, within the ad's
+    assert.equal(ovp.adSegment(url, 0, 0), null, 'still slate: the break must not change to the ad part-way')
+    assert.equal(calls, 1)
+  } finally { globalThis.fetch = real; ovp.reset() }
+})

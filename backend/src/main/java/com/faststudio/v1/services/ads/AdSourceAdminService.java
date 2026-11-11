@@ -75,7 +75,10 @@ public class AdSourceAdminService {
         String tag = "VAST".equals(r.kind()) && (r.tagUrl() == null || r.tagUrl().isBlank())
                 ? repository.vastTagUrl(org, id, onlyManagedBy).orElseThrow(() -> ApiException.notFound("Ad source"))   // already sealed
                 : seal(checkTag(r));
-        decisions.requireDeliveryAllowed(org, r.deliveryOrDefault());
+        // a Direct setting already saved stays editable (pause, rename) after the feature is switched off; choosing it anew needs the feature
+        boolean keptDirect = IAdSource.DIRECT.equals(r.deliveryOrDefault())
+                && repository.waterfall(org).stream().anyMatch(s -> s.id().equals(id) && IAdSource.DIRECT.equals(s.delivery()));
+        if (!keptDirect) decisions.requireDeliveryAllowed(org, r.deliveryOrDefault());
         if (!repository.update(org, id, r.kind(), r.name().trim(), tag, r.timeoutMs(), r.enabled(), onlyManagedBy, r.deliveryOrDefault()))
             throw ApiException.notFound("Ad source");
         audit.log(org, actor, "ad-source.update", "ad_source", id, r.name());

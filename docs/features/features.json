@@ -4495,12 +4495,12 @@
       ],
       "howItWorks": [
         "For a Direct connection, an ad with an HLS file is checked once (and again after a day): its piece format, separate audio, levels and piece lengths are saved per creative (ad_direct_check). The answer that sees it first uses the R2 path while the check runs.",
-        "An ad plays directly when its format matches the channel (TS or fMP4), fMP4 channels get a separate audio track, every piece but a short last one is 5 s, its length matches the ad server's and it fits the time left. The slot length is its whole 5 s pieces, like R2 ads.",
+        "An ad plays directly when its format matches the channel (TS or fMP4), fMP4 channels get a separate audio track and TS channels audio inside the pieces, pieces are not byte ranges or encrypted, every piece but a short last one is 5 s, its length matches the ad server's and it fits the time left. The slot length is its whole 5 s pieces, like R2 ads.",
         "The edge lists one ad piece per 5 s step, exactly where an R2 ad's piece would go, taking the address from the ad's own playlist (read once per location like a library programme). If that playlist can't be read, those steps play slate.",
         "Store in R2: a creative from an ad server is encoded at one quality level first (the project's highest at or below 720p), published, then the full ladder is made in the background."
       ],
       "optimizations": [
-        "The ad's playlist is read once per location and reused by every viewer, like library programmes.",
+        "The ad's playlist is read once per location for each ad answer (ad servers sign URLs per answer, so viewers of different answers read it again); a read that fails keeps that ad as slate for its break instead of starting part-way.",
         "Checks run one at a time off the decision path; one in flight per creative."
       ],
       "scale": [
@@ -4509,7 +4509,8 @@
       "rules": [
         "Direct only with the AD_DIRECT_DELIVERY feature; saving Direct without it is refused (403 FEATURE_OFF), and a saved Direct setting plays as Store in R2 once the feature is switched off.",
         "Only https HLS addresses play directly; the URL played is always the one in the current answer (ad servers sign URLs per request).",
-        "Competitive separation and the break length apply to Direct ads as to any other."
+        "Competitive separation and the break length apply to Direct ads as to any other.",
+        "A connection already saved as Direct stays editable after the feature is switched off (its ads then play from R2)."
       ],
       "api": [
         "POST /api/orgs/{org}/ad-sources",
@@ -4524,7 +4525,9 @@
         "Worker direct.test.ts: ad server pieces in the 5 s steps, slate when unread or of the other format, audio track, SGAI asset list.",
         "MediaPruneTest: one level first, then the full ladder.",
         "e2e ad-delivery.spec.ts: the Delivery choice appears only with the feature.",
-        "Chrome hls.js through a live break with a Direct ad (local): 0 stalls, 0 errors, 0 of 1,960 frames dropped, all 6 ad pieces from the ad server."
+        "Chrome hls.js through a live break with a Direct ad (local, TS channel): 0 stalls, 0 errors, 0 of 1,960 frames dropped, all 6 ad pieces from the ad server.",
+        "decision.test.ts: a Direct slot passes the fMP4 R2 check and does not cut the break (found in final review).",
+        "MediaJobTest: a failed full-ladder follow-up keeps the airing creative READY."
       ],
       "docs": [
         "superpowers/specs/2026-11-10-ad-delivery-design.md"

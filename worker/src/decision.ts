@@ -37,6 +37,7 @@ export class BreakDecision {
           const slots: Decision['slots'] = []
           const marker = layout === 'split' ? 's-master.m3u8' : 'f-master.m3u8'
           for (const slot of decision.slots) {
+            if (slot.delivery === 'DIRECT') { slots.push(slot); continue }   // the ad server's own HLS: nothing of ours in R2
             if (!await this.env.MEDIA.head(`${slot.mediaKey}/${marker}`)) break
             let levels = slot.levels
             if (!levels?.length) {

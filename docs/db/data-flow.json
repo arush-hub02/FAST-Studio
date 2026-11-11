@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10",
+  "generatedAt": "2026-11-11",
   "note": "Static trace of the Java source: controller → services → repositories → SQL. Interceptors, interface strategies and SQL built at run time are not followed.",
   "routes": {
     "GET /.well-known/jwks.json": {
@@ -2630,6 +2630,31 @@
             {
               "class": "AdSourceRepository",
               "method": "vastTagUrl",
+              "layer": "repository"
+            }
+          ]
+        },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "AdsControllerV1",
+              "method": "updateSource",
+              "layer": "controller"
+            },
+            {
+              "class": "ProjectAdSourceServiceV1",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
               "layer": "repository"
             }
           ]
@@ -14619,7 +14644,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -15570,7 +15595,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -27563,7 +27588,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -28514,7 +28539,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -31904,6 +31929,31 @@
             }
           ]
         },
+        "connector_property": {
+          "mode": "read",
+          "chain": [
+            {
+              "class": "ConnectorsControllerV1",
+              "method": "update",
+              "layer": "controller"
+            },
+            {
+              "class": "ConnectorAdminServiceV1",
+              "method": "updateAdSource",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceAdminService",
+              "method": "update",
+              "layer": "service"
+            },
+            {
+              "class": "AdSourceRepository",
+              "method": "waterfall",
+              "layer": "repository"
+            }
+          ]
+        },
         "connector_value": {
           "mode": "read+write",
           "chain": [
@@ -32946,7 +32996,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -33897,7 +33947,7 @@
             },
             {
               "class": "ConnectorCatalogueRepository",
-              "method": "removeValue",
+              "method": "values",
               "layer": "repository"
             }
           ]
@@ -47572,6 +47622,7 @@
     "connector_property": {
       "read": [
         "GET /api/orgs/{org}/ad-sources",
+        "PUT /api/orgs/{org}/ad-sources/{id}",
         "POST /api/orgs/{org}/ads/simulate",
         "GET /api/orgs/{org}/assets",
         "POST /api/orgs/{org}/assets",
@@ -47605,6 +47656,7 @@
         "DELETE /api/platform/connector-instances/{key}/{id}",
         "PUT /api/platform/connector-instances/{key}/{id}",
         "GET /api/platform/orgs/{orgId}/ad-sources",
+        "PUT /api/platform/orgs/{orgId}/ad-sources/{id}",
         "POST /api/platform/orgs/{orgId}/ad-sources/order",
         "GET /api/platform/orgs/{orgId}/connector-instances",
         "POST /api/platform/orgs/{orgId}/connector-instances/{key}",

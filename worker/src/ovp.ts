@@ -130,7 +130,8 @@ async function loadUrl(snap: Snapshot, master: string, variant: number, asset: s
   if (variant !== AUDIO && !ours) return
   const k = `${master}|${variant}`
   const hit = memo.get(k)
-  if (hit && now - hit.at < (hit.urls ? FRESH_MS : RETRY_MS)) return
+  // a Direct ad that couldn't be read stays unread (slate) rather than starting part-way through its slot later
+  if (hit && now - hit.at < (hit.urls || asset === 'ad' ? FRESH_MS : RETRY_MS)) return
   let p = inflight.get(k)
   if (!p) {
     p = (async (): Promise<Entry> => {

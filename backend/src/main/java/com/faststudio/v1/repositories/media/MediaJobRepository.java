@@ -78,7 +78,8 @@ public class MediaJobRepository {
                                   finished_at = case when :r and attempts < max_attempts then null else now() end,
                                   lease_owner = null, lease_until = null, last_error = :e
                            where id = :id and org_id = :o and fence = :f and state = 'RUNNING' returning org_id, asset_id, state),
-                     x as (update asset a set status = case when j.state = 'FAILED' then 'FAILED' else a.status end,
+                     x as (update asset a set status = case when j.state = 'FAILED' and a.media_key is null then 'FAILED'
+                                                            when j.state = 'FAILED' then 'READY' else a.status end,   -- media already airing keeps airing
                                   status_detail = case when j.state = 'FAILED' then :e else 'Will retry shortly: ' || :e end, updated_at = now()
                            from j where a.org_id = j.org_id and a.id = j.asset_id)
                 select state from j""")
@@ -114,7 +115,7 @@ public class MediaJobRepository {
                                   finished_at = case when attempts < max_attempts then null else now() end,
                                   lease_owner = null, lease_until = null, last_error = :e
                            where state = 'RUNNING' and lease_until < now() returning org_id, asset_id, state),
-                     x as (update asset a set status = 'FAILED', status_detail = :e, updated_at = now()
+                     x as (update asset a set status = case when a.media_key is null then 'FAILED' else 'READY' end, status_detail = :e, updated_at = now()
                            from j where a.org_id = j.org_id and a.id = j.asset_id and j.state = 'FAILED')
                 select count(*) from j /* all tenants: lease reaper */""").param("e", why).query(Integer.class).single();
         return n + db.sql("""

@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
 public class DirectAdCheck {
     static final double SEG_S = 5.0, TOLERANCE_S = 0.1;
     static final long LENGTH_TOLERANCE_MS = 500;
-    private static final JsonMapper JSON = new JsonMapper();
+    // checks saved before a field existed read it as false
+    private static final JsonMapper JSON = JsonMapper.builder().disable(tools.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES).build();
     private static final Pattern RESOLUTION = Pattern.compile("RESOLUTION=\\d+x(\\d+)");
     private static final Pattern URI_ATTR = Pattern.compile("URI=\"([^\"]+)\"");
 
@@ -33,7 +34,12 @@ public class DirectAdCheck {
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).connectTimeout(Duration.ofSeconds(3)).build();
 
     /** container TS or FMP4; heights of the variants, in master order; pieces = durations (s) of the first variant. */
-    public record Profile(String container, boolean separateAudio, List<Integer> heights, List<Double> pieces) {}
+    /** byteRanges: pieces are ranges of one file; encrypted: an EXT-X-KEY other than NONE (the edge can list neither). */
+    public record Profile(String container, boolean separateAudio, List<Integer> heights, List<Double> pieces, boolean byteRanges, boolean encrypted) {
+        public Profile(String container, boolean separateAudio, List<Integer> heights, List<Double> pieces) {
+            this(container, separateAudio, heights, pieces, false, false);
+        }
+    }
 
     /** Reads the ad's master (or single media playlist) and its first variant. */
     public Profile check(String masterUrl) throws IOException {
@@ -81,7 +87,8 @@ public class DirectAdCheck {
         List<Double> pieces = new ArrayList<>();
         for (String l : text.split("\\r?\\n"))
             if (l.startsWith("#EXTINF:")) pieces.add(Double.parseDouble(l.substring(8).split(",")[0].trim()));
-        return new Profile(text.contains("#EXT-X-MAP") ? "FMP4" : "TS", audio, heights, pieces);
+        boolean encrypted = text.lines().anyMatch(l -> l.startsWith("#EXT-X-KEY:") && !l.contains("METHOD=NONE"));
+        return new Profile(text.contains("#EXT-X-MAP") ? "FMP4" : "TS", audio, heights, pieces, text.contains("#EXT-X-BYTERANGE"), encrypted);
     }
 
     /** Whole 5 s pieces × 5000 ms; a shorter last piece is dropped; 0 when any other piece isn't 5 s. */
@@ -100,7 +107,10 @@ public class DirectAdCheck {
         long slot = slotMs(p);
         if (slot == 0) return "Direct not possible: pieces are not 5 s";
         if (!p.container().equals(channelFmt)) return "Direct not possible: " + p.container() + " pieces on a " + channelFmt + " channel";
+        if (p.byteRanges()) return "Direct not possible: single-file HLS (byte ranges)";
+        if (p.encrypted()) return "Direct not possible: encrypted pieces";
         if ("FMP4".equals(channelFmt) && !p.separateAudio()) return "Direct not possible: no separate audio track";
+        if ("TS".equals(channelFmt) && p.separateAudio()) return "Direct not possible: audio is a separate track, the TS channel needs it in the pieces";
         if (Math.abs(Math.round(total * 1000) - vastDurationMs) > LENGTH_TOLERANCE_MS) return "Direct not possible: length differs from the ad server's";
         if (slot > leftMs) return "Direct not possible: doesn't fit the time left";
         return null;

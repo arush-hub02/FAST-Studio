@@ -97,5 +97,27 @@ class DirectAdCheckTest {
     void profileSurvivesJson() {
         Profile p = profile("FMP4", true, 5, 5, 2.5);
         assertEquals(p, DirectAdCheck.fromJson(DirectAdCheck.toJson(p)));
+        assertEquals(p, DirectAdCheck.fromJson("{\"container\":\"FMP4\",\"separateAudio\":true,\"heights\":[720],\"pieces\":[5.0,5.0,2.5]}"),
+                "checks saved before byte ranges and keys were recorded still read");
+    }
+
+    @Test
+    void singleFileHlsWithByteRangesDoesNotFit() {
+        Profile p = DirectAdCheck.parse("#EXTM3U\n#EXTINF:5.0,\n#EXT-X-BYTERANGE:1000@0\nad.ts\n#EXTINF:5.0,\n#EXT-X-BYTERANGE:1000@1000\nad.ts\n#EXT-X-ENDLIST\n", BASE + "i.m3u8", u -> null);
+        assertEquals("Direct not possible: single-file HLS (byte ranges)", DirectAdCheck.misfit(p, "TS", 10_000, 60_000));
+    }
+
+    @Test
+    void encryptedPiecesDoNotFit() {
+        Profile p = DirectAdCheck.parse("#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI=\"k\"\n#EXTINF:5.0,\na.ts\n#EXT-X-ENDLIST\n", BASE + "i.m3u8", u -> null);
+        assertEquals("Direct not possible: encrypted pieces", DirectAdCheck.misfit(p, "TS", 5_000, 60_000));
+        Profile clear = DirectAdCheck.parse("#EXTM3U\n#EXT-X-KEY:METHOD=NONE\n#EXTINF:5.0,\na.ts\n#EXT-X-ENDLIST\n", BASE + "i.m3u8", u -> null);
+        assertNull(DirectAdCheck.misfit(clear, "TS", 5_000, 60_000));
+    }
+
+    @Test
+    void separateAudioOnATsChannelDoesNotFit() {
+        assertEquals("Direct not possible: audio is a separate track, the TS channel needs it in the pieces",
+                DirectAdCheck.misfit(profile("TS", true, 5, 5), "TS", 10_000, 60_000));
     }
 }

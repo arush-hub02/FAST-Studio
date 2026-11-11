@@ -226,7 +226,7 @@ public class MediaServiceV1 {
 
     /** After the job published p: a first version queues the full ladder. */
     public void published(UUID org, UUID assetId, Packaged p) {
-        if (p.partial()) jobs.enqueue(org, assetId, "AD");
+        if (p.partial()) jobs.enqueue(org, assetId, "PROGRAMME");   // off the ad lane, so new creatives' first versions never wait behind it
     }
 
     /**

@@ -100,6 +100,19 @@ class AdDirectDeliverySettingTest {
         assertEquals("STORE_R2", decisions.effectiveDelivery(aurora(), config("DIRECT")));
     }
 
+    @Test @Order(7)
+    void aSavedDirectSourceStaysEditableAfterTheFeatureIsSwitchedOff() throws Exception {
+        features("[\"AD_DIRECT_DELIVERY\"]");
+        MvcResult add = call(post("/api/platform/orgs/" + aurora() + "/ad-sources"), vast("Kept direct", "DIRECT"));
+        String id = add.getResponse().getContentAsString().replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
+        features("[]");
+        MvcResult pause = call(put("/api/platform/orgs/" + aurora() + "/ad-sources/" + id),
+                vast("Kept direct", "DIRECT").replace("\"enabled\":true", "\"enabled\":false"));
+        assertEquals(200, pause.getResponse().getStatus(), "pausing keeps the saved delivery: " + pause.getResponse().getContentAsString());
+        MvcResult other = call(post("/api/platform/orgs/" + aurora() + "/ad-sources"), vast("New direct", "DIRECT"));
+        assertEquals(403, other.getResponse().getStatus(), "choosing Direct anew still needs the feature");
+    }
+
     @Autowired com.faststudio.v1.repositories.ads.AdSourceRepository repository;
 
     @Test @Order(6)

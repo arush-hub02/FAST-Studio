@@ -60,7 +60,9 @@ export function AdSources({ base, mode, canAddOwn = false, canDirect = false }: 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <b>{s.name}</b> <span className={`badge ${s.kind === 'DIRECT' ? 'ok' : 'info'}`}>{s.kind === 'DIRECT' ? 'Direct-sold' : 'VAST ad server'}</span>
                 {' '}<span className="badge">{s.managedBy === 'TENANT' ? (platform ? 'Company tag' : 'Your tag') : 'Platform'}</span>
-                {s.delivery === 'DIRECT' && <>{' '}<span className="badge info" title="Plays the ad server's own HLS from its CDN when it fits the channel; other ads are stored in R2">Direct</span></>}
+                {s.delivery === 'DIRECT' && (canDirect
+                  ? <>{' '}<span className="badge info" title="Plays the ad server's own HLS from its CDN when it fits the channel; other ads are stored in R2">Direct</span></>
+                  : <span className="faint small" title="Direct ad delivery is switched off for this company, so its ads are stored in R2"> · Direct (feature off: stored in R2)</span>)}
                 {!s.enabled && <span className="faint small"> · paused</span>}
                 {s.tagUrl && <div className="faint small mono" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.tagUrl}</div>}
               </div>

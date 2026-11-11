@@ -94,7 +94,7 @@ class MediaPruneTest {
         MediaServiceV1 media = new MediaServiceV1(null, jobs, System.getProperty("java.io.tmpdir"), "", List.of(), null, null);
         java.util.UUID project = java.util.UUID.randomUUID(), asset = java.util.UUID.randomUUID();
         media.published(project, asset, new MediaServiceV1.Packaged("acme/ad.1", null, 30_000, "x", null, false, true));
-        org.mockito.Mockito.verify(jobs).enqueue(project, asset, "AD");
+        org.mockito.Mockito.verify(jobs).enqueue(project, asset, "PROGRAMME");   // off the ad lane: new creatives' first versions never wait behind it
         media.published(project, asset, new MediaServiceV1.Packaged("acme/ad.2", null, 30_000, "x", null, false));
         org.mockito.Mockito.verifyNoMoreInteractions(jobs);
     }
